@@ -1,21 +1,109 @@
 import 'package:flutter/material.dart';
+
 import '../models/game_result_model.dart';
+import '../models/reward_result_model.dart';
+
+import '../managers/reward_manager.dart';
 
 
 
-class PuzzleWinScreen extends StatelessWidget {
+class PuzzleWinScreen extends StatefulWidget {
 
 
   final GameResultModel result;
 
 
+  final int difficulty;
+
+
+
   const PuzzleWinScreen({
+
 
     super.key,
 
+
     required this.result,
 
+
+    this.difficulty = 1,
+
+
   });
+
+
+
+
+
+  @override
+  State<PuzzleWinScreen> createState() =>
+      _PuzzleWinScreenState();
+
+}
+
+
+
+
+
+class _PuzzleWinScreenState
+    extends State<PuzzleWinScreen> {
+
+
+  RewardResultModel? reward;
+
+
+  bool loading = true;
+
+
+
+  @override
+  void initState(){
+
+
+    super.initState();
+
+
+    getReward();
+
+
+  }
+
+
+
+
+
+
+  Future<void> getReward() async {
+
+
+    final result =
+
+    await RewardManager.completePuzzle(
+
+
+      difficulty: widget.difficulty,
+
+
+    );
+
+
+
+    setState((){
+
+
+      reward = result;
+
+
+      loading = false;
+
+
+    });
+
+
+  }
+
+
+
 
 
 
@@ -26,13 +114,17 @@ class PuzzleWinScreen extends StatelessWidget {
     return Scaffold(
 
 
+
       body:Container(
+
 
 
         decoration:const BoxDecoration(
 
 
+
           gradient:LinearGradient(
+
 
 
             colors:[
@@ -44,50 +136,78 @@ class PuzzleWinScreen extends StatelessWidget {
             ],
 
 
+
             begin:Alignment.topCenter,
+
 
             end:Alignment.bottomCenter,
 
 
+
           ),
 
+
+
         ),
+
+
 
 
 
         child:SafeArea(
 
 
+
           child:Center(
 
 
-            child:Column(
+
+            child:loading
+
+
+
+                ? const CircularProgressIndicator()
+
+
+
+                :Column(
+
 
 
               mainAxisAlignment:
+
               MainAxisAlignment.center,
+
 
 
               children:[
 
 
+
                 const Text(
+
 
 
                   '🎉 أحسنت!',
 
 
+
                   style:TextStyle(
+
+
+
+                    color:Colors.white,
 
 
                     fontSize:45,
 
-                    fontWeight:
-                    FontWeight.bold,
 
-                    color:Colors.white,
+                    fontWeight:FontWeight.bold,
+
+
 
                   ),
+
 
 
                 ),
@@ -95,7 +215,9 @@ class PuzzleWinScreen extends StatelessWidget {
 
 
 
-                const SizedBox(height:30),
+
+                const SizedBox(height:25),
+
 
 
 
@@ -103,40 +225,45 @@ class PuzzleWinScreen extends StatelessWidget {
                 Row(
 
 
+
                   mainAxisAlignment:
+
                   MainAxisAlignment.center,
 
 
-                  children:List.generate(
+
+                  children:
 
 
-                    result.stars,
+
+                  List.generate(
 
 
-                        (index)=>const Padding(
+
+                    widget.result.stars,
 
 
-                      padding:
-                      EdgeInsets.all(5),
+
+                        (index)=>const Icon(
 
 
-                      child:Icon(
+
+                      Icons.star,
 
 
-                        Icons.star,
+                      color:Colors.yellow,
 
 
-                        color:Colors.yellow,
+                      size:55,
 
-                        size:55,
-
-                      ),
 
 
                     ),
 
 
+
                   ),
+
 
 
                 ),
@@ -144,25 +271,117 @@ class PuzzleWinScreen extends StatelessWidget {
 
 
 
-                const SizedBox(height:30),
+
+                const SizedBox(height:35),
 
 
 
 
-                Text(
+
+                Container(
 
 
-                  'الحركات: ${result.moves}',
+
+                  padding:
+
+                  const EdgeInsets.all(20),
 
 
-                  style:const TextStyle(
+
+                  decoration:BoxDecoration(
 
 
-                    fontSize:22,
 
-                    color:Colors.white,
+                    color:Colors.white24,
+
+
+
+                    borderRadius:
+
+                    BorderRadius.circular(25),
+
+
 
                   ),
+
+
+
+                  child:Column(
+
+
+
+                    children:[
+
+
+
+                      Text(
+
+
+
+                        '+ ${reward!.coins} 🪙',
+
+
+
+                        style:const TextStyle(
+
+
+
+                          color:Colors.white,
+
+
+                          fontSize:28,
+
+
+                          fontWeight:
+
+                          FontWeight.bold,
+
+
+
+                        ),
+
+
+
+                      ),
+
+
+
+
+                      if(reward!.gems > 0)
+
+                        Text(
+
+
+
+                          '+ ${reward!.gems} 💎',
+
+
+
+                          style:const TextStyle(
+
+
+
+                            color:Colors.white,
+
+
+                            fontSize:28,
+
+
+
+                          ),
+
+
+
+                        ),
+
+
+
+                    ],
+
+
+
+                  ),
+
 
 
                 ),
@@ -170,33 +389,9 @@ class PuzzleWinScreen extends StatelessWidget {
 
 
 
-                const SizedBox(height:10),
 
+                const SizedBox(height:40),
 
-
-
-                Text(
-
-
-                  'الوقت: ${result.time.inSeconds} ثانية',
-
-
-                  style:const TextStyle(
-
-
-                    fontSize:22,
-
-                    color:Colors.white,
-
-                  ),
-
-
-                ),
-
-
-
-
-                const SizedBox(height:50),
 
 
 
@@ -204,52 +399,84 @@ class PuzzleWinScreen extends StatelessWidget {
                 ElevatedButton(
 
 
-                  onPressed:(){
 
+                  style:
 
-                    Navigator.pop(context);
+                  ElevatedButton.styleFrom(
 
-
-                  },
-
-
-                  style:ElevatedButton.styleFrom(
 
 
                     padding:
+
                     const EdgeInsets.symmetric(
+
+
 
                       horizontal:50,
 
+
                       vertical:18,
 
+
+
                     ),
+
 
 
                     shape:
+
                     RoundedRectangleBorder(
 
+
+
                       borderRadius:
+
                       BorderRadius.circular(30),
 
+
+
                     ),
+
 
 
                   ),
 
 
 
+
+                  onPressed:(){
+
+
+
+                    Navigator.pop(context);
+
+
+
+                  },
+
+
+
                   child:const Text(
 
 
-                    'ممتاز 🧩',
+
+                    'متابعة 🧩',
 
 
-                    style:TextStyle(
+
+                    style:
+
+                    TextStyle(
+
+
 
                       fontSize:22,
 
+
+
                     ),
+
+
 
                   ),
 
@@ -262,16 +489,21 @@ class PuzzleWinScreen extends StatelessWidget {
               ],
 
 
+
             ),
+
 
 
           ),
 
 
+
         ),
 
 
+
       ),
+
 
 
     );
