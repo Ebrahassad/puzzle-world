@@ -3,12 +3,22 @@ import 'package:flutter/material.dart';
 import '../models/puzzle_model.dart';
 import '../models/puzzle_level_model.dart';
 
+import '../puzzle_engine/puzzle_generator.dart';
+import '../puzzle_engine/puzzle_piece.dart';
+import '../puzzle_engine/puzzle_controller.dart';
+
+import '../utils/image_helper.dart';
+import '../widgets/puzzle_piece_widget.dart';
+
+
 
 class PuzzleGameScreen extends StatefulWidget {
+
 
   final PuzzleModel puzzle;
 
   final PuzzleLevelModel level;
+
 
 
   const PuzzleGameScreen({
@@ -22,6 +32,7 @@ class PuzzleGameScreen extends StatefulWidget {
   });
 
 
+
   @override
   State<PuzzleGameScreen> createState() =>
       _PuzzleGameScreenState();
@@ -30,11 +41,20 @@ class PuzzleGameScreen extends StatefulWidget {
 
 
 
+
 class _PuzzleGameScreenState
     extends State<PuzzleGameScreen> {
 
 
-  late List<int> pieces;
+
+  late List<PuzzlePiece> pieces;
+
+
+  late PuzzleController controller;
+
+
+
+  final double boardSize = 350;
 
 
 
@@ -43,31 +63,45 @@ class _PuzzleGameScreenState
 
     super.initState();
 
-    createPieces();
 
-  }
+    pieces = PuzzleGenerator.generate(
 
+      rows: widget.level.gridSize,
 
+      columns: widget.level.gridSize,
 
-  void createPieces(){
+      imageWidth: boardSize,
 
-    pieces = List.generate(
-
-      widget.level.piecesCount,
-
-          (index)=> index,
+      imageHeight: boardSize,
 
     );
 
 
-    pieces.shuffle();
+    controller = PuzzleController(
+
+      pieces: pieces,
+
+    );
 
   }
+
+
 
 
 
   @override
   Widget build(BuildContext context) {
+
+
+    final image =
+    ImageHelper.getPuzzleImage(
+        widget.puzzle.image);
+
+
+
+    final pieceSize =
+        boardSize / widget.level.gridSize;
+
 
 
     return Scaffold(
@@ -90,55 +124,49 @@ class _PuzzleGameScreenState
 
             ],
 
-          ),
 
+          ),
 
         ),
 
 
 
-        child: SafeArea(
+        child:SafeArea(
 
 
-          child: Column(
+          child:Column(
 
 
             children:[
 
 
-              Padding(
+              const SizedBox(height:20),
 
 
-                padding:
-                const EdgeInsets.all(16),
+
+              Text(
 
 
-                child: Text(
+                widget.puzzle.title,
 
 
-                  widget.puzzle.title,
+                style:const TextStyle(
 
 
-                  style:const TextStyle(
+                  color:Colors.white,
 
+                  fontSize:30,
 
-                    color:Colors.white,
-
-
-                    fontSize:30,
-
-
-                    fontWeight:
-                    FontWeight.bold,
-
-
-                  ),
-
+                  fontWeight:
+                  FontWeight.bold,
 
                 ),
 
-
               ),
+
+
+
+              const SizedBox(height:20),
 
 
 
@@ -146,153 +174,118 @@ class _PuzzleGameScreenState
               Expanded(
 
 
-                child:Center(
+                child:Stack(
 
 
-                  child:Container(
+                  children:[
 
 
-                    margin:
-                    const EdgeInsets.all(20),
+                    // مكان تركيب الصورة
 
 
-                    padding:
-                    const EdgeInsets.all(10),
+                    Center(
 
 
-                    decoration:BoxDecoration(
+                      child:Container(
 
 
-                      color:Colors.white,
+                        width:boardSize,
+
+                        height:boardSize,
 
 
-                      borderRadius:
-                      BorderRadius.circular(25),
+                        decoration:BoxDecoration(
 
 
-                      boxShadow:const[
+                          color:Colors.white24,
 
 
-                        BoxShadow(
+                          borderRadius:
+                          BorderRadius.circular(20),
 
 
-                          color:Colors.black26,
-
-
-                          blurRadius:15,
-
-
-                          offset:Offset(0,8),
-
-
-                        )
-
-
-                      ],
-
-
-                    ),
-
-
-
-                    child:GridView.builder(
-
-
-                      shrinkWrap:true,
-
-
-                      itemCount:pieces.length,
-
-
-                      gridDelegate:
-                      SliverGridDelegateWithFixedCrossAxisCount(
-
-
-                        crossAxisCount:
-                        widget.level.gridSize,
+                        ),
 
 
                       ),
 
-
-
-                      itemBuilder:(context,index){
-
-
-                        return DragTarget<int>(
-
-
-                          onAccept:(data){
-
-
-                            setState((){
-
-
-                              final old =
-                              pieces.indexOf(data);
-
-
-                              pieces[old]=
-                              pieces[index];
-
-
-                              pieces[index]=data;
-
-
-                            });
-
-
-                          },
-
-
-                          builder:
-                              (context,candidate,rejected){
-
-
-                            return Draggable<int>(
-
-
-                              data:pieces[index],
-
-
-                              feedback:_PieceBox(
-
-                                number:
-                                pieces[index],
-
-                              ),
-
-
-
-                              childWhenDragging:
-                              Container(),
-
-
-
-                              child:_PieceBox(
-
-                                number:
-                                pieces[index],
-
-                              ),
-
-
-
-                            );
-
-
-                          },
-
-                        );
-
-
-                      },
-
-
                     ),
 
 
-                  ),
+
+
+                    ...pieces.map((piece){
+
+
+
+                      return Positioned(
+
+
+                        left:piece.position.dx,
+
+                        top:piece.position.dy,
+
+
+
+                        child:Draggable<PuzzlePiece>(
+
+
+
+                          data:piece,
+
+
+
+                          feedback:PuzzlePieceWidget(
+
+
+                            piece:piece,
+
+
+                            image:image,
+
+
+                            size:pieceSize,
+
+
+                          ),
+
+
+
+                          childWhenDragging:
+
+                          const SizedBox(),
+
+
+
+
+                          child:PuzzlePieceWidget(
+
+
+                            piece:piece,
+
+
+                            image:image,
+
+
+                            size:pieceSize,
+
+
+                          ),
+
+
+
+                        ),
+
+
+
+                      );
+
+
+
+                    }),
+
+
+                  ],
 
 
                 ),
@@ -319,84 +312,5 @@ class _PuzzleGameScreenState
 
   }
 
-}
-
-
-
-
-
-class _PieceBox extends StatelessWidget {
-
-
-  final int number;
-
-
-  const _PieceBox({
-
-    required this.number,
-
-  });
-
-
-
-  @override
-  Widget build(BuildContext context) {
-
-
-    return Container(
-
-
-      margin:
-      const EdgeInsets.all(3),
-
-
-      decoration:BoxDecoration(
-
-
-        color:Colors.blue.shade300,
-
-
-        borderRadius:
-        BorderRadius.circular(8),
-
-
-      ),
-
-
-
-      child:Center(
-
-
-        child:Text(
-
-
-          '${number+1}',
-
-
-          style:const TextStyle(
-
-
-            color:Colors.white,
-
-
-            fontSize:20,
-
-
-            fontWeight:
-            FontWeight.bold,
-
-
-          ),
-
-
-        ),
-
-
-      ),
-
-
-    );
-
-  }
 
 }
