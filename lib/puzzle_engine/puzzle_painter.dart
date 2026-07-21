@@ -3,14 +3,12 @@ import 'package:flutter/material.dart';
 import 'puzzle_piece.dart';
 
 
-
 class PuzzlePainter extends CustomPainter {
 
 
   final PuzzlePiece piece;
 
   final ImageProvider image;
-
 
 
   PuzzlePainter({
@@ -24,7 +22,6 @@ class PuzzlePainter extends CustomPainter {
 
 
   @override
-
   void paint(
 
       Canvas canvas,
@@ -34,16 +31,45 @@ class PuzzlePainter extends CustomPainter {
       ) {
 
 
-
-    final paint = Paint();
-
-
-    final path = _createPiecePath(size);
+    final path = createPiecePath(size);
 
 
+
+    // ظل القطعة (إحساس 3D)
 
     canvas.save();
 
+
+    canvas.translate(3, 5);
+
+
+    canvas.drawPath(
+
+      path,
+
+      Paint()
+
+        ..color = Colors.black26
+
+        ..maskFilter = const MaskFilter.blur(
+
+          BlurStyle.normal,
+
+          6,
+
+        ),
+
+    );
+
+
+    canvas.restore();
+
+
+
+
+    // قص الصورة داخل القطعة
+
+    canvas.save();
 
 
     canvas.clipPath(path);
@@ -54,17 +80,7 @@ class PuzzlePainter extends CustomPainter {
 
       canvas: canvas,
 
-      rect: Rect.fromLTWH(
-
-        0,
-
-        0,
-
-        size.width,
-
-        size.height,
-
-      ),
+      rect: Offset.zero & size,
 
       image: image,
 
@@ -73,10 +89,13 @@ class PuzzlePainter extends CustomPainter {
     );
 
 
-
     canvas.restore();
 
 
+
+
+
+    // إطار القطعة
 
     canvas.drawPath(
 
@@ -88,9 +107,30 @@ class PuzzlePainter extends CustomPainter {
 
         ..strokeWidth = 2
 
-        ..color = Colors.black26,
+        ..color = Colors.white70,
 
     );
+
+
+
+
+
+    // لمعان بسيط
+
+    canvas.drawPath(
+
+      path,
+
+      Paint()
+
+        ..style = PaintingStyle.stroke
+
+        ..strokeWidth = 1
+
+        ..color = Colors.white,
+
+    );
+
 
 
   }
@@ -99,11 +139,10 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-  Path _createPiecePath(Size size) {
+  Path createPiecePath(Size size) {
 
 
     final path = Path();
-
 
 
     final w = size.width;
@@ -116,33 +155,15 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-    // top
-
     path.lineTo(w, 0);
 
 
 
-    // right
-
-    path.lineTo(
-
-      w,
-
-      h,
-
-    );
+    path.lineTo(w, h);
 
 
 
-    // bottom
-
-    path.lineTo(
-
-      0,
-
-      h,
-
-    );
+    path.lineTo(0, h);
 
 
 
@@ -151,7 +172,6 @@ class PuzzlePainter extends CustomPainter {
 
 
     return path;
-
 
   }
 
@@ -167,11 +187,8 @@ class PuzzlePainter extends CustomPainter {
 
       ) {
 
-
     return true;
 
-
   }
-
 
 }
