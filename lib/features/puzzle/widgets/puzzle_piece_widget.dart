@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../engine/puzzle_piece.dart';
+import '../engine/puzzle_painter.dart';
 
 
 
-class PuzzlePieceWidget extends StatelessWidget {
+class PuzzlePieceWidget extends StatefulWidget {
 
 
   final PuzzlePiece piece;
+
+
+  final ImageProvider image;
 
 
   final double size;
@@ -23,11 +27,33 @@ class PuzzlePieceWidget extends StatelessWidget {
     required this.piece,
 
 
+    required this.image,
+
+
     required this.size,
 
 
   });
 
+
+
+  @override
+  State<PuzzlePieceWidget> createState() =>
+      _PuzzlePieceWidgetState();
+
+}
+
+
+
+
+
+
+
+class _PuzzlePieceWidgetState
+    extends State<PuzzlePieceWidget> {
+
+
+  bool pressed = false;
 
 
 
@@ -38,54 +64,147 @@ class PuzzlePieceWidget extends StatelessWidget {
 
 
 
-    return Container(
+    return GestureDetector(
 
 
 
-      width:size,
+      onTapDown:(_){
 
 
-      height:size,
+        setState((){
 
 
-
-      decoration:
-
-      BoxDecoration(
+          pressed = true;
 
 
-
-        color:Colors.white,
-
+        });
 
 
-        borderRadius:
-
-        BorderRadius.circular(12),
+      },
 
 
 
-        boxShadow:[
+      onTapUp:(_){
+
+
+        setState((){
+
+
+          pressed = false;
+
+
+        });
+
+
+      },
 
 
 
-          BoxShadow(
+      onTapCancel:(){
+
+
+        setState((){
+
+
+          pressed = false;
+
+
+        });
+
+
+      },
 
 
 
-            color:
-
-            Colors.black.withOpacity(.25),
+      child:AnimatedScale(
 
 
 
-            blurRadius:8,
+        scale:
+
+        pressed ? 1.12 : 1,
 
 
 
-            offset:
+        duration:
 
-            const Offset(0,5),
+        const Duration(
+
+          milliseconds:150,
+
+        ),
+
+
+
+
+        child:AnimatedContainer(
+
+
+
+          duration:
+
+          const Duration(
+
+            milliseconds:150,
+
+          ),
+
+
+
+          decoration:
+
+          BoxDecoration(
+
+
+
+            boxShadow:[
+
+
+
+              BoxShadow(
+
+
+
+                color:
+
+                Colors.black.withOpacity(
+
+
+
+                  pressed ? 0.35 : 0.15,
+
+
+
+                ),
+
+
+
+                blurRadius:
+
+                pressed ? 18 : 8,
+
+
+
+                offset:Offset(
+
+
+
+                  0,
+
+
+                  pressed ? 10 : 5,
+
+
+
+                ),
+
+
+
+              ),
+
+
+
+            ],
 
 
 
@@ -93,45 +212,49 @@ class PuzzlePieceWidget extends StatelessWidget {
 
 
 
-        ],
+
+
+          child:CustomPaint(
 
 
 
-      ),
+            size:
+
+            Size(
 
 
 
-      child:
-
-      ClipRRect(
+              widget.size,
 
 
-
-        borderRadius:
-
-        BorderRadius.circular(12),
+              widget.size,
 
 
 
-        child:
-
-        CustomPaint(
+            ),
 
 
 
-          size:
 
-          Size(size,size),
+            painter:
 
-
-
-          painter:
-
-          PuzzlePiecePainter(
+            PuzzlePainter(
 
 
 
-            piece:piece,
+              piece:
+
+              widget.piece,
+
+
+
+              image:
+
+              widget.image,
+
+
+
+            ),
 
 
 
@@ -150,214 +273,7 @@ class PuzzlePieceWidget extends StatelessWidget {
     );
 
 
-
   }
-
-
-}
-
-
-
-
-
-
-
-class PuzzlePiecePainter extends CustomPainter {
-
-
-
-  final PuzzlePiece piece;
-
-
-
-  PuzzlePiecePainter({
-
-
-    required this.piece,
-
-
-  });
-
-
-
-
-
-
-  @override
-
-  void paint(
-
-      Canvas canvas,
-
-      Size size,
-
-      ){
-
-
-
-    final paint = Paint()
-
-
-
-      ..color = Colors.blueAccent
-
-
-
-      ..style = PaintingStyle.fill;
-
-
-
-
-
-
-    final path = Path();
-
-
-
-    path.addRect(
-
-      Rect.fromLTWH(
-
-        0,
-
-        0,
-
-        size.width,
-
-        size.height,
-
-      ),
-
-    );
-
-
-
-    canvas.drawPath(
-
-      path,
-
-      paint,
-
-    );
-
-
-
-
-    // رقم القطعة للمساعدة أثناء التطوير
-
-    final textPainter = TextPainter(
-
-
-
-      text:
-
-      TextSpan(
-
-
-
-        text:
-
-        "${piece.id}",
-
-
-
-        style:
-
-        const TextStyle(
-
-
-
-          color:Colors.white,
-
-
-          fontSize:18,
-
-
-          fontWeight:
-
-          FontWeight.bold,
-
-
-        ),
-
-
-
-      ),
-
-
-
-      textDirection:
-
-      TextDirection.rtl,
-
-
-
-    );
-
-
-
-    textPainter.layout();
-
-
-
-    textPainter.paint(
-
-
-
-      canvas,
-
-
-
-      Offset(
-
-
-
-        (size.width -
-
-            textPainter.width) /
-
-            2,
-
-
-
-        (size.height -
-
-            textPainter.height) /
-
-            2,
-
-
-
-      ),
-
-
-
-    );
-
-
-
-  }
-
-
-
-
-
-
-
-  @override
-
-  bool shouldRepaint(
-
-      covariant CustomPainter oldDelegate,
-
-      ){
-
-
-    return true;
-
-
-  }
-
 
 
 }
