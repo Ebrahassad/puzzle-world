@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 import '../models/stage_node_model.dart';
 import '../widgets/stage_node.dart';
 
+import '../../puzzle/screens/puzzle_game_screen.dart';
+
+import '../../puzzle/models/puzzle_model.dart';
+import '../../puzzle/models/puzzle_level_model.dart';
+
 
 
 class WorldLevelsScreen extends StatelessWidget {
@@ -17,12 +22,9 @@ class WorldLevelsScreen extends StatelessWidget {
 
   const WorldLevelsScreen({
 
-
     super.key,
 
-
     required this.worldId,
-
 
     required this.title,
 
@@ -53,7 +55,6 @@ class WorldLevelsScreen extends StatelessWidget {
         stars:index < 3 ? 3 : 0,
 
 
-
       );
 
 
@@ -61,6 +62,67 @@ class WorldLevelsScreen extends StatelessWidget {
 
 
   }
+
+
+
+
+
+
+  PuzzleModel createPuzzle(int level){
+
+
+    return PuzzleModel(
+
+
+      id:"${worldId}_$level",
+
+
+      title:"$title - مرحلة $level",
+
+
+      image:"animals_1.png",
+
+
+    );
+
+
+  }
+
+
+
+
+
+
+  PuzzleLevelModel createPuzzleLevel(int level){
+
+
+    return PuzzleLevelModel(
+
+
+      id:"level_$level",
+
+
+      puzzleId:"${worldId}_$level",
+
+
+      gridSize:3,
+
+
+      piecesCount:9,
+
+
+      difficulty:"easy",
+
+
+      unlocked:true,
+
+
+    );
+
+
+  }
+
+
 
 
 
@@ -93,20 +155,13 @@ class WorldLevelsScreen extends StatelessWidget {
 
             colors:[
 
-
               Color(0xff56CCF2),
-
 
               Color(0xff2F80ED),
 
-
             ],
 
-
-
           ),
-
-
 
         ),
 
@@ -143,9 +198,7 @@ class WorldLevelsScreen extends StatelessWidget {
 
                   color:Colors.white,
 
-
                   fontSize:32,
-
 
                   fontWeight:FontWeight.bold,
 
@@ -155,6 +208,7 @@ class WorldLevelsScreen extends StatelessWidget {
 
 
               ),
+
 
 
 
@@ -188,7 +242,6 @@ class WorldLevelsScreen extends StatelessWidget {
                     crossAxisSpacing:20,
 
 
-
                   ),
 
 
@@ -201,11 +254,15 @@ class WorldLevelsScreen extends StatelessWidget {
 
 
 
+                    final level = levels[index];
+
+
+
                     return StageNode(
 
 
 
-                      node:levels[index],
+                      node:level,
 
 
 
@@ -213,7 +270,47 @@ class WorldLevelsScreen extends StatelessWidget {
 
 
 
-                        // فتح لعبة البازل لاحقًا
+                        Navigator.push(
+
+
+
+                          context,
+
+
+
+                          MaterialPageRoute(
+
+
+
+                            builder:(context)=>
+
+
+
+                            PuzzleGameScreen(
+
+
+
+                              puzzle:
+
+                              createPuzzle(level.level),
+
+
+
+                              level:
+
+                              createPuzzleLevel(level.level),
+
+
+
+                            ),
+
+
+
+                          ),
+
+
+
+                        );
 
 
 
