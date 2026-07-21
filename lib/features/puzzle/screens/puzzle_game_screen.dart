@@ -30,7 +30,6 @@ class PuzzleGameScreen extends StatefulWidget {
 
 
 
-
   const PuzzleGameScreen({
 
 
@@ -44,8 +43,6 @@ class PuzzleGameScreen extends StatefulWidget {
 
 
   });
-
-
 
 
 
@@ -97,9 +94,7 @@ class _PuzzleGameScreenState
 
 
 
-
   @override
-
   void initState(){
 
 
@@ -117,7 +112,6 @@ class _PuzzleGameScreenState
 
 
 
-
   void createGame(){
 
 
@@ -125,26 +119,25 @@ class _PuzzleGameScreenState
     pieces = PuzzleGenerator.generate(
 
 
-      rows:widget.level.gridSize,
+      rows: widget.level.gridSize,
 
 
-      columns:widget.level.gridSize,
+      columns: widget.level.gridSize,
 
 
-      imageWidth:boardSize,
+      imageWidth: boardSize,
 
 
-      imageHeight:boardSize,
+      imageHeight: boardSize,
 
 
     );
 
 
 
-
     controller = PuzzleController(
 
-      pieces:pieces,
+      pieces: pieces,
 
     );
 
@@ -174,7 +167,6 @@ class _PuzzleGameScreenState
 
 
 
-
     if(saved != null &&
 
         saved['puzzleId'] == widget.puzzle.id &&
@@ -186,7 +178,6 @@ class _PuzzleGameScreenState
       final continueGame =
 
       await showContinueDialog();
-
 
 
 
@@ -219,8 +210,6 @@ class _PuzzleGameScreenState
 
           piece.placed = item['placed'];
 
-
-
         }
 
 
@@ -230,10 +219,7 @@ class _PuzzleGameScreenState
 
         seconds = saved['seconds'];
 
-
-
       }
-
 
 
     }
@@ -244,7 +230,7 @@ class _PuzzleGameScreenState
     setState((){
 
 
-      loading=false;
+      loading = false;
 
 
     });
@@ -272,8 +258,7 @@ class _PuzzleGameScreenState
 
 
 
-      context:context,
-
+      context: context,
 
 
       barrierDismissible:false,
@@ -288,16 +273,29 @@ class _PuzzleGameScreenState
 
 
 
+          shape:
+
+          RoundedRectangleBorder(
+
+            borderRadius:
+
+            BorderRadius.circular(25),
+
+          ),
+
+
+
           title:
 
           const Text(
 
             "🧩 لعبة محفوظة",
 
-            textAlign:TextAlign.center,
+            textAlign:
+
+            TextAlign.center,
 
           ),
-
 
 
 
@@ -305,9 +303,11 @@ class _PuzzleGameScreenState
 
           const Text(
 
-            "هل تريد متابعة تقدمك؟",
+            "وجدنا تقدم سابق، هل تريد المتابعة؟",
 
-            textAlign:TextAlign.center,
+            textAlign:
+
+            TextAlign.center,
 
           ),
 
@@ -325,6 +325,7 @@ class _PuzzleGameScreenState
               onPressed:(){
 
 
+
                 Navigator.pop(
 
                   context,
@@ -332,6 +333,7 @@ class _PuzzleGameScreenState
                   false,
 
                 );
+
 
 
               },
@@ -342,7 +344,7 @@ class _PuzzleGameScreenState
 
               const Text(
 
-                "إعادة",
+                "ابدأ من جديد",
 
               ),
 
@@ -382,9 +384,7 @@ class _PuzzleGameScreenState
 
                   );
 
-
                 }
-
 
 
               },
@@ -414,7 +414,6 @@ class _PuzzleGameScreenState
 
 
       },
-
 
     );
 
@@ -456,13 +455,20 @@ class _PuzzleGameScreenState
 
 
 
-        setState((){
+        if(mounted){
 
 
-          seconds++;
+
+          setState((){
 
 
-        });
+            seconds++;
+
+
+          });
+
+
+        }
 
 
 
@@ -495,21 +501,16 @@ class _PuzzleGameScreenState
       puzzleId:widget.puzzle.id,
 
 
-
       levelId:widget.level.id,
-
 
 
       pieces:pieces,
 
 
-
       moves:moves,
 
 
-
       seconds:seconds,
-
 
 
     );
@@ -550,9 +551,17 @@ class _PuzzleGameScreenState
 
       controller.checkPiecePosition(
 
+
+
         piece,
 
-        boardSize / widget.level.gridSize,
+
+
+        boardSize /
+
+            widget.level.gridSize,
+
+
 
       );
 
@@ -562,8 +571,8 @@ class _PuzzleGameScreenState
 
 
 
-    saveGame();
 
+    saveGame();
 
 
 
@@ -571,9 +580,7 @@ class _PuzzleGameScreenState
     if(controller.isCompleted){
 
 
-
       finishGame();
-
 
 
     }
@@ -606,6 +613,7 @@ class _PuzzleGameScreenState
 
 
 
+
     Navigator.pushReplacement(
 
 
@@ -622,14 +630,18 @@ class _PuzzleGameScreenState
 
 
 
-          result:GameResultModel(
+          result:
+
+          GameResultModel(
 
 
 
             stars:3,
 
 
+
             moves:moves,
+
 
 
             time:
@@ -687,7 +699,6 @@ class _PuzzleGameScreenState
     );
 
 
-
   }
 
 
@@ -699,13 +710,10 @@ class _PuzzleGameScreenState
 
 
   @override
-
   void dispose(){
 
 
-
     timer?.cancel();
-
 
 
     super.dispose();
@@ -722,7 +730,6 @@ class _PuzzleGameScreenState
 
 
   @override
-
   Widget build(BuildContext context){
 
 
@@ -756,10 +763,22 @@ class _PuzzleGameScreenState
 
 
 
+    final double pieceSize =
 
-    final pieceSize =
+    boardSize /
 
-    boardSize / widget.level.gridSize;
+        widget.level.gridSize;
+
+
+
+    final ImageProvider image =
+
+    AssetImage(
+
+      widget.puzzle.image,
+
+    );
+
 
 
 
@@ -770,7 +789,9 @@ class _PuzzleGameScreenState
 
 
 
-      body:Container(
+      body:
+
+      Container(
 
 
 
@@ -792,6 +813,7 @@ class _PuzzleGameScreenState
 
               Color(0xff89F7FE),
 
+
               Color(0xff66A6FF),
 
 
@@ -808,11 +830,16 @@ class _PuzzleGameScreenState
 
 
 
-        child:SafeArea(
+
+        child:
+
+        SafeArea(
 
 
 
-          child:Column(
+          child:
+
+          Column(
 
 
 
@@ -821,6 +848,7 @@ class _PuzzleGameScreenState
 
 
               const SizedBox(height:20),
+
 
 
 
@@ -848,7 +876,6 @@ class _PuzzleGameScreenState
                   fontWeight:
 
                   FontWeight.bold,
-
 
 
                 ),
@@ -895,7 +922,9 @@ class _PuzzleGameScreenState
 
 
 
-                child:Stack(
+                child:
+
+                Stack(
 
 
 
@@ -907,7 +936,9 @@ class _PuzzleGameScreenState
 
 
 
-                      child:Container(
+                      child:
+
+                      Container(
 
 
 
@@ -990,10 +1021,17 @@ class _PuzzleGameScreenState
                             piece:piece,
 
 
+
+                            image:image,
+
+
+
                             size:pieceSize,
 
 
+
                           ),
+
 
 
 
@@ -1039,7 +1077,11 @@ class _PuzzleGameScreenState
                             piece:piece,
 
 
+                            image:image,
+
+
                             size:pieceSize,
+
 
 
                           ),
