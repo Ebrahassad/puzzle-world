@@ -1,194 +1,219 @@
 import 'package:flutter/material.dart';
+
 import '../models/category_model.dart';
-import '../data/puzzles_data.dart';
 import '../models/puzzle_model.dart';
+import '../data/puzzles_data.dart';
+
+import 'levels_screen.dart';
+
+
 
 class PuzzlesScreen extends StatelessWidget {
+
+
   final CategoryModel category;
 
+
+
   const PuzzlesScreen({
+
     super.key,
+
     required this.category,
+
   });
+
 
 
   @override
   Widget build(BuildContext context) {
 
-    final List<PuzzleModel> puzzles =
-        PuzzlesData.byCategory(category.id);
+
+
+    final puzzles =
+    PuzzlesData.byCategory(category.id);
+
 
 
     return Scaffold(
 
+
+
       body: Container(
+
+
 
         decoration: const BoxDecoration(
 
+
+
           gradient: LinearGradient(
 
+
+
             colors: [
+
               Color(0xff89F7FE),
+
               Color(0xff66A6FF),
+
             ],
 
+
+
             begin: Alignment.topCenter,
+
             end: Alignment.bottomCenter,
 
+
+
           ),
+
+
 
         ),
 
 
+
+
+
         child: SafeArea(
 
+
+
           child: Column(
+
+
 
             children: [
 
 
-              Padding(
 
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 15,
-                ),
+              _TopBar(
 
-                child: Row(
-
-                  children: [
-
-
-                    IconButton(
-
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-
-                      icon: const Icon(
-                        Icons.arrow_back_ios,
-                        color: Colors.white,
-                      ),
-
-                    ),
-
-
-                    Expanded(
-
-                      child: Text(
-
-                        category.name,
-
-                        textAlign: TextAlign.center,
-
-                        style: const TextStyle(
-
-                          color: Colors.white,
-
-                          fontSize: 30,
-
-                          fontWeight: FontWeight.bold,
-
-                          shadows: [
-
-                            Shadow(
-
-                              blurRadius: 8,
-
-                              offset: Offset(2,3),
-
-                            )
-
-                          ],
-
-                        ),
-
-                      ),
-
-                    ),
-
-
-                    const SizedBox(width: 45),
-
-
-                  ],
-
-                ),
+                title: category.name,
 
               ),
+
+
 
 
 
               Expanded(
 
+
+
                 child: puzzles.isEmpty
+
+
 
                     ? const Center(
 
-                        child: Text(
 
-                          'لا توجد ألغاز حالياً',
 
-                          style: TextStyle(
+                  child: Text(
 
-                            fontSize: 22,
 
-                            color: Colors.white,
 
-                          ),
+                    'لا توجد صور حالياً',
 
-                        ),
+                    style: TextStyle(
 
-                      )
+                      color: Colors.white,
+
+                      fontSize:22,
+
+                    ),
+
+                  ),
+
+                )
+
 
 
                     : GridView.builder(
 
-                        padding: const EdgeInsets.all(18),
 
 
-                        itemCount: puzzles.length,
+                  padding:
+                  const EdgeInsets.all(18),
 
 
-                        gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
 
-                          crossAxisCount: 2,
-
-                          crossAxisSpacing: 18,
-
-                          mainAxisSpacing: 18,
-
-                          childAspectRatio: 0.85,
-
-                        ),
+                  itemCount:
+                  puzzles.length,
 
 
-                        itemBuilder: (context,index){
+
+                  gridDelegate:
+                  const SliverGridDelegateWithFixedCrossAxisCount(
 
 
-                          final puzzle = puzzles[index];
+
+                    crossAxisCount:2,
 
 
-                          return _PuzzleCard(
-                            puzzle: puzzle,
-                          );
+
+                    crossAxisSpacing:18,
 
 
-                        },
 
-                      ),
+                    mainAxisSpacing:18,
+
+
+
+                    childAspectRatio:0.8,
+
+
+
+                  ),
+
+
+
+
+                  itemBuilder:(context,index){
+
+
+
+                    return PuzzleCard(
+
+
+
+                      puzzle:puzzles[index],
+
+
+
+                    );
+
+
+
+                  },
+
+
+
+                ),
+
+
 
               ),
 
 
+
             ],
+
+
 
           ),
 
+
+
         ),
 
+
+
       ),
+
+
 
     );
 
@@ -198,15 +223,21 @@ class PuzzlesScreen extends StatelessWidget {
 
 
 
-class _PuzzleCard extends StatelessWidget {
 
 
-  final PuzzleModel puzzle;
 
 
-  const _PuzzleCard({
+class _TopBar extends StatelessWidget {
 
-    required this.puzzle,
+
+
+  final String title;
+
+
+
+  const _TopBar({
+
+    required this.title,
 
   });
 
@@ -216,154 +247,428 @@ class _PuzzleCard extends StatelessWidget {
   Widget build(BuildContext context) {
 
 
-    return Container(
 
-      decoration: BoxDecoration(
-
-        color: Colors.white,
-
-        borderRadius: BorderRadius.circular(25),
+    return Padding(
 
 
-        boxShadow: const [
 
-          BoxShadow(
-
-            color: Colors.black26,
-
-            blurRadius: 12,
-
-            offset: Offset(0,8),
-
-          )
-
-        ],
-
-      ),
+      padding: const EdgeInsets.all(16),
 
 
-      child: Column(
+
+      child: Row(
+
+
 
         children: [
 
 
+
+          IconButton(
+
+
+
+            onPressed: (){
+
+              Navigator.pop(context);
+
+            },
+
+
+
+            icon: const Icon(
+
+              Icons.arrow_back_ios,
+
+              color:Colors.white,
+
+            ),
+
+          ),
+
+
+
+
+
           Expanded(
 
-            child: ClipRRect(
 
-              borderRadius:
-              const BorderRadius.vertical(
-                top: Radius.circular(25),
+
+            child: Text(
+
+
+
+              title,
+
+
+
+              textAlign:TextAlign.center,
+
+
+
+              style:const TextStyle(
+
+
+
+                color:Colors.white,
+
+
+
+                fontSize:30,
+
+
+
+                fontWeight:FontWeight.bold,
+
+
+
               ),
 
-              child: Image.asset(
 
-                puzzle.image,
-
-                width: double.infinity,
-
-                fit: BoxFit.cover,
-
-
-                errorBuilder:
-                (context,error,stackTrace){
-
-                  return const Icon(
-
-                    Icons.extension,
-
-                    size:70,
-
-                    color:Colors.blue,
-
-                  );
-
-                },
-
-              ),
 
             ),
+
+
 
           ),
 
 
 
-          Padding(
-
-            padding: const EdgeInsets.all(10),
-
-            child: Column(
-
-              children: [
 
 
-                Text(
-
-                  puzzle.title,
-
-                  style: const TextStyle(
-
-                    fontSize:20,
-
-                    fontWeight:FontWeight.bold,
-
-                  ),
-
-                ),
+          const SizedBox(width:50),
 
 
-
-                const SizedBox(height:5),
-
-
-
-                Row(
-
-                  mainAxisAlignment:
-                  MainAxisAlignment.center,
-
-                  children: [
-
-
-                    const Icon(
-
-                      Icons.grid_on,
-
-                      size:18,
-
-                    ),
-
-
-                    const SizedBox(width:5),
-
-
-                    Text(
-
-                      '${puzzle.pieces} قطعة',
-
-                      style: const TextStyle(
-
-                        fontSize:16,
-
-                      ),
-
-                    ),
-
-
-                  ],
-
-                ),
-
-
-              ],
-
-            ),
-
-          ),
 
         ],
 
+
+
       ),
+
+
+
+    );
+
+  }
+
+}
+
+
+
+
+
+
+
+
+
+class PuzzleCard extends StatelessWidget {
+
+
+
+  final PuzzleModel puzzle;
+
+
+
+  const PuzzleCard({
+
+    super.key,
+
+    required this.puzzle,
+
+  });
+
+
+
+
+
+  @override
+  Widget build(BuildContext context) {
+
+
+
+    return InkWell(
+
+
+
+      borderRadius:
+      BorderRadius.circular(25),
+
+
+
+
+      onTap:(){
+
+
+
+        Navigator.push(
+
+
+
+          context,
+
+
+
+          MaterialPageRoute(
+
+
+
+            builder:(context)=>
+
+
+
+            LevelsScreen(
+
+              puzzle:puzzle,
+
+            ),
+
+
+
+          ),
+
+
+
+        );
+
+
+
+      },
+
+
+
+
+
+      child: Container(
+
+
+
+        decoration:BoxDecoration(
+
+
+
+          color:Colors.white,
+
+
+
+          borderRadius:
+          BorderRadius.circular(25),
+
+
+
+
+          boxShadow:const [
+
+
+
+            BoxShadow(
+
+
+
+              color:Colors.black26,
+
+
+
+              blurRadius:12,
+
+
+
+              offset:Offset(0,8),
+
+
+
+            )
+
+
+
+          ],
+
+
+
+        ),
+
+
+
+
+        child:Column(
+
+
+
+          children:[
+
+
+
+
+
+            Expanded(
+
+
+
+              child:ClipRRect(
+
+
+
+                borderRadius:
+                const BorderRadius.vertical(
+
+                  top:Radius.circular(25),
+
+                ),
+
+
+
+
+                child:Image.asset(
+
+
+
+                  puzzle.image,
+
+
+
+                  width:double.infinity,
+
+
+
+                  fit:BoxFit.cover,
+
+
+
+                  errorBuilder:
+                  (context,error,stack)=>
+
+
+
+                  const Icon(
+
+
+
+                    Icons.extension,
+
+
+
+                    size:70,
+
+
+
+                    color:Colors.blue,
+
+
+
+                  ),
+
+
+
+                ),
+
+
+
+              ),
+
+
+
+            ),
+
+
+
+
+
+
+            Padding(
+
+
+
+              padding:
+              const EdgeInsets.all(12),
+
+
+
+              child:Column(
+
+
+
+                children:[
+
+
+
+                  Text(
+
+
+
+                    puzzle.title,
+
+
+
+                    style:const TextStyle(
+
+
+
+                      fontSize:22,
+
+
+
+                      fontWeight:
+                      FontWeight.bold,
+
+
+
+                    ),
+
+
+
+                  ),
+
+
+
+
+                  const SizedBox(height:5),
+
+
+
+
+                  Text(
+
+
+
+                    '${puzzle.pieces} قطعة',
+
+
+
+                    style:const TextStyle(
+
+                      fontSize:16,
+
+                    ),
+
+
+
+                  ),
+
+
+
+                ],
+
+
+
+              ),
+
+
+
+            ),
+
+
+
+          ],
+
+
+
+        ),
+
+
+
+      ),
+
+
 
     );
 
