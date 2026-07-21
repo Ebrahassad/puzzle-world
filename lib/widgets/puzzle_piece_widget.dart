@@ -5,19 +5,14 @@ import '../puzzle_engine/puzzle_painter.dart';
 
 
 
-class PuzzlePieceWidget extends StatelessWidget {
+class PuzzlePieceWidget extends StatefulWidget {
 
 
   final PuzzlePiece piece;
 
-
   final ImageProvider image;
 
-
   final double size;
-
-
-  final VoidCallback? onTap;
 
 
 
@@ -31,9 +26,24 @@ class PuzzlePieceWidget extends StatelessWidget {
 
     required this.size,
 
-    this.onTap,
-
   });
+
+
+
+  @override
+  State<PuzzlePieceWidget> createState() =>
+      _PuzzlePieceWidgetState();
+
+}
+
+
+
+
+class _PuzzlePieceWidgetState
+    extends State<PuzzlePieceWidget> {
+
+
+  bool pressed = false;
 
 
 
@@ -44,49 +54,140 @@ class PuzzlePieceWidget extends StatelessWidget {
     return GestureDetector(
 
 
-      onTap:onTap,
+      onTapDown:(_){
+
+
+        setState((){
+
+          pressed = true;
+
+        });
+
+
+      },
 
 
 
-      child:AnimatedContainer(
+      onTapUp:(_){
+
+
+        setState((){
+
+          pressed = false;
+
+        });
+
+
+      },
+
+
+
+      onTapCancel:(){
+
+
+        setState((){
+
+          pressed = false;
+
+        });
+
+
+      },
+
+
+
+      child:AnimatedScale(
+
+
+        scale: pressed ? 1.12 : 1,
 
 
         duration:
         const Duration(milliseconds:150),
 
 
-        width:size,
+
+        child:AnimatedContainer(
 
 
-        height:size,
-
-
-
-        child:CustomPaint(
-
-
-
-          painter:PuzzlePainter(
+          duration:
+          const Duration(milliseconds:150),
 
 
 
-            piece:piece,
+          decoration:BoxDecoration(
 
 
+            boxShadow:[
 
-            image:image,
 
+              BoxShadow(
+
+
+                color:Colors.black.withOpacity(
+
+                  pressed ? 0.35 : 0.15,
+
+                ),
+
+
+                blurRadius:
+
+                pressed ? 18 : 8,
+
+
+                offset:Offset(
+
+                  0,
+
+                  pressed ? 10 : 5,
+
+                ),
+
+
+              )
+
+
+            ],
 
 
           ),
 
 
 
+
+          child:CustomPaint(
+
+
+            size:Size(
+
+              widget.size,
+
+              widget.size,
+
+            ),
+
+
+
+            painter:PuzzlePainter(
+
+
+              piece:widget.piece,
+
+
+              image:widget.image,
+
+
+            ),
+
+
+
+          ),
+
+
         ),
 
-
       ),
-
 
     );
 
