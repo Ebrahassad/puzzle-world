@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'puzzle_piece.dart';
 
 
+
 class PuzzlePainter extends CustomPainter {
 
 
   final PuzzlePiece piece;
 
   final ImageProvider image;
+
 
 
   PuzzlePainter({
@@ -35,10 +37,9 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-    // ظل القطعة (إحساس 3D)
+    // ظل 3D
 
     canvas.save();
-
 
     canvas.translate(3, 5);
 
@@ -51,11 +52,12 @@ class PuzzlePainter extends CustomPainter {
 
         ..color = Colors.black26
 
-        ..maskFilter = const MaskFilter.blur(
+        ..maskFilter =
+        const MaskFilter.blur(
 
           BlurStyle.normal,
 
-          6,
+          7,
 
         ),
 
@@ -67,7 +69,8 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-    // قص الصورة داخل القطعة
+
+    // الصورة داخل القطعة
 
     canvas.save();
 
@@ -89,13 +92,14 @@ class PuzzlePainter extends CustomPainter {
     );
 
 
+
     canvas.restore();
 
 
 
 
 
-    // إطار القطعة
+    // حدود القطعة
 
     canvas.drawPath(
 
@@ -107,30 +111,9 @@ class PuzzlePainter extends CustomPainter {
 
         ..strokeWidth = 2
 
-        ..color = Colors.white70,
-
-    );
-
-
-
-
-
-    // لمعان بسيط
-
-    canvas.drawPath(
-
-      path,
-
-      Paint()
-
-        ..style = PaintingStyle.stroke
-
-        ..strokeWidth = 1
-
         ..color = Colors.white,
 
     );
-
 
 
   }
@@ -151,19 +134,206 @@ class PuzzlePainter extends CustomPainter {
 
 
 
+    final tab = w * 0.22;
+
+
+
+    // بداية
+
     path.moveTo(0, 0);
 
 
 
-    path.lineTo(w, 0);
+    // الأعلى
+
+    path.lineTo(w / 2 - tab, 0);
 
 
 
-    path.lineTo(w, h);
+    if (piece.top == EdgeType.tab) {
+
+
+      path.quadraticBezierTo(
+
+        w / 2,
+
+        -tab,
+
+        w / 2 + tab,
+
+        0,
+
+      );
+
+
+    }
+
+
+    else if(piece.top == EdgeType.blank){
+
+
+      path.quadraticBezierTo(
+
+        w / 2,
+
+        tab,
+
+        w / 2 + tab,
+
+        0,
+
+      );
+
+
+    }
 
 
 
-    path.lineTo(0, h);
+    path.lineTo(w,0);
+
+
+
+
+    // اليمين
+
+    path.lineTo(w,h/2-tab);
+
+
+
+    if(piece.right==EdgeType.tab){
+
+
+      path.quadraticBezierTo(
+
+        w+tab,
+
+        h/2,
+
+        w,
+
+        h/2+tab,
+
+      );
+
+
+    }
+
+
+    else if(piece.right==EdgeType.blank){
+
+
+      path.quadraticBezierTo(
+
+        w-tab,
+
+        h/2,
+
+        w,
+
+        h/2+tab,
+
+      );
+
+
+    }
+
+
+
+    path.lineTo(w,h);
+
+
+
+    // الأسفل
+
+    path.lineTo(w/2+tab,h);
+
+
+
+    if(piece.bottom==EdgeType.tab){
+
+
+      path.quadraticBezierTo(
+
+        w/2,
+
+        h+tab,
+
+        w/2-tab,
+
+        h,
+
+      );
+
+
+    }
+
+
+    else if(piece.bottom==EdgeType.blank){
+
+
+      path.quadraticBezierTo(
+
+        w/2,
+
+        h-tab,
+
+        w/2-tab,
+
+        h,
+
+      );
+
+
+    }
+
+
+
+    path.lineTo(0,h);
+
+
+
+    // اليسار
+
+    path.lineTo(0,h/2+tab);
+
+
+
+    if(piece.left==EdgeType.tab){
+
+
+      path.quadraticBezierTo(
+
+        -tab,
+
+        h/2,
+
+        0,
+
+        h/2-tab,
+
+      );
+
+
+    }
+
+
+    else if(piece.left==EdgeType.blank){
+
+
+      path.quadraticBezierTo(
+
+        tab,
+
+        h/2,
+
+        0,
+
+        h/2-tab,
+
+      );
+
+
+    }
 
 
 
@@ -185,7 +355,7 @@ class PuzzlePainter extends CustomPainter {
 
       covariant PuzzlePainter oldDelegate,
 
-      ) {
+      ){
 
     return true;
 
