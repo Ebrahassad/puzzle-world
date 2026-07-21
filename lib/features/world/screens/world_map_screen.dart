@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+
 import '../data/islands_data.dart';
 import '../widgets/island_widget.dart';
+import 'world_levels_screen.dart';
+
 
 
 class WorldMapScreen extends StatelessWidget {
@@ -19,28 +22,22 @@ class WorldMapScreen extends StatelessWidget {
     return Scaffold(
 
 
-      body:Container(
+      body: Container(
 
 
-
-        decoration:const BoxDecoration(
-
+        decoration: const BoxDecoration(
 
 
-          gradient:LinearGradient(
+          gradient: LinearGradient(
 
 
-
-            begin:Alignment.topCenter,
-
+            begin: Alignment.topCenter,
 
 
-            end:Alignment.bottomCenter,
+            end: Alignment.bottomCenter,
 
 
-
-            colors:[
-
+            colors: [
 
 
               Color(0xff74D7FF),
@@ -49,37 +46,27 @@ class WorldMapScreen extends StatelessWidget {
               Color(0xff2196F3),
 
 
-
             ],
 
 
-
           ),
-
 
 
         ),
 
 
 
-
-        child:SafeArea(
-
+        child: SafeArea(
 
 
-          child:Stack(
+          child: Stack(
 
 
+            children: [
 
-            children:[
-
-
-
-              // عنوان الخريطة
 
 
               Positioned(
-
 
 
                 top:20,
@@ -91,41 +78,31 @@ class WorldMapScreen extends StatelessWidget {
                 right:0,
 
 
-
-                child:Text(
-
+                child: const Text(
 
 
                   "🌍 Puzzle World",
 
 
-
-                  textAlign:TextAlign.center,
-
+                  textAlign: TextAlign.center,
 
 
-                  style:const TextStyle(
+                  style: TextStyle(
 
 
-
-                    color:Colors.white,
-
+                    color: Colors.white,
 
 
                     fontSize:32,
 
 
-
                     fontWeight:FontWeight.bold,
-
 
 
                   ),
 
 
-
                 ),
-
 
 
               ),
@@ -134,14 +111,7 @@ class WorldMapScreen extends StatelessWidget {
 
 
 
-
-
-              // السحب
-
-
-
               Positioned(
-
 
 
                 top:80,
@@ -150,9 +120,7 @@ class WorldMapScreen extends StatelessWidget {
                 left:30,
 
 
-
-                child:cloud(),
-
+                child: cloud(),
 
 
               ),
@@ -163,16 +131,13 @@ class WorldMapScreen extends StatelessWidget {
               Positioned(
 
 
-
                 top:180,
 
 
                 right:40,
 
 
-
-                child:cloud(),
-
+                child: cloud(),
 
 
               ),
@@ -181,18 +146,10 @@ class WorldMapScreen extends StatelessWidget {
 
 
 
-
-
-              // الجزر
-
-
-
               ...islands.map((island){
 
 
-
                 return Positioned(
-
 
 
                   left:
@@ -213,8 +170,7 @@ class WorldMapScreen extends StatelessWidget {
 
 
 
-                  child:IslandWidget(
-
+                  child: IslandWidget(
 
 
                     island:island,
@@ -225,38 +181,37 @@ class WorldMapScreen extends StatelessWidget {
 
 
 
-                      ScaffoldMessenger.of(context)
-
-                          .showSnackBar(
+                      Navigator.push(
 
 
-
-                        SnackBar(
-
+                        context,
 
 
-                          content:Text(
+                        MaterialPageRoute(
 
 
+                          builder:(context)=>
 
-                            "فتح عالم ${island.title}",
 
+                          WorldLevelsScreen(
+
+
+                            worldId:island.worldId,
+
+
+                            title:island.title,
 
 
                           ),
 
 
-
                         ),
-
 
 
                       );
 
 
-
                     },
-
 
 
                   ),
@@ -266,7 +221,6 @@ class WorldMapScreen extends StatelessWidget {
                 );
 
 
-
               }),
 
 
@@ -274,17 +228,13 @@ class WorldMapScreen extends StatelessWidget {
             ],
 
 
-
           ),
-
 
 
         ),
 
 
-
       ),
-
 
 
     );
@@ -297,13 +247,10 @@ class WorldMapScreen extends StatelessWidget {
 
 
 
-
   Widget cloud(){
 
 
-
     return Container(
-
 
 
       width:90,
@@ -312,13 +259,10 @@ class WorldMapScreen extends StatelessWidget {
       height:40,
 
 
-
       decoration:BoxDecoration(
 
 
-
         color:Colors.white.withOpacity(.8),
-
 
 
         borderRadius:
@@ -326,13 +270,10 @@ class WorldMapScreen extends StatelessWidget {
         BorderRadius.circular(40),
 
 
-
       ),
 
 
-
     );
-
 
 
   }
