@@ -10,38 +10,71 @@ class PuzzleProgressManager {
 
 
 
-  static const String _saveKey =
-      'puzzle_current_progress';
+  // إنشاء مفتاح خاص لكل صورة ومستوى
+
+  static String _saveKey(
+
+      String puzzleId,
+
+      String levelId,
+
+      ){
+
+    return 'puzzle_${puzzleId}_$levelId';
+
+  }
 
 
 
 
 
-  // حفظ تقدم اللعبة
+
+  // حفظ تقدم البازل
 
   static Future<void> saveProgress({
 
+
     required String puzzleId,
+
 
     required String levelId,
 
+
     required List<PuzzlePiece> pieces,
+
 
     required int moves,
 
+
     required int seconds,
+
 
   }) async {
 
 
 
     final prefs =
+
     await SharedPreferences.getInstance();
 
 
 
 
+    final placedCount = pieces
+
+        .where(
+
+          (piece)=>piece.placed,
+
+    )
+
+        .length;
+
+
+
+
     final data = {
+
 
 
       'puzzleId': puzzleId,
@@ -54,6 +87,18 @@ class PuzzleProgressManager {
 
 
       'seconds': seconds,
+
+
+      'placedCount': placedCount,
+
+
+
+      'lastSave':
+
+      DateTime.now()
+
+          .toIso8601String(),
+
 
 
 
@@ -90,11 +135,21 @@ class PuzzleProgressManager {
 
     await prefs.setString(
 
-      _saveKey,
+
+      _saveKey(
+
+        puzzleId,
+
+        levelId,
+
+      ),
+
 
       jsonEncode(data),
 
+
     );
+
 
 
   }
@@ -103,21 +158,47 @@ class PuzzleProgressManager {
 
 
 
-  // جلب آخر لعبة محفوظة
+
+
+  // تحميل تقدم مستوى معين
 
   static Future<Map<String,dynamic>?>
 
-  loadProgress() async {
+  loadProgress({
+
+
+    required String puzzleId,
+
+
+    required String levelId,
+
+
+  }) async {
 
 
 
     final prefs =
+
     await SharedPreferences.getInstance();
 
 
 
+
     final saved =
-    prefs.getString(_saveKey);
+
+    prefs.getString(
+
+
+      _saveKey(
+
+        puzzleId,
+
+        levelId,
+
+      ),
+
+    );
+
 
 
 
@@ -130,6 +211,7 @@ class PuzzleProgressManager {
 
 
 
+
     return jsonDecode(saved);
 
   }
@@ -138,18 +220,41 @@ class PuzzleProgressManager {
 
 
 
-  // هل يوجد تقدم محفوظ؟
 
-  static Future<bool> hasProgress() async {
+
+  // هل يوجد حفظ لهذا المستوى؟
+
+  static Future<bool> hasProgress({
+
+
+    required String puzzleId,
+
+
+    required String levelId,
+
+
+  }) async {
 
 
 
     final prefs =
+
     await SharedPreferences.getInstance();
 
 
 
-    return prefs.containsKey(_saveKey);
+    return prefs.containsKey(
+
+
+      _saveKey(
+
+        puzzleId,
+
+        levelId,
+
+      ),
+
+    );
 
 
   }
@@ -158,21 +263,85 @@ class PuzzleProgressManager {
 
 
 
-  // حذف الحفظ بعد إكمال اللعبة
 
-  static Future<void> clearProgress() async {
+
+  // حذف حفظ مستوى بعد الفوز
+
+  static Future<void> clearProgress({
+
+
+    required String puzzleId,
+
+
+    required String levelId,
+
+
+  }) async {
 
 
 
     final prefs =
+
     await SharedPreferences.getInstance();
 
 
 
-    await prefs.remove(_saveKey);
+    await prefs.remove(
+
+
+      _saveKey(
+
+        puzzleId,
+
+        levelId,
+
+      ),
+
+    );
 
 
   }
+
+
+
+
+
+
+
+  // حذف كل تقدم البازل
+
+  static Future<void> clearAllProgress() async {
+
+
+
+    final prefs =
+
+    await SharedPreferences.getInstance();
+
+
+
+    final keys = prefs.getKeys();
+
+
+
+    for(final key in keys){
+
+
+
+      if(key.startsWith('puzzle_')){
+
+
+        await prefs.remove(key);
+
+
+      }
+
+
+    }
+
+
+  }
+
 
 
 }
