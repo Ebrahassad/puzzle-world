@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../managers/reward_manager.dart';
+import '../managers/hint_manager.dart';
+import '../services/reward_ad_service.dart';
 
 
 
@@ -20,6 +22,7 @@ class WalletScreen extends StatefulWidget {
 
 
 
+
 class _WalletScreenState
     extends State<WalletScreen> {
 
@@ -28,16 +31,23 @@ class _WalletScreenState
 
   int gems = 0;
 
+  int hints = 0;
+
+
+  bool loading = true;
+
+
+
 
 
   @override
-  void initState() {
+  void initState(){
 
 
     super.initState();
 
 
-    loadWallet();
+    loadData();
 
 
   }
@@ -47,16 +57,19 @@ class _WalletScreenState
 
 
 
-  Future<void> loadWallet() async {
+  Future<void> loadData() async {
 
 
     final c =
     await RewardManager.getCoins();
 
 
-
     final g =
     await RewardManager.getGems();
+
+
+    final h =
+    await HintManager.getHints();
 
 
 
@@ -68,8 +81,68 @@ class _WalletScreenState
 
       gems = g;
 
+      hints = h;
+
+      loading = false;
+
 
     });
+
+
+  }
+
+
+
+
+
+
+
+  Future<void> watchAd() async {
+
+
+    final result =
+
+    await RewardAdService.showRewardAd();
+
+
+
+    if(result){
+
+
+
+      await RewardManager.addCoins(100);
+
+
+      await HintManager.addHints(1);
+
+
+
+      loadData();
+
+
+
+      ScaffoldMessenger.of(context)
+
+          .showSnackBar(
+
+
+        const SnackBar(
+
+
+          content:Text(
+
+            '🎉 حصلت على 100 عملة + تلميح',
+
+          ),
+
+
+        ),
+
+
+      );
+
+
+    }
 
 
   }
@@ -84,76 +157,86 @@ class _WalletScreenState
   Widget build(BuildContext context) {
 
 
-    return Scaffold(
+    if(loading){
 
 
-      appBar: AppBar(
+      return const Scaffold(
 
 
-        title:const Text(
+        body:
 
-          'محفظتي',
+        Center(
+
+          child:CircularProgressIndicator(),
 
         ),
 
 
-        centerTitle:true,
+      );
 
 
-      ),
+    }
+
+
+
+
+    return Scaffold(
 
 
 
       body:Container(
 
 
+
         decoration:const BoxDecoration(
+
 
 
           gradient:LinearGradient(
 
 
+
             colors:[
+
 
               Color(0xff89F7FE),
 
+
               Color(0xff66A6FF),
+
+
 
             ],
 
 
+
+            begin:Alignment.topCenter,
+
+
+            end:Alignment.bottomCenter,
+
+
+
           ),
+
+
 
         ),
 
 
 
-        child:Center(
+
+
+
+        child:SafeArea(
+
 
 
           child:Column(
 
 
-            mainAxisAlignment:
-
-            MainAxisAlignment.center,
-
-
 
             children:[
-
-
-
-              _buildCard(
-
-                icon:'🪙',
-
-                title:'العملات',
-
-                value:'$coins',
-
-              ),
-
 
 
 
@@ -162,13 +245,220 @@ class _WalletScreenState
 
 
 
-              _buildCard(
+              const Text(
 
-                icon:'💎',
 
-                title:'الجواهر',
 
-                value:'$gems',
+                '👜 محفظتي',
+
+
+
+                style:TextStyle(
+
+
+
+                  color:Colors.white,
+
+
+                  fontSize:40,
+
+
+                  fontWeight:FontWeight.bold,
+
+
+
+                ),
+
+
+
+              ),
+
+
+
+
+
+              const SizedBox(height:30),
+
+
+
+
+
+              Expanded(
+
+
+
+                child:SingleChildScrollView(
+
+
+
+                  child:Column(
+
+
+
+                    children:[
+
+
+
+                      buildCard(
+
+
+                        '🪙',
+
+
+                        'العملات',
+
+
+                        coins.toString(),
+
+
+                      ),
+
+
+
+
+                      buildCard(
+
+
+                        '💎',
+
+
+                        'الجواهر',
+
+
+                        gems.toString(),
+
+
+                      ),
+
+
+
+
+
+                      buildCard(
+
+
+                        '💡',
+
+
+                        'التلميحات',
+
+
+                        hints.toString(),
+
+
+                      ),
+
+
+
+
+                      const SizedBox(height:30),
+
+
+
+
+                      ElevatedButton.icon(
+
+
+
+                        onPressed:watchAd,
+
+
+
+                        icon:const Icon(
+
+                          Icons.play_circle_fill,
+
+                          size:35,
+
+                        ),
+
+
+
+                        label:const Text(
+
+
+
+                          'زيادة المحفظة 🎬',
+
+
+
+                          style:TextStyle(
+
+
+
+                            fontSize:22,
+
+
+                            fontWeight:FontWeight.bold,
+
+
+
+                          ),
+
+
+
+                        ),
+
+
+
+                        style:
+
+                        ElevatedButton.styleFrom(
+
+
+
+                          padding:
+
+                          const EdgeInsets.symmetric(
+
+
+
+                            horizontal:45,
+
+
+                            vertical:18,
+
+
+
+                          ),
+
+
+
+                          shape:
+
+                          RoundedRectangleBorder(
+
+
+
+                            borderRadius:
+
+                            BorderRadius.circular(40),
+
+
+
+                          ),
+
+
+
+                        ),
+
+
+
+                      ),
+
+
+
+                    ],
+
+
+
+                  ),
+
+
+
+                ),
+
+
 
               ),
 
@@ -177,13 +467,17 @@ class _WalletScreenState
             ],
 
 
+
           ),
+
 
 
         ),
 
 
+
       ),
+
 
 
     );
@@ -197,38 +491,48 @@ class _WalletScreenState
 
 
 
+  Widget buildCard(
 
-  Widget _buildCard({
+      String icon,
 
+      String title,
 
-    required String icon,
+      String value,
 
+      ){
 
-    required String title,
-
-
-    required String value,
-
-
-  }){
 
 
     return Container(
 
 
-      width:300,
+      margin:
+
+      const EdgeInsets.symmetric(
+
+        horizontal:25,
+
+        vertical:10,
+
+      ),
+
+
 
 
       padding:
 
-      const EdgeInsets.all(25),
+      const EdgeInsets.all(20),
+
+
 
 
 
       decoration:BoxDecoration(
 
 
+
         color:Colors.white.withOpacity(.9),
+
 
 
         borderRadius:
@@ -237,98 +541,194 @@ class _WalletScreenState
 
 
 
+
         boxShadow:[
+
 
 
           BoxShadow(
 
 
-            color:Colors.black26,
+
+            color:Colors.black.withOpacity(.2),
+
 
 
             blurRadius:15,
 
 
-            offset:Offset(0,8),
+            offset:
+
+            const Offset(0,8),
+
 
 
           ),
 
 
+
         ],
+
 
 
       ),
 
 
 
-      child:Column(
+
+
+      child:Row(
+
 
 
         children:[
 
 
 
-          Text(
+          Container(
 
 
-            icon,
+
+            padding:
+
+            const EdgeInsets.all(15),
 
 
-            style:const TextStyle(
 
-              fontSize:50,
+            decoration:
+
+            BoxDecoration(
+
+
+
+              color:
+
+              Colors.blue.shade100,
+
+
+
+              shape:
+
+              BoxShape.circle,
+
+
 
             ),
+
+
+
+            child:Text(
+
+
+
+              icon,
+
+
+
+              style:
+
+              const TextStyle(
+
+
+
+                fontSize:45,
+
+
+
+              ),
+
+
+
+            ),
+
 
 
           ),
 
 
 
-          const SizedBox(height:10),
 
 
-
-          Text(
-
-
-            title,
-
-
-            style:const TextStyle(
-
-
-              fontSize:22,
-
-              fontWeight:FontWeight.bold,
-
-
-            ),
-
-
-          ),
+          const SizedBox(width:25),
 
 
 
 
-          Text(
+
+          Column(
 
 
-            value,
+
+            crossAxisAlignment:
+
+            CrossAxisAlignment.start,
 
 
-            style:const TextStyle(
+
+            children:[
 
 
-              fontSize:35,
 
-              color:Colors.blue,
-
-              fontWeight:FontWeight.bold,
+              Text(
 
 
-            ),
+
+                title,
+
+
+
+                style:const TextStyle(
+
+
+
+                  fontSize:22,
+
+
+                  fontWeight:FontWeight.bold,
+
+
+
+                ),
+
+
+
+              ),
+
+
+
+
+              Text(
+
+
+
+                value,
+
+
+
+                style:const TextStyle(
+
+
+
+                  fontSize:35,
+
+
+                  color:Colors.blue,
+
+
+                  fontWeight:FontWeight.bold,
+
+
+
+                ),
+
+
+
+              ),
+
+
+
+            ],
+
 
 
           ),
@@ -338,10 +738,13 @@ class _WalletScreenState
         ],
 
 
+
       ),
 
 
+
     );
+
 
 
   }
