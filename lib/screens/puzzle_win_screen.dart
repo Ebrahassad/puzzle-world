@@ -4,6 +4,7 @@ import '../models/game_result_model.dart';
 import '../models/reward_result_model.dart';
 
 import '../managers/reward_manager.dart';
+import '../services/reward_ad_service.dart';
 
 
 
@@ -12,26 +13,19 @@ class PuzzleWinScreen extends StatefulWidget {
 
   final GameResultModel result;
 
-
   final int difficulty;
 
 
 
   const PuzzleWinScreen({
 
-
     super.key,
-
 
     required this.result,
 
-
     this.difficulty = 1,
 
-
   });
-
-
 
 
 
@@ -55,9 +49,14 @@ class _PuzzleWinScreenState
   bool loading = true;
 
 
+  bool adUsed = false;
+
+
+
+
 
   @override
-  void initState(){
+  void initState() {
 
 
     super.initState();
@@ -107,24 +106,120 @@ class _PuzzleWinScreenState
 
 
 
+
+  Future<void> doubleReward() async {
+
+
+
+    if(adUsed) return;
+
+
+
+    final watched =
+
+    await RewardAdService.showRewardAd();
+
+
+
+
+    if(watched){
+
+
+
+      await RewardManager.addCoins(
+
+        reward!.coins,
+
+      );
+
+
+
+      if(reward!.gems > 0){
+
+
+        await RewardManager.addGems(
+
+          reward!.gems,
+
+        );
+
+
+      }
+
+
+
+      setState((){
+
+
+        reward = RewardResultModel(
+
+
+          coins: reward!.coins * 2,
+
+
+          gems: reward!.gems * 2,
+
+
+        );
+
+
+
+        adUsed = true;
+
+
+
+      });
+
+
+
+    }
+
+
+
+  }
+
+
+
+
+
+
+
+
   @override
   Widget build(BuildContext context) {
+
+
+    if(loading){
+
+
+      return const Scaffold(
+
+
+        body:Center(
+
+
+          child:CircularProgressIndicator(),
+
+
+        ),
+
+      );
+
+
+    }
+
 
 
     return Scaffold(
 
 
-
       body:Container(
-
 
 
         decoration:const BoxDecoration(
 
 
-
           gradient:LinearGradient(
-
 
 
             colors:[
@@ -136,42 +231,19 @@ class _PuzzleWinScreenState
             ],
 
 
-
-            begin:Alignment.topCenter,
-
-
-            end:Alignment.bottomCenter,
-
-
-
           ),
 
-
-
         ),
-
-
 
 
 
         child:SafeArea(
 
 
-
           child:Center(
 
 
-
-            child:loading
-
-
-
-                ? const CircularProgressIndicator()
-
-
-
-                :Column(
-
+            child:Column(
 
 
               mainAxisAlignment:
@@ -187,204 +259,68 @@ class _PuzzleWinScreenState
                 const Text(
 
 
-
                   '🎉 أحسنت!',
-
 
 
                   style:TextStyle(
 
 
+                    fontSize:45,
 
                     color:Colors.white,
 
-
-                    fontSize:45,
-
-
                     fontWeight:FontWeight.bold,
 
-
-
                   ),
-
-
 
                 ),
 
 
 
 
-
-                const SizedBox(height:25),
-
+                const SizedBox(height:30),
 
 
 
 
-                Row(
+                Text(
+
+
+                  '🪙 +${reward!.coins}',
+
+
+                  style:const TextStyle(
+
+
+                    fontSize:35,
+
+                    color:Colors.white,
+
+                  ),
+
+                ),
 
 
 
-                  mainAxisAlignment:
 
-                  MainAxisAlignment.center,
+                if(reward!.gems > 0)
 
-
-
-                  children:
+                  Text(
 
 
-
-                  List.generate(
-
+                    '💎 +${reward!.gems}',
 
 
-                    widget.result.stars,
+                    style:const TextStyle(
 
 
+                      fontSize:30,
 
-                        (index)=>const Icon(
-
-
-
-                      Icons.star,
-
-
-                      color:Colors.yellow,
-
-
-                      size:55,
-
-
+                      color:Colors.white,
 
                     ),
 
-
-
                   ),
-
-
-
-                ),
-
-
-
-
-
-                const SizedBox(height:35),
-
-
-
-
-
-                Container(
-
-
-
-                  padding:
-
-                  const EdgeInsets.all(20),
-
-
-
-                  decoration:BoxDecoration(
-
-
-
-                    color:Colors.white24,
-
-
-
-                    borderRadius:
-
-                    BorderRadius.circular(25),
-
-
-
-                  ),
-
-
-
-                  child:Column(
-
-
-
-                    children:[
-
-
-
-                      Text(
-
-
-
-                        '+ ${reward!.coins} 🪙',
-
-
-
-                        style:const TextStyle(
-
-
-
-                          color:Colors.white,
-
-
-                          fontSize:28,
-
-
-                          fontWeight:
-
-                          FontWeight.bold,
-
-
-
-                        ),
-
-
-
-                      ),
-
-
-
-
-                      if(reward!.gems > 0)
-
-                        Text(
-
-
-
-                          '+ ${reward!.gems} 💎',
-
-
-
-                          style:const TextStyle(
-
-
-
-                            color:Colors.white,
-
-
-                            fontSize:28,
-
-
-
-                          ),
-
-
-
-                        ),
-
-
-
-                    ],
-
-
-
-                  ),
-
-
-
-                ),
 
 
 
@@ -396,44 +332,35 @@ class _PuzzleWinScreenState
 
 
 
-                ElevatedButton(
+                if(!adUsed)
+
+                  ElevatedButton.icon(
 
 
 
-                  style:
-
-                  ElevatedButton.styleFrom(
+                    onPressed:doubleReward,
 
 
 
-                    padding:
+                    icon:const Icon(
 
-                    const EdgeInsets.symmetric(
-
-
-
-                      horizontal:50,
-
-
-                      vertical:18,
-
-
+                      Icons.play_circle,
 
                     ),
 
 
 
-                    shape:
-
-                    RoundedRectangleBorder(
+                    label:const Text(
 
 
-
-                      borderRadius:
-
-                      BorderRadius.circular(30),
+                      '🎬 مضاعفة المكافأة ×2',
 
 
+                      style:TextStyle(
+
+                        fontSize:18,
+
+                      ),
 
                     ),
 
@@ -444,12 +371,21 @@ class _PuzzleWinScreenState
 
 
 
+
+
+                const SizedBox(height:20),
+
+
+
+
+                ElevatedButton(
+
+
+
                   onPressed:(){
 
 
-
                     Navigator.pop(context);
-
 
 
                   },
@@ -459,27 +395,16 @@ class _PuzzleWinScreenState
                   child:const Text(
 
 
-
                     'متابعة 🧩',
 
 
+                    style:TextStyle(
 
-                    style:
-
-                    TextStyle(
-
-
-
-                      fontSize:22,
-
-
+                      fontSize:20,
 
                     ),
 
-
-
                   ),
-
 
 
                 ),
@@ -489,22 +414,14 @@ class _PuzzleWinScreenState
               ],
 
 
-
             ),
-
 
 
           ),
 
-
-
         ),
 
-
-
       ),
-
-
 
     );
 
