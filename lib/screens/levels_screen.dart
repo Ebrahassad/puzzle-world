@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+
 import '../models/puzzle_model.dart';
 import '../data/levels_data.dart';
 import '../models/puzzle_level_model.dart';
 
+import 'puzzle_game_screen.dart';
+
+
 
 class LevelsScreen extends StatelessWidget {
+
 
   final PuzzleModel puzzle;
 
@@ -24,19 +29,22 @@ class LevelsScreen extends StatelessWidget {
 
 
     final levels =
-        LevelsData.byPuzzle(puzzle.id);
+    LevelsData.byPuzzle(puzzle.id);
 
 
 
     return Scaffold(
 
+
       body: Container(
+
 
         decoration: const BoxDecoration(
 
+
           gradient: LinearGradient(
 
-            colors: [
+            colors:[
 
               Color(0xff89F7FE),
 
@@ -44,40 +52,48 @@ class LevelsScreen extends StatelessWidget {
 
             ],
 
-            begin: Alignment.topCenter,
-
-            end: Alignment.bottomCenter,
-
           ),
 
         ),
 
 
-        child: SafeArea(
 
-          child: Column(
+        child:SafeArea(
 
-            children: [
+
+          child:Column(
+
+
+            children:[
 
 
               const SizedBox(height:20),
 
 
+
               Text(
+
 
                 puzzle.title,
 
-                style: const TextStyle(
 
-                  color: Colors.white,
+                style:const TextStyle(
+
+
+                  color:Colors.white,
+
 
                   fontSize:32,
 
-                  fontWeight:FontWeight.bold,
+
+                  fontWeight:
+                  FontWeight.bold,
+
 
                 ),
 
               ),
+
 
 
               const SizedBox(height:25),
@@ -86,14 +102,16 @@ class LevelsScreen extends StatelessWidget {
 
               Expanded(
 
-                child: ListView.builder(
+
+                child:ListView.builder(
 
 
                   padding:
                   const EdgeInsets.all(20),
 
 
-                  itemCount: levels.length,
+                  itemCount:
+                  levels.length,
 
 
                   itemBuilder:(context,index){
@@ -104,37 +122,88 @@ class LevelsScreen extends StatelessWidget {
 
 
 
-                    return _LevelCard(
+                    return LevelCard(
 
-                      level: level,
+
+                      level:level,
+
 
                       onTap:(){
 
 
-                        // لاحقاً نفتح لعبة البازل
+
+                        Navigator.push(
+
+
+
+                          context,
+
+
+
+                          MaterialPageRoute(
+
+
+
+                            builder:(context)=>
+
+
+                            PuzzleGameScreen(
+
+
+
+                              puzzle:puzzle,
+
+
+
+                              level:level,
+
+
+
+                            ),
+
+
+
+                          ),
+
+
+
+                        );
+
 
 
                       },
 
+
+
                     );
+
 
 
                   },
 
+
+
                 ),
 
-              )
+
+              ),
+
 
 
             ],
 
+
           ),
+
 
         ),
 
+
       ),
 
+
     );
+
 
   }
 
@@ -143,16 +212,21 @@ class LevelsScreen extends StatelessWidget {
 
 
 
-class _LevelCard extends StatelessWidget {
+
+
+class LevelCard extends StatelessWidget {
 
 
   final PuzzleLevelModel level;
+
 
   final VoidCallback onTap;
 
 
 
-  const _LevelCard({
+  const LevelCard({
+
+    super.key,
 
     required this.level,
 
@@ -168,6 +242,7 @@ class _LevelCard extends StatelessWidget {
 
     return InkWell(
 
+
       onTap:onTap,
 
 
@@ -176,12 +251,11 @@ class _LevelCard extends StatelessWidget {
 
 
 
-      child: Container(
+      child:Container(
 
 
         margin:
         const EdgeInsets.only(bottom:18),
-
 
 
         padding:
@@ -200,7 +274,8 @@ class _LevelCard extends StatelessWidget {
 
 
 
-          boxShadow:const [
+          boxShadow:const[
+
 
             BoxShadow(
 
@@ -208,11 +283,13 @@ class _LevelCard extends StatelessWidget {
 
               blurRadius:12,
 
-              offset:Offset(0,7),
+              offset:Offset(0,8),
 
             )
 
+
           ],
+
 
 
         ),
@@ -221,31 +298,19 @@ class _LevelCard extends StatelessWidget {
 
         child:Row(
 
+
           children:[
 
 
-            Container(
-
-              width:65,
-
-              height:65,
-
-              decoration:const BoxDecoration(
-
-                color:Colors.blue,
-
-                shape:BoxShape.circle,
-
-              ),
+            const CircleAvatar(
 
 
-              child:const Icon(
+              radius:32,
+
+
+              child:Icon(
 
                 Icons.extension,
-
-                color:Colors.white,
-
-                size:35,
 
               ),
 
@@ -259,7 +324,9 @@ class _LevelCard extends StatelessWidget {
 
             Expanded(
 
+
               child:Column(
+
 
                 crossAxisAlignment:
                 CrossAxisAlignment.start,
@@ -270,16 +337,22 @@ class _LevelCard extends StatelessWidget {
 
                   Text(
 
+
                     level.difficulty,
+
 
                     style:const TextStyle(
 
+
                       fontSize:24,
+
 
                       fontWeight:
                       FontWeight.bold,
 
+
                     ),
+
 
                   ),
 
@@ -287,7 +360,9 @@ class _LevelCard extends StatelessWidget {
 
                   Text(
 
+
                     '${level.piecesCount} قطعة',
+
 
                     style:const TextStyle(
 
@@ -298,9 +373,12 @@ class _LevelCard extends StatelessWidget {
                   ),
 
 
+
                 ],
 
+
               ),
+
 
             ),
 
@@ -308,19 +386,25 @@ class _LevelCard extends StatelessWidget {
 
             const Icon(
 
-              Icons.arrow_forward_ios,
+              Icons.play_circle_fill,
+
+              size:40,
 
             ),
 
 
+
           ],
+
 
         ),
 
 
       ),
 
+
     );
+
 
   }
 
