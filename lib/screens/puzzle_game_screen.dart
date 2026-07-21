@@ -1,22 +1,35 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../models/puzzle_model.dart';
 import '../models/puzzle_level_model.dart';
 
-import '../puzzle_engine/puzzle_generator.dart';
 import '../puzzle_engine/puzzle_piece.dart';
+import '../puzzle_engine/puzzle_generator.dart';
 import '../puzzle_engine/puzzle_controller.dart';
 
-import '../utils/image_helper.dart';
 import '../widgets/puzzle_piece_widget.dart';
+
+import '../utils/image_helper.dart';
+
+import '../managers/puzzle_progress_manager.dart';
+
+import '../services/reward_ad_service.dart';
+
+import 'puzzle_win_screen.dart';
+
+import '../models/game_result_model.dart';
 
 
 
 class PuzzleGameScreen extends StatefulWidget {
 
+
   final PuzzleModel puzzle;
 
   final PuzzleLevelModel level;
+
 
 
   const PuzzleGameScreen({
@@ -44,12 +57,34 @@ class _PuzzleGameScreenState
     extends State<PuzzleGameScreen> {
 
 
+
   late List<PuzzlePiece> pieces;
+
 
   late PuzzleController controller;
 
 
+
+  int moves = 0;
+
+
+  int seconds = 0;
+
+
+
+  Timer? timer;
+
+
+
+  bool loading = true;
+
+
+  bool gameStarted = false;
+
+
+
   final double boardSize = 350;
+
 
 
 
@@ -59,17 +94,33 @@ class _PuzzleGameScreenState
     super.initState();
 
 
+    createGame();
+
+  }
+
+
+
+
+  void createGame(){
+
+
     pieces = PuzzleGenerator.generate(
+
 
       rows: widget.level.gridSize,
 
+
       columns: widget.level.gridSize,
+
 
       imageWidth: boardSize,
 
+
       imageHeight: boardSize,
 
+
     );
+
 
 
     controller = PuzzleController(
@@ -78,7 +129,305 @@ class _PuzzleGameScreenState
 
     );
 
+
+    loadProgress();
+
+
   }
+
+
+
+
+
+
+
+  Future<void> loadProgress() async {
+
+
+    final saved =
+
+    await PuzzleProgressManager.loadProgress();
+
+
+
+
+    if(saved != null &&
+
+        saved['puzzleId'] == widget.puzzle.id &&
+
+        saved['levelId'] == widget.level.id){
+
+
+
+      final continueGame =
+
+      await showContinueDialog();
+
+
+
+      if(continueGame){
+
+
+        for(final item in saved['pieces']){
+
+
+          final piece = pieces.firstWhere(
+
+                (p)=>p.id == item['id'],
+
+          );
+
+
+
+          piece.position = Offset(
+
+            item['x'],
+
+            item['y'],
+
+          );
+
+
+
+          piece.placed =
+
+          item['placed'];
+
+        }
+
+
+
+        moves = saved['moves'];
+
+        seconds = saved['seconds'];
+
+      }
+
+
+
+    }
+
+
+
+    setState((){
+
+      loading = false;
+
+    });
+
+
+
+    startTimer();
+
+
+  }
+
+
+
+
+
+
+
+
+  Future<bool> showContinueDialog() async {
+
+
+    final result = await showDialog<bool>(
+
+
+      context: context,
+
+
+      barrierDismissible:false,
+
+
+      builder:(context){
+
+
+        return AlertDialog(
+
+
+          shape:RoundedRectangleBorder(
+
+
+            borderRadius:
+            BorderRadius.circular(25),
+
+
+          ),
+
+
+
+          title:const Text(
+
+            '🧩 لعبة مستمرة',
+
+            textAlign:TextAlign.center,
+
+          ),
+
+
+
+          content:const Text(
+
+            'وجدنا تقدم سابق، هل تريد المتابعة؟',
+
+            textAlign:TextAlign.center,
+
+          ),
+
+
+
+          actions:[
+
+
+            TextButton(
+
+
+              onPressed:(){
+
+
+                Navigator.pop(context,false);
+
+
+              },
+
+
+              child:const Text(
+
+                'ابدأ من جديد',
+
+              ),
+
+            ),
+
+
+
+
+            ElevatedButton(
+
+
+              onPressed:() async {
+
+
+                final ad =
+
+                await RewardAdService.showContinueAd();
+
+
+
+                if(ad && mounted){
+
+
+                  Navigator.pop(context,true);
+
+
+                }
+
+
+              },
+
+
+              child:const Text(
+
+                '🎬 متابعة',
+
+              ),
+
+
+            ),
+
+
+
+          ],
+
+
+        );
+
+
+      },
+
+    );
+
+
+
+    return result ?? false;
+
+
+  }
+
+
+
+
+
+
+
+  void startTimer(){
+
+
+    timer?.cancel();
+
+
+    timer = Timer.periodic(
+
+
+      const Duration(seconds:1),
+
+
+          (_) {
+
+
+        setState((){
+
+
+          seconds++;
+
+
+        });
+
+
+
+      },
+
+
+    );
+
+  }
+
+
+
+
+
+
+
+
+  Future<void> saveGame() async {
+
+
+    await PuzzleProgressManager.saveProgress(
+
+
+      puzzleId: widget.puzzle.id,
+
+
+      levelId: widget.level.id,
+
+
+      pieces: pieces,
+
+
+      moves:moves,
+
+
+      seconds:seconds,
+
+
+    );
+
+
+  }
+
+
 
 
 
@@ -90,19 +439,18 @@ class _PuzzleGameScreenState
 
       Offset position,
 
-      ) {
+      ){
 
 
-    setState(() {
+
+    setState((){
 
 
-      piece.position = Offset(
+      moves++;
 
-        position.dx - 40,
 
-        position.dy - 120,
+      piece.position = position;
 
-      );
 
 
       controller.checkPiecePosition(
@@ -118,12 +466,19 @@ class _PuzzleGameScreenState
 
 
 
+    saveGame();
+
+
+
     if(controller.isCompleted){
 
-      showWinDialog();
+
+      finishGame();
+
 
     }
 
+
   }
 
 
@@ -131,110 +486,73 @@ class _PuzzleGameScreenState
 
 
 
-  void showWinDialog(){
 
 
-    Future.delayed(
-
-      const Duration(milliseconds:500),
-
-          (){
+  Future<void> finishGame() async {
 
 
-        if(!mounted) return;
+    timer?.cancel();
 
 
-        showDialog(
-
-
-          context:context,
-
-
-          builder:(context){
-
-
-            return AlertDialog(
-
-
-              shape:RoundedRectangleBorder(
-
-
-                borderRadius:
-                BorderRadius.circular(25),
-
-
-              ),
+    await PuzzleProgressManager.clearProgress();
 
 
 
-              title:const Text(
-
-                '🎉 أحسنت',
-
-                textAlign:TextAlign.center,
-
-              ),
+    Navigator.pushReplacement(
 
 
-
-              content:const Text(
-
-                'أكملت البازل بنجاح',
-
-                textAlign:TextAlign.center,
-
-              ),
+      context,
 
 
-
-              actions:[
-
-
-                Center(
+      MaterialPageRoute(
 
 
-                  child:ElevatedButton(
+        builder:(context)=>PuzzleWinScreen(
 
 
-                    onPressed:(){
+          result:GameResultModel(
 
 
-                      Navigator.pop(context);
+            stars:3,
 
 
-                    },
+            moves:moves,
 
 
-                    child:const Text(
-
-                      'ممتاز',
-
-                    ),
+            time:Duration(seconds:seconds),
 
 
-                  ),
+          ),
 
 
-                )
+        ),
 
 
-              ],
+      ),
 
-
-            );
-
-
-          },
-
-
-        );
-
-
-      },
 
     );
 
+
   }
+
+
+
+
+
+
+
+  @override
+  void dispose(){
+
+
+    timer?.cancel();
+
+
+    super.dispose();
+
+  }
+
 
 
 
@@ -245,7 +563,30 @@ class _PuzzleGameScreenState
   Widget build(BuildContext context) {
 
 
-    final image = ImageHelper.getPuzzleImage(
+    if(loading){
+
+
+      return const Scaffold(
+
+
+        body:Center(
+
+
+          child:CircularProgressIndicator(),
+
+
+        ),
+
+      );
+
+    }
+
+
+
+
+    final image =
+
+    ImageHelper.getPuzzleImage(
 
       widget.puzzle.image,
 
@@ -256,6 +597,7 @@ class _PuzzleGameScreenState
     final pieceSize =
 
         boardSize / widget.level.gridSize;
+
 
 
 
@@ -280,9 +622,7 @@ class _PuzzleGameScreenState
 
             ],
 
-
           ),
-
 
         ),
 
@@ -298,7 +638,7 @@ class _PuzzleGameScreenState
 
 
 
-              const SizedBox(height:20),
+              const SizedBox(height:15),
 
 
 
@@ -319,11 +659,30 @@ class _PuzzleGameScreenState
 
                   fontWeight:FontWeight.bold,
 
+                ),
+
+              ),
+
+
+
+
+              Text(
+
+
+                '⭐ $moves حركة  ⏱ $seconds',
+
+                style:const TextStyle(
+
+
+                  color:Colors.white,
+
+
+                  fontSize:18,
 
                 ),
 
-
               ),
+
 
 
 
@@ -346,6 +705,7 @@ class _PuzzleGameScreenState
 
                         width:boardSize,
 
+
                         height:boardSize,
 
 
@@ -356,16 +716,7 @@ class _PuzzleGameScreenState
 
 
                           borderRadius:
-                          BorderRadius.circular(20),
-
-
-                          border:Border.all(
-
-                            color:Colors.white,
-
-                            width:2,
-
-                          ),
+                          BorderRadius.circular(25),
 
 
                         ),
@@ -379,14 +730,15 @@ class _PuzzleGameScreenState
 
 
 
-
                     ...pieces.map((piece){
+
 
 
                       return Positioned(
 
 
                         left:piece.position.dx,
+
 
                         top:piece.position.dy,
 
@@ -418,13 +770,13 @@ class _PuzzleGameScreenState
 
                           childWhenDragging:
 
+
                           const SizedBox(),
 
 
 
 
                           onDragEnd:(details){
-
 
 
                             dropPiece(
@@ -437,7 +789,6 @@ class _PuzzleGameScreenState
 
 
                             );
-
 
 
                           },
@@ -466,6 +817,7 @@ class _PuzzleGameScreenState
                       );
 
 
+
                     }),
 
 
@@ -478,22 +830,17 @@ class _PuzzleGameScreenState
               ),
 
 
-
             ],
-
 
           ),
 
         ),
 
-
       ),
-
 
     );
 
 
   }
-
 
 }
