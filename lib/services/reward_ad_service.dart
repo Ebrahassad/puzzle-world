@@ -1,17 +1,43 @@
 class RewardAdService {
 
 
-  // مؤقتًا يرجع نجاح المشاهدة
-  // لاحقًا نربطه مع AdMob Rewarded Ads
+
+  // مؤقتًا محاكاة نجاح الإعلان
+  // لاحقًا يتم استبداله بـ AdMob RewardedAd
+
 
 
   static Future<bool> showContinueAd() async {
 
 
-    // هنا سيأتي إعلان AdMob لاحقًا
+    await Future.delayed(
+
+      const Duration(seconds:2),
+
+    );
 
 
     return true;
+
+
+  }
+
+
+
+
+
+  static Future<bool> showRewardAd() async {
+
+
+    await Future.delayed(
+
+      const Duration(seconds:2),
+
+    );
+
+
+    return true;
+
 
   }
 
