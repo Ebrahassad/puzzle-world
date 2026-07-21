@@ -17,21 +17,21 @@ class PuzzlePieceWidget extends StatelessWidget {
   final double size;
 
 
+  final VoidCallback? onTap;
+
+
 
   const PuzzlePieceWidget({
 
-
     super.key,
-
 
     required this.piece,
 
-
     required this.image,
-
 
     required this.size,
 
+    this.onTap,
 
   });
 
@@ -41,25 +41,45 @@ class PuzzlePieceWidget extends StatelessWidget {
   Widget build(BuildContext context) {
 
 
-    return SizedBox(
+    return GestureDetector(
 
 
-      width:size,
+      onTap:onTap,
 
 
-      height:size,
+
+      child:AnimatedContainer(
 
 
-      child:CustomPaint(
+        duration:
+        const Duration(milliseconds:150),
 
 
-        painter:PuzzlePainter(
+        width:size,
 
 
-          piece:piece,
+        height:size,
 
 
-          image:image,
+
+        child:CustomPaint(
+
+
+
+          painter:PuzzlePainter(
+
+
+
+            piece:piece,
+
+
+
+            image:image,
+
+
+
+          ),
+
 
 
         ),
@@ -72,6 +92,5 @@ class PuzzlePieceWidget extends StatelessWidget {
 
 
   }
-
 
 }
