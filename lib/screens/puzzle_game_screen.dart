@@ -14,11 +14,9 @@ import '../widgets/puzzle_piece_widget.dart';
 
 class PuzzleGameScreen extends StatefulWidget {
 
-
   final PuzzleModel puzzle;
 
   final PuzzleLevelModel level;
-
 
 
   const PuzzleGameScreen({
@@ -46,12 +44,9 @@ class _PuzzleGameScreenState
     extends State<PuzzleGameScreen> {
 
 
-
   late List<PuzzlePiece> pieces;
 
-
   late PuzzleController controller;
-
 
 
   final double boardSize = 350;
@@ -89,31 +84,192 @@ class _PuzzleGameScreenState
 
 
 
+  void dropPiece(
+
+      PuzzlePiece piece,
+
+      Offset position,
+
+      ) {
+
+
+    setState(() {
+
+
+      piece.position = Offset(
+
+        position.dx - 40,
+
+        position.dy - 120,
+
+      );
+
+
+      controller.checkPiecePosition(
+
+        piece,
+
+        boardSize / widget.level.gridSize,
+
+      );
+
+
+    });
+
+
+
+    if(controller.isCompleted){
+
+      showWinDialog();
+
+    }
+
+  }
+
+
+
+
+
+
+  void showWinDialog(){
+
+
+    Future.delayed(
+
+      const Duration(milliseconds:500),
+
+          (){
+
+
+        if(!mounted) return;
+
+
+        showDialog(
+
+
+          context:context,
+
+
+          builder:(context){
+
+
+            return AlertDialog(
+
+
+              shape:RoundedRectangleBorder(
+
+
+                borderRadius:
+                BorderRadius.circular(25),
+
+
+              ),
+
+
+
+              title:const Text(
+
+                '🎉 أحسنت',
+
+                textAlign:TextAlign.center,
+
+              ),
+
+
+
+              content:const Text(
+
+                'أكملت البازل بنجاح',
+
+                textAlign:TextAlign.center,
+
+              ),
+
+
+
+              actions:[
+
+
+                Center(
+
+
+                  child:ElevatedButton(
+
+
+                    onPressed:(){
+
+
+                      Navigator.pop(context);
+
+
+                    },
+
+
+                    child:const Text(
+
+                      'ممتاز',
+
+                    ),
+
+
+                  ),
+
+
+                )
+
+
+              ],
+
+
+            );
+
+
+          },
+
+
+        );
+
+
+      },
+
+    );
+
+  }
+
+
+
+
+
+
   @override
   Widget build(BuildContext context) {
 
 
-    final image =
-    ImageHelper.getPuzzleImage(
-        widget.puzzle.image);
+    final image = ImageHelper.getPuzzleImage(
+
+      widget.puzzle.image,
+
+    );
 
 
 
     final pieceSize =
+
         boardSize / widget.level.gridSize;
+
 
 
 
     return Scaffold(
 
 
-      body: Container(
+      body:Container(
 
 
-        decoration: const BoxDecoration(
+        decoration:const BoxDecoration(
 
 
-          gradient: LinearGradient(
+          gradient:LinearGradient(
 
 
             colors:[
@@ -127,6 +283,7 @@ class _PuzzleGameScreenState
 
           ),
 
+
         ),
 
 
@@ -138,6 +295,7 @@ class _PuzzleGameScreenState
 
 
             children:[
+
 
 
               const SizedBox(height:20),
@@ -155,18 +313,17 @@ class _PuzzleGameScreenState
 
                   color:Colors.white,
 
+
                   fontSize:30,
 
-                  fontWeight:
-                  FontWeight.bold,
+
+                  fontWeight:FontWeight.bold,
+
 
                 ),
 
+
               ),
-
-
-
-              const SizedBox(height:20),
 
 
 
@@ -179,8 +336,6 @@ class _PuzzleGameScreenState
 
                   children:[
 
-
-                    // مكان تركيب الصورة
 
 
                     Center(
@@ -204,18 +359,28 @@ class _PuzzleGameScreenState
                           BorderRadius.circular(20),
 
 
+                          border:Border.all(
+
+                            color:Colors.white,
+
+                            width:2,
+
+                          ),
+
+
                         ),
 
 
                       ),
+
 
                     ),
 
 
 
 
-                    ...pieces.map((piece){
 
+                    ...pieces.map((piece){
 
 
                       return Positioned(
@@ -258,6 +423,27 @@ class _PuzzleGameScreenState
 
 
 
+                          onDragEnd:(details){
+
+
+
+                            dropPiece(
+
+
+                              piece,
+
+
+                              details.offset,
+
+
+                            );
+
+
+
+                          },
+
+
+
                           child:PuzzlePieceWidget(
 
 
@@ -277,19 +463,17 @@ class _PuzzleGameScreenState
                         ),
 
 
-
                       );
 
 
-
                     }),
+
 
 
                   ],
 
 
                 ),
-
 
               ),
 
@@ -299,7 +483,6 @@ class _PuzzleGameScreenState
 
 
           ),
-
 
         ),
 
