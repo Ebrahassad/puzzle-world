@@ -38,6 +38,8 @@ class PuzzleProgressManager {
 
   static const String completedLevelsKey =
       "puzzle_completed_levels";
+static const String claimedRewardsKey =
+    "puzzle_claimed_rewards";
 
   static const String unlockedLevelsKey =
       "puzzle_unlocked_levels";
@@ -663,7 +665,49 @@ class PuzzleProgressManager {
   }
 
 
+//==================================================
+// 🎁 المكافآت المستلمة
+//==================================================
 
+static Future<void> markRewardClaimed(
+    String levelKey,
+    ) async {
+
+  final prefs = await _prefs;
+
+  final list =
+      prefs.getStringList(claimedRewardsKey) ?? [];
+
+
+  if(!list.contains(levelKey)){
+
+    list.add(levelKey);
+
+    await prefs.setStringList(
+      claimedRewardsKey,
+      list,
+    );
+
+  }
+
+}
+
+
+
+
+static Future<bool> isRewardClaimed(
+    String levelKey,
+    ) async {
+
+  final prefs = await _prefs;
+
+  final list =
+      prefs.getStringList(claimedRewardsKey) ?? [];
+
+
+  return list.contains(levelKey);
+
+}
 
 
   //==================================================
