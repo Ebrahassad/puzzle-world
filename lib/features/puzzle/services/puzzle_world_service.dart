@@ -11,103 +11,200 @@ import '../managers/reward_manager.dart';
 
 import '../screens/puzzle_home_screen.dart';
 import '../screens/puzzle_level_screen.dart';
-import '../screens/puzzle_game_screen.dart';
 import '../screens/puzzle_win_screen.dart';
 import '../screens/wallet_screen.dart';
 
 import '../services/puzzle_navigation_service.dart';
 
+
+
 class PuzzleWorldService {
+
+
   const PuzzleWorldService._();
 
+
+
+
   //==================================================
-  // العوالم
+  // 🌍 العوالم
   //==================================================
 
+
   static List<PuzzleModel> get worlds =>
+
       PuzzleData.puzzles;
 
 
+
+
+
   static Future<List<PuzzleModel>> loadWorlds() async {
+
+
     return PuzzleData.puzzles;
+
+
   }
+
+
+
+
 
 
   static Future<PuzzleModel?> getWorld(
-      String worldId) async {
+
+      String worldId,
+
+      ) async {
+
+
 
     try {
 
+
+
       return PuzzleData.puzzles.firstWhere(
-        (e) => e.id == worldId,
+
+            (world) => world.id == worldId,
+
       );
 
-    } catch (_) {
+
+
+    } catch(_){
+
+
 
       return null;
 
+
+
     }
 
+
   }
 
 
 
+
+
+
+
   //==================================================
-  // المراحل
+  // 🧩 المراحل
   //==================================================
+
 
   static Future<List<PuzzleLevelModel>> loadLevels(
-      String worldId) async {
 
-    return PuzzleLevelData.getLevels(worldId);
+      String worldId,
+
+      ) async {
+
+
+
+    return PuzzleLevelData.getLevels(
+
+      worldId,
+
+    );
+
 
   }
 
 
 
+
+
+
+
   //==================================================
-  // الموارد
+  // 💰 الموارد
   //==================================================
+
 
   static Future<int> getTotalStars() async {
 
-    return PuzzleProgressManager.getTotalStars();
+
+    return await PuzzleProgressManager.getTotalStars();
+
 
   }
+
+
+
+
 
 
   static Future<int> getCoins() async {
 
-    return RewardManager.getCoins();
+
+    return await RewardManager.getCoins();
+
 
   }
+
+
+
+
 
 
   static Future<int> getGems() async {
 
-    return RewardManager.getGems();
+
+    return await RewardManager.getGems();
+
 
   }
+
+
+
+
 
 
   static Future<int> getHints() async {
 
-    return PuzzleProgressManager.getHints();
+
+    return await PuzzleProgressManager.getHints();
+
 
   }
 
 
 
+
+
+
+
   //==================================================
-  // فتح العالم
+  // 🔓 فتح العالم
   //==================================================
 
+
   static Future<bool> isWorldUnlocked(
-      PuzzleModel world) async {
+
+      PuzzleModel world,
+
+      ) async {
+
+
+
+    // مؤقتاً العالم الأول مفتوح
+
+    // نظام فتح العوالم يضاف لاحقاً
+
+
 
     return true;
 
+
+
   }
+
+
+
+
 
 
 
@@ -115,29 +212,46 @@ class PuzzleWorldService {
   // فتح شاشة العالم
   //==================================================
 
+
   static Future<void> openWorld(
+
       BuildContext context,
+
       PuzzleModel world,
+
       ) async {
 
+
+
     await Navigator.push(
+
       context,
+
       MaterialPageRoute(
-        builder: (_) => PuzzleLevelScreen(
-          puzzle: world,
-        ),
+
+        builder: (_) =>
+
+            PuzzleLevelScreen(
+
+              puzzle: world,
+
+            ),
+
       ),
+
     );
+
 
   }
 
 
+  //==================================================
+  // 🧩 فتح المرحلة
+  //==================================================
 
-  //==================================================
-  // فتح مرحلة
-  //==================================================
 
   static Future<void> openLevel(
+
       BuildContext context, {
 
         required PuzzleModel world,
@@ -147,14 +261,15 @@ class PuzzleWorldService {
       }) async {
 
 
-    await Navigator.push(
+
+    await PuzzleNavigationService.openGame(
+
       context,
-      MaterialPageRoute(
-        builder: (_) => PuzzleGameScreen(
-          puzzle: world,
-          level: level,
-        ),
-      ),
+
+      puzzle: world,
+
+      level: level,
+
     );
 
 
@@ -162,38 +277,73 @@ class PuzzleWorldService {
 
 
 
+
+
+
+
   //==================================================
-  // المحفظة
+  // 💰 المحفظة
   //==================================================
+
 
   static Future<void> openWallet(
-      BuildContext context) async {
+
+      BuildContext context,
+
+      ) async {
+
+
 
     await Navigator.push(
+
       context,
+
       MaterialPageRoute(
-        builder: (_) => const WalletScreen(),
+
+        builder: (_) =>
+
+        const WalletScreen(),
+
       ),
+
     );
+
 
   }
 
 
 
+
+
+
+
   //==================================================
-  // الرئيسية
+  // 🏠 العودة للرئيسية
   //==================================================
 
+
   static Future<void> returnToHome(
-      BuildContext context) async {
+
+      BuildContext context,
+
+      ) async {
+
 
 
     await Navigator.pushAndRemoveUntil(
+
       context,
+
       MaterialPageRoute(
-        builder: (_) => const PuzzleHomeScreen(),
+
+        builder: (_) =>
+
+        const PuzzleHomeScreen(),
+
       ),
+
           (route) => false,
+
     );
 
 
@@ -201,9 +351,14 @@ class PuzzleWorldService {
 
 
 
+
+
+
+
   //==================================================
-  // إكمال المرحلة
+  // ✅ إكمال المرحلة
   //==================================================
+
 
   static Future<void> completeLevel({
 
@@ -216,22 +371,79 @@ class PuzzleWorldService {
   }) async {
 
 
-    final id =
+
+    final levelKey =
+
         "${worldId}_level_$level";
 
 
+
+
+
+    // حفظ إكمال المرحلة
+
     await PuzzleProgressManager.completeLevel(
-      id,
+
+      levelKey,
+
     );
 
 
-    await PuzzleProgressManager.unlockNextLevel(
-      id,
+
+
+
+
+    // حفظ نجوم المرحلة
+
+    await PuzzleProgressManager.saveLevelStars(
+
+      levelKey,
+
+      stars,
+
     );
 
+
+
+
+
+
+    // إضافة النجوم للمجموع
 
     await PuzzleProgressManager.addStars(
+
       stars,
+
+    );
+
+
+
+
+
+
+    // فتح المرحلة التالية
+
+    await PuzzleProgressManager.unlockNextLevel(
+
+      worldId,
+
+      level,
+
+    );
+
+
+
+
+
+
+    // حفظ آخر مرحلة لعب
+
+    await PuzzleProgressManager.saveLastPuzzle(
+
+      worldId,
+
+      "level_$level",
+
     );
 
 
@@ -239,11 +451,17 @@ class PuzzleWorldService {
 
 
 
+
+
+
+
   //==================================================
-  // المرحلة التالية
+  // ➡️ الانتقال للمرحلة التالية
   //==================================================
 
+
   static Future<void> goToNextLevel(
+
       BuildContext context, {
 
         required String worldId,
@@ -251,6 +469,7 @@ class PuzzleWorldService {
         required int currentLevel,
 
       }) async {
+
 
 
     await PuzzleNavigationService.openNextLevel(
@@ -266,13 +485,13 @@ class PuzzleWorldService {
 
   }
 
-
-
   //==================================================
-  // إعادة المرحلة
+  // 🔄 إعادة المرحلة
   //==================================================
+
 
   static Future<void> replayLevel(
+
       BuildContext context, {
 
         required PuzzleModel world,
@@ -282,21 +501,14 @@ class PuzzleWorldService {
       }) async {
 
 
-    await Navigator.pushReplacement(
+
+    await PuzzleNavigationService.restartLevel(
 
       context,
 
-      MaterialPageRoute(
+      puzzle: world,
 
-        builder: (_) => PuzzleGameScreen(
-
-          puzzle: world,
-
-          level: level,
-
-        ),
-
-      ),
+      level: level,
 
     );
 
@@ -305,33 +517,222 @@ class PuzzleWorldService {
 
 
 
+
+
+
+
   //==================================================
-  // شاشة الفوز
+  // 🎉 فتح شاشة الفوز
   //==================================================
+
 
   static Future<void> openWinScreen(
 
-      BuildContext context,
+      BuildContext context, {
 
-      PuzzleWinScreen screen,
+        required GameResultModel result,
+
+        required int difficulty,
+
+        required String worldId,
+
+        required int level,
+
+      }) async {
+
+
+
+    await PuzzleNavigationService.openWin(
+
+      context,
+
+      result: result,
+
+      difficulty: difficulty,
+
+      worldId: worldId,
+
+      level: level,
+
+    );
+
+
+  }
+
+
+
+
+
+
+
+  //==================================================
+  // ⭐ نجوم العالم
+  //==================================================
+
+
+  static Future<int> getWorldStars(
+
+      String worldId,
 
       ) async {
 
 
-    await Navigator.pushReplacement(
 
-      context,
+    final levels =
 
-      MaterialPageRoute(
+    await loadLevels(
 
-        builder: (_) => screen,
-
-      ),
+      worldId,
 
     );
 
 
+
+    int total = 0;
+
+
+
+
+
+    for(final level in levels){
+
+
+
+      total +=
+
+      await PuzzleProgressManager.getLevelStars(
+
+        "${worldId}_${level.id}",
+
+      );
+
+
+    }
+
+
+
+
+
+    return total;
+
+
   }
+
+
+
+
+
+
+
+  //==================================================
+  // 🏆 هل العالم مكتمل
+  //==================================================
+
+
+  static Future<bool> isWorldCompleted(
+
+      String worldId,
+
+      ) async {
+
+
+
+    final levels =
+
+    await loadLevels(
+
+      worldId,
+
+    );
+
+
+
+
+
+    for(final level in levels){
+
+
+
+      final completed =
+
+      await PuzzleProgressManager.isCompleted(
+
+        "${worldId}_${level.id}",
+
+      );
+
+
+
+
+
+      if(!completed){
+
+        return false;
+
+      }
+
+
+    }
+
+
+
+
+
+    return true;
+
+
+  }
+
+
+
+
+
+
+
+  //==================================================
+  // 🧹 إعادة ضبط عالم
+  //==================================================
+
+
+  static Future<void> resetWorld(
+
+      String worldId,
+
+      ) async {
+
+
+
+    final levels =
+
+    await loadLevels(
+
+      worldId,
+
+    );
+
+
+
+
+
+    for(final level in levels){
+
+
+
+      await PuzzleProgressManager.removeLevel(
+
+        "${worldId}_${level.id}",
+
+      );
+
+
+    }
+
+
+  }
+
+
+
+
 
 
 }
