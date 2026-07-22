@@ -136,10 +136,16 @@ class PuzzleProgressManager {
     final current =
         prefs.getInt(starsKey) ?? 0;
 
-    await prefs.setInt(
-      starsKey,
-      current + amount,
-    );
+    int value = current + amount;
+
+if(value < 0){
+  value = 0;
+}
+
+await prefs.setInt(
+  starsKey,
+  value,
+);
   }
 
   //==================================================
@@ -673,4 +679,54 @@ static Future<Map<String,dynamic>?> getLastPuzzle() async {
 
     await prefs.remove(lastSessionKey);
   }
+
+//==================================================
+// 🎁 إضافة مكافآت كاملة
+//==================================================
+
+static Future<void> addReward({
+
+  int coins = 0,
+
+  int gems = 0,
+
+  int stars = 0,
+
+  int hints = 0,
+
+}) async {
+
+
+  if(coins != 0){
+
+    await addCoins(coins);
+
+  }
+
+
+  if(gems != 0){
+
+    await addGems(gems);
+
+  }
+
+
+  if(stars != 0){
+
+    await addStars(stars);
+
+  }
+
+
+  if(hints != 0){
+
+    await addHints(hints);
+
+  }
+
+
 }
+
+}
+
+
