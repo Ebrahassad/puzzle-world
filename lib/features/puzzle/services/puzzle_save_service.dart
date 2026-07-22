@@ -164,7 +164,7 @@ class PuzzleSaveService {
   // مستخدم من PuzzleWinScreen
   //==================================================
 
-  static Future<void> autoSavePuzzle({
+    static Future<void> autoSavePuzzle({
 
     required String worldId,
 
@@ -184,6 +184,16 @@ class PuzzleSaveService {
 
 
 
+
+  //==================================================
+  // 🗑 مسح آخر لعبة
+  //==================================================
+
+  static Future<void> clearLastPlayed() async {
+
+    await PuzzleProgressManager.saveLastGame("");
+
+  }
 
 
 }
