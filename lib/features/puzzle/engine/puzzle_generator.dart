@@ -363,7 +363,413 @@ class PuzzleGenerator {
 
       case EdgeType.tab:
 
+        import 'dart:math';
+
+import 'package:flutter/material.dart';
+
+import 'puzzle_piece.dart';
+
+
+
+class PuzzleGenerator {
+
+
+
+  static List<PuzzlePiece> generate({
+
+    required int rows,
+
+    required int columns,
+
+    required double imageWidth,
+
+    required double imageHeight,
+
+  }) {
+
+
+
+    final random = Random();
+
+
+
+    final pieces = <PuzzlePiece>[];
+
+
+
+    final pieceWidth =
+
+        imageWidth / columns;
+
+
+
+    final pieceHeight =
+
+        imageHeight / rows;
+
+
+
+
+
+    final horizontalEdges =
+
+    <String, EdgeType>{};
+
+
+
+    final verticalEdges =
+
+    <String, EdgeType>{};
+
+
+
+
+
+    int id = 0;
+
+
+
+
+
+
+
+    for(int row = 0; row < rows; row++){
+
+
+
+      for(int column = 0; column < columns; column++){
+
+
+
+
+
+        final top = row == 0
+
+            ? EdgeType.flat
+
+            :
+
+        verticalEdges["${row - 1}_$column"]
+
+            ??
+
+        EdgeType.flat;
+
+
+
+
+
+
+
+        final left = column == 0
+
+            ? EdgeType.flat
+
+            :
+
+        horizontalEdges["${row}_$column"]
+
+            ??
+
+        EdgeType.flat;
+
+
+
+
+
+
+
+
+        final right =
+
+        column == columns - 1
+
+            ? EdgeType.flat
+
+            :
+
+        _randomEdge(random);
+
+
+
+
+
+
+
+
+        final bottom =
+
+        row == rows - 1
+
+            ? EdgeType.flat
+
+            :
+
+        _randomEdge(random);
+
+
+
+
+
+
+
+
+
+        // حفظ الحواف المقابلة
+
+        if(column < columns - 1){
+
+
+
+          horizontalEdges["${row}_$column"] =
+
+              _opposite(right);
+
+
+
+        }
+
+
+
+
+
+
+
+        if(row < rows - 1){
+
+
+
+          verticalEdges["${row}_$column"] =
+
+              _opposite(bottom);
+
+
+
+        }
+
+
+
+
+
+
+
+
+
+        pieces.add(
+
+
+
+          PuzzlePiece(
+
+
+
+            id:
+
+            "piece_$id",
+
+
+
+            row:
+
+            row,
+
+
+
+            column:
+
+            column,
+
+
+
+            correctPosition:
+
+            id,
+
+
+
+            sourceRect:
+
+            Rect.fromLTWH(
+
+
+
+              column * pieceWidth,
+
+
+
+              row * pieceHeight,
+
+
+
+              pieceWidth,
+
+
+
+              pieceHeight,
+
+
+
+            ),
+
+
+
+
+
+            top:
+
+            top,
+
+
+
+            bottom:
+
+            bottom,
+
+
+
+            left:
+
+            left,
+
+
+
+            right:
+
+            right,
+
+
+
+
+
+            position:
+
+            Offset(
+
+
+
+              column * pieceWidth,
+
+
+
+              row * pieceHeight,
+
+
+
+            ),
+
+
+
+          ),
+
+
+
+        );
+
+
+
+
+
+        id++;
+
+
+
+      }
+
+
+
+    }
+
+
+
+
+
+
+
+
+    // خلط القطع
+
+    pieces.shuffle(random);
+
+
+
+    return pieces;
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  static EdgeType _randomEdge(
+
+      Random random,
+
+      ){
+
+
+
+    return random.nextBool()
+
+        ? EdgeType.tab
+
+        : EdgeType.blank;
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  static EdgeType _opposite(
+
+      EdgeType edge,
+
+      ){
+
+
+
+    switch(edge){
+
+
+
+      case EdgeType.tab:
+
         return EdgeType.blank;
+
+
+
+      case EdgeType.blank:
+
+        return EdgeType.tab;
+
+
+
+      case EdgeType.flat:
+
+        return EdgeType.flat;
+
+
+    }
+
+
+
+  }
+
+
+
+} EdgeType.blank;
 
 
 
