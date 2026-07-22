@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/puzzle_model.dart';
 import '../models/puzzle_level_model.dart';
+import '../models/game_result_model.dart';
 
 import '../data/puzzle_data.dart';
 import '../data/puzzle_level_data.dart';
@@ -11,7 +12,6 @@ import '../managers/reward_manager.dart';
 
 import '../screens/puzzle_home_screen.dart';
 import '../screens/puzzle_level_screen.dart';
-import '../screens/puzzle_win_screen.dart';
 import '../screens/wallet_screen.dart';
 
 import '../services/puzzle_navigation_service.dart';
@@ -26,8 +26,9 @@ class PuzzleWorldService {
 
 
 
+
   //==================================================
-  // 🌍 العوالم
+  // 🌍 قائمة العوالم
   //==================================================
 
 
@@ -41,11 +42,10 @@ class PuzzleWorldService {
 
   static Future<List<PuzzleModel>> loadWorlds() async {
 
-
     return PuzzleData.puzzles;
 
-
   }
+
 
 
 
@@ -60,30 +60,27 @@ class PuzzleWorldService {
 
 
 
-    try {
-
+    try{
 
 
       return PuzzleData.puzzles.firstWhere(
 
-            (world) => world.id == worldId,
+            (world)=>world.id == worldId,
 
       );
 
 
-
-    } catch(_){
-
+    }catch(_){
 
 
       return null;
-
 
 
     }
 
 
   }
+
 
 
 
@@ -103,7 +100,6 @@ class PuzzleWorldService {
       ) async {
 
 
-
     return PuzzleLevelData.getLevels(
 
       worldId,
@@ -112,6 +108,7 @@ class PuzzleWorldService {
 
 
   }
+
 
 
 
@@ -137,6 +134,7 @@ class PuzzleWorldService {
 
 
 
+
   static Future<int> getCoins() async {
 
 
@@ -150,6 +148,7 @@ class PuzzleWorldService {
 
 
 
+
   static Future<int> getGems() async {
 
 
@@ -157,6 +156,7 @@ class PuzzleWorldService {
 
 
   }
+
 
 
 
@@ -177,6 +177,7 @@ class PuzzleWorldService {
 
 
 
+
   //==================================================
   // 🔓 فتح العالم
   //==================================================
@@ -189,18 +190,16 @@ class PuzzleWorldService {
       ) async {
 
 
-
-    // مؤقتاً العالم الأول مفتوح
-
-    // نظام فتح العوالم يضاف لاحقاً
-
+    // حالياً أول نسخة:
+    // كل العوالم مفتوحة
+    // لاحقاً نربطها بالنجوم
 
 
     return true;
 
 
-
   }
+
 
 
 
@@ -222,18 +221,17 @@ class PuzzleWorldService {
       ) async {
 
 
-
     await Navigator.push(
 
       context,
 
       MaterialPageRoute(
 
-        builder: (_) =>
+        builder:(_)=>
 
             PuzzleLevelScreen(
 
-              puzzle: world,
+              puzzle:world,
 
             ),
 
@@ -245,8 +243,14 @@ class PuzzleWorldService {
   }
 
 
+
+
+
+
+
+
   //==================================================
-  // 🧩 فتح المرحلة
+  // 🧩 فتح لعبة المرحلة
   //==================================================
 
 
@@ -254,9 +258,12 @@ class PuzzleWorldService {
 
       BuildContext context, {
 
+
         required PuzzleModel world,
 
+
         required PuzzleLevelModel level,
+
 
       }) async {
 
@@ -266,23 +273,16 @@ class PuzzleWorldService {
 
       context,
 
-      puzzle: world,
+      puzzle:world,
 
-      level: level,
+      level:level,
 
     );
 
 
   }
-
-
-
-
-
-
-
   //==================================================
-  // 💰 المحفظة
+  // 💰 فتح المحفظة
   //==================================================
 
 
@@ -293,14 +293,13 @@ class PuzzleWorldService {
       ) async {
 
 
-
     await Navigator.push(
 
       context,
 
       MaterialPageRoute(
 
-        builder: (_) =>
+        builder:(_)=>
 
         const WalletScreen(),
 
@@ -329,25 +328,25 @@ class PuzzleWorldService {
       ) async {
 
 
-
     await Navigator.pushAndRemoveUntil(
 
       context,
 
       MaterialPageRoute(
 
-        builder: (_) =>
+        builder:(_)=>
 
         const PuzzleHomeScreen(),
 
       ),
 
-          (route) => false,
+          (route)=>false,
 
     );
 
 
   }
+
 
 
 
@@ -380,7 +379,8 @@ class PuzzleWorldService {
 
 
 
-    // حفظ إكمال المرحلة
+
+    // حفظ الإنجاز
 
     await PuzzleProgressManager.completeLevel(
 
@@ -393,7 +393,7 @@ class PuzzleWorldService {
 
 
 
-    // حفظ نجوم المرحلة
+    // حفظ أفضل نجوم للمرحلة
 
     await PuzzleProgressManager.saveLevelStars(
 
@@ -436,7 +436,7 @@ class PuzzleWorldService {
 
 
 
-    // حفظ آخر مرحلة لعب
+    // حفظ آخر لعب
 
     await PuzzleProgressManager.saveLastPuzzle(
 
@@ -455,8 +455,10 @@ class PuzzleWorldService {
 
 
 
+
+
   //==================================================
-  // ➡️ الانتقال للمرحلة التالية
+  // ➡️ المرحلة التالية
   //==================================================
 
 
@@ -476,17 +478,24 @@ class PuzzleWorldService {
 
       context,
 
-      worldId: worldId,
+      worldId:worldId,
 
-      currentLevel: currentLevel,
+      currentLevel:currentLevel,
 
     );
 
 
   }
 
+
+
+
+
+
+
+
   //==================================================
-  // 🔄 إعادة المرحلة
+  // 🔄 إعادة اللعب
   //==================================================
 
 
@@ -506,9 +515,9 @@ class PuzzleWorldService {
 
       context,
 
-      puzzle: world,
+      puzzle:world,
 
-      level: level,
+      level:level,
 
     );
 
@@ -521,8 +530,9 @@ class PuzzleWorldService {
 
 
 
+
   //==================================================
-  // 🎉 فتح شاشة الفوز
+  // 🎉 فتح الفوز
   //==================================================
 
 
@@ -541,18 +551,17 @@ class PuzzleWorldService {
       }) async {
 
 
-
     await PuzzleNavigationService.openWin(
 
       context,
 
-      result: result,
+      result:result,
 
-      difficulty: difficulty,
+      difficulty:difficulty,
 
-      worldId: worldId,
+      worldId:worldId,
 
-      level: level,
+      level:level,
 
     );
 
@@ -560,13 +569,8 @@ class PuzzleWorldService {
   }
 
 
-
-
-
-
-
   //==================================================
-  // ⭐ نجوم العالم
+  // ⭐ مجموع نجوم العالم
   //==================================================
 
 
@@ -580,16 +584,11 @@ class PuzzleWorldService {
 
     final levels =
 
-    await loadLevels(
-
-      worldId,
-
-    );
+    await loadLevels(worldId);
 
 
 
     int total = 0;
-
 
 
 
@@ -602,14 +601,13 @@ class PuzzleWorldService {
 
       await PuzzleProgressManager.getLevelStars(
 
-        "${worldId}_${level.id}",
+        "${worldId}_level_${level.levelNumber}",
 
       );
 
 
+
     }
-
-
 
 
 
@@ -639,11 +637,8 @@ class PuzzleWorldService {
 
     final levels =
 
-    await loadLevels(
+    await loadLevels(worldId);
 
-      worldId,
-
-    );
 
 
 
@@ -657,7 +652,7 @@ class PuzzleWorldService {
 
       await PuzzleProgressManager.isCompleted(
 
-        "${worldId}_${level.id}",
+        "${worldId}_level_${level.levelNumber}",
 
       );
 
@@ -665,16 +660,17 @@ class PuzzleWorldService {
 
 
 
+
       if(!completed){
 
+
         return false;
+
 
       }
 
 
     }
-
-
 
 
 
@@ -690,7 +686,7 @@ class PuzzleWorldService {
 
 
   //==================================================
-  // 🧹 إعادة ضبط عالم
+  // 🧹 إعادة ضبط عالم كامل
   //==================================================
 
 
@@ -704,11 +700,8 @@ class PuzzleWorldService {
 
     final levels =
 
-    await loadLevels(
+    await loadLevels(worldId);
 
-      worldId,
-
-    );
 
 
 
@@ -720,18 +713,25 @@ class PuzzleWorldService {
 
       await PuzzleProgressManager.removeLevel(
 
-        "${worldId}_${level.id}",
+        "${worldId}_level_${level.levelNumber}",
 
       );
+
+
+
+      await PuzzleProgressManager.removeLevelStars(
+
+        "${worldId}_level_${level.levelNumber}",
+
+      );
+
 
 
     }
 
 
+
   }
-
-
-
 
 
 
