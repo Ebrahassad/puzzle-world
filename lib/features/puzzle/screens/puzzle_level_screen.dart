@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 import '../models/puzzle_model.dart';
 import '../models/puzzle_level_model.dart';
 
-import '../data/puzzle_level_data.dart';
-
-import '../managers/puzzle_progress_manager.dart';
-import '../managers/star_manager.dart';
+import '../services/puzzle_level_service.dart';
+import '../services/puzzle_level_progress_service.dart';
+import '../services/puzzle_level_unlock_service.dart';
 
 import 'puzzle_game_screen.dart';
 
@@ -40,18 +39,21 @@ class PuzzleLevelScreen extends StatefulWidget {
 
 
 
+
 class _PuzzleLevelScreenState
     extends State<PuzzleLevelScreen> {
 
 
 
-  late List<PuzzleLevelModel> levels;
+  List<PuzzleLevelModel> levels = [];
 
 
   int totalStars = 0;
 
 
   bool loading = true;
+
+
 
 
 
@@ -74,27 +76,53 @@ class _PuzzleLevelScreenState
 
 
 
+
   Future<void> loadData() async {
 
 
 
-    levels =
-        PuzzleLevelData.getLevels(
-          widget.puzzle.id,
-        );
+    final data =
+
+    await PuzzleLevelService.getLevels(
+
+      widget.puzzle.id,
+
+    );
+
+
+
+
+
+    final prepared =
+
+    await PuzzleLevelProgressService.prepareLevels(
+
+      levels: data,
+
+    );
+
+
 
 
 
     final stars =
-        await PuzzleProgressManager
-            .getTotalStars();
+
+    await PuzzleLevelService.getTotalStars();
+
+
+
 
 
 
 
     if(mounted){
 
+
       setState((){
+
+
+
+        levels = prepared;
 
 
         totalStars = stars;
@@ -103,10 +131,12 @@ class _PuzzleLevelScreenState
         loading = false;
 
 
+
       });
 
 
     }
+
 
 
   }
@@ -118,25 +148,25 @@ class _PuzzleLevelScreenState
 
 
 
-  bool isUnlocked(
+
+  Future<bool> isUnlocked(
+
       PuzzleLevelModel level,
-      ){
+
+      ) async {
 
 
 
-    if(level.unlocked){
-
-      return true;
-
-    }
+    return await PuzzleLevelUnlockService.checkUnlocked(
 
 
+      worldId: widget.puzzle.id,
 
 
+      level: level,
 
-    return totalStars >=
-        level.requiredStars;
 
+    );
 
 
   }
@@ -150,18 +180,26 @@ class _PuzzleLevelScreenState
 
 
   void openLevel(
+
       PuzzleLevelModel level,
-      ){
+
+      ) async {
 
 
 
-    if(!isUnlocked(level)){
+    final unlocked =
+
+    await isUnlocked(level);
 
 
 
-      showLockedDialog(
-        level,
-      );
+
+
+    if(!unlocked){
+
+
+
+      showLockedDialog(level);
 
 
       return;
@@ -182,17 +220,17 @@ class _PuzzleLevelScreenState
 
         builder:(_)=>
 
+
             PuzzleGameScreen(
 
-              puzzle:
-              widget.puzzle,
+              puzzle: widget.puzzle,
 
 
-              level:
-              level,
+              level: level,
 
 
             ),
+
 
       ),
 
@@ -209,15 +247,19 @@ class _PuzzleLevelScreenState
 
 
 
+
   void showLockedDialog(
+
       PuzzleLevelModel level,
+
       ){
 
 
 
     showDialog(
 
-      context:context,
+
+      context: context,
 
 
       builder:(context){
@@ -229,43 +271,62 @@ class _PuzzleLevelScreenState
 
 
           shape:
+
+
           RoundedRectangleBorder(
 
+
             borderRadius:
+
             BorderRadius.circular(25),
 
+
           ),
+
+
 
 
 
 
           title:
+
+
           const Text(
+
 
             "🔒 المرحلة مغلقة",
 
+
             textAlign:
+
             TextAlign.center,
+
 
           ),
 
 
 
 
-          content:Text(
 
+
+          content:
+
+
+          Text(
 
 
             "تحتاج ⭐ ${level.requiredStars} نجوم لفتح هذه المرحلة",
 
 
-
             textAlign:
+
             TextAlign.center,
 
 
-
           ),
+
+
+
 
 
 
@@ -277,21 +338,29 @@ class _PuzzleLevelScreenState
 
 
 
-              child:ElevatedButton(
+              child:
+
+              ElevatedButton(
 
 
 
                 onPressed:(){
 
+
+
                   Navigator.pop(context);
+
 
                 },
 
 
 
                 child:
+
                 const Text(
+
                   "حسناً",
+
                 ),
 
 
@@ -300,7 +369,7 @@ class _PuzzleLevelScreenState
 
 
 
-            ),
+            )
 
 
 
@@ -308,14 +377,14 @@ class _PuzzleLevelScreenState
 
 
 
-        );
 
+        );
 
 
       },
 
-    );
 
+    );
 
 
   }
@@ -336,16 +405,20 @@ class _PuzzleLevelScreenState
     if(loading){
 
 
+
       return const Scaffold(
 
 
         body:
+
         Center(
 
           child:
+
           CircularProgressIndicator(),
 
         ),
+
 
       );
 
@@ -354,31 +427,29 @@ class _PuzzleLevelScreenState
 
 
 
-
-
-
-
     return Scaffold(
 
 
 
       body:
+
       Container(
 
 
 
         decoration:
+
         const BoxDecoration(
 
 
 
           gradient:
+
           LinearGradient(
 
 
 
             colors:[
-
 
 
               Color(0xffFFD166),
@@ -387,17 +458,18 @@ class _PuzzleLevelScreenState
               Color(0xffFF9F1C),
 
 
-
             ],
 
 
 
             begin:
+
             Alignment.topCenter,
 
 
 
             end:
+
             Alignment.bottomCenter,
 
 
@@ -410,21 +482,19 @@ class _PuzzleLevelScreenState
 
 
 
-
-
         child:
+
         SafeArea(
 
 
 
           child:
+
           Column(
 
 
 
             children:[
-
-
 
 
 
@@ -444,20 +514,25 @@ class _PuzzleLevelScreenState
 
 
                 style:
+
                 const TextStyle(
 
 
 
                   color:
+
                   Colors.white,
 
 
 
-                  fontSize:32,
+                  fontSize:
+
+                  32,
 
 
 
                   fontWeight:
+
                   FontWeight.bold,
 
 
@@ -485,6 +560,7 @@ class _PuzzleLevelScreenState
 
 
                 padding:
+
                 const EdgeInsets.symmetric(
 
 
@@ -500,16 +576,19 @@ class _PuzzleLevelScreenState
 
 
                 decoration:
+
                 BoxDecoration(
 
 
 
                   color:
+
                   Colors.white24,
 
 
 
                   borderRadius:
+
                   BorderRadius.circular(25),
 
 
@@ -519,6 +598,7 @@ class _PuzzleLevelScreenState
 
 
                 child:
+
                 Text(
 
 
@@ -528,16 +608,20 @@ class _PuzzleLevelScreenState
 
 
                   style:
+
                   const TextStyle(
 
 
 
                     color:
+
                     Colors.white,
 
 
 
-                    fontSize:22,
+                    fontSize:
+
+                    22,
 
 
 
@@ -560,39 +644,32 @@ class _PuzzleLevelScreenState
 
 
 
-
-
-
-
               Expanded(
 
-
-
                 child:
+
                 GridView.builder(
 
 
-
                   padding:
+
                   const EdgeInsets.all(20),
 
 
 
-                  gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
 
+                  gridDelegate:
+
+                  const SliverGridDelegateWithFixedCrossAxisCount(
 
 
                     crossAxisCount:3,
 
 
-
                     crossAxisSpacing:15,
 
 
-
                     mainAxisSpacing:15,
-
 
 
                   ),
@@ -600,8 +677,8 @@ class _PuzzleLevelScreenState
 
 
 
-
                   itemCount:
+
                   levels.length,
 
 
@@ -613,213 +690,282 @@ class _PuzzleLevelScreenState
 
 
                     final level =
+
                     levels[index];
 
 
 
-                    final unlocked =
-                    isUnlocked(level);
+
+                    return FutureBuilder<bool>(
+
+
+
+                      future:
+
+                      isUnlocked(level),
+
+
+
+
+                      builder:(context,snapshot){
+
+
+
+                        final unlocked =
+
+                        snapshot.data ?? false;
 
 
 
 
 
-                    return GestureDetector(
+                        return GestureDetector(
 
 
 
-                      onTap:(){
-
-                        openLevel(level);
-
-                      },
+                          onTap:(){
 
 
 
-
-
-                      child:
-                      Container(
+                            openLevel(level);
 
 
 
-                        decoration:
-                        BoxDecoration(
+                          },
 
 
 
-                          color:
-                          Colors.white,
 
 
 
-                          borderRadius:
-                          BorderRadius.circular(25),
+                          child:
+
+                          Container(
 
 
 
-                          boxShadow:[
+                            decoration:
 
-
-
-                            const BoxShadow(
+                            BoxDecoration(
 
 
 
                               color:
-                              Colors.black26,
 
+                              Colors.white,
 
 
-                              blurRadius:10,
 
+                              borderRadius:
 
+                              BorderRadius.circular(25),
 
-                              offset:
-                              Offset(0,6),
 
 
+                              boxShadow:[
 
-                            ),
 
 
+                                const BoxShadow(
 
-                          ],
 
-
-
-                        ),
-
-
-
-
-
-                        child:
-                        Column(
-
-
-
-                          mainAxisAlignment:
-                          MainAxisAlignment.center,
-
-
-
-                          children:[
-
-
-
-
-
-                            Icon(
-
-
-
-                              unlocked
-
-                                  ?
-                              Icons.extension
-
-                                  :
-                              Icons.lock,
-
-
-
-                              size:45,
-
-
-
-                              color:
-                              unlocked
-
-                                  ?
-                              Colors.orange
-
-                                  :
-                              Colors.grey,
-
-
-
-                            ),
-
-
-
-
-
-                            const SizedBox(height:10),
-
-
-
-
-
-                            Text(
-
-
-
-                              "مرحلة ${index+1}",
-
-
-
-                              style:
-                              const TextStyle(
-
-
-
-                                fontSize:18,
-
-
-
-                                fontWeight:
-                                FontWeight.bold,
-
-
-
-                              ),
-
-
-
-                            ),
-
-
-
-
-
-
-
-                            if(!unlocked)
-
-
-
-                              Text(
-
-
-
-                                "⭐ ${level.requiredStars}",
-
-
-
-                                style:
-                                const TextStyle(
 
                                   color:
-                                  Colors.orange,
+
+                                  Colors.black26,
+
+
+
+                                  blurRadius:
+
+                                  10,
+
+
+
+                                  offset:
+
+                                  Offset(0,6),
+
+
 
                                 ),
 
 
 
-                              ),
+                              ],
 
 
 
-                          ],
+                            ),
 
 
 
-                        ),
 
 
 
-                      ),
+                            child:
+
+                            Column(
+
+
+
+                              mainAxisAlignment:
+
+                              MainAxisAlignment.center,
+
+
+
+                              children:[
+
+
+
+
+
+
+                                Icon(
+
+
+
+                                  unlocked
+
+                                      ?
+
+                                  Icons.extension
+
+                                      :
+
+                                  Icons.lock,
+
+
+
+                                  size:
+
+                                  45,
+
+
+
+                                  color:
+
+
+
+                                  unlocked
+
+                                      ?
+
+                                  Colors.orange
+
+                                      :
+
+                                  Colors.grey,
+
+
+
+                                ),
+
+
+
+
+
+
+                                const SizedBox(height:10),
+
+
+
+
+
+
+                                Text(
+
+
+
+                                  "مرحلة ${index+1}",
+
+
+
+                                  style:
+
+                                  const TextStyle(
+
+
+
+                                    fontSize:
+
+                                    18,
+
+
+
+                                    fontWeight:
+
+                                    FontWeight.bold,
+
+
+
+                                  ),
+
+
+
+                                ),
+
+
+
+
+
+
+                                if(!unlocked)
+
+
+
+                                  Text(
+
+
+
+                                    "⭐ ${level.requiredStars}",
+
+
+
+                                    style:
+
+                                    const TextStyle(
+
+
+
+                                      color:
+
+                                      Colors.orange,
+
+
+
+                                      fontWeight:
+
+                                      FontWeight.bold,
+
+
+
+                                    ),
+
+
+
+                                  ),
+
+
+
+                              ],
+
+
+
+                            ),
+
+
+
+                          ),
+
+
+
+                        );
+
+
+
+                      },
 
 
 
@@ -858,9 +1004,7 @@ class _PuzzleLevelScreenState
     );
 
 
-
   }
-
 
 
 }
