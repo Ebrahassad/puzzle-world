@@ -455,10 +455,7 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
     final watched =
-
-    await PuzzleRewardAdService.showRewardAd();
-
-
+    await PuzzleRewardAdService.watchAdForDoubleReward();
 
 
 
