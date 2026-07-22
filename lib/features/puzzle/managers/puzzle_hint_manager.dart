@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import '../engine/puzzle_piece.dart';
 import 'puzzle_progress_manager.dart';
 
@@ -7,50 +9,48 @@ class PuzzleHintManager {
 
 
 
-  // جلب عدد التلميحات
+  // =========================
+  // 💡 جلب عدد التلميحات
+  // =========================
+
 
   static Future<int> getHints() async {
-
 
 
     return await PuzzleProgressManager.getHints();
 
 
-
   }
 
 
 
 
 
+  // =========================
+  // استهلاك تلميح
+  // =========================
 
-
-  // استخدام تلميح واحد
 
   static Future<bool> consumeHint() async {
-
 
 
     return await PuzzleProgressManager.useHint();
 
 
-
   }
 
 
 
 
 
-
-
+  // =========================
   // إضافة تلميحات
+  // =========================
+
 
   static Future<void> addHints(
-
       int amount,
-
       ) async {
-
 
 
     await PuzzleProgressManager.addHints(
@@ -60,16 +60,16 @@ class PuzzleHintManager {
     );
 
 
-
   }
 
 
 
 
 
-
-
+  // =========================
   // البحث عن قطعة غير مكتملة
+  // =========================
+
 
   static PuzzlePiece? findAvailablePiece(
 
@@ -78,29 +78,22 @@ class PuzzleHintManager {
       ){
 
 
-
     for(final piece in pieces){
-
 
 
       if(!piece.placed){
 
 
-
         return piece;
-
 
 
       }
 
 
-
     }
 
 
-
     return null;
-
 
 
   }
@@ -109,9 +102,10 @@ class PuzzleHintManager {
 
 
 
-
-
+  // =========================
   // تطبيق التلميح
+  // =========================
+
 
   static void applyHint(
 
@@ -126,13 +120,10 @@ class PuzzleHintManager {
     piece.position = Offset(
 
 
-
       piece.column * pieceSize,
 
 
-
       piece.row * pieceSize,
-
 
 
     );
@@ -149,16 +140,16 @@ class PuzzleHintManager {
 
 
 
+  // =========================
+  // القطع المتبقية
+  // =========================
 
-
-  // عدد القطع المتبقية
 
   static int remainingPieces(
 
       List<PuzzlePiece> pieces,
 
       ){
-
 
 
     return pieces
@@ -172,8 +163,29 @@ class PuzzleHintManager {
         .length;
 
 
+  }
+
+
+
+
+
+  // =========================
+  // هل يوجد تلميح متاح؟
+  // =========================
+
+
+  static Future<bool> hasHint() async {
+
+
+    final hints = await getHints();
+
+
+    return hints > 0;
+
 
   }
+
+
 
 
 
