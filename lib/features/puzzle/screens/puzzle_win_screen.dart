@@ -26,7 +26,6 @@ class PuzzleWinScreen extends StatefulWidget {
 
 
 
-
   const PuzzleWinScreen({
 
     super.key,
@@ -45,6 +44,7 @@ class PuzzleWinScreen extends StatefulWidget {
 
   @override
   State<PuzzleWinScreen> createState() =>
+
       _PuzzleWinScreenState();
 
 }
@@ -88,6 +88,7 @@ class _PuzzleWinScreenState
   @override
   void initState(){
 
+
     super.initState();
 
 
@@ -100,7 +101,9 @@ class _PuzzleWinScreenState
 
       const Duration(seconds:1),
 
-    )..repeat(reverse:true);
+    )
+
+      ..repeat(reverse:true);
 
 
 
@@ -114,6 +117,8 @@ class _PuzzleWinScreenState
 
     ).animate(
 
+
+
       CurvedAnimation(
 
         parent:animationController,
@@ -123,6 +128,7 @@ class _PuzzleWinScreenState
       ),
 
     );
+
 
 
 
@@ -155,9 +161,13 @@ class _PuzzleWinScreenState
 
 
 
-      final completed =
 
-      await PuzzleProgressManager.isCompleted(
+
+      final claimed =
+
+      await PuzzleProgressManager
+
+          .isRewardClaimed(
 
         levelId,
 
@@ -165,11 +175,15 @@ class _PuzzleWinScreenState
 
 
 
-      if(!completed){
+
+
+      if(!claimed){
 
 
 
-        await PuzzleProgressManager.completeLevel(
+        await PuzzleProgressManager
+
+            .completeLevel(
 
           levelId,
 
@@ -177,7 +191,35 @@ class _PuzzleWinScreenState
 
 
 
-        await PuzzleProgressManager.unlockNextLevel(
+
+
+        await PuzzleProgressManager
+
+            .unlockNextLevel(
+
+          levelId,
+
+        );
+
+
+
+
+
+        await PuzzleProgressManager
+
+            .addStars(
+
+          widget.result.stars,
+
+        );
+
+
+
+
+
+        await PuzzleProgressManager
+
+            .markRewardClaimed(
 
           levelId,
 
@@ -195,17 +237,7 @@ class _PuzzleWinScreenState
 
 
 
-    await PuzzleProgressManager.addStars(
-
-      widget.result.stars,
-
-    );
-
-
-
-
-
-    final rewardResult =
+    final result =
 
     await RewardManager.completePuzzle(
 
@@ -219,6 +251,7 @@ class _PuzzleWinScreenState
 
 
 
+
     if(mounted){
 
 
@@ -226,7 +259,8 @@ class _PuzzleWinScreenState
       setState((){
 
 
-        reward = rewardResult;
+
+        reward = result;
 
 
         loading=false;
@@ -263,63 +297,88 @@ class _PuzzleWinScreenState
 
 
 
+
+
     final watched =
 
-    await RewardAdService.showRewardAd();
+    await RewardAdService
+
+        .showRewardAd();
 
 
 
 
 
-    if(watched){
+    if(!watched){
+
+      return;
+
+    }
 
 
 
-      // إضافة المكافأة الإضافية فقط
 
-      await RewardManager.addCoins(
 
-        reward!.coins,
+    final extraCoins =
+
+        reward!.coins;
+
+
+
+
+
+    final extraGems =
+
+        reward!.gems;
+
+
+
+
+
+
+
+    await RewardManager.addCoins(
+
+      extraCoins,
+
+    );
+
+
+
+
+
+    if(extraGems > 0){
+
+
+
+      await RewardManager.addGems(
+
+        extraGems,
 
       );
 
 
-
-
-
-      if(reward!.gems > 0){
-
-
-
-        await RewardManager.addGems(
-
-          reward!.gems,
-
-        );
-
-      }
-
-
-
-
-
-      setState((){
-
-
-
-        reward = reward!.multiply(2);
-
-
-
-        adUsed=true;
-
-
-
-      });
-
-
-
     }
+
+
+
+
+
+
+
+    setState((){
+
+
+
+      reward = reward!.multiply(2);
+
+
+
+      adUsed=true;
+
+
+
+    });
 
 
 
@@ -334,9 +393,7 @@ class _PuzzleWinScreenState
 
 
   @override
-
   void dispose(){
-
 
 
     animationController.dispose();
@@ -356,7 +413,6 @@ class _PuzzleWinScreenState
 
 
   @override
-
   Widget build(BuildContext context){
 
 
@@ -364,13 +420,22 @@ class _PuzzleWinScreenState
     if(loading){
 
 
+
       return const Scaffold(
+
+
 
         body:Center(
 
+
+
           child:CircularProgressIndicator(),
 
+
+
         ),
+
+
 
       );
 
@@ -381,60 +446,130 @@ class _PuzzleWinScreenState
 
 
 
+
+
     return Scaffold(
+
+
 
       body:Container(
 
-        decoration:const BoxDecoration(
 
-          gradient:LinearGradient(
+
+        decoration:
+
+        const BoxDecoration(
+
+
+
+          gradient:
+
+          LinearGradient(
+
+
+
+            begin:
+
+            Alignment.topCenter,
+
+
+
+            end:
+
+            Alignment.bottomCenter,
+
+
 
             colors:[
 
+
+
               Color(0xffffd166),
+
+
 
               Color(0xffff9f1c),
 
+
+
             ],
 
+
+
           ),
+
+
 
         ),
 
 
 
+
+
         child:SafeArea(
+
+
 
           child:Center(
 
+
+
             child:Column(
+
+
 
               mainAxisAlignment:
 
               MainAxisAlignment.center,
 
 
+
               children:[
+
+
 
 
 
                 ScaleTransition(
 
+
+
                   scale:scaleAnimation,
 
-                  child:const Text(
+
+
+                  child:
+
+                  const Text(
+
+
 
                     "🏆",
 
-                    style:TextStyle(
+
+
+                    style:
+
+                    TextStyle(
+
+
 
                       fontSize:90,
 
+
+
                     ),
+
+
 
                   ),
 
+
+
                 ),
+
+
+
 
 
 
@@ -442,25 +577,52 @@ class _PuzzleWinScreenState
 
 
 
+
+
+
                 const Text(
+
+
 
                   "أحسنت! 🎉",
 
-                  style:TextStyle(
+
+
+                  style:
+
+                  TextStyle(
+
+
 
                     color:Colors.white,
 
+
+
                     fontSize:45,
 
-                    fontWeight:FontWeight.bold,
+
+
+                    fontWeight:
+
+                    FontWeight.bold,
+
+
 
                   ),
+
+
 
                 ),
 
 
 
+
+
+
                 const SizedBox(height:30),
+
+
+
 
 
 
@@ -468,35 +630,53 @@ class _PuzzleWinScreenState
 
 
 
+
+
+
                 const SizedBox(height:30),
+
+
 
 
 
                 if(!adUsed)
 
+
+
                   ElevatedButton.icon(
 
-                    onPressed:doubleReward,
 
-                    icon:const Icon(
+
+                    onPressed:
+
+                    doubleReward,
+
+
+
+                    icon:
+
+                    const Icon(
 
                       Icons.play_circle,
 
                     ),
 
-                    label:const Text(
+
+
+                    label:
+
+                    const Text(
 
                       "🎬 مضاعفة المكافأة ×2",
 
-                      style:TextStyle(
-
-                        fontSize:18,
-
-                      ),
-
                     ),
 
+
+
                   ),
+
+
+
 
 
 
@@ -504,9 +684,41 @@ class _PuzzleWinScreenState
 
 
 
+
+
+
                 ElevatedButton(
 
+
+
+                  style:
+
+                  ElevatedButton.styleFrom(
+
+
+
+                    padding:
+
+                    const EdgeInsets.symmetric(
+
+
+
+                      horizontal:40,
+
+                      vertical:15,
+
+
+
+                    ),
+
+
+
+                  ),
+
+
+
                   onPressed:(){
+
 
 
                     Navigator.pop(
@@ -518,28 +730,62 @@ class _PuzzleWinScreenState
                     );
 
 
+
                   },
 
-                  child:const Text(
+
+
+                  child:
+
+                  const Text(
+
+
 
                     "متابعة 🧩",
 
+
+
+                    style:
+
+                    TextStyle(
+
+                      fontSize:22,
+
+                    ),
+
+
+
                   ),
+
+
 
                 ),
 
 
+
               ],
+
+
 
             ),
 
+
+
           ),
+
+
 
         ),
 
+
+
       ),
 
+
+
     );
+
+
 
   }
 
@@ -554,83 +800,192 @@ class _PuzzleWinScreenState
   Widget rewardBox(){
 
 
+
     return Container(
+
+
 
       padding:
 
       const EdgeInsets.all(25),
 
 
-      decoration:BoxDecoration(
+
+
+      margin:
+
+      const EdgeInsets.symmetric(
+
+        horizontal:30,
+
+      ),
+
+
+
+
+      decoration:
+
+      BoxDecoration(
+
+
 
         color:Colors.white,
+
+
 
         borderRadius:
 
         BorderRadius.circular(30),
 
+
+
+        boxShadow:[
+
+
+
+          BoxShadow(
+
+
+
+            color:
+
+            Colors.black26,
+
+
+
+            blurRadius:15,
+
+
+
+            offset:
+
+            const Offset(0,8),
+
+
+
+          ),
+
+
+
+        ],
+
+
+
       ),
 
 
+
+
+
+
       child:Column(
+
+
 
         children:[
 
 
 
+
+
           Text(
+
+
 
             "⭐ +${widget.result.stars}",
 
+
+
             style:
 
             const TextStyle(
 
+
+
               fontSize:32,
+
+
 
             ),
 
+
+
           ),
+
+
+
 
 
 
           Text(
 
+
+
             "🪙 +${reward!.coins}",
+
+
 
             style:
 
             const TextStyle(
 
+
+
               fontSize:32,
+
+
 
             ),
 
+
+
           ),
+
+
+
 
 
 
           if(reward!.gems > 0)
 
+
+
             Text(
 
+
+
               "💎 +${reward!.gems}",
+
+
 
               style:
 
               const TextStyle(
 
+
+
                 fontSize:30,
+
+
 
               ),
 
+
+
             ),
+
+
 
         ],
 
+
+
       ),
 
+
+
     );
+
 
 
   }
