@@ -166,23 +166,21 @@ class PuzzleSaveService {
 
     static Future<void> autoSavePuzzle({
 
-    required String worldId,
+  required String worldId,
 
-    required int level,
+  required int level,
 
-  }) async {
+}) async {
 
+  await PuzzleProgressManager.saveLastGame(
+    "${worldId}_level_$level",
+  );
 
-    await PuzzleProgressManager.saveLastGame(
+  await PuzzleProgressManager.saveLastSession(
+    DateTime.now(),
+  );
 
-      "${worldId}_level_$level",
-
-    );
-
-
-  }
-
-
+}
 
 
   //==================================================
