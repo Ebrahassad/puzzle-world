@@ -44,7 +44,6 @@ class PuzzleWinScreen extends StatefulWidget {
 
   @override
   State<PuzzleWinScreen> createState() =>
-
       _PuzzleWinScreenState();
 
 }
@@ -64,7 +63,6 @@ class _PuzzleWinScreenState
 
 
   RewardResultModel? reward;
-
 
 
   bool loading = true;
@@ -88,7 +86,6 @@ class _PuzzleWinScreenState
   @override
   void initState(){
 
-
     super.initState();
 
 
@@ -98,11 +95,9 @@ class _PuzzleWinScreenState
       vsync:this,
 
       duration:
-
       const Duration(seconds:1),
 
     )
-
       ..repeat(reverse:true);
 
 
@@ -117,8 +112,6 @@ class _PuzzleWinScreenState
 
     ).animate(
 
-
-
       CurvedAnimation(
 
         parent:animationController,
@@ -131,11 +124,7 @@ class _PuzzleWinScreenState
 
 
 
-
-
     completeLevel();
-
-
 
   }
 
@@ -151,23 +140,37 @@ class _PuzzleWinScreenState
 
 
 
+    RewardResultModel rewardResult =
+
+    RewardResultModel(
+
+      coins:0,
+
+      gems:0,
+
+    );
+
+
+
+
+
     if(widget.level != null){
 
 
 
       final levelId =
 
-      "level_${widget.level}";
+      "${widget.worldId}_level_${widget.level}";
 
 
 
 
 
-      final claimed =
+      final completed =
 
       await PuzzleProgressManager
 
-          .isRewardClaimed(
+          .isCompleted(
 
         levelId,
 
@@ -177,7 +180,8 @@ class _PuzzleWinScreenState
 
 
 
-      if(!claimed){
+
+      if(!completed){
 
 
 
@@ -217,6 +221,45 @@ class _PuzzleWinScreenState
 
 
 
+      }
+
+
+
+
+
+
+      final claimed =
+
+      await PuzzleProgressManager
+
+          .isRewardClaimed(
+
+        levelId,
+
+      );
+
+
+
+
+
+      if(!claimed){
+
+
+
+        rewardResult =
+
+        await RewardManager.completePuzzle(
+
+          difficulty:
+
+          widget.difficulty,
+
+        );
+
+
+
+
+
         await PuzzleProgressManager
 
             .markRewardClaimed(
@@ -231,21 +274,25 @@ class _PuzzleWinScreenState
 
 
 
+    }else{
+
+
+
+      rewardResult =
+
+      await RewardManager.completePuzzle(
+
+        difficulty:
+
+        widget.difficulty,
+
+      );
+
+
+
     }
 
 
-
-
-
-    final result =
-
-    await RewardManager.completePuzzle(
-
-      difficulty:
-
-      widget.difficulty,
-
-    );
 
 
 
@@ -260,7 +307,7 @@ class _PuzzleWinScreenState
 
 
 
-        reward = result;
+        reward = rewardResult;
 
 
         loading=false;
@@ -299,6 +346,7 @@ class _PuzzleWinScreenState
 
 
 
+
     final watched =
 
     await RewardAdService
@@ -319,18 +367,11 @@ class _PuzzleWinScreenState
 
 
 
-    final extraCoins =
 
-        reward!.coins;
-
+    final extraCoins = reward!.coins;
 
 
-
-
-    final extraGems =
-
-        reward!.gems;
-
+    final extraGems = reward!.gems;
 
 
 
@@ -357,9 +398,7 @@ class _PuzzleWinScreenState
 
       );
 
-
     }
-
 
 
 
@@ -396,10 +435,13 @@ class _PuzzleWinScreenState
   void dispose(){
 
 
+
     animationController.dispose();
 
 
+
     super.dispose();
+
 
 
   }
@@ -440,7 +482,9 @@ class _PuzzleWinScreenState
       );
 
 
+
     }
+
 
 
 
@@ -468,6 +512,21 @@ class _PuzzleWinScreenState
 
 
 
+            colors:[
+
+
+
+              Color(0xffffd166),
+
+
+              Color(0xffff9f1c),
+
+
+
+            ],
+
+
+
             begin:
 
             Alignment.topCenter,
@@ -477,22 +536,6 @@ class _PuzzleWinScreenState
             end:
 
             Alignment.bottomCenter,
-
-
-
-            colors:[
-
-
-
-              Color(0xffffd166),
-
-
-
-              Color(0xffff9f1c),
-
-
-
-            ],
 
 
 
@@ -534,7 +577,9 @@ class _PuzzleWinScreenState
 
 
 
-                  scale:scaleAnimation,
+                  scale:
+
+                  scaleAnimation,
 
 
 
@@ -691,32 +736,6 @@ class _PuzzleWinScreenState
 
 
 
-                  style:
-
-                  ElevatedButton.styleFrom(
-
-
-
-                    padding:
-
-                    const EdgeInsets.symmetric(
-
-
-
-                      horizontal:40,
-
-                      vertical:15,
-
-
-
-                    ),
-
-
-
-                  ),
-
-
-
                   onPressed:(){
 
 
@@ -739,21 +758,7 @@ class _PuzzleWinScreenState
 
                   const Text(
 
-
-
                     "متابعة 🧩",
-
-
-
-                    style:
-
-                    TextStyle(
-
-                      fontSize:22,
-
-                    ),
-
-
 
                   ),
 
@@ -811,7 +816,6 @@ class _PuzzleWinScreenState
 
 
 
-
       margin:
 
       const EdgeInsets.symmetric(
@@ -829,7 +833,9 @@ class _PuzzleWinScreenState
 
 
 
-        color:Colors.white,
+        color:
+
+        Colors.white,
 
 
 
@@ -876,9 +882,9 @@ class _PuzzleWinScreenState
 
 
 
+      child:
 
-
-      child:Column(
+      Column(
 
 
 
@@ -900,11 +906,7 @@ class _PuzzleWinScreenState
 
             const TextStyle(
 
-
-
               fontSize:32,
-
-
 
             ),
 
@@ -929,11 +931,7 @@ class _PuzzleWinScreenState
 
             const TextStyle(
 
-
-
               fontSize:32,
-
-
 
             ),
 
@@ -962,11 +960,7 @@ class _PuzzleWinScreenState
 
               const TextStyle(
 
-
-
                 fontSize:30,
-
-
 
               ),
 
