@@ -817,7 +817,44 @@ static Future<bool> isRewardClaimed(
   }
 
 
+//==================================================
+// 🗑️ حذف تقدم مرحلة
+//==================================================
 
+static Future<void> removeLevel(
+    String levelKey,
+    ) async {
+
+  final prefs = await _prefs;
+
+
+  final completed =
+      prefs.getStringList(completedLevelsKey) ?? [];
+
+
+  completed.remove(levelKey);
+
+
+  await prefs.setStringList(
+    completedLevelsKey,
+    completed,
+  );
+
+
+
+  final unlocked =
+      prefs.getStringList(unlockedLevelsKey) ?? [];
+
+
+  unlocked.remove(levelKey);
+
+
+  await prefs.setStringList(
+    unlockedLevelsKey,
+    unlocked,
+  );
+
+}
 
 
   //==================================================
