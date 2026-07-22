@@ -9,15 +9,22 @@ import '../managers/puzzle_progress_manager.dart';
 import '../services/reward_ad_service.dart';
 
 
+
 class PuzzleWinScreen extends StatefulWidget {
+
 
   final GameResultModel result;
 
+
   final int difficulty;
+
 
   final String? worldId;
 
+
   final int? level;
+
+
 
 
   const PuzzleWinScreen({
@@ -46,22 +53,35 @@ class PuzzleWinScreen extends StatefulWidget {
 
 
 
+
+
 class _PuzzleWinScreenState
+
     extends State<PuzzleWinScreen>
+
     with SingleTickerProviderStateMixin {
+
 
 
   RewardResultModel? reward;
 
 
+
   bool loading = true;
+
 
   bool adUsed = false;
 
 
+
   late AnimationController animationController;
 
+
   late Animation<double> scaleAnimation;
+
+
+
+
 
 
 
@@ -71,14 +91,18 @@ class _PuzzleWinScreenState
     super.initState();
 
 
+
     animationController = AnimationController(
 
       vsync:this,
 
       duration:
+
       const Duration(seconds:1),
 
     )..repeat(reverse:true);
+
+
 
 
 
@@ -101,7 +125,10 @@ class _PuzzleWinScreenState
     );
 
 
+
+
     completeLevel();
+
 
 
   }
@@ -110,29 +137,56 @@ class _PuzzleWinScreenState
 
 
 
+
+
+
+
   Future<void> completeLevel() async {
 
 
-    // حفظ المرحلة المكتملة
 
     if(widget.level != null){
 
 
-      await PuzzleProgressManager.completeLevel(
 
-        "level_${widget.level}",
+      final levelId =
+
+      "level_${widget.level}";
+
+
+
+      final completed =
+
+      await PuzzleProgressManager.isCompleted(
+
+        levelId,
 
       );
 
 
 
-      // فتح المرحلة التالية
+      if(!completed){
 
-      await PuzzleProgressManager.unlockNextLevel(
 
-        "level_${widget.level}",
 
-      );
+        await PuzzleProgressManager.completeLevel(
+
+          levelId,
+
+        );
+
+
+
+        await PuzzleProgressManager.unlockNextLevel(
+
+          levelId,
+
+        );
+
+
+
+      }
+
 
 
     }
@@ -140,7 +194,6 @@ class _PuzzleWinScreenState
 
 
 
-    // إضافة النجوم
 
     await PuzzleProgressManager.addStars(
 
@@ -151,13 +204,17 @@ class _PuzzleWinScreenState
 
 
 
-    final result =
+
+    final rewardResult =
 
     await RewardManager.completePuzzle(
 
-      difficulty:widget.difficulty,
+      difficulty:
+
+      widget.difficulty,
 
     );
+
 
 
 
@@ -165,13 +222,15 @@ class _PuzzleWinScreenState
     if(mounted){
 
 
+
       setState((){
 
 
-        reward=result;
+        reward = rewardResult;
 
 
         loading=false;
+
 
 
       });
@@ -195,12 +254,12 @@ class _PuzzleWinScreenState
   Future<void> doubleReward() async {
 
 
+
     if(adUsed || reward == null){
 
       return;
 
     }
-
 
 
 
@@ -211,9 +270,12 @@ class _PuzzleWinScreenState
 
 
 
+
     if(watched){
 
 
+
+      // إضافة المكافأة الإضافية فقط
 
       await RewardManager.addCoins(
 
@@ -224,7 +286,9 @@ class _PuzzleWinScreenState
 
 
 
+
       if(reward!.gems > 0){
+
 
 
         await RewardManager.addGems(
@@ -233,8 +297,8 @@ class _PuzzleWinScreenState
 
         );
 
-
       }
+
 
 
 
@@ -242,16 +306,9 @@ class _PuzzleWinScreenState
       setState((){
 
 
-        reward = RewardResultModel(
 
+        reward = reward!.multiply(2);
 
-          coins:reward!.coins * 2,
-
-
-          gems:reward!.gems * 2,
-
-
-        );
 
 
         adUsed=true;
@@ -277,7 +334,9 @@ class _PuzzleWinScreenState
 
 
   @override
+
   void dispose(){
+
 
 
     animationController.dispose();
@@ -297,14 +356,15 @@ class _PuzzleWinScreenState
 
 
   @override
+
   Widget build(BuildContext context){
+
 
 
     if(loading){
 
 
       return const Scaffold(
-
 
         body:Center(
 
@@ -320,20 +380,14 @@ class _PuzzleWinScreenState
 
 
 
-    return Scaffold(
 
+    return Scaffold(
 
       body:Container(
 
-
         decoration:const BoxDecoration(
 
-
           gradient:LinearGradient(
-
-            begin:Alignment.topCenter,
-
-            end:Alignment.bottomCenter,
 
             colors:[
 
@@ -351,12 +405,9 @@ class _PuzzleWinScreenState
 
         child:SafeArea(
 
-
           child:Center(
 
-
             child:Column(
-
 
               mainAxisAlignment:
 
@@ -369,9 +420,7 @@ class _PuzzleWinScreenState
 
                 ScaleTransition(
 
-
                   scale:scaleAnimation,
-
 
                   child:const Text(
 
@@ -389,9 +438,7 @@ class _PuzzleWinScreenState
 
 
 
-
-                const SizedBox(height:15),
-
+                const SizedBox(height:20),
 
 
 
@@ -413,10 +460,7 @@ class _PuzzleWinScreenState
 
 
 
-
                 const SizedBox(height:30),
-
-
 
 
 
@@ -424,9 +468,7 @@ class _PuzzleWinScreenState
 
 
 
-
                 const SizedBox(height:30),
-
 
 
 
@@ -458,29 +500,11 @@ class _PuzzleWinScreenState
 
 
 
-
                 const SizedBox(height:20),
 
 
 
-
-
                 ElevatedButton(
-
-                  style:ElevatedButton.styleFrom(
-
-                    padding:
-
-                    const EdgeInsets.symmetric(
-
-                      horizontal:40,
-
-                      vertical:15,
-
-                    ),
-
-                  ),
-
 
                   onPressed:(){
 
@@ -496,21 +520,13 @@ class _PuzzleWinScreenState
 
                   },
 
-
                   child:const Text(
 
                     "متابعة 🧩",
 
-                    style:TextStyle(
-
-                      fontSize:22,
-
-                    ),
-
                   ),
 
                 ),
-
 
 
               ],
@@ -534,28 +550,18 @@ class _PuzzleWinScreenState
 
 
 
+
   Widget rewardBox(){
 
 
     return Container(
-
 
       padding:
 
       const EdgeInsets.all(25),
 
 
-      margin:
-
-      const EdgeInsets.symmetric(
-
-        horizontal:30,
-
-      ),
-
-
       decoration:BoxDecoration(
-
 
         color:Colors.white,
 
@@ -563,34 +569,13 @@ class _PuzzleWinScreenState
 
         BorderRadius.circular(30),
 
-
-        boxShadow:[
-
-
-          BoxShadow(
-
-            color:Colors.black26,
-
-            blurRadius:15,
-
-            offset:
-
-            const Offset(0,8),
-
-          ),
-
-
-        ],
-
-
       ),
-
 
 
       child:Column(
 
-
         children:[
+
 
 
           Text(
@@ -625,7 +610,6 @@ class _PuzzleWinScreenState
 
 
 
-
           if(reward!.gems > 0)
 
             Text(
@@ -642,17 +626,15 @@ class _PuzzleWinScreenState
 
             ),
 
-
         ],
 
-
       ),
-
 
     );
 
 
   }
+
 
 
 }
