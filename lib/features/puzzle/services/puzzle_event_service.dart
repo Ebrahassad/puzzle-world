@@ -1,9 +1,12 @@
 import '../managers/puzzle_progress_manager.dart';
 
 
-
 class PuzzleEventService {
 
+
+  //==================================================
+  // بداية المرحلة
+  //==================================================
 
   static Future<void> onPuzzleStarted({
 
@@ -14,10 +17,7 @@ class PuzzleEventService {
   }) async {
 
 
-
-    await PuzzleProgressManager
-
-        .saveLastGame(
+    await PuzzleProgressManager.saveLastGame(
 
       "$worldId-$level",
 
@@ -29,9 +29,37 @@ class PuzzleEventService {
 
 
 
+  // يستخدم عند فتح شاشة الفوز
+
+  static Future<void> levelScreenOpened({
+
+    String? worldId,
+
+    int? level,
+
+  }) async {
+
+
+    if(worldId != null && level != null){
+
+      await PuzzleProgressManager.saveLastGame(
+
+        "$worldId-$level",
+
+      );
+
+    }
+
+
+  }
 
 
 
+
+
+  //==================================================
+  // إكمال المرحلة
+  //==================================================
 
   static Future<void> onPuzzleCompleted({
 
@@ -43,9 +71,7 @@ class PuzzleEventService {
 
 
 
-    await PuzzleProgressManager
-
-        .completeLevel(
+    await PuzzleProgressManager.completeLevel(
 
       levelId,
 
@@ -53,11 +79,7 @@ class PuzzleEventService {
 
 
 
-
-
-    await PuzzleProgressManager
-
-        .addStars(
+    await PuzzleProgressManager.addStars(
 
       stars,
 
@@ -70,8 +92,57 @@ class PuzzleEventService {
 
 
 
+  // يستخدم من WinScreen
+
+  static Future<void> levelCompleted({
+
+    String? worldId,
+
+    int? level,
+
+    required int stars,
+
+    required int moves,
+
+    required int seconds,
+
+  }) async {
 
 
+
+    await PuzzleProgressManager.addCompletedPuzzle(
+
+      stars: stars,
+
+      moves: moves,
+
+      seconds: seconds,
+
+    );
+
+
+
+    if(worldId != null && level != null){
+
+      await PuzzleProgressManager.saveLastGame(
+
+        "$worldId-$level",
+
+      );
+
+    }
+
+
+  }
+
+
+
+
+
+
+  //==================================================
+  // فتح مرحلة
+  //==================================================
 
   static Future<void> onLevelUnlocked({
 
@@ -80,10 +151,7 @@ class PuzzleEventService {
   }) async {
 
 
-
-    await PuzzleProgressManager
-
-        .unlockLevel(
+    await PuzzleProgressManager.unlockLevel(
 
       levelId,
 
@@ -97,15 +165,14 @@ class PuzzleEventService {
 
 
 
-
+  //==================================================
+  // التلميحات
+  //==================================================
 
   static Future<void> onHintUsed() async {
 
 
-
-    await PuzzleProgressManager
-
-        .addHints(
+    await PuzzleProgressManager.addHints(
 
       -1,
 
@@ -119,7 +186,9 @@ class PuzzleEventService {
 
 
 
-
+  //==================================================
+  // مكافأة
+  //==================================================
 
   static Future<void> onRewardReceived({
 
@@ -128,10 +197,7 @@ class PuzzleEventService {
   }) async {
 
 
-
-    await PuzzleProgressManager
-
-        .addStars(
+    await PuzzleProgressManager.addStars(
 
       stars,
 
@@ -145,15 +211,45 @@ class PuzzleEventService {
 
 
 
+  // يستخدم عند مضاعفة المكافأة
 
+  static Future<void> rewardDoubled({
+
+    String? worldId,
+
+    int? level,
+
+    required int coins,
+
+    required int gems,
+
+  }) async {
+
+
+    // نحفظ آخر جلسة فقط
+
+    await PuzzleProgressManager.saveLastSession(
+
+      DateTime.now(),
+
+    );
+
+
+  }
+
+
+
+
+
+
+  //==================================================
+  // خروج من اللعبة
+  //==================================================
 
   static Future<void> onGameExit() async {
 
 
-
-    await PuzzleProgressManager
-
-        .saveLastSession(
+    await PuzzleProgressManager.saveLastSession(
 
       DateTime.now(),
 
