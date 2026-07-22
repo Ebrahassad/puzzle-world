@@ -1353,7 +1353,108 @@ static Future<void> removeLevel(
   }
 
 
+  //==================================================
+  // حذف تقدم مرحلة واحدة
+  //==================================================
 
+
+  static Future<void> removeLevel(
+
+      String levelKey,
+
+      ) async {
+
+
+    final prefs = await _prefs;
+
+
+
+    // حذف من المراحل المكتملة
+
+    final completed =
+
+    prefs.getStringList(
+
+      completedLevelsKey,
+
+    ) ?? [];
+
+
+
+    completed.remove(levelKey);
+
+
+
+    await prefs.setStringList(
+
+      completedLevelsKey,
+
+      completed,
+
+    );
+
+
+
+
+
+    // حذف من المراحل المفتوحة
+
+    final unlocked =
+
+    prefs.getStringList(
+
+      unlockedLevelsKey,
+
+    ) ?? [];
+
+
+
+    unlocked.remove(levelKey);
+
+
+
+    await prefs.setStringList(
+
+      unlockedLevelsKey,
+
+      unlocked,
+
+    );
+
+
+
+
+
+    // حذف نجوم المرحلة
+
+    final starsData =
+
+    Map<String,dynamic>.from(
+
+      jsonDecode(
+
+        prefs.getString(levelStarsKey) ?? "{}",
+
+      ),
+
+    );
+
+
+
+    starsData.remove(levelKey);
+
+
+
+    await prefs.setString(
+
+      levelStarsKey,
+
+      jsonEncode(starsData),
+
+    );
+
+
+  }
 
 
   //==================================================
