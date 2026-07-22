@@ -27,21 +27,15 @@ class PuzzleWinScreen extends StatefulWidget {
 
   const PuzzleWinScreen({
 
-
     super.key,
-
 
     required this.result,
 
-
     this.difficulty = 1,
-
 
     this.worldId,
 
-
     this.level,
-
 
   });
 
@@ -60,7 +54,9 @@ class PuzzleWinScreen extends StatefulWidget {
 
 
 class _PuzzleWinScreenState
+
     extends State<PuzzleWinScreen>
+
     with SingleTickerProviderStateMixin {
 
 
@@ -72,16 +68,14 @@ class _PuzzleWinScreenState
   bool loading = true;
 
 
-
   bool adUsed = false;
 
 
 
-  late AnimationController animationController;
+  late AnimationController controller;
 
 
-
-  late Animation<double> scaleAnimation;
+  late Animation<double> animation;
 
 
 
@@ -96,7 +90,7 @@ class _PuzzleWinScreenState
 
 
 
-    animationController = AnimationController(
+    controller = AnimationController(
 
 
       vsync:this,
@@ -112,13 +106,14 @@ class _PuzzleWinScreenState
 
 
 
-    scaleAnimation = Tween<double>(
+
+    animation = Tween<double>(
 
 
       begin:1,
 
 
-      end:1.1,
+      end:1.15,
 
 
     ).animate(
@@ -128,7 +123,7 @@ class _PuzzleWinScreenState
       CurvedAnimation(
 
 
-        parent:animationController,
+        parent:controller,
 
 
         curve:Curves.easeInOut,
@@ -137,11 +132,12 @@ class _PuzzleWinScreenState
       ),
 
 
+
     );
 
 
 
-    getReward();
+    loadReward();
 
 
   }
@@ -153,13 +149,15 @@ class _PuzzleWinScreenState
 
 
 
-  Future<void> getReward() async {
+
+  Future<void> loadReward() async {
 
 
 
     final result =
 
     await RewardManager.completePuzzle(
+
 
 
       difficulty:
@@ -172,16 +170,27 @@ class _PuzzleWinScreenState
 
 
 
-    setState((){
+
+    if(mounted){
 
 
-      reward = result;
+
+      setState((){
 
 
-      loading=false;
+
+        reward=result;
 
 
-    });
+        loading=false;
+
+
+
+      });
+
+
+
+    }
 
 
 
@@ -199,7 +208,7 @@ class _PuzzleWinScreenState
 
 
 
-    if(adUsed || reward == null){
+    if(adUsed || reward==null){
 
       return;
 
@@ -208,9 +217,11 @@ class _PuzzleWinScreenState
 
 
 
+
     final watched =
 
     await RewardAdService.showRewardAd();
+
 
 
 
@@ -229,7 +240,7 @@ class _PuzzleWinScreenState
 
 
 
-      if(reward!.gems > 0){
+      if(reward!.gems>0){
 
 
         await RewardManager.addGems(
@@ -246,6 +257,7 @@ class _PuzzleWinScreenState
 
 
       setState((){
+
 
 
         reward = RewardResultModel(
@@ -279,6 +291,7 @@ class _PuzzleWinScreenState
     }
 
 
+
   }
 
 
@@ -287,16 +300,22 @@ class _PuzzleWinScreenState
 
 
 
+
+
   @override
+
   void dispose(){
 
 
-    animationController.dispose();
+
+    controller.dispose();
+
 
 
     super.dispose();
 
 
+
   }
 
 
@@ -305,7 +324,10 @@ class _PuzzleWinScreenState
 
 
 
+
+
   @override
+
   Widget build(BuildContext context){
 
 
@@ -313,27 +335,28 @@ class _PuzzleWinScreenState
     if(loading){
 
 
+
       return const Scaffold(
+
 
 
         body:
 
         Center(
 
-
           child:
 
           CircularProgressIndicator(),
 
-
         ),
+
 
 
       );
 
 
-    }
 
+    }
 
 
 
@@ -361,26 +384,14 @@ class _PuzzleWinScreenState
 
 
 
-            begin:
-
-            Alignment.topCenter,
-
-
-
-            end:
-
-            Alignment.bottomCenter,
-
-
-
             colors:[
-
 
 
               Color(0xffffd166),
 
 
               Color(0xffff9f1c),
+
 
 
             ],
@@ -425,14 +436,13 @@ class _PuzzleWinScreenState
 
 
 
-
                 ScaleTransition(
 
 
 
                   scale:
 
-                  scaleAnimation,
+                  animation,
 
 
 
@@ -442,7 +452,7 @@ class _PuzzleWinScreenState
 
 
 
-                    "🎉",
+                    "🏆",
 
 
 
@@ -452,13 +462,15 @@ class _PuzzleWinScreenState
 
 
 
-                      fontSize:80,
+                      fontSize:90,
 
 
                     ),
 
 
+
                   ),
+
 
 
                 ),
@@ -467,7 +479,8 @@ class _PuzzleWinScreenState
 
 
 
-                const SizedBox(height:10),
+
+                const SizedBox(height:20),
 
 
 
@@ -477,7 +490,7 @@ class _PuzzleWinScreenState
 
 
 
-                  "أحسنت!",
+                  "أحسنت! 🎉",
 
 
 
@@ -487,10 +500,10 @@ class _PuzzleWinScreenState
 
 
 
-                    fontSize:45,
-
-
                     color:Colors.white,
+
+
+                    fontSize:45,
 
 
                     fontWeight:
@@ -498,11 +511,13 @@ class _PuzzleWinScreenState
                     FontWeight.bold,
 
 
+
                   ),
 
 
 
                 ),
+
 
 
 
@@ -514,7 +529,151 @@ class _PuzzleWinScreenState
 
 
 
-                rewardCard(),
+                Container(
+
+
+
+                  padding:
+
+                  const EdgeInsets.all(25),
+
+
+
+                  margin:
+
+                  const EdgeInsets.symmetric(
+
+                    horizontal:30,
+
+                  ),
+
+
+
+                  decoration:
+
+                  BoxDecoration(
+
+
+
+                    color:Colors.white,
+
+
+                    borderRadius:
+
+                    BorderRadius.circular(30),
+
+
+
+                    boxShadow:[
+
+
+
+                      BoxShadow(
+
+
+
+                        color:
+
+                        Colors.black26,
+
+
+
+                        blurRadius:15,
+
+
+
+                        offset:
+
+                        Offset(0,8),
+
+
+
+                      ),
+
+
+
+                    ],
+
+
+
+                  ),
+
+
+
+                  child:
+
+                  Column(
+
+
+
+                    children:[
+
+
+
+                      Text(
+
+                        "⭐ ${widget.result.stars}",
+
+                        style:
+
+                        const TextStyle(
+
+                          fontSize:32,
+
+                        ),
+
+                      ),
+
+
+
+
+                      Text(
+
+                        "🪙 +${reward!.coins}",
+
+                        style:
+
+                        const TextStyle(
+
+                          fontSize:32,
+
+                        ),
+
+                      ),
+
+
+
+
+                      if(reward!.gems>0)
+
+
+
+                        Text(
+
+                          "💎 +${reward!.gems}",
+
+                          style:
+
+                          const TextStyle(
+
+                            fontSize:28,
+
+                          ),
+
+                        ),
+
+
+
+                    ],
+
+
+
+                  ),
+
+
+
+                ),
+
 
 
 
@@ -576,7 +735,9 @@ class _PuzzleWinScreenState
 
 
 
+
                 const SizedBox(height:20),
+
 
 
 
@@ -623,6 +784,7 @@ class _PuzzleWinScreenState
                     ),
 
 
+
                   ),
 
 
@@ -646,139 +808,13 @@ class _PuzzleWinScreenState
         ),
 
 
-      ),
-
-
-    );
-
-
-  }
-
-
-
-
-
-
-
-
-
-  Widget rewardCard(){
-
-
-
-    return Container(
-
-
-
-      padding:
-
-      const EdgeInsets.all(25),
-
-
-
-      margin:
-
-      const EdgeInsets.symmetric(
-
-        horizontal:30,
-
-      ),
-
-
-
-      decoration:
-
-      BoxDecoration(
-
-
-
-        color:
-
-        Colors.white.withOpacity(.9),
-
-
-
-        borderRadius:
-
-        BorderRadius.circular(30),
-
-
-
-      ),
-
-
-
-      child:
-
-      Column(
-
-
-
-        children:[
-
-
-
-          Text(
-
-            "⭐ ${widget.result.stars}",
-
-            style:
-
-            const TextStyle(
-
-              fontSize:30,
-
-            ),
-
-          ),
-
-
-
-          Text(
-
-            "🪙 +${reward!.coins}",
-
-            style:
-
-            const TextStyle(
-
-              fontSize:30,
-
-            ),
-
-          ),
-
-
-
-          if(reward!.gems>0)
-
-
-
-            Text(
-
-              "💎 +${reward!.gems}",
-
-              style:
-
-              const TextStyle(
-
-                fontSize:30,
-
-              ),
-
-            ),
-
-
-
-        ],
-
-
 
       ),
 
 
 
     );
+
 
 
   }
