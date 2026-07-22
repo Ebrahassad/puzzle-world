@@ -3,25 +3,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/reward_result_model.dart';
 
 
-
 class RewardManager {
 
 
-
-  static const String coinsKey = "puzzle_coins";
-
-
-  static const String gemsKey = "puzzle_gems";
+  static const String coinsKey =
+      "puzzle_coins";
 
 
-  static const String puzzlesSolvedKey =
-      "puzzle_solved";
+  static const String gemsKey =
+      "puzzle_gems";
+
+
+  static const String solvedKey =
+      "puzzle_solved_count";
 
 
   static const String dailyRewardKey =
       "puzzle_daily_reward";
-
-
 
 
 
@@ -32,18 +30,12 @@ class RewardManager {
 
   static Future<int> getCoins() async {
 
-
     final prefs =
     await SharedPreferences.getInstance();
 
-
     return prefs.getInt(coinsKey) ?? 0;
 
-
   }
-
-
-
 
 
 
@@ -76,6 +68,34 @@ class RewardManager {
 
 
 
+  static Future<void> removeCoins(
+      int amount,
+      ) async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    final current =
+        prefs.getInt(coinsKey) ?? 0;
+
+
+
+    await prefs.setInt(
+
+      coinsKey,
+
+      current - amount < 0
+          ? 0
+          : current - amount,
+
+    );
+
+
+  }
+
+
 
 
 
@@ -95,7 +115,6 @@ class RewardManager {
 
 
   }
-
 
 
 
@@ -133,9 +152,8 @@ class RewardManager {
 
 
 
-
   // =========================
-  // إنهاء البازل
+  // إنهاء لعبة البازل
   // =========================
 
 
@@ -149,7 +167,7 @@ class RewardManager {
 
 
 
-    int coins = 50;
+    int coins;
 
 
     int gems = 0;
@@ -157,10 +175,8 @@ class RewardManager {
 
 
 
-    // زيادة المكافأة حسب المستوى
-
-
     switch(difficulty){
+
 
 
       case 1:
@@ -168,6 +184,7 @@ class RewardManager {
         coins = 50;
 
         break;
+
 
 
 
@@ -179,7 +196,8 @@ class RewardManager {
 
 
 
-      default:
+
+      case 3:
 
         coins = 150;
 
@@ -188,8 +206,18 @@ class RewardManager {
         break;
 
 
-    }
 
+
+      default:
+
+        coins = 200;
+
+        gems = 2;
+
+        break;
+
+
+    }
 
 
 
@@ -211,25 +239,18 @@ class RewardManager {
 
 
     final prefs =
-
     await SharedPreferences.getInstance();
 
 
 
     final solved =
-
-    prefs.getInt(
-
-      puzzlesSolvedKey,
-
-    ) ?? 0;
-
+        prefs.getInt(solvedKey) ?? 0;
 
 
 
     await prefs.setInt(
 
-      puzzlesSolvedKey,
+      solvedKey,
 
       solved + 1,
 
@@ -250,7 +271,6 @@ class RewardManager {
     );
 
 
-
   }
 
 
@@ -262,17 +282,35 @@ class RewardManager {
 
 
   // =========================
-  // مكافأة مشاهدة إعلان
+  // مكافأة إعلان
   // =========================
 
 
-  static Future<void>
+  static Future<RewardResultModel>
 
   rewardedAdBonus() async {
 
 
 
-    await addCoins(100);
+    const reward = RewardResultModel(
+
+      coins:100,
+
+      gems:0,
+
+    );
+
+
+
+    await addCoins(
+
+      reward.coins,
+
+    );
+
+
+
+    return reward;
 
 
   }
@@ -295,23 +333,23 @@ class RewardManager {
   canClaimDailyReward() async {
 
 
-    final prefs =
 
+    final prefs =
     await SharedPreferences.getInstance();
 
 
 
-    final last =
+    final saved =
+        prefs.getString(
 
-    prefs.getString(
+          dailyRewardKey,
 
-      dailyRewardKey,
-
-    );
-
+        );
 
 
-    if(last == null){
+
+
+    if(saved == null){
 
       return true;
 
@@ -320,24 +358,25 @@ class RewardManager {
 
 
 
-    final oldDate =
 
-    DateTime.parse(last);
+    final last =
+    DateTime.parse(saved);
 
 
 
     final now =
-
     DateTime.now();
 
 
 
 
-    return oldDate.day != now.day ||
+    return
 
-        oldDate.month != now.month ||
+        last.year != now.year ||
 
-        oldDate.year != now.year;
+            last.month != now.month ||
+
+            last.day != now.day;
 
 
 
@@ -357,9 +396,7 @@ class RewardManager {
 
 
     final prefs =
-
     await SharedPreferences.getInstance();
-
 
 
 
@@ -381,14 +418,10 @@ class RewardManager {
     await addCoins(100);
 
 
-
     await addGems(1);
 
 
-
   }
-
-
 
 
 
