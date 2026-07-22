@@ -5,9 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../engine/puzzle_piece.dart';
 
 
-
 class PuzzleProgressManager {
-
 
 
   static const String progressKey =
@@ -22,6 +20,10 @@ class PuzzleProgressManager {
       "puzzle_coins";
 
 
+  static const String gemsKey =
+      "puzzle_gems";
+
+
   static const String hintsKey =
       "puzzle_hints";
 
@@ -32,6 +34,30 @@ class PuzzleProgressManager {
 
   static const String unlockedLevelsKey =
       "puzzle_unlocked_levels";
+
+
+  static const String lastGameKey =
+      "puzzle_last_game";
+
+
+  static const String lastSessionKey =
+      "puzzle_last_session";
+
+
+  static const String claimedRewardsKey =
+      "puzzle_claimed_rewards";
+
+
+  static const String movesKey =
+      "puzzle_total_moves";
+
+
+  static const String completedCountKey =
+      "puzzle_completed_count";
+
+
+  static const String bestTimeKey =
+      "puzzle_best_time";
 
 
 
@@ -65,7 +91,6 @@ class PuzzleProgressManager {
     final data = {
 
 
-
       "puzzleId": puzzleId,
 
 
@@ -76,7 +101,6 @@ class PuzzleProgressManager {
 
 
       "seconds": seconds,
-
 
 
       "pieces": pieces.map((piece){
@@ -109,9 +133,7 @@ class PuzzleProgressManager {
       }).toList(),
 
 
-
     };
-
 
 
 
@@ -131,9 +153,6 @@ class PuzzleProgressManager {
 
 
 
-
-
-
   // =========================
   // تحميل التقدم
   // =========================
@@ -144,14 +163,12 @@ class PuzzleProgressManager {
   loadProgress() async {
 
 
-
     final prefs =
     await SharedPreferences.getInstance();
 
 
-
     final value =
-    prefs.getString(progressKey);
+        prefs.getString(progressKey);
 
 
 
@@ -177,14 +194,6 @@ class PuzzleProgressManager {
 
 
 
-
-
-
-  // =========================
-  // حذف التقدم الحالي
-  // =========================
-
-
   static Future<void> clearProgress() async {
 
 
@@ -192,18 +201,10 @@ class PuzzleProgressManager {
     await SharedPreferences.getInstance();
 
 
-
-    await prefs.remove(
-
-      progressKey,
-
-    );
+    await prefs.remove(progressKey);
 
 
   }
-
-
-
 
 
 
@@ -222,10 +223,8 @@ class PuzzleProgressManager {
       ) async {
 
 
-
     final prefs =
     await SharedPreferences.getInstance();
-
 
 
     final current =
@@ -248,15 +247,11 @@ class PuzzleProgressManager {
 
 
 
-
-
-
   static Future<int> getStars() async {
 
 
     final prefs =
     await SharedPreferences.getInstance();
-
 
 
     return prefs.getInt(starsKey) ?? 0;
@@ -268,10 +263,39 @@ class PuzzleProgressManager {
 
 
 
+  static Future<int> getTotalStars() async {
+
+
+    return getStars();
+
+
+  }
 
 
 
 
+
+  static Future<void> saveStars(
+
+      int amount,
+
+      ) async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    await prefs.setInt(
+
+      starsKey,
+
+      amount,
+
+    );
+
+
+  }
   // =========================
   // 🪙 العملات
   // =========================
@@ -286,7 +310,6 @@ class PuzzleProgressManager {
 
     final prefs =
     await SharedPreferences.getInstance();
-
 
 
     final current =
@@ -309,16 +332,11 @@ class PuzzleProgressManager {
 
 
 
-
-
-
   static Future<int> getCoins() async {
-
 
 
     final prefs =
     await SharedPreferences.getInstance();
-
 
 
     return prefs.getInt(coinsKey) ?? 0;
@@ -329,6 +347,54 @@ class PuzzleProgressManager {
 
 
 
+
+  // =========================
+  // 💎 الجواهر
+  // =========================
+
+
+  static Future<void> addGems(
+
+      int amount,
+
+      ) async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    final current =
+        prefs.getInt(gemsKey) ?? 0;
+
+
+
+    await prefs.setInt(
+
+      gemsKey,
+
+      current + amount,
+
+    );
+
+
+  }
+
+
+
+
+
+  static Future<int> getGems() async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    return prefs.getInt(gemsKey) ?? 0;
+
+
+  }
 
 
 
@@ -350,9 +416,19 @@ class PuzzleProgressManager {
     await SharedPreferences.getInstance();
 
 
-
     final current =
         prefs.getInt(hintsKey) ?? 0;
+
+
+
+    int result = current + amount;
+
+
+    if(result < 0){
+
+      result = 0;
+
+    }
 
 
 
@@ -360,15 +436,12 @@ class PuzzleProgressManager {
 
       hintsKey,
 
-      current + amount,
+      result,
 
     );
 
 
   }
-
-
-
 
 
 
@@ -381,7 +454,6 @@ class PuzzleProgressManager {
     await SharedPreferences.getInstance();
 
 
-
     return prefs.getInt(hintsKey) ?? 0;
 
 
@@ -391,16 +463,11 @@ class PuzzleProgressManager {
 
 
 
-
-
-
   static Future<bool> useHint() async {
-
 
 
     final prefs =
     await SharedPreferences.getInstance();
-
 
 
     final current =
@@ -416,7 +483,6 @@ class PuzzleProgressManager {
 
 
 
-
     await prefs.setInt(
 
       hintsKey,
@@ -424,7 +490,6 @@ class PuzzleProgressManager {
       current - 1,
 
     );
-
 
 
     return true;
@@ -436,12 +501,8 @@ class PuzzleProgressManager {
 
 
 
-
-
-
-
   // =========================
-  // 🏆 إكمال مرحلة
+  // 🏆 المراحل المكتملة
   // =========================
 
 
@@ -452,10 +513,8 @@ class PuzzleProgressManager {
       ) async {
 
 
-
     final prefs =
     await SharedPreferences.getInstance();
-
 
 
     final levels =
@@ -465,7 +524,6 @@ class PuzzleProgressManager {
       completedLevelsKey,
 
     ) ?? [];
-
 
 
 
@@ -489,9 +547,6 @@ class PuzzleProgressManager {
 
 
   }
-
-
-
 
 
 
@@ -504,10 +559,8 @@ class PuzzleProgressManager {
       ) async {
 
 
-
     final prefs =
     await SharedPreferences.getInstance();
-
 
 
     final levels =
@@ -529,12 +582,34 @@ class PuzzleProgressManager {
 
 
 
+  static Future<int> getCompletedPuzzleCount() async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    final levels =
+
+    prefs.getStringList(
+
+      completedLevelsKey,
+
+    ) ?? [];
+
+
+
+    return levels.length;
+
+
+  }
+
 
 
 
 
   // =========================
-  // 🔓 فتح مرحلة
+  // 🔓 فتح المراحل
   // =========================
 
 
@@ -545,10 +620,8 @@ class PuzzleProgressManager {
       ) async {
 
 
-
     final prefs =
     await SharedPreferences.getInstance();
-
 
 
     final levels =
@@ -561,7 +634,6 @@ class PuzzleProgressManager {
 
 
 
-
     if(!levels.contains(levelId)){
 
 
@@ -569,7 +641,6 @@ class PuzzleProgressManager {
 
 
     }
-
 
 
 
@@ -588,19 +659,6 @@ class PuzzleProgressManager {
 
 
 
-
-
-
-
-  // =========================
-  // هل المرحلة مفتوحة
-  // يدعم العوالم
-  // مثال:
-  // animals_level_1
-  // cars_level_1
-  // =========================
-
-
   static Future<bool> isUnlocked(
 
       String levelId,
@@ -608,10 +666,8 @@ class PuzzleProgressManager {
       ) async {
 
 
-
     final prefs =
     await SharedPreferences.getInstance();
-
 
 
     final levels =
@@ -624,18 +680,11 @@ class PuzzleProgressManager {
 
 
 
-
-    // أول مرحلة في كل عالم مفتوحة
-
     if(levelId.endsWith("_level_1")){
-
 
       return true;
 
-
     }
-
-
 
 
 
@@ -648,15 +697,6 @@ class PuzzleProgressManager {
 
 
 
-
-
-
-
-  // =========================
-  // فتح المرحلة التالية
-  // =========================
-
-
   static Future<void> unlockNextLevel(
 
       String currentLevelId,
@@ -664,11 +704,8 @@ class PuzzleProgressManager {
       ) async {
 
 
-
     final data =
-
-    currentLevelId.split("_level_");
-
+        currentLevelId.split("_level_");
 
 
 
@@ -680,29 +717,44 @@ class PuzzleProgressManager {
 
 
 
-
-
     final world = data[0];
 
 
-
     final current =
-
-    int.tryParse(data[1]) ?? 1;
-
-
-
-
-    final next =
-
-    "${world}_level_${current + 1}";
-
+        int.tryParse(data[1]) ?? 1;
 
 
 
     await unlockLevel(
 
-      next,
+      "${world}_level_${current + 1}",
+
+    );
+
+
+  }
+
+  // =========================
+  // 🎮 آخر لعبة
+  // =========================
+
+
+  static Future<void> saveLastGame(
+
+      String value,
+
+      ) async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    await prefs.setString(
+
+      lastGameKey,
+
+      value,
 
     );
 
@@ -713,17 +765,228 @@ class PuzzleProgressManager {
 
 
 
+  static Future<String?> getLastGame() async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    return prefs.getString(
+
+      lastGameKey,
+
+    );
+
+
+  }
+
 
 
 
 
   // =========================
-  // إعادة كل البيانات
+  // ⏱ آخر جلسة
   // =========================
 
 
-  static Future<void> resetAll() async {
+  static Future<void> saveLastSession(
 
+      DateTime time,
+
+      ) async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    await prefs.setString(
+
+      lastSessionKey,
+
+      time.toIso8601String(),
+
+    );
+
+
+  }
+
+
+
+
+
+  static Future<DateTime?> getLastSession() async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    final value =
+        prefs.getString(lastSessionKey);
+
+
+
+    if(value == null){
+
+      return null;
+
+    }
+
+
+
+    return DateTime.tryParse(value);
+
+
+  }
+
+
+
+
+
+  // =========================
+  // 🎁 المكافآت
+  // =========================
+
+
+  static Future<bool> isRewardClaimed(
+
+      String levelId,
+
+      ) async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    final rewards =
+
+    prefs.getStringList(
+
+      claimedRewardsKey,
+
+    ) ?? [];
+
+
+
+    return rewards.contains(levelId);
+
+
+  }
+
+
+
+
+
+  static Future<void> markRewardClaimed(
+
+      String levelId,
+
+      ) async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    final rewards =
+
+    prefs.getStringList(
+
+      claimedRewardsKey,
+
+    ) ?? [];
+
+
+
+    if(!rewards.contains(levelId)){
+
+
+      rewards.add(levelId);
+
+
+    }
+
+
+
+    await prefs.setStringList(
+
+      claimedRewardsKey,
+
+      rewards,
+
+    );
+
+
+  }
+
+
+
+
+
+  // =========================
+  // 📊 الإحصائيات
+  // =========================
+
+
+  static Future<void> addGamePlayed() async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    final current =
+        prefs.getInt("puzzle_games_played") ?? 0;
+
+
+
+    await prefs.setInt(
+
+      "puzzle_games_played",
+
+      current + 1,
+
+    );
+
+
+  }
+
+
+
+
+
+  static Future<int> getGamesPlayed() async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    return prefs.getInt(
+
+      "puzzle_games_played",
+
+    ) ?? 0;
+
+
+  }
+
+
+
+
+
+  static Future<void> addCompletedPuzzle({
+
+    required int stars,
+
+    required int moves,
+
+    required int seconds,
+
+  }) async {
 
 
     final prefs =
@@ -731,28 +994,169 @@ class PuzzleProgressManager {
 
 
 
-
-    await prefs.remove(progressKey);
-
-
-    await prefs.remove(starsKey);
+    final completed =
+        prefs.getInt(completedCountKey) ?? 0;
 
 
-    await prefs.remove(coinsKey);
+
+    await prefs.setInt(
+
+      completedCountKey,
+
+      completed + 1,
+
+    );
 
 
-    await prefs.remove(hintsKey);
+
+    final totalMoves =
+        prefs.getInt(movesKey) ?? 0;
 
 
-    await prefs.remove(completedLevelsKey);
+
+    await prefs.setInt(
+
+      movesKey,
+
+      totalMoves + moves,
+
+    );
 
 
-    await prefs.remove(unlockedLevelsKey);
+
+    final oldBest =
+        prefs.getInt(bestTimeKey);
+
+
+
+    if(oldBest == null || seconds < oldBest){
+
+
+      await prefs.setInt(
+
+        bestTimeKey,
+
+        seconds,
+
+      );
+
+
+    }
 
 
 
   }
 
+
+
+
+
+  static Future<int> getTotalMoves() async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    return prefs.getInt(movesKey) ?? 0;
+
+
+  }
+
+
+
+
+
+  static Future<int> getBestTime() async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    return prefs.getInt(bestTimeKey) ?? 0;
+
+
+  }
+
+
+
+
+
+  static Future<void> resetStatistics() async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    await prefs.remove(
+
+      movesKey,
+
+    );
+
+
+    await prefs.remove(
+
+      bestTimeKey,
+
+    );
+
+
+    await prefs.remove(
+
+      completedCountKey,
+
+    );
+
+
+  }
+
+
+
+
+
+  // =========================
+  // 🔄 إعادة كل البيانات
+  // =========================
+
+
+  static Future<void> resetAll() async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    await prefs.remove(progressKey);
+
+    await prefs.remove(starsKey);
+
+    await prefs.remove(coinsKey);
+
+    await prefs.remove(gemsKey);
+
+    await prefs.remove(hintsKey);
+
+    await prefs.remove(completedLevelsKey);
+
+    await prefs.remove(unlockedLevelsKey);
+
+    await prefs.remove(lastGameKey);
+
+    await prefs.remove(lastSessionKey);
+
+    await prefs.remove(claimedRewardsKey);
+
+    await prefs.remove(movesKey);
+
+    await prefs.remove(completedCountKey);
+
+    await prefs.remove(bestTimeKey);
+
+
+  }
 
 
 }
