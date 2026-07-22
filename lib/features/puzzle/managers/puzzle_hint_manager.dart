@@ -13,12 +13,9 @@ class PuzzleHintManager {
   // 💡 جلب عدد التلميحات
   // =========================
 
-
   static Future<int> getHints() async {
 
-
     return await PuzzleProgressManager.getHints();
-
 
   }
 
@@ -27,15 +24,12 @@ class PuzzleHintManager {
 
 
   // =========================
-  // استهلاك تلميح
+  // استهلاك تلميح واحد
   // =========================
-
 
   static Future<bool> consumeHint() async {
 
-
     return await PuzzleProgressManager.useHint();
-
 
   }
 
@@ -47,9 +41,10 @@ class PuzzleHintManager {
   // إضافة تلميحات
   // =========================
 
-
   static Future<void> addHints(
+
       int amount,
+
       ) async {
 
 
@@ -67,9 +62,27 @@ class PuzzleHintManager {
 
 
   // =========================
-  // البحث عن قطعة غير مكتملة
+  // هل يوجد تلميحات؟
   // =========================
 
+  static Future<bool> hasHint() async {
+
+
+    final value = await getHints();
+
+
+    return value > 0;
+
+
+  }
+
+
+
+
+
+  // =========================
+  // البحث عن قطعة غير مكتملة
+  // =========================
 
   static PuzzlePiece? findAvailablePiece(
 
@@ -106,7 +119,6 @@ class PuzzleHintManager {
   // تطبيق التلميح
   // =========================
 
-
   static void applyHint(
 
       PuzzlePiece piece,
@@ -116,22 +128,16 @@ class PuzzleHintManager {
       ){
 
 
-
     piece.position = Offset(
-
 
       piece.column * pieceSize,
 
-
       piece.row * pieceSize,
-
 
     );
 
 
-
     piece.placed = true;
-
 
 
   }
@@ -141,9 +147,8 @@ class PuzzleHintManager {
 
 
   // =========================
-  // القطع المتبقية
+  // حساب القطع المتبقية
   // =========================
-
 
   static int remainingPieces(
 
@@ -170,22 +175,44 @@ class PuzzleHintManager {
 
 
   // =========================
-  // هل يوجد تلميح متاح؟
+  // إعطاء قطعة عشوائية كتلميح
   // =========================
 
+  static PuzzlePiece? getHintPiece(
 
-  static Future<bool> hasHint() async {
+      List<PuzzlePiece> pieces,
+
+      ){
 
 
-    final hints = await getHints();
+    final available = pieces
+
+        .where(
+
+          (piece)=>!piece.placed,
+
+    )
+
+        .toList();
 
 
-    return hints > 0;
+
+    if(available.isEmpty){
+
+      return null;
+
+    }
+
+
+
+    available.shuffle();
+
+
+
+    return available.first;
 
 
   }
-
-
 
 
 
