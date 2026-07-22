@@ -1,13 +1,24 @@
 class PuzzleModel {
-
-
+  // معرف العالم
   final String id;
 
-
+  // اسم العالم
   final String title;
 
-
+  // صورة العالم
   final String image;
+
+  // وصف العالم (مستقبلاً)
+  final String description;
+
+  // عدد المراحل داخل العالم
+  final int totalLevels;
+
+  // هل العالم مفتوح
+  final bool unlocked;
+
+  // النجوم المطلوبة لفتح العالم
+  final int requiredStars;
 
 
   const PuzzleModel({
@@ -18,15 +29,23 @@ class PuzzleModel {
 
     this.image = "",
 
+    this.description = "",
+
+    this.totalLevels = 0,
+
+    this.unlocked = true,
+
+    this.requiredStars = 0,
+
   });
 
 
 
+  //==================================================
+  // تحويل إلى JSON
+  //==================================================
 
-
-  // تحويل إلى JSON للحفظ مستقبلاً
-
-  Map<String, dynamic> toJson(){
+  Map<String, dynamic> toJson() {
 
     return {
 
@@ -36,6 +55,14 @@ class PuzzleModel {
 
       "image": image,
 
+      "description": description,
+
+      "totalLevels": totalLevels,
+
+      "unlocked": unlocked,
+
+      "requiredStars": requiredStars,
+
     };
 
   }
@@ -44,21 +71,39 @@ class PuzzleModel {
 
 
 
+  //==================================================
   // قراءة من JSON
+  //==================================================
 
   factory PuzzleModel.fromJson(
-
       Map<String, dynamic> json,
-
-      ){
+      ) {
 
     return PuzzleModel(
 
       id: json["id"] ?? "",
 
+
       title: json["title"] ?? "",
 
+
       image: json["image"] ?? "",
+
+
+      description:
+      json["description"] ?? "",
+
+
+      totalLevels:
+      json["totalLevels"] ?? 0,
+
+
+      unlocked:
+      json["unlocked"] ?? true,
+
+
+      requiredStars:
+      json["requiredStars"] ?? 0,
 
     );
 
@@ -68,7 +113,9 @@ class PuzzleModel {
 
 
 
-  // نسخة معدلة من البيانات
+  //==================================================
+  // نسخة معدلة
+  //==================================================
 
   PuzzleModel copyWith({
 
@@ -78,7 +125,15 @@ class PuzzleModel {
 
     String? image,
 
-  }){
+    String? description,
+
+    int? totalLevels,
+
+    bool? unlocked,
+
+    int? requiredStars,
+
+  }) {
 
 
     return PuzzleModel(
@@ -89,8 +144,19 @@ class PuzzleModel {
 
       image: image ?? this.image,
 
-    );
+      description:
+      description ?? this.description,
 
+      totalLevels:
+      totalLevels ?? this.totalLevels,
+
+      unlocked:
+      unlocked ?? this.unlocked,
+
+      requiredStars:
+      requiredStars ?? this.requiredStars,
+
+    );
 
   }
 
@@ -98,12 +164,14 @@ class PuzzleModel {
 
 
 
+  //==================================================
+  // مقارنة العوالم
+  //==================================================
+
   @override
+  bool operator ==(Object other) {
 
-  bool operator ==(Object other){
-
-
-    if(identical(this, other)){
+    if (identical(this, other)) {
 
       return true;
 
@@ -111,9 +179,7 @@ class PuzzleModel {
 
 
     return other is PuzzleModel &&
-
         other.id == id;
-
 
   }
 
@@ -122,9 +188,30 @@ class PuzzleModel {
 
 
   @override
-
   int get hashCode => id.hashCode;
 
 
+
+
+
+  //==================================================
+  // عرض نصي للتصحيح
+  //==================================================
+
+  @override
+  String toString() {
+
+    return """
+
+PuzzleModel(
+ id: $id,
+ title: $title,
+ levels: $totalLevels,
+ unlocked: $unlocked
+)
+
+""";
+
+  }
 
 }
