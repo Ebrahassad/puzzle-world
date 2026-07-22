@@ -1,389 +1,545 @@
-import 'dart:math';
-
+import 'dart:async';
 import 'package:flutter/material.dart';
 
-import 'puzzle_piece.dart';
+import '../models/game_result_model.dart';
+import '../models/puzzle_level_model.dart';
+import '../models/puzzle_model.dart';
 
+import '../engine/puzzle_controller.dart';
+import '../engine/puzzle_generator.dart';
+import '../engine/puzzle_piece.dart';
 
+import '../widgets/puzzle_piece_widget.dart';
 
-class PuzzleGenerator {
+import '../managers/puzzle_hint_manager.dart';
+import '../managers/puzzle_progress_manager.dart';
 
+import '../services/reward_ad_service.dart';
 
+import 'puzzle_win_screen.dart';
 
-  static List<PuzzlePiece> generate({
+class PuzzleGameScreen extends StatefulWidget {
+  final PuzzleModel puzzle;
+  final PuzzleLevelModel level;
 
-    required int rows,
+  const PuzzleGameScreen({
+    super.key,
+    required this.puzzle,
+    required this.level,
+  });
 
-    required int columns,
+  @override
+  State<PuzzleGameScreen> createState() =>
+      _PuzzleGameScreenState();
+}
 
-    required double imageWidth,
+class _PuzzleGameScreenState
+    extends State<PuzzleGameScreen> {
 
-    required double imageHeight,
+  late List<PuzzlePiece> pieces;
+  late PuzzleController controller;
 
-  }) {
+  Timer? timer;
 
+  int moves = 0;
+  int seconds = 0;
+  int hints = 0;
 
+  bool loading = true;
+  bool finishing = false;
 
-    final random = Random();
+  final double boardSize = 350;
 
+  double get pieceSize =>
+      boardSize / widget.level.gridSize;
 
+  @override
+  void initState() {
+    super.initState();
+    createGame();
+  }
 
-    final pieces = <PuzzlePiece>[];
+  void createGame() {
+    pieces = PuzzleGenerator.generate(
+      rows: widget.level.gridSize,
+      columns: widget.level.gridSize,
+      imageWidth: boardSize,
+      imageHeight: boardSize,
+    );
 
+    controller = PuzzleController(
+      pieces: pieces,
+    );
 
+    loadProgress();
+  }
 
-    final pieceWidth = imageWidth / columns;
+  Future<void> loadProgress() async {
 
-    final pieceHeight = imageHeight / rows;
+    final saved =
+        await PuzzleProgressManager.loadProgress();
 
+    if (saved != null &&
+        saved["puzzleId"] == widget.puzzle.id &&
+        saved["levelId"] == widget.level.id) {
 
+      final continueGame =
+          await showContinueDialog();
 
+      if (continueGame) {
 
+        final savedPieces =
+            saved["pieces"] ?? [];
 
-    final horizontalEdges = <String, EdgeType>{};
+        for (final item in savedPieces) {
 
-    final verticalEdges = <String, EdgeType>{};
+          final piece = pieces.firstWhere(
+            (p) =>
+                p.id == item["id"].toString(),
+            orElse: () => pieces.first,
+          );
 
-
-
-
-
-    int id = 0;
-
-
-
-
-
-
-
-    for(int row = 0; row < rows; row++){
-
-
-
-      for(int column = 0; column < columns; column++){
-
-
-
-
-
-        final top = row == 0
-
-            ? EdgeType.flat
-
-            :
-
-        verticalEdges["${row - 1}_$column"]
-
-            ?? EdgeType.flat;
-
-
-
-
-
-
-
-        final left = column == 0
-
-            ? EdgeType.flat
-
-            :
-
-        horizontalEdges["${row}_$column"]
-
-            ?? EdgeType.flat;
-
-
-
-
-
-
-
-        final right = column == columns - 1
-
-            ? EdgeType.flat
-
-            :
-
-        _randomEdge(random);
-
-
-
-
-
-
-
-        final bottom = row == rows - 1
-
-            ? EdgeType.flat
-
-            :
-
-        _randomEdge(random);
-
-
-
-
-
-
-
-
-
-        // حفظ الحافة المقابلة للقطعة التالية
-
-        if(column < columns - 1){
-
-
-
-          horizontalEdges["${row}_$column"] =
-
-              _opposite(right);
-
-
-
+          piece.position = Offset(
+            (item["x"] ?? 0).toDouble(),
+            (item["y"] ?? 0).toDouble(),
+          );
+
+          piece.placed =
+              item["placed"] ?? false;
         }
 
+        moves = saved["moves"] ?? 0;
+        seconds = saved["seconds"] ?? 0;
 
+      } else {
 
+        await PuzzleProgressManager
+            .clearProgress();
+      }
+    }
 
+    await loadHints();
 
+    if (mounted) {
+      setState(() {
+        loading = false;
+      });
+    }
 
+    startTimer();
+  }
 
-        if(row < rows - 1){
+  Future<void> loadHints() async {
 
+    final value =
+        await PuzzleHintManager.getHints();
 
+    if (!mounted) return;
 
-          verticalEdges["${row}_$column"] =
+    setState(() {
+      hints = value;
+    });
+  }
 
-              _opposite(bottom);
 
+  Future<bool> showContinueDialog() async {
 
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
 
-        }
-
-
-
-
-
-
-
-
-
-        pieces.add(
-
-
-
-          PuzzlePiece(
-
-
-
-            id:
-
-            id.toString(),
-
-
-
-            row:
-
-            row,
-
-
-
-            column:
-
-            column,
-
-
-
-            correctPosition:
-
-            id,
-
-
-
-            sourceRect:
-
-            Rect.fromLTWH(
-
-
-
-              column * pieceWidth,
-
-
-
-              row * pieceHeight,
-
-
-
-              pieceWidth,
-
-
-
-              pieceHeight,
-
-
-
-            ),
-
-
-
-
-
-            top:
-
-            top,
-
-
-
-            bottom:
-
-            bottom,
-
-
-
-            left:
-
-            left,
-
-
-
-            right:
-
-            right,
-
-
-
-
-
-            position:
-
-            Offset(
-
-
-
-              column * pieceWidth,
-
-
-
-              row * pieceHeight,
-
-
-
-            ),
-
-
-
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(25),
           ),
 
+          title: const Text(
+            "🧩 لعبة محفوظة",
+            textAlign: TextAlign.center,
+          ),
 
+          content: const Text(
+            "وجدنا لعبة محفوظة، هل تريد المتابعة؟",
+            textAlign: TextAlign.center,
+          ),
 
+          actions: [
+
+            TextButton(
+              onPressed: () async {
+
+                await PuzzleProgressManager.clearProgress();
+
+                if (mounted) {
+                  Navigator.pop(context, false);
+                }
+              },
+              child: const Text("ابدأ من جديد"),
+            ),
+
+            ElevatedButton(
+              onPressed: () async {
+
+                final watched =
+                    await RewardAdService.showContinueAd();
+
+                if (watched && mounted) {
+                  Navigator.pop(context, true);
+                }
+              },
+              child: const Text("🎬 متابعة"),
+            ),
+
+          ],
         );
+      },
+    );
 
+    return result ?? false;
+  }
 
+  void startTimer() {
 
+    timer?.cancel();
 
+    timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) {
 
-        id++;
+        if (!mounted || finishing) return;
 
+        setState(() {
+          seconds++;
+        });
+      },
+    );
+  }
 
+  Future<void> saveGame() async {
 
+    await PuzzleProgressManager.saveProgress(
+      puzzleId: widget.puzzle.id,
+      levelId: widget.level.id,
+      pieces: pieces,
+      moves: moves,
+      seconds: seconds,
+    );
+  }
+
+  Future<void> dropPiece(
+    PuzzlePiece piece,
+    Offset position,
+  ) async {
+
+    if (piece.placed || finishing) {
+      return;
+    }
+
+    setState(() {
+
+      moves++;
+
+      piece.position = position;
+
+      controller.checkPiecePosition(
+        piece,
+        pieceSize,
+      );
+    });
+
+    await saveGame();
+
+    checkCompleted();
+  }
+
+  void checkCompleted() {
+
+    if (controller.isCompleted && !finishing) {
+      finishGame();
+    }
+  }
+
+  Future<void> usePuzzleHint() async {
+
+    if (finishing) return;
+
+    bool available =
+        await PuzzleHintManager.consumeHint();
+
+    if (!available) {
+
+      final watched =
+          await RewardAdService.showRewardAd();
+
+      if (watched) {
+
+        await PuzzleHintManager.addHints(3);
+
+        available = true;
       }
-
-
-
     }
 
+    if (!available) return;
 
+    final piece =
+        PuzzleHintManager.findAvailablePiece(
+      pieces,
+    );
 
+    if (piece == null) return;
 
+    setState(() {
 
+      controller.applyHint(
+        piece,
+        pieceSize,
+      );
 
+      moves++;
+    });
 
+    await saveGame();
 
+    await loadHints();
 
-    // خلط القطع بدون تغيير بياناتها
-
-    pieces.shuffle(random);
-
-
-
-
-
-    return pieces;
-
-
-
+    checkCompleted();
   }
 
+  Future<void> finishGame() async {
 
+    if (finishing) return;
 
+    finishing = true;
 
+    timer?.cancel();
 
+    await PuzzleProgressManager.clearProgress();
 
+    final stars = calculateStars();
 
+    if (!mounted) return;
 
-
-  static EdgeType _randomEdge(
-
-      Random random,
-
-      ){
-
-
-
-    return random.nextBool()
-
-        ? EdgeType.tab
-
-        : EdgeType.blank;
-
-
-
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PuzzleWinScreen(
+          result: GameResultModel(
+            stars: stars,
+            moves: moves,
+            time: Duration(
+              seconds: seconds,
+            ),
+          ),
+          difficulty: widget.level.gridSize,
+          worldId: widget.puzzle.id,
+          level: int.tryParse(
+                widget.level.id.replaceAll(
+                  "level_",
+                  "",
+                ),
+              ) ??
+              1,
+        ),
+      ),
+    );
   }
 
+  int calculateStars() {
 
-
-
-
-
-
-
-
-  static EdgeType _opposite(
-
-      EdgeType edge,
-
-      ){
-
-
-
-    switch(edge){
-
-
-
-      case EdgeType.tab:
-
-        return EdgeType.blank;
-
-
-
-      case EdgeType.blank:
-
-        return EdgeType.tab;
-
-
-
-      case EdgeType.flat:
-
-        return EdgeType.flat;
-
-
-
+    if (widget.level.gridSize <= 3 &&
+        seconds < 60 &&
+        moves < 25) {
+      return 3;
     }
 
+    if (widget.level.gridSize <= 4 &&
+        seconds < 120) {
+      return 3;
+    }
 
+    if (seconds < 180) {
+      return 2;
+    }
 
+    return 1;
   }
 
+  @override
+  void dispose() {
+
+    timer?.cancel();
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    final ImageProvider image = widget.puzzle.image.isEmpty
+        ? const AssetImage(
+            "assets/images/puzzle_placeholder.png",
+          )
+        : AssetImage(widget.puzzle.image);
+
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xff89F7FE),
+              Color(0xff66A6FF),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+
+              Text(
+                widget.puzzle.title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius:
+                          BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      "🧩 $moves   ⏱ $seconds",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 16),
+
+                  ElevatedButton.icon(
+                    onPressed: usePuzzleHint,
+                    icon: const Icon(Icons.lightbulb),
+                    label: Text("💡 $hints"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(20),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              Expanded(
+                child: Center(
+                  child: SizedBox(
+                    width: boardSize,
+                    height: boardSize,
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: boardSize,
+                          height: boardSize,
+                          decoration: BoxDecoration(
+                            color: Colors.white30,
+                            borderRadius:
+                                BorderRadius.circular(25),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 15,
+                                offset: Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                        ),
 
 
+                        ...pieces.map((piece) {
+                          return AnimatedPositioned(
+                            duration: const Duration(
+                              milliseconds: 180,
+                            ),
+                            left: piece.position.dx,
+                            top: piece.position.dy,
+                            child: Draggable<PuzzlePiece>(
+                              data: piece,
+
+                              feedback: Material(
+                                color: Colors.transparent,
+                                child: PuzzlePieceWidget(
+                                  piece: piece,
+                                  image: image,
+                                  size: pieceSize,
+                                ),
+                              ),
+
+                              childWhenDragging: const SizedBox(),
+
+                              onDragEnd: (details) {
+                                final renderBox =
+                                    context.findRenderObject()
+                                        as RenderBox;
+
+                                final localPosition =
+                                    renderBox.globalToLocal(
+                                  details.offset,
+                                );
+
+                                dropPiece(
+                                  piece,
+                                  localPosition,
+                                );
+                              },
+
+                              child: PuzzlePieceWidget(
+                                piece: piece,
+                                image: image,
+                                size: pieceSize,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
