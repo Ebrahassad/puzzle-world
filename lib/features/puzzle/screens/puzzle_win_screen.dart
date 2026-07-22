@@ -3,23 +3,18 @@ import 'package:flutter/material.dart';
 import '../models/game_result_model.dart';
 import '../models/reward_result_model.dart';
 
-
-// Managers
-import '../managers/puzzle_progress_manager.dart';
 import '../managers/reward_manager.dart';
-
-
-// Services
-import '../services/puzzle_audio_service.dart';
-import '../services/puzzle_event_service.dart';
-import '../services/puzzle_cloud_service.dart';
-import '../services/puzzle_navigation_service.dart';
-import '../services/puzzle_reward_ad_service.dart';
+import '../managers/puzzle_progress_manager.dart';
 
 import '../services/puzzle_world_service.dart';
-import '../services/puzzle_save_service.dart';
+import '../services/puzzle_reward_ad_service.dart';
+import '../services/puzzle_audio_service.dart';
+import '../services/puzzle_event_service.dart';
 import '../services/puzzle_statistics_service.dart';
 import '../services/puzzle_achievement_service.dart';
+import '../services/puzzle_cloud_service.dart';
+import '../services/puzzle_save_service.dart';
+import '../services/puzzle_navigation_service.dart';
 
 
 
@@ -50,23 +45,33 @@ class PuzzleWinScreen extends StatefulWidget {
 
   const PuzzleWinScreen({
 
+
     super.key,
+
 
     required this.result,
 
+
     this.difficulty = 1,
+
 
     this.worldId,
 
+
     this.level,
+
 
     this.onNextLevel,
 
+
     this.onBackToWorld,
+
 
     this.onBackToHome,
 
+
   });
+
 
 
 
@@ -89,6 +94,7 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
   RewardResultModel? reward;
 
 
+
   bool loading = true;
 
 
@@ -106,8 +112,8 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-
   String? get levelKey {
+
 
 
     if(widget.worldId == null ||
@@ -129,9 +135,9 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-
   @override
   void initState(){
+
 
     super.initState();
 
@@ -140,14 +146,18 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
     animationController =
         AnimationController(
 
-      vsync:this,
+          vsync: this,
 
-      duration:
-      const Duration(seconds:1),
 
-    )
-          ..repeat(
-              reverse:true);
+          duration:
+          const Duration(seconds:1),
+
+
+        )
+          ..repeat(reverse:true);
+
+
+
 
 
 
@@ -156,7 +166,9 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
           begin:1,
 
+
           end:1.15,
+
 
         ).animate(
 
@@ -165,8 +177,10 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
             parent:
             animationController,
 
+
             curve:
             Curves.easeInOut,
+
 
           ),
 
@@ -175,10 +189,8 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-    enterScreen();
 
-
-    completeLevel();
+    initialize();
 
 
   }
@@ -189,20 +201,18 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-  Future<void> enterScreen() async {
+  Future<void> initialize() async {
+
 
 
     await PuzzleAudioService.playWinSound();
 
 
 
-    await PuzzleEventService.levelScreenOpened(
 
-      worldId: widget.worldId,
+    await completeResult();
 
-      level: widget.level,
 
-    );
 
 
   }
@@ -213,10 +223,12 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-  Future<void> completeLevel() async {
+
+  Future<void> completeResult() async {
 
 
-    RewardResultModel result =
+
+    RewardResultModel rewardResult =
     const RewardResultModel(
 
       coins:0,
@@ -227,34 +239,58 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-    final id = levelKey;
 
 
+    if(levelKey != null){
 
-    if(id != null){
 
 
       final completed =
 
       await PuzzleProgressManager
-          .isCompleted(id);
+          .isCompleted(
+
+        levelKey!,
+
+      );
+
+
 
 
 
       if(!completed){
 
 
-  await PuzzleProgressManager.completeLevel(id);
+
+        await PuzzleProgressManager
+            .completeLevel(
+
+          levelKey!,
+
+        );
 
 
-  await PuzzleProgressManager.unlockNextLevel(id);
 
 
 
-  await afterCompleted();
+        await PuzzleProgressManager
+            .unlockNextLevel(
+
+          widget.worldId!,
+
+          widget.level!,
+
+        );
 
 
-}
+
+
+
+        await afterLevelCompleted();
+
+
+
+      }
 
 
 
@@ -264,7 +300,13 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
       final claimed =
 
       await PuzzleProgressManager
-          .isRewardClaimed(id);
+          .isRewardClaimed(
+
+        levelKey!,
+
+      );
+
+
 
 
 
@@ -272,7 +314,8 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-        result =
+        rewardResult =
+
         await RewardManager.completePuzzle(
 
           difficulty:
@@ -282,8 +325,14 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
+
+
         await PuzzleProgressManager
-            .markRewardClaimed(id);
+            .markRewardClaimed(
+
+          levelKey!,
+
+        );
 
 
 
@@ -291,11 +340,12 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-
     }else{
 
 
-      result =
+
+      rewardResult =
+
       await RewardManager.completePuzzle(
 
         difficulty:
@@ -304,24 +354,29 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
       );
 
 
+
     }
 
 
 
 
 
-    if(!mounted) return;
+    if(!mounted){
+
+      return;
+
+    }
+
 
 
 
     setState((){
 
 
-      reward = result;
+      reward = rewardResult;
 
 
       loading = false;
-
 
 
     });
@@ -331,107 +386,132 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
   }
 
 
-  //==================================================
-  // بعد إكمال المرحلة
-  // استخدام الخدمات الحديثة
-  //==================================================
-
-  Future<void> afterCompleted() async {
 
 
-    await PuzzleStatisticsService.addCompletedPuzzle(
+
+
+
+
+  Future<void> afterLevelCompleted() async {
+
+
+
+    if(widget.worldId == null ||
+        widget.level == null){
+
+      return;
+
+    }
+
+
+
+
+
+    await PuzzleWorldService.completeLevel(
+
+      worldId: widget.worldId!,
+
+
+      level: widget.level!,
+
 
       stars: widget.result.stars,
 
-      moves: widget.result.moves,
-
-      seconds: widget.result.seconds,
 
     );
 
 
 
 
-    if(widget.worldId != null &&
-        widget.level != null){
 
 
-      await PuzzleWorldService.completeLevel(
+    await PuzzleStatisticsService.addCompletedPuzzle(
 
-        worldId: widget.worldId!,
-
-        level: widget.level!,
-
-        stars: widget.result.stars,
-
-      );
+      stars: widget.result.stars,
 
 
+      moves: widget.result.moves,
 
-      await PuzzleSaveService.saveLastPlayed(
 
-  worldId: widget.worldId!,
+      seconds: widget.result.seconds,
 
-  levelId: "level_${widget.level}",
 
-);
+    );
 
 
 
-      await PuzzleAchievementService.checkPuzzleAchievements(
-
-        worldId: widget.worldId,
-
-        level: widget.level,
-
-        result: widget.result,
-
-      );
 
 
+    await PuzzleSaveService.saveLastPlayed(
 
-      await PuzzleCloudService.sync();
+      worldId: widget.worldId!,
+
+
+      levelId: "level_${widget.level}",
+
+
+    );
 
 
 
-      await PuzzleEventService.levelCompleted(
-
-        worldId: widget.worldId,
-
-        level: widget.level,
-
-        stars: widget.result.stars,
-
-        moves: widget.result.moves,
-
-        seconds: widget.result.seconds,
-
-      );
 
 
-    }
 
+    await PuzzleAchievementService.checkPuzzleAchievements(
+
+      worldId: widget.worldId,
+
+
+      level: widget.level,
+
+
+      result: widget.result,
+
+
+    );
+
+
+
+
+
+    await PuzzleCloudService.sync();
+
+
+
+
+
+    await PuzzleEventService.levelCompleted(
+
+      worldId: widget.worldId,
+
+
+      level: widget.level,
+
+
+      stars: widget.result.stars,
+
+
+      moves: widget.result.moves,
+
+
+      seconds: widget.result.seconds,
+
+
+    );
 
 
   }
 
-
-
-
-
-
-
-
   //==================================================
-  // مضاعفة المكافأة بالإعلان
+  // 🎬 مضاعفة المكافأة بالإعلان
   //==================================================
+
 
   Future<void> doubleReward() async {
 
 
 
-    if(adUsed ||
-        reward == null){
+    if(adUsed || reward == null){
 
       return;
 
@@ -442,7 +522,11 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
     final watched =
-    await PuzzleRewardAdService.watchAdForDoubleReward();
+
+    await PuzzleRewardAdService
+        .watchAdForDoubleReward();
+
+
 
 
 
@@ -456,26 +540,36 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-    final coins =
-        reward!.coins;
+
+
+    final coins = reward!.coins;
+
+
+    final gems = reward!.gems;
 
 
 
-    final gems =
-        reward!.gems;
 
 
-await PuzzleEventService.rewardDoubled(
+    await PuzzleEventService.rewardDoubled(
 
-  worldId: widget.worldId,
+      worldId: widget.worldId,
 
-  level: widget.level,
 
-  coins: coins,
+      level: widget.level,
 
-  gems: gems,
 
-);
+      coins: coins,
+
+
+      gems: gems,
+
+
+    );
+
+
+
+
 
 
 
@@ -501,14 +595,17 @@ await PuzzleEventService.rewardDoubled(
 
     }
 
-await PuzzleProgressManager.saveLastSession(
-  DateTime.now(),
-);
 
 
 
 
-    if(!mounted) return;
+
+
+    if(!mounted){
+
+      return;
+
+    }
 
 
 
@@ -517,9 +614,8 @@ await PuzzleProgressManager.saveLastSession(
     setState((){
 
 
-      reward =
-          reward!.multiply(2);
 
+      reward = reward!.multiply(2);
 
 
       adUsed = true;
@@ -527,8 +623,6 @@ await PuzzleProgressManager.saveLastSession(
 
 
     });
-
-
 
 
 
@@ -544,6 +638,7 @@ await PuzzleProgressManager.saveLastSession(
   //==================================================
   // الانتقال للمرحلة التالية
   //==================================================
+
 
   Future<void> goNextLevel() async {
 
@@ -566,6 +661,7 @@ await PuzzleProgressManager.saveLastSession(
 
 
     if(widget.worldId != null &&
+
         widget.level != null){
 
 
@@ -574,12 +670,14 @@ await PuzzleProgressManager.saveLastSession(
 
         context,
 
+
         worldId: widget.worldId!,
+
 
         currentLevel: widget.level!,
 
-      );
 
+      );
 
 
     }
@@ -599,6 +697,7 @@ await PuzzleProgressManager.saveLastSession(
   // العودة للعالم
   //==================================================
 
+
   Future<void> backWorld() async {
 
 
@@ -613,6 +712,7 @@ await PuzzleProgressManager.saveLastSession(
 
 
     }
+
 
 
 
@@ -634,6 +734,7 @@ await PuzzleProgressManager.saveLastSession(
   // العودة للرئيسية
   //==================================================
 
+
   Future<void> backHome() async {
 
 
@@ -652,29 +753,41 @@ await PuzzleProgressManager.saveLastSession(
 
 
 
+
     Navigator.popUntil(
 
       context,
 
+
       (route)=>route.isFirst,
+
 
     );
 
 
-
   }
+
+
+
+
+
+
+
 
   @override
   void dispose(){
 
 
+
     animationController.dispose();
+
 
 
     super.dispose();
 
 
   }
+
 
 
 
@@ -692,6 +805,7 @@ await PuzzleProgressManager.saveLastSession(
 
 
       body:
+
 
       Container(
 
@@ -724,12 +838,10 @@ await PuzzleProgressManager.saveLastSession(
             colors:[
 
 
-
               Color(0xff7ED6FF),
 
 
               Color(0xffB8F2FF),
-
 
 
             ],
@@ -745,7 +857,6 @@ await PuzzleProgressManager.saveLastSession(
             end:
 
             Alignment.bottomCenter,
-
 
 
           ),
@@ -770,7 +881,6 @@ await PuzzleProgressManager.saveLastSession(
           loading
 
 
-
               ? const Center(
 
 
@@ -778,7 +888,6 @@ await PuzzleProgressManager.saveLastSession(
             child:
 
             CircularProgressIndicator(),
-
 
 
           )
@@ -797,33 +906,16 @@ await PuzzleProgressManager.saveLastSession(
 
 
 
-              mainAxisAlignment:
-
-              MainAxisAlignment.center,
-
-
-
               children:[
 
 
 
-
-
-
-
-                const SizedBox(
-
-                  height:30,
-
-                ),
+                const SizedBox(height:30),
 
 
 
 
 
-
-
-                // نجمة الفوز المتحركة
 
                 ScaleTransition(
 
@@ -837,96 +929,17 @@ await PuzzleProgressManager.saveLastSession(
 
                   child:
 
-                  Container(
+                  const Icon(
 
 
 
-                    padding:
-
-                    const EdgeInsets.all(20),
+                    Icons.star,
 
 
-
-                    decoration:
-
-                    BoxDecoration(
+                    size:100,
 
 
-
-                      shape:
-
-                      BoxShape.circle,
-
-
-
-                      color:
-
-                      Colors.white.withOpacity(.8),
-
-
-
-                      boxShadow:[
-
-
-
-                        BoxShadow(
-
-
-
-                          color:
-
-                          Colors.black.withOpacity(.15),
-
-
-
-                          blurRadius:
-
-                          20,
-
-
-
-                          offset:
-
-                          const Offset(0,8),
-
-
-
-                        )
-
-
-
-                      ],
-
-
-
-                    ),
-
-
-
-                    child:
-
-                    const Icon(
-
-
-
-                      Icons.star,
-
-
-
-                      size:
-
-                      90,
-
-
-
-                      color:
-
-                      Colors.amber,
-
-
-
-                    ),
-
+                    color:Colors.amber,
 
 
                   ),
@@ -940,11 +953,7 @@ await PuzzleProgressManager.saveLastSession(
 
 
 
-                const SizedBox(
-
-                  height:25,
-
-                ),
+                const SizedBox(height:20),
 
 
 
@@ -965,10 +974,7 @@ await PuzzleProgressManager.saveLastSession(
 
 
 
-                    fontSize:
-
-                    36,
-
+                    fontSize:36,
 
 
                     fontWeight:
@@ -976,11 +982,9 @@ await PuzzleProgressManager.saveLastSession(
                     FontWeight.bold,
 
 
-
                     color:
 
                     Colors.white,
-
 
 
                   ),
@@ -994,19 +998,14 @@ await PuzzleProgressManager.saveLastSession(
 
 
 
-
-                const SizedBox(
-
-                  height:10,
-
-                ),
+                const SizedBox(height:10),
 
 
 
 
 
 
-                Text(
+                const Text(
 
 
 
@@ -1020,67 +1019,7 @@ await PuzzleProgressManager.saveLastSession(
 
 
 
-                    fontSize:
-
-                    20,
-
-
-
-                    color:
-
-                    Colors.white.withOpacity(.9),
-
-
-
-                  ),
-
-
-
-                ),
-
-
-
-
-
-
-
-                const SizedBox(
-
-                  height:30,
-
-                ),
-
-
-
-
-
-
-                // بطاقة النتيجة
-
-                Container(
-
-
-
-                  margin:
-
-                  const EdgeInsets.symmetric(
-
-                    horizontal:25,
-
-                  ),
-
-
-
-                  padding:
-
-                  const EdgeInsets.all(20),
-
-
-
-                  decoration:
-
-                  BoxDecoration(
-
+                    fontSize:20,
 
 
                     color:
@@ -1088,179 +1027,6 @@ await PuzzleProgressManager.saveLastSession(
                     Colors.white,
 
 
-
-                    borderRadius:
-
-                    BorderRadius.circular(25),
-
-
-
-                    boxShadow:[
-
-
-
-                      BoxShadow(
-
-
-
-                        color:
-
-                        Colors.black.withOpacity(.15),
-
-
-
-                        blurRadius:
-
-                        15,
-
-
-
-                        offset:
-
-                        const Offset(0,8),
-
-
-
-                      )
-
-
-
-                    ],
-
-
-
-                  ),
-
-
-
-                  child:
-
-                  Column(
-
-
-
-                    children:[
-
-
-
-                      Text(
-
-
-
-                        "⭐ النجوم: ${widget.result.stars}",
-
-
-
-                        style:
-
-                        const TextStyle(
-
-
-
-                          fontSize:
-
-                          24,
-
-
-
-                          fontWeight:
-
-                          FontWeight.bold,
-
-
-
-                        ),
-
-
-
-                      ),
-
-
-
-
-
-                      const SizedBox(
-
-                        height:12,
-
-                      ),
-
-
-
-
-
-                      Text(
-
-
-
-                        "🚶 الحركات: ${widget.result.moves}",
-
-
-
-                        style:
-
-                        const TextStyle(
-
-
-
-                          fontSize:
-
-                          18,
-
-
-
-                        ),
-
-
-
-                      ),
-
-
-
-
-
-                      const SizedBox(
-
-                        height:8,
-
-                      ),
-
-
-
-
-
-                      Text(
-
-
-
-                        "⏱ الوقت: ${widget.result.seconds} ثانية",
-
-
-
-                        style:
-
-                        const TextStyle(
-
-
-
-                          fontSize:
-
-                          18,
-
-
-
-                        ),
-
-
-
-                      ),
-
-
-
-                    ],
-
-
-
                   ),
 
 
@@ -1272,13 +1038,20 @@ await PuzzleProgressManager.saveLastSession(
 
 
 
+                const SizedBox(height:25),
 
-                const SizedBox(
 
-                  height:20,
 
-                ),
 
+
+
+                resultCard(),
+
+
+
+
+
+                const SizedBox(height:20),
 
 
 
@@ -1288,29 +1061,21 @@ await PuzzleProgressManager.saveLastSession(
 
                   rewardCard(),
 
-                const SizedBox(
-
-                  height:25,
-
-                ),
 
 
 
-                // زر مضاعفة المكافأة
+                const SizedBox(height:25),
+
+
+
 
                 if(reward != null && !adUsed)
 
-                  _actionButton(
-
-                    text:
+                  actionButton(
 
                     "🎬 مضاعفة المكافأة",
 
-                    color:
-
                     Colors.orange,
-
-                    onTap:
 
                     doubleReward,
 
@@ -1319,32 +1084,16 @@ await PuzzleProgressManager.saveLastSession(
 
 
 
-
-
-                const SizedBox(
-
-                  height:15,
-
-                ),
+                const SizedBox(height:15),
 
 
 
 
-
-
-                // المرحلة التالية
-
-                _actionButton(
-
-                  text:
+                actionButton(
 
                   "➡️ المرحلة التالية",
 
-                  color:
-
                   Colors.green,
-
-                  onTap:
 
                   goNextLevel,
 
@@ -1352,32 +1101,16 @@ await PuzzleProgressManager.saveLastSession(
 
 
 
-
-
-
-                const SizedBox(
-
-                  height:15,
-
-                ),
+                const SizedBox(height:15),
 
 
 
 
-
-                // العودة للعالم
-
-                _actionButton(
-
-                  text:
+                actionButton(
 
                   "🧩 العودة للعالم",
 
-                  color:
-
                   Colors.blue,
-
-                  onTap:
 
                   backWorld,
 
@@ -1385,32 +1118,16 @@ await PuzzleProgressManager.saveLastSession(
 
 
 
-
-
-
-                const SizedBox(
-
-                  height:15,
-
-                ),
+                const SizedBox(height:15),
 
 
 
 
-
-                // الرئيسية
-
-                _actionButton(
-
-                  text:
+                actionButton(
 
                   "🏠 الرئيسية",
 
-                  color:
-
                   Colors.purple,
-
-                  onTap:
 
                   backHome,
 
@@ -1419,13 +1136,7 @@ await PuzzleProgressManager.saveLastSession(
 
 
 
-
-
-                const SizedBox(
-
-                  height:40,
-
-                ),
+                const SizedBox(height:40),
 
 
 
@@ -1452,22 +1163,15 @@ await PuzzleProgressManager.saveLastSession(
     );
 
 
-
   }
 
 
-
-
-
-
-
-
   //==================================================
-  // بطاقة المكافأة
+  // بطاقة النتيجة
   //==================================================
 
-  Widget rewardCard(){
 
+  Widget resultCard(){
 
 
     return Container(
@@ -1484,9 +1188,13 @@ await PuzzleProgressManager.saveLastSession(
 
 
 
+
+
       padding:
 
       const EdgeInsets.all(20),
+
+
 
 
 
@@ -1514,15 +1222,27 @@ await PuzzleProgressManager.saveLastSession(
 
           BoxShadow(
 
+
+
             color:
 
             Colors.black.withOpacity(.15),
 
+
+
             blurRadius:
 
-            12,
+            15,
 
-          )
+
+
+            offset:
+
+            const Offset(0,8),
+
+
+
+          ),
 
 
 
@@ -1531,6 +1251,230 @@ await PuzzleProgressManager.saveLastSession(
 
 
       ),
+
+
+
+
+
+
+      child:
+
+      Column(
+
+
+
+        children:[
+
+
+
+
+
+          Text(
+
+
+
+            "⭐ النجوم: ${widget.result.stars}",
+
+
+
+            style:
+
+            const TextStyle(
+
+
+
+              fontSize:24,
+
+
+              fontWeight:
+
+              FontWeight.bold,
+
+
+
+            ),
+
+
+
+          ),
+
+
+
+
+
+          const SizedBox(height:12),
+
+
+
+
+
+
+          Text(
+
+
+
+            "🚶 الحركات: ${widget.result.moves}",
+
+
+
+            style:
+
+            const TextStyle(
+
+
+
+              fontSize:18,
+
+
+
+            ),
+
+
+
+          ),
+
+
+
+
+
+
+          const SizedBox(height:8),
+
+
+
+
+
+
+          Text(
+
+
+
+            "⏱ الوقت: ${widget.result.seconds} ثانية",
+
+
+
+            style:
+
+            const TextStyle(
+
+
+
+              fontSize:18,
+
+
+
+            ),
+
+
+
+          ),
+
+
+
+        ],
+
+
+
+      ),
+
+
+
+    );
+
+
+  }
+
+
+
+
+
+
+
+
+
+  //==================================================
+  // بطاقة المكافأة
+  //==================================================
+
+
+  Widget rewardCard(){
+
+
+
+    return Container(
+
+
+
+      margin:
+
+      const EdgeInsets.symmetric(
+
+        horizontal:25,
+
+      ),
+
+
+
+
+
+      padding:
+
+      const EdgeInsets.all(20),
+
+
+
+
+
+      decoration:
+
+      BoxDecoration(
+
+
+
+        color:
+
+        Colors.white,
+
+
+
+        borderRadius:
+
+        BorderRadius.circular(25),
+
+
+
+        boxShadow:[
+
+
+
+          BoxShadow(
+
+
+
+            color:
+
+            Colors.black.withOpacity(.15),
+
+
+
+            blurRadius:
+
+            12,
+
+
+
+          ),
+
+
+
+        ],
+
+
+
+      ),
+
+
+
 
 
 
@@ -1550,46 +1494,84 @@ await PuzzleProgressManager.saveLastSession(
 
 
 
+
+
           Column(
+
+
 
             children:[
 
+
+
               const Text(
+
+
 
                 "🪙",
 
+
+
                 style:
 
                 TextStyle(
 
+
+
                   fontSize:35,
 
+
+
                 ),
+
+
 
               ),
 
 
+
+
+
+
               Text(
 
+
+
                 "${reward!.coins}",
+
+
 
                 style:
 
                 const TextStyle(
 
+
+
                   fontSize:22,
+
+
 
                   fontWeight:
 
                   FontWeight.bold,
 
+
+
                 ),
+
+
 
               ),
 
+
+
             ],
 
+
+
           ),
+
+
 
 
 
@@ -1597,46 +1579,79 @@ await PuzzleProgressManager.saveLastSession(
 
           Column(
 
+
+
             children:[
+
+
 
               const Text(
 
+
+
                 "💎",
+
+
 
                 style:
 
                 TextStyle(
 
+
+
                   fontSize:35,
+
+
 
                 ),
 
+
+
               ),
+
+
 
 
 
               Text(
 
+
+
                 "${reward!.gems}",
+
+
 
                 style:
 
                 const TextStyle(
 
+
+
                   fontSize:22,
+
+
 
                   fontWeight:
 
                   FontWeight.bold,
 
+
+
                 ),
+
+
 
               ),
 
 
+
             ],
 
+
+
           ),
+
+
 
 
 
@@ -1651,9 +1666,7 @@ await PuzzleProgressManager.saveLastSession(
     );
 
 
-
   }
-
 
 
 
@@ -1666,15 +1679,22 @@ await PuzzleProgressManager.saveLastSession(
   // زر موحد
   //==================================================
 
-  Widget _actionButton({
 
-    required String text,
+  Widget actionButton(
 
-    required Color color,
 
-    required VoidCallback onTap,
 
-  }){
+      String text,
+
+
+      Color color,
+
+
+      VoidCallback onTap,
+
+
+
+      ){
 
 
 
@@ -1686,9 +1706,15 @@ await PuzzleProgressManager.saveLastSession(
 
       const EdgeInsets.symmetric(
 
+
+
         horizontal:35,
 
+
+
       ),
+
+
 
 
 
@@ -1707,6 +1733,8 @@ await PuzzleProgressManager.saveLastSession(
         height:
 
         55,
+
+
 
 
 
@@ -1766,6 +1794,8 @@ await PuzzleProgressManager.saveLastSession(
 
 
 
+
+
           child:
 
           Text(
@@ -1816,4 +1846,4 @@ await PuzzleProgressManager.saveLastSession(
 
 
 
-}  
+}
