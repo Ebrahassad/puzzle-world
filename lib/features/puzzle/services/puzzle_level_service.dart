@@ -21,6 +21,28 @@ class PuzzleLevelService {
 
 
   //=========================================
+  // 🔑 مفتاح المرحلة الموحد
+  //=========================================
+
+
+  static String levelKey(
+
+      String worldId,
+
+      int levelNumber,
+
+      ){
+
+    return "${worldId}_level_$levelNumber";
+
+  }
+
+
+
+
+
+
+  //=========================================
   // جلب كل مراحل العالم
   //=========================================
 
@@ -58,10 +80,11 @@ class PuzzleLevelService {
       ) async {
 
 
-    final levels =
+    final levels = await getLevels(
 
-    await getLevels(worldId);
+      worldId,
 
+    );
 
 
     return levels.length;
@@ -90,31 +113,38 @@ class PuzzleLevelService {
   }) async {
 
 
+    final levels = await getLevels(
 
-    final levels =
+      worldId,
 
-    await getLevels(worldId);
-
-
-
-
-    if(levelNumber <= 0 ||
-
-        levelNumber > levels.length){
+    );
 
 
-      return null;
+
+    for(final level in levels){
+
+
+      if(level.levelNumber == levelNumber){
+
+
+        return level;
+
+
+      }
 
 
     }
 
 
 
-
-    return levels[levelNumber - 1];
+    return null;
 
 
   }
+
+
+
+
 
 
   //=========================================
@@ -132,9 +162,7 @@ class PuzzleLevelService {
 
 
 
-    final level =
-
-    await getLevel(
+    final level = await getLevel(
 
       worldId: worldId,
 
@@ -169,7 +197,7 @@ class PuzzleLevelService {
 
 
 
-    if(level.unlocked){
+    if(level.levelNumber == 1){
 
       return true;
 
@@ -179,22 +207,20 @@ class PuzzleLevelService {
 
 
 
-    return PuzzleProgressManager
+    return PuzzleProgressManager.isLevelUnlocked(
 
-        .isLevelUnlocked(
+      levelKey(
 
-      "${worldId}_${level.id}",
+        worldId,
+
+        level.levelNumber,
+
+      ),
 
     );
 
 
   }
-
-
-
-
-
-
 
   //=========================================
   // هل يمكن بدء المرحلة
@@ -208,7 +234,6 @@ class PuzzleLevelService {
     required PuzzleLevelModel level,
 
   }) async {
-
 
 
     return await isLevelUnlocked(
@@ -227,9 +252,8 @@ class PuzzleLevelService {
 
 
 
-
   //=========================================
-  // فتح شاشة المراحل
+  // فتح شاشة مراحل العالم
   //=========================================
 
 
@@ -242,20 +266,17 @@ class PuzzleLevelService {
       ) async {
 
 
-
     await Navigator.push(
 
       context,
 
       MaterialPageRoute(
 
-        builder: (_) =>
+        builder: (_) => PuzzleLevelScreen(
 
-            PuzzleLevelScreen(
+          puzzle: puzzle,
 
-              puzzle: puzzle,
-
-            ),
+        ),
 
       ),
 
@@ -269,9 +290,8 @@ class PuzzleLevelService {
 
 
 
-
   //=========================================
-  // فتح مرحلة اللعب
+  // فتح لعبة مرحلة
   //=========================================
 
 
@@ -287,9 +307,7 @@ class PuzzleLevelService {
 
 
 
-    final allowed =
-
-    await canPlayLevel(
+    final allowed = await canPlayLevel(
 
       worldId: puzzle.id,
 
@@ -300,16 +318,11 @@ class PuzzleLevelService {
 
 
 
-
     if(!allowed){
-
 
       return;
 
-
     }
-
-
 
 
 
@@ -320,15 +333,13 @@ class PuzzleLevelService {
 
       MaterialPageRoute(
 
-        builder: (_) =>
+        builder: (_) => PuzzleGameScreen(
 
-            PuzzleGameScreen(
+          puzzle: puzzle,
 
-              puzzle: puzzle,
+          level: level,
 
-              level: level,
-
-            ),
+        ),
 
       ),
 
@@ -336,6 +347,12 @@ class PuzzleLevelService {
 
 
   }
+
+
+
+
+
+
   //=========================================
   // إنهاء المرحلة
   //=========================================
@@ -349,25 +366,28 @@ class PuzzleLevelService {
 
     required int stars,
 
-    required int difficulty,
-
   }) async {
 
 
 
-    final levelKey =
+    final key = levelKey(
 
-        "${worldId}_level_$levelNumber";
+      worldId,
+
+      levelNumber,
+
+    );
 
 
 
 
 
-    // حفظ إكمال المرحلة
+
+    // حفظ الإكمال
 
     await PuzzleProgressManager.completeLevel(
 
-      levelKey,
+      key,
 
     );
 
@@ -380,7 +400,7 @@ class PuzzleLevelService {
 
     await PuzzleProgressManager.saveLevelStars(
 
-      levelKey,
+      key,
 
       stars,
 
@@ -391,7 +411,7 @@ class PuzzleLevelService {
 
 
 
-    // إضافة النجوم للمجموع العام
+    // إضافة النجوم للمجموع
 
     await PuzzleProgressManager.addStars(
 
@@ -418,7 +438,8 @@ class PuzzleLevelService {
 
 
 
-    // حفظ آخر مرحلة لعب
+
+    // حفظ آخر مرحلة
 
     await PuzzleProgressManager.saveLastPuzzle(
 
@@ -429,9 +450,7 @@ class PuzzleLevelService {
     );
 
 
-
   }
-
 
 
 
@@ -453,61 +472,43 @@ class PuzzleLevelService {
 
 
 
-    final nextLevel = currentLevel + 1;
+    final next = currentLevel + 1;
 
 
 
+    final exists = await levelExists(
 
+      worldId: worldId,
 
-    final levels =
-
-    await getLevels(
-
-      worldId,
+      levelNumber: next,
 
     );
 
 
 
-
-
-    if(nextLevel > levels.length){
-
+    if(!exists){
 
       return;
-
 
     }
 
 
 
 
-
-
-
-    final key =
-
-        "${worldId}_level_$nextLevel";
-
-
-
-
-
-
     await PuzzleProgressManager.unlockLevel(
 
-      key,
+      levelKey(
+
+        worldId,
+
+        next,
+
+      ),
 
     );
 
 
   }
-
-
-
-
-
-
 
   //=========================================
   // هل العالم مكتمل
@@ -522,9 +523,7 @@ class PuzzleLevelService {
 
 
 
-    final levels =
-
-    await getLevels(
+    final levels = await getLevels(
 
       worldId,
 
@@ -534,14 +533,17 @@ class PuzzleLevelService {
 
 
 
-
     for(final level in levels){
 
 
 
-      final key =
+      final key = levelKey(
 
-          "${worldId}_${level.id}";
+        worldId,
+
+        level.levelNumber,
+
+      );
 
 
 
@@ -561,9 +563,7 @@ class PuzzleLevelService {
 
       if(!completed){
 
-
         return false;
-
 
       }
 
@@ -599,13 +599,12 @@ class PuzzleLevelService {
 
 
 
-    final levels =
-
-    await getLevels(
+    final levels = await getLevels(
 
       worldId,
 
     );
+
 
 
 
@@ -620,19 +619,17 @@ class PuzzleLevelService {
 
 
 
-      final key =
-
-          "${worldId}_${level.id}";
-
-
-
-
-
       total +=
 
       await PuzzleProgressManager.getLevelStars(
 
-        key,
+        levelKey(
+
+          worldId,
+
+          level.levelNumber,
+
+        ),
 
       );
 
@@ -650,8 +647,13 @@ class PuzzleLevelService {
   }
 
 
+
+
+
+
+
   //=========================================
-  // إعادة ضبط تقدم عالم
+  // إعادة ضبط تقدم العالم
   //=========================================
 
 
@@ -663,9 +665,7 @@ class PuzzleLevelService {
 
 
 
-    final levels =
-
-    await getLevels(
+    final levels = await getLevels(
 
       worldId,
 
@@ -679,9 +679,13 @@ class PuzzleLevelService {
 
 
 
-      final key =
+      final key = levelKey(
 
-          "${worldId}_${level.id}";
+        worldId,
+
+        level.levelNumber,
+
+      );
 
 
 
@@ -694,9 +698,7 @@ class PuzzleLevelService {
       );
 
 
-
     }
-
 
 
   }
@@ -733,13 +735,7 @@ class PuzzleLevelService {
     );
 
 
-
   }
-
-
-
-
-
 
 
 
