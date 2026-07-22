@@ -14,48 +14,60 @@ enum EdgeType {
 
 
 
-
 class PuzzlePiece {
 
 
+  // رقم القطعة
 
   final String id;
 
 
-  final int row;
 
+  // مكانها الصحيح داخل الشبكة
+
+  final int row;
 
   final int column;
 
 
 
+  // رقم ترتيبها الصحيح
+
   final int correctPosition;
 
 
+
+
+  // الجزء المقصوص من الصورة
 
   final Rect sourceRect;
 
 
 
-  final EdgeType top;
 
+  // شكل الحواف
+
+  final EdgeType top;
 
   final EdgeType bottom;
 
-
   final EdgeType left;
-
 
   final EdgeType right;
 
 
 
 
+  // موقعها الحالي على الشاشة
+
   Offset position;
 
 
 
+  // هل تم تثبيتها
+
   bool placed;
+
 
 
 
@@ -95,7 +107,6 @@ class PuzzlePiece {
 
 
 
-
   // الموقع الصحيح الحقيقي حسب حجم القطعة
 
   Offset correctOffset(double pieceSize){
@@ -119,8 +130,7 @@ class PuzzlePiece {
 
 
 
-
-  // تثبيت القطعة بالتلميح
+  // تثبيت القطعة بواسطة التلميح
 
   void placeHint(double pieceSize){
 
@@ -133,6 +143,32 @@ class PuzzlePiece {
 
   }
 
+
+
+
+
+
+
+
+  // هل القطعة في مكانها
+
+  bool isCorrect(double pieceSize){
+
+
+    final target = correctOffset(pieceSize);
+
+
+
+    return (
+
+        (position.dx - target.dx).abs() < 5 &&
+
+        (position.dy - target.dy).abs() < 5
+
+    );
+
+
+  }
 
 
 
@@ -161,8 +197,7 @@ class PuzzlePiece {
 
 
 
-
-  // حفظ
+  // تحويل للحفظ
 
   Map<String,dynamic> toJson(){
 
@@ -172,18 +207,14 @@ class PuzzlePiece {
 
       "id":id,
 
-
       "row":row,
 
-
       "column":column,
-
 
       "correctPosition":correctPosition,
 
 
       "x":position.dx,
-
 
       "y":position.dy,
 
@@ -203,8 +234,7 @@ class PuzzlePiece {
 
 
 
-
-  // تحميل
+  // استرجاع من الحفظ
 
   factory PuzzlePiece.fromJson(
 
@@ -231,18 +261,17 @@ class PuzzlePiece {
 
 
 
-      sourceRect: Rect.zero,
+      sourceRect:
+
+      Rect.zero,
 
 
 
       top: EdgeType.flat,
 
-
       bottom: EdgeType.flat,
 
-
       left: EdgeType.flat,
-
 
       right: EdgeType.flat,
 
@@ -250,18 +279,17 @@ class PuzzlePiece {
 
       position: Offset(
 
-
         (json['x'] ?? 0).toDouble(),
 
-
         (json['y'] ?? 0).toDouble(),
-
 
       ),
 
 
 
-      placed: json['placed'] ?? false,
+      placed:
+
+      json['placed'] ?? false,
 
 
     );
