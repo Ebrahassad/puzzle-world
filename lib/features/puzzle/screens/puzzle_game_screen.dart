@@ -55,7 +55,6 @@ class PuzzleGameScreen extends StatefulWidget {
 
 
 
-
 class _PuzzleGameScreenState
     extends State<PuzzleGameScreen> {
 
@@ -101,6 +100,8 @@ class _PuzzleGameScreenState
 
 
 
+
+
   @override
   void initState(){
 
@@ -121,18 +122,13 @@ class _PuzzleGameScreenState
 
     pieces = PuzzleGenerator.generate(
 
-
       rows: widget.level.gridSize,
-
 
       columns: widget.level.gridSize,
 
-
       imageWidth: boardSize,
 
-
       imageHeight: boardSize,
-
 
     );
 
@@ -152,13 +148,20 @@ class _PuzzleGameScreenState
   }
 
 
-id="8q4k9v"
+
+
+
+
+
   Future<void> loadProgress() async {
+
 
 
     final saved =
 
     await PuzzleProgressManager.loadProgress();
+
+
 
 
 
@@ -173,6 +176,8 @@ id="8q4k9v"
       final continueGame =
 
       await showContinueDialog();
+
+
 
 
 
@@ -192,9 +197,7 @@ id="8q4k9v"
 
 
 
-          final piece =
-
-          pieces.firstWhere(
+          final piece = pieces.firstWhere(
 
 
 
@@ -285,7 +288,6 @@ id="8q4k9v"
 
 
 
-
     if(mounted){
 
 
@@ -308,14 +310,10 @@ id="8q4k9v"
 
 
 
-
     startTimer();
 
 
-
   }
-
-
 
 
 
@@ -355,75 +353,45 @@ id="8q4k9v"
 
   }
 
-
-
-
-
-
-
-
-
   Future<bool> showContinueDialog() async {
-
 
 
     final result =
 
     await showDialog<bool>(
 
-
-
       context: context,
 
-
-
       barrierDismissible: false,
-
-
 
       builder:(context){
 
 
-
         return AlertDialog(
-
 
 
           shape:
 
           RoundedRectangleBorder(
 
-
-
             borderRadius:
 
             BorderRadius.circular(25),
 
-
-
           ),
-
-
 
 
           title:
 
           const Text(
 
-
-
             "🧩 لعبة محفوظة",
-
-
 
             textAlign:
 
             TextAlign.center,
 
-
-
           ),
-
 
 
 
@@ -431,20 +399,13 @@ id="8q4k9v"
 
           const Text(
 
-
-
-            "وجدنا لعبة محفوظة، هل تريد المتابعة؟",
-
-
+            "وجدنا مرحلة محفوظة، هل تريد المتابعة؟",
 
             textAlign:
 
             TextAlign.center,
 
-
-
           ),
-
 
 
 
@@ -455,9 +416,7 @@ id="8q4k9v"
             TextButton(
 
 
-
               onPressed:() async {
-
 
 
                 await PuzzleProgressManager
@@ -466,10 +425,7 @@ id="8q4k9v"
 
 
 
-
-
-                if(mounted){
-
+                if(context.mounted){
 
 
                   Navigator.pop(
@@ -481,13 +437,10 @@ id="8q4k9v"
                   );
 
 
-
                 }
 
 
-
               },
-
 
 
               child:
@@ -499,8 +452,8 @@ id="8q4k9v"
               ),
 
 
-
             ),
+
 
 
 
@@ -509,9 +462,7 @@ id="8q4k9v"
             ElevatedButton(
 
 
-
               onPressed:() async {
-
 
 
                 final watched =
@@ -522,10 +473,7 @@ id="8q4k9v"
 
 
 
-
-
-                if(watched && mounted){
-
+                if(watched && context.mounted){
 
 
                   Navigator.pop(
@@ -537,13 +485,10 @@ id="8q4k9v"
                   );
 
 
-
                 }
 
 
-
               },
-
 
 
               child:
@@ -553,7 +498,6 @@ id="8q4k9v"
                 "🎬 متابعة",
 
               ),
-
 
 
             ),
@@ -567,9 +511,7 @@ id="8q4k9v"
         );
 
 
-
       },
-
 
 
     );
@@ -581,9 +523,7 @@ id="8q4k9v"
     return result ?? false;
 
 
-
   }
-
 
 
 
@@ -595,23 +535,15 @@ id="8q4k9v"
   void startTimer(){
 
 
-
     timer?.cancel();
-
-
 
 
 
     timer = Timer.periodic(
 
-
-
       const Duration(seconds:1),
 
-
-
           (_) {
-
 
 
         if(!mounted || finishing){
@@ -622,14 +554,10 @@ id="8q4k9v"
 
 
 
-
-
         setState((){
 
 
-
           seconds++;
-
 
 
         });
@@ -638,39 +566,49 @@ id="8q4k9v"
 
       },
 
-
-
     );
-
 
 
   }
 
+
+
+
+
+
+
+
+
   Future<void> saveGame() async {
+
 
 
     await PuzzleProgressManager.saveProgress(
 
 
+      puzzleId:
 
-      puzzleId: widget.puzzle.id,
-
-
-
-      levelId: widget.level.id,
+      widget.puzzle.id,
 
 
+      levelId:
 
-      pieces: pieces,
-
-
-
-      moves: moves,
+      widget.level.id,
 
 
+      pieces:
 
-      seconds: seconds,
+      pieces,
 
+
+      moves:
+
+      moves,
+
+
+      seconds:
+
+      seconds,
 
 
     );
@@ -698,9 +636,7 @@ id="8q4k9v"
 
     if(piece.placed || finishing){
 
-
       return;
-
 
     }
 
@@ -709,7 +645,6 @@ id="8q4k9v"
 
 
     final RenderBox box =
-
 
     context.findRenderObject()
 
@@ -721,12 +656,9 @@ id="8q4k9v"
 
     final boardPosition =
 
-
     box.globalToLocal(
 
-
       globalPosition,
-
 
     );
 
@@ -734,9 +666,7 @@ id="8q4k9v"
 
 
 
-
     final correctedPosition = Offset(
-
 
 
       (boardPosition.dx - pieceSize / 2)
@@ -748,7 +678,6 @@ id="8q4k9v"
         boardSize - pieceSize,
 
       ),
-
 
 
 
@@ -764,9 +693,7 @@ id="8q4k9v"
 
 
 
-
     );
-
 
 
 
@@ -781,7 +708,6 @@ id="8q4k9v"
 
 
 
-
       piece.position =
 
           correctedPosition;
@@ -789,24 +715,18 @@ id="8q4k9v"
 
 
 
-
       controller.checkPiecePosition(
-
-
 
         piece,
 
-
-
         pieceSize,
-
-
 
       );
 
 
 
     });
+
 
 
 
@@ -834,17 +754,13 @@ id="8q4k9v"
   void checkCompleted(){
 
 
-
     if(controller.isCompleted && !finishing){
-
 
 
       finishGame();
 
 
-
     }
-
 
 
   }
@@ -863,11 +779,7 @@ id="8q4k9v"
 
     if(finishing){
 
-
-
       return;
-
-
 
     }
 
@@ -875,14 +787,9 @@ id="8q4k9v"
 
 
 
-
-
     bool available =
 
-
-
     await PuzzleHintManager.consumeHint();
-
 
 
 
@@ -894,10 +801,7 @@ id="8q4k9v"
 
       final watched =
 
-
-
       await RewardAdService.showRewardAd();
-
 
 
 
@@ -914,14 +818,10 @@ id="8q4k9v"
         available = true;
 
 
-
       }
 
 
-
     }
-
-
 
 
 
@@ -929,14 +829,9 @@ id="8q4k9v"
 
     if(!available){
 
-
-
       return;
 
-
-
     }
-
 
 
 
@@ -945,15 +840,9 @@ id="8q4k9v"
 
     final piece =
 
-
-
     PuzzleHintManager.findAvailablePiece(
 
-
-
       pieces,
-
-
 
     );
 
@@ -961,17 +850,11 @@ id="8q4k9v"
 
 
 
-
     if(piece == null){
-
-
 
       return;
 
-
-
     }
-
 
 
 
@@ -984,24 +867,15 @@ id="8q4k9v"
 
       controller.applyHint(
 
-
-
         piece,
 
-
-
         pieceSize,
-
-
 
       );
 
 
 
-
-
       moves++;
-
 
 
 
@@ -1027,15 +901,570 @@ id="8q4k9v"
 
   }
 
+  Future<void> loadHints() async {
+
+    final value =
+        await PuzzleHintManager.getHints();
+
+
+    if(!mounted) return;
+
+
+    setState((){
+
+      hints = value;
+
+    });
+
+
+  }
+
+
+
+
+
+
+  Future<bool> showContinueDialog() async {
+
+
+    final result =
+    await showDialog<bool>(
+
+      context: context,
+
+      barrierDismissible: false,
+
+
+      builder:(context){
+
+
+        return AlertDialog(
+
+          shape:
+
+          RoundedRectangleBorder(
+
+            borderRadius:
+
+            BorderRadius.circular(25),
+
+          ),
+
+
+          title:
+
+          const Text(
+
+            "🧩 لعبة محفوظة",
+
+            textAlign:
+
+            TextAlign.center,
+
+          ),
+
+
+          content:
+
+          const Text(
+
+            "وجدنا لعبة محفوظة، هل تريد المتابعة؟",
+
+            textAlign:
+
+            TextAlign.center,
+
+          ),
+
+
+
+          actions:[
+
+
+            TextButton(
+
+              onPressed:() async {
+
+
+                await PuzzleProgressManager
+
+                    .clearProgress();
+
+
+                if(mounted){
+
+                  Navigator.pop(
+
+                    context,
+
+                    false,
+
+                  );
+
+                }
+
+
+              },
+
+
+              child:
+
+              const Text(
+
+                "ابدأ من جديد",
+
+              ),
+
+            ),
+
+
+
+
+            ElevatedButton(
+
+
+              onPressed:() async {
+
+
+                final watched =
+
+                await RewardAdService
+
+                    .showContinueAd();
+
+
+
+                if(watched && mounted){
+
+
+                  Navigator.pop(
+
+                    context,
+
+                    true,
+
+                  );
+
+
+                }
+
+
+              },
+
+
+              child:
+
+              const Text(
+
+                "🎬 متابعة",
+
+              ),
+
+
+            ),
+
+
+          ],
+
+
+        );
+
+
+      },
+
+
+    );
+
+
+
+    return result ?? false;
+
+
+  }
+
+
+
+
+
+
+
+
+  void startTimer(){
+
+
+    timer?.cancel();
+
+
+
+    timer = Timer.periodic(
+
+
+      const Duration(seconds:1),
+
+
+          (_) {
+
+
+        if(!mounted || finishing){
+
+          return;
+
+        }
+
+
+
+        setState((){
+
+
+          seconds++;
+
+
+        });
+
+
+
+      },
+
+
+    );
+
+
+  }
+
+
+
+
+
+
+
+
+
+  Future<void> saveGame() async {
+
+
+    await PuzzleProgressManager.saveProgress(
+
+
+      puzzleId:
+
+      widget.puzzle.id,
+
+
+      levelId:
+
+      widget.level.id,
+
+
+      pieces:
+
+      pieces,
+
+
+      moves:
+
+      moves,
+
+
+      seconds:
+
+      seconds,
+
+
+    );
+
+
+  }
+
+
+
+
+
+
+
+
+
+  Future<void> dropPiece(
+
+      PuzzlePiece piece,
+
+      Offset globalPosition,
+
+      ) async {
+
+
+
+    if(piece.placed || finishing){
+
+      return;
+
+    }
+
+
+
+
+
+
+    final RenderBox box =
+
+
+    context.findRenderObject()
+
+    as RenderBox;
+
+
+
+
+
+    final boardPosition =
+
+
+    box.globalToLocal(
+
+      globalPosition,
+
+    );
+
+
+
+
+
+
+    final correctedPosition = Offset(
+
+
+      (boardPosition.dx - pieceSize / 2)
+
+          .clamp(
+
+        0,
+
+        boardSize - pieceSize,
+
+      ),
+
+
+
+      (boardPosition.dy - pieceSize / 2)
+
+          .clamp(
+
+        0,
+
+        boardSize - pieceSize,
+
+      ),
+
+
+    );
+
+
+
+
+
+
+
+    setState((){
+
+
+      moves++;
+
+
+
+      piece.position =
+
+          correctedPosition;
+
+
+
+
+      controller.checkPiecePosition(
+
+        piece,
+
+        pieceSize,
+
+      );
+
+
+
+    });
+
+
+
+
+
+
+
+    await saveGame();
+
+
+
+    checkCompleted();
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  void checkCompleted(){
+
+
+    if(controller.isCompleted && !finishing){
+
+
+      finishGame();
+
+
+    }
+
+
+  }
+
+
+  Future<void> usePuzzleHint() async {
+
+
+    if(finishing){
+
+      return;
+
+    }
+
+
+
+    bool available =
+
+    await PuzzleHintManager.consumeHint();
+
+
+
+
+
+    if(!available){
+
+
+      final watched =
+
+      await RewardAdService.showRewardAd();
+
+
+
+
+      if(watched){
+
+
+        await PuzzleHintManager.addHints(3);
+
+
+        available = true;
+
+
+      }
+
+
+    }
+
+
+
+
+
+
+
+    if(!available){
+
+      return;
+
+    }
+
+
+
+
+
+
+
+    final piece =
+
+    PuzzleHintManager.findAvailablePiece(
+
+      pieces,
+
+    );
+
+
+
+
+
+
+    if(piece == null){
+
+      return;
+
+    }
+
+
+
+
+
+
+
+    setState((){
+
+
+      controller.applyHint(
+
+        piece,
+
+        pieceSize,
+
+      );
+
+
+
+      moves++;
+
+
+
+    });
+
+
+
+
+
+
+
+    await saveGame();
+
+
+    await loadHints();
+
+
+    checkCompleted();
+
+
+  }
+
+
+
+
+
+
+
+
+
   Future<void> finishGame() async {
 
 
 
     if(finishing){
 
-
       return;
-
 
     }
 
@@ -1060,6 +1489,8 @@ id="8q4k9v"
 
 
 
+
+
     await PuzzleLevelService.finishLevel(
 
 
@@ -1072,26 +1503,13 @@ id="8q4k9v"
 
       levelNumber:
 
-      int.tryParse(
-
-
-        widget.level.id.replaceAll(
-
-
-          "level_",
-
-
-          "",
-
-
-        ),
-
-
-      ) ?? 1,
+      widget.level.levelNumber,
 
 
 
-      stars: stars,
+      stars:
+
+      stars,
 
 
 
@@ -1108,10 +1526,7 @@ id="8q4k9v"
 
 
 
-
     await PuzzleProgressManager.clearProgress();
-
-
 
 
 
@@ -1121,12 +1536,9 @@ id="8q4k9v"
 
     if(!mounted){
 
-
       return;
 
-
     }
-
 
 
 
@@ -1146,7 +1558,7 @@ id="8q4k9v"
 
 
 
-        builder:(context)=>
+        builder: (_) =>
 
 
 
@@ -1156,31 +1568,27 @@ id="8q4k9v"
 
               result:
 
-
-
               GameResultModel(
 
 
 
-                stars: stars,
+                stars:
+
+                stars,
 
 
 
-                moves: moves,
+                moves:
+
+                moves,
 
 
 
                 time:
 
-
-
                 Duration(
 
-
-
                   seconds: seconds,
-
-
 
                 ),
 
@@ -1192,10 +1600,7 @@ id="8q4k9v"
 
 
 
-
               difficulty:
-
-
 
               widget.level.gridSize,
 
@@ -1203,11 +1608,7 @@ id="8q4k9v"
 
 
 
-
-
               worldId:
-
-
 
               widget.puzzle.id,
 
@@ -1215,28 +1616,9 @@ id="8q4k9v"
 
 
 
-
-
               level:
 
-
-
-              int.tryParse(
-
-
-                widget.level.id.replaceAll(
-
-
-                  "level_",
-
-
-                  "",
-
-
-                ),
-
-
-              ) ?? 1,
+              widget.level.levelNumber,
 
 
 
@@ -1265,71 +1647,35 @@ id="8q4k9v"
   int calculateStars(){
 
 
-
-    final size =
-
-    widget.level.gridSize;
+    final size = widget.level.gridSize;
 
 
 
-
-
-    if(size <= 3 &&
-
-        seconds < 60 &&
-
-        moves < 25){
-
-
+    if(size <= 3 && seconds < 60 && moves < 25){
 
       return 3;
-
-
 
     }
 
 
 
-
-
-
-
-    if(size <= 4 &&
-
-        seconds < 120){
-
-
+    if(size <= 4 && seconds < 120){
 
       return 3;
 
-
-
     }
-
-
-
-
 
 
 
     if(seconds < 180){
 
-
-
       return 2;
-
-
 
     }
 
 
 
-
-
-
-
     return 1;
-
 
 
   }
@@ -1343,21 +1689,24 @@ id="8q4k9v"
 
 
   @override
-
   void dispose(){
-
 
 
     timer?.cancel();
 
 
-
-
     super.dispose();
 
 
-
   }
+
+
+
+
+
+
+
+
 
   @override
   Widget build(BuildContext context){
@@ -1367,33 +1716,25 @@ id="8q4k9v"
     if(loading){
 
 
-
       return const Scaffold(
-
 
 
         body:
 
 
-
         Center(
-
 
 
           child:
 
 
-
           CircularProgressIndicator(),
-
 
 
         ),
 
 
-
       );
-
 
 
     }
@@ -1403,38 +1744,26 @@ id="8q4k9v"
 
 
 
-
     final ImageProvider image =
-
 
 
     widget.puzzle.image.isEmpty
 
 
-
         ? const AssetImage(
 
-
-
       "assets/images/puzzle_placeholder.png",
-
-
 
     )
 
 
+        :
 
-        : AssetImage(
-
-
+    AssetImage(
 
       widget.puzzle.image,
 
-
-
     );
-
-
 
 
 
@@ -1445,93 +1774,64 @@ id="8q4k9v"
     return Scaffold(
 
 
-
       body:
-
 
 
       Container(
 
 
-
         decoration:
-
 
 
         const BoxDecoration(
 
 
-
           gradient:
-
 
 
           LinearGradient(
 
 
-
-            begin:
-
-
-
-            Alignment.topCenter,
-
-
-
-            end:
-
-
-
-            Alignment.bottomCenter,
-
-
-
             colors:[
-
 
 
               Color(0xff89F7FE),
 
-
-
               Color(0xff66A6FF),
-
-
 
             ],
 
 
+            begin:
+
+            Alignment.topCenter,
+
+
+            end:
+
+            Alignment.bottomCenter,
+
 
           ),
-
 
 
         ),
 
 
 
-
-
-
-
         child:
-
 
 
         SafeArea(
 
 
-
           child:
-
 
 
           Column(
 
 
-
             children:[
-
 
 
               const SizedBox(height:20),
@@ -1539,43 +1839,28 @@ id="8q4k9v"
 
 
 
-
-
               Text(
-
 
 
                 widget.puzzle.title,
 
 
-
                 style:
-
 
 
                 const TextStyle(
 
 
-
                   color: Colors.white,
-
-
 
                   fontSize:30,
 
-
-
-                  fontWeight: FontWeight.bold,
-
-
+                  fontWeight:FontWeight.bold,
 
                 ),
 
 
-
               ),
-
-
 
 
 
@@ -1585,110 +1870,63 @@ id="8q4k9v"
 
 
 
-
-
               Row(
-
 
 
                 mainAxisAlignment:
 
-
-
                 MainAxisAlignment.center,
-
 
 
                 children:[
 
 
-
                   Container(
-
 
 
                     padding:
 
-
-
-                    const EdgeInsets.symmetric(
-
-
-
-                      horizontal:14,
-
-
-
-                      vertical:8,
-
-
-
-                    ),
-
+                    const EdgeInsets.all(12),
 
 
                     decoration:
 
 
-
                     BoxDecoration(
 
 
-
-                      color:
-
-
-
-                      Colors.white24,
-
+                      color:Colors.white24,
 
 
                       borderRadius:
 
-
-
                       BorderRadius.circular(20),
 
 
-
                     ),
-
 
 
                     child:
 
 
-
                     Text(
-
 
 
                       "🧩 $moves   ⏱ $seconds",
 
 
-
                       style:
-
-
 
                       const TextStyle(
 
-
-
                         color:Colors.white,
 
-
-
                         fontSize:18,
-
-
 
                       ),
 
 
-
                     ),
-
 
 
                   ),
@@ -1696,13 +1934,7 @@ id="8q4k9v"
 
 
 
-
-
-
-                  const SizedBox(width:16),
-
-
-
+                  const SizedBox(width:15),
 
 
 
@@ -1710,213 +1942,88 @@ id="8q4k9v"
                   ElevatedButton.icon(
 
 
-
                     onPressed:
-
-
 
                     usePuzzleHint,
 
 
-
                     icon:
-
-
 
                     const Icon(Icons.lightbulb),
 
 
-
                     label:
-
-
 
                     Text(
 
-
-
                       "💡 $hints",
 
-
-
                     ),
-
-
-
-                    style:
-
-
-
-                    ElevatedButton.styleFrom(
-
-
-
-                      backgroundColor:
-
-
-
-                      Colors.orange,
-
-
-
-                      foregroundColor:
-
-
-
-                      Colors.white,
-
-
-
-                      shape:
-
-
-
-                      RoundedRectangleBorder(
-
-
-
-                        borderRadius:
-
-
-
-                        BorderRadius.circular(20),
-
-
-
-                      ),
-
-
-
-                    ),
-
 
 
                   ),
 
 
-
                 ],
-
 
 
               ),
 
 
 
-
-
-
-
-              const SizedBox(height:20),
-
-
-
-
-
-
-
               Expanded(
-
 
 
                 child:
 
 
-
                 Center(
-
 
 
                   child:
 
 
-
                   SizedBox(
 
 
+                    width:
 
-                    width:boardSize,
+                    boardSize,
 
 
+                    height:
 
-                    height:boardSize,
-
+                    boardSize,
 
 
                     child:
 
 
-
                     Stack(
-
 
 
                       children:[
 
 
-
                         Container(
-
-
-
-                          width:boardSize,
-
-
-
-                          height:boardSize,
-
 
 
                           decoration:
 
-
-
                           BoxDecoration(
 
 
+                            color:
 
-                            color:Colors.white30,
-
+                            Colors.white30,
 
 
                             borderRadius:
 
-
-
                             BorderRadius.circular(25),
 
 
-
-                            boxShadow:[
-
-
-
-                              const BoxShadow(
-
-
-
-                                color:Colors.black26,
-
-
-
-                                blurRadius:15,
-
-
-
-                                offset:Offset(0,8),
-
-
-
-                              ),
-
-
-
-                            ],
-
-
-
                           ),
-
 
 
                         ),
@@ -1924,44 +2031,27 @@ id="8q4k9v"
 
 
 
-
-
-
                         ...pieces.map((piece){
-
 
 
                           return AnimatedPositioned(
 
 
-
                             duration:
-
-
 
                             const Duration(
 
-
-
                               milliseconds:180,
-
-
 
                             ),
 
 
-
                             left:
-
-
 
                             piece.position.dx,
 
 
-
                             top:
-
-
 
                             piece.position.dy,
 
@@ -1970,54 +2060,51 @@ id="8q4k9v"
                             child:
 
 
-
                             Draggable<PuzzlePiece>(
 
 
+                              data:
 
-                              data:piece,
+                              piece,
 
 
 
                               feedback:
 
 
-
                               Material(
 
 
+                                color:
 
-                                color:Colors.transparent,
-
+                                Colors.transparent,
 
 
                                 child:
 
 
-
                                 PuzzlePieceWidget(
 
 
+                                  piece:
 
-                                  piece:piece,
-
-
-
-                                  image:image,
+                                  piece,
 
 
+                                  image:
 
-                                  size:pieceSize,
+                                  image,
 
+
+                                  size:
+
+                                  pieceSize,
 
 
                                 ),
 
 
-
                               ),
-
-
 
 
 
@@ -2025,10 +2112,7 @@ id="8q4k9v"
                               childWhenDragging:
 
 
-
                               const SizedBox(),
-
-
 
 
 
@@ -2036,21 +2120,13 @@ id="8q4k9v"
                               onDragEnd:(details){
 
 
-
                                 dropPiece(
-
-
 
                                   piece,
 
-
-
                                   details.offset,
 
-
-
                                 );
-
 
 
                               },
@@ -2058,95 +2134,71 @@ id="8q4k9v"
 
 
 
-
-
-
                               child:
-
 
 
                               PuzzlePieceWidget(
 
 
+                                piece:
 
-                                piece:piece,
-
-
-
-                                image:image,
+                                piece,
 
 
+                                image:
 
-                                size:pieceSize,
+                                image,
 
+
+                                size:
+
+                                pieceSize,
 
 
                               ),
 
 
-
                             ),
-
 
 
                           );
 
 
-
-                        }).toList(),
-
+                        }),
 
 
                       ],
 
 
-
                     ),
-
 
 
                   ),
 
 
-
                 ),
-
 
 
               ),
 
 
 
-
-
-
-
-              const SizedBox(height:20),
-
-
-
             ],
-
 
 
           ),
 
 
-
         ),
-
 
 
       ),
 
 
-
     );
-
 
 
   }
 
 
 }
-                           
