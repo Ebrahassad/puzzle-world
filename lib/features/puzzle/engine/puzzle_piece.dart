@@ -2,6 +2,20 @@ import 'package:flutter/material.dart';
 
 
 
+enum EdgeType {
+
+  flat,
+
+  tab,
+
+  blank,
+
+}
+
+
+
+
+
 class PuzzlePiece {
 
 
@@ -12,7 +26,7 @@ class PuzzlePiece {
 
 
 
-  // مكان القطعة الصحيح داخل الشبكة
+  // مكانها الصحيح في الشبكة
 
   final int row;
 
@@ -23,7 +37,40 @@ class PuzzlePiece {
 
 
 
-  // مكانها الحالي على اللوحة
+  // رقم المكان الصحيح
+
+  final int correctPosition;
+
+
+
+
+
+  // مكان قصها من الصورة الأصلية
+
+  final Rect sourceRect;
+
+
+
+
+
+  // حواف القطعة
+
+  final EdgeType top;
+
+
+  final EdgeType bottom;
+
+
+  final EdgeType left;
+
+
+  final EdgeType right;
+
+
+
+
+
+  // مكانها الحالي
 
   Offset position;
 
@@ -31,22 +78,9 @@ class PuzzlePiece {
 
 
 
-  // هل وضعت في مكانها الصحيح؟
+  // هل تم تركيبها
 
   bool placed;
-
-
-
-
-
-
-
-  // حجم القطعة (اختياري للاستخدام لاحقاً)
-
-  final double width;
-
-
-  final double height;
 
 
 
@@ -61,10 +95,36 @@ class PuzzlePiece {
     required this.id,
 
 
+
     required this.row,
 
 
+
     required this.column,
+
+
+
+    required this.correctPosition,
+
+
+
+    required this.sourceRect,
+
+
+
+    required this.top,
+
+
+
+    required this.bottom,
+
+
+
+    required this.left,
+
+
+
+    required this.right,
 
 
 
@@ -73,13 +133,6 @@ class PuzzlePiece {
 
 
     this.placed = false,
-
-
-
-    this.width = 0,
-
-
-    this.height = 0,
 
 
 
@@ -93,22 +146,26 @@ class PuzzlePiece {
 
 
 
-  // =========================
-  // المكان الصحيح للقطعة
-  // =========================
+  // المكان الصحيح على اللوحة
 
-
-  Offset get correctPosition {
+  Offset get correctOffset {
 
 
 
     return Offset(
 
+
+
       column.toDouble(),
+
+
 
       row.toDouble(),
 
+
+
     );
+
 
 
   }
@@ -121,10 +178,67 @@ class PuzzlePiece {
 
 
 
-  // =========================
-  // تحويل إلى بيانات للحفظ
-  // =========================
+  // تثبيت القطعة بالتلميح
 
+  void placeHint(double pieceSize){
+
+
+
+    position = Offset(
+
+
+
+      column * pieceSize,
+
+
+
+      row * pieceSize,
+
+
+
+    );
+
+
+
+    placed = true;
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  // إعادة القطعة
+
+  void reset(){
+
+
+
+    position = Offset.zero;
+
+
+
+    placed = false;
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  // حفظ البيانات
 
   Map<String,dynamic> toJson(){
 
@@ -156,6 +270,7 @@ class PuzzlePiece {
     };
 
 
+
   }
 
 
@@ -166,10 +281,7 @@ class PuzzlePiece {
 
 
 
-  // =========================
-  // إنشاء قطعة من البيانات
-  // =========================
-
+  // استرجاع البيانات
 
   factory PuzzlePiece.fromJson(
 
@@ -183,7 +295,7 @@ class PuzzlePiece {
 
 
 
-      id:json['id'],
+      id:json['id'].toString(),
 
 
 
@@ -192,6 +304,33 @@ class PuzzlePiece {
 
 
       column:json['column'],
+
+
+
+      correctPosition:
+
+      json['row'] * 100 +
+
+          json['column'],
+
+
+
+      sourceRect:
+
+      Rect.zero,
+
+
+
+      top:EdgeType.flat,
+
+
+      bottom:EdgeType.flat,
+
+
+      left:EdgeType.flat,
+
+
+      right:EdgeType.flat,
 
 
 
@@ -222,78 +361,6 @@ class PuzzlePiece {
 
 
   }
-
-
-
-
-
-
-
-
-
-  // =========================
-  // إعادة القطعة لبداية اللعبة
-  // =========================
-
-
-  void reset(){
-
-
-
-    position = Offset.zero;
-
-
-
-    placed = false;
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-  // =========================
-  // تثبيت القطعة بالتلميح
-  // =========================
-
-
-  void placeHint(
-
-      double pieceSize,
-
-      ){
-
-
-
-    position = Offset(
-
-
-
-      column * pieceSize,
-
-
-
-      row * pieceSize,
-
-
-
-    );
-
-
-
-    placed = true;
-
-
-
-  }
-
-
 
 
 
