@@ -4,8 +4,8 @@ import '../models/game_result_model.dart';
 import '../models/reward_result_model.dart';
 
 import '../managers/reward_manager.dart';
-import '../managers/puzzle_progress_manager.dart';
 
+import '../services/puzzle_level_service.dart';
 import '../services/puzzle_world_service.dart';
 import '../services/puzzle_reward_ad_service.dart';
 import '../services/puzzle_audio_service.dart';
@@ -74,12 +74,12 @@ class PuzzleWinScreen extends StatefulWidget {
 
 
 
-
   @override
   State<PuzzleWinScreen> createState() =>
       _PuzzleWinScreenState();
 
 }
+
 
 
 
@@ -92,7 +92,6 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
   RewardResultModel? reward;
-
 
 
   bool loading = true;
@@ -112,29 +111,6 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-  String? get levelKey {
-
-
-
-    if(widget.worldId == null ||
-        widget.level == null){
-
-      return null;
-
-    }
-
-
-
-    return "${widget.worldId}_level_${widget.level}";
-
-
-  }
-
-
-
-
-
-
   @override
   void initState(){
 
@@ -146,16 +122,15 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
     animationController =
         AnimationController(
 
-          vsync: this,
+          vsync:this,
 
 
           duration:
           const Duration(seconds:1),
 
-
         )
-          ..repeat(reverse:true);
-
+          ..repeat(
+              reverse:true);
 
 
 
@@ -204,14 +179,11 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
   Future<void> initialize() async {
 
 
-
     await PuzzleAudioService.playWinSound();
 
 
 
-
     await completeResult();
-
 
 
 
@@ -239,83 +211,42 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
+    if(widget.worldId != null &&
+        widget.level != null){
 
 
-    if(levelKey != null){
+
+      await PuzzleLevelService.finishLevel(
+
+        worldId: widget.worldId!,
 
 
+        levelNumber: widget.level!,
 
-      final completed =
 
-      await PuzzleProgressManager
-          .isCompleted(
+        stars: widget.result.stars,
 
-        levelKey!,
+
+        difficulty: widget.difficulty,
+
 
       );
 
 
 
-
-
-      if(!completed){
-
-
-
-        await PuzzleProgressManager
-            .completeLevel(
-
-          levelKey!,
-
-        );
+      await afterLevelCompleted();
 
 
 
-
-
-        await PuzzleProgressManager
-            .unlockNextLevel(
-
-          widget.worldId!,
-
-          widget.level!,
-
-        );
-
-
-
-
-
-        await afterLevelCompleted();
-
-
-
-      }
+    }
 
 
 
 
 
 
-      final claimed =
 
-      await PuzzleProgressManager
-          .isRewardClaimed(
-
-        levelKey!,
-
-      );
-
-
-
-
-
-      if(!claimed){
-
-
-
-        rewardResult =
-
+    rewardResult =
         await RewardManager.completePuzzle(
 
           difficulty:
@@ -324,38 +255,6 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
         );
 
 
-
-
-
-        await PuzzleProgressManager
-            .markRewardClaimed(
-
-          levelKey!,
-
-        );
-
-
-
-      }
-
-
-
-    }else{
-
-
-
-      rewardResult =
-
-      await RewardManager.completePuzzle(
-
-        difficulty:
-        widget.difficulty,
-
-      );
-
-
-
-    }
 
 
 
@@ -379,21 +278,14 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
       loading = false;
 
 
+
     });
 
 
 
   }
 
-
-
-
-
-
-
-
   Future<void> afterLevelCompleted() async {
-
 
 
     if(widget.worldId == null ||
@@ -442,6 +334,7 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
+
     await PuzzleSaveService.saveLastPlayed(
 
       worldId: widget.worldId!,
@@ -474,7 +367,9 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
+
     await PuzzleCloudService.sync();
+
 
 
 
@@ -500,7 +395,15 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
     );
 
 
+
   }
+
+
+
+
+
+
+
 
   //==================================================
   // 🎬 مضاعفة المكافأة بالإعلان
@@ -546,6 +449,8 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
     final gems = reward!.gems;
+
+
 
 
 
@@ -606,6 +511,8 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
       return;
 
     }
+
+
 
 
 
@@ -778,7 +685,6 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
   void dispose(){
 
 
-
     animationController.dispose();
 
 
@@ -787,12 +693,6 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
   }
-
-
-
-
-
-
 
 
   @override
@@ -838,10 +738,12 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
             colors:[
 
 
+
               Color(0xff7ED6FF),
 
 
               Color(0xffB8F2FF),
+
 
 
             ],
@@ -857,6 +759,7 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
             end:
 
             Alignment.bottomCenter,
+
 
 
           ),
@@ -881,6 +784,7 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
           loading
 
 
+
               ? const Center(
 
 
@@ -888,6 +792,7 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
             child:
 
             CircularProgressIndicator(),
+
 
 
           )
@@ -906,11 +811,24 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
+              mainAxisAlignment:
+
+              MainAxisAlignment.center,
+
+
+
               children:[
 
 
 
-                const SizedBox(height:30),
+
+
+                const SizedBox(
+
+                  height:30,
+
+                ),
+
 
 
 
@@ -953,7 +871,11 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-                const SizedBox(height:20),
+                const SizedBox(
+
+                  height:20,
+
+                ),
 
 
 
@@ -998,7 +920,11 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-                const SizedBox(height:10),
+                const SizedBox(
+
+                  height:10,
+
+                ),
 
 
 
@@ -1038,7 +964,11 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-                const SizedBox(height:25),
+                const SizedBox(
+
+                  height:25,
+
+                ),
 
 
 
@@ -1051,7 +981,13 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-                const SizedBox(height:20),
+
+                const SizedBox(
+
+                  height:20,
+
+                ),
+
 
 
 
@@ -1064,7 +1000,15 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-                const SizedBox(height:25),
+
+
+                const SizedBox(
+
+                  height:25,
+
+                ),
+
+
 
 
 
@@ -1084,7 +1028,15 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-                const SizedBox(height:15),
+
+
+                const SizedBox(
+
+                  height:15,
+
+                ),
+
+
 
 
 
@@ -1101,7 +1053,16 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-                const SizedBox(height:15),
+
+
+
+                const SizedBox(
+
+                  height:15,
+
+                ),
+
+
 
 
 
@@ -1118,7 +1079,16 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-                const SizedBox(height:15),
+
+
+
+                const SizedBox(
+
+                  height:15,
+
+                ),
+
+
 
 
 
@@ -1136,7 +1106,13 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-                const SizedBox(height:40),
+
+
+                const SizedBox(
+
+                  height:40,
+
+                ),
 
 
 
@@ -1550,11 +1526,9 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
                   fontSize:22,
 
 
-
                   fontWeight:
 
                   FontWeight.bold,
-
 
 
                 ),
@@ -1630,11 +1604,9 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
                   fontSize:22,
 
 
-
                   fontWeight:
 
                   FontWeight.bold,
-
 
 
                 ),
@@ -1667,6 +1639,7 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
   }
+
 
 
 
@@ -1815,11 +1788,9 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
               fontSize:20,
 
 
-
               fontWeight:
 
               FontWeight.bold,
-
 
 
             ),
