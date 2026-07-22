@@ -586,6 +586,60 @@ getLastPlayed() async {
     await prefs.remove(bestTimeKey);
   }
 
+//==================================================
+// 🧩 آخر بازل تم لعبه
+//==================================================
+
+static const String lastPuzzleWorldKey =
+    "puzzle_last_world";
+
+static const String lastPuzzleLevelKey =
+    "puzzle_last_level";
+
+
+static Future<void> saveLastPuzzle(
+  String worldId,
+  String levelId,
+) async {
+
+  final prefs = await _prefs;
+
+  await prefs.setString(
+    lastPuzzleWorldKey,
+    worldId,
+  );
+
+  await prefs.setString(
+    lastPuzzleLevelKey,
+    levelId,
+  );
+
+}
+
+
+static Future<Map<String,dynamic>?> getLastPuzzle() async {
+
+  final prefs = await _prefs;
+
+  final world =
+      prefs.getString(lastPuzzleWorldKey);
+
+  final level =
+      prefs.getString(lastPuzzleLevelKey);
+
+
+  if(world == null || level == null){
+    return null;
+  }
+
+
+  return {
+    "worldId": world,
+    "levelId": level,
+  };
+
+}
+
   //==================================================
   // إعادة ضبط كل بيانات البازل
   //==================================================
