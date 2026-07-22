@@ -1,7 +1,8 @@
-import '../models/reward_result_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/reward_result_model.dart';
 import '../managers/puzzle_progress_manager.dart';
+
 
 
 class RewardManager {
@@ -21,8 +22,6 @@ class RewardManager {
     return PuzzleProgressManager.getCoins();
 
   }
-
-
 
 
 
@@ -67,7 +66,6 @@ class RewardManager {
 
 
 
-
   //==================================================
   // 💎 الجواهر
   //==================================================
@@ -75,13 +73,9 @@ class RewardManager {
 
   static Future<int> getGems() async {
 
-
     return PuzzleProgressManager.getGems();
 
-
   }
-
-
 
 
 
@@ -101,8 +95,6 @@ class RewardManager {
 
 
   }
-
-
 
 
 
@@ -128,19 +120,44 @@ class RewardManager {
 
 
 
-
   //==================================================
-  // 🎮 إكمال البازل وإعطاء المكافأة
+  // 🎮 مكافأة إنهاء البازل
   //==================================================
 
 
-  static Future<RewardResultModel>
+  static Future<RewardResultModel?>
 
   completePuzzle({
 
     required int difficulty,
 
+    required String rewardKey,
+
   }) async {
+
+
+
+    // منع تكرار المكافأة
+
+    final claimed =
+
+    await PuzzleProgressManager.isRewardClaimed(
+
+      rewardKey,
+
+    );
+
+
+
+    if(claimed){
+
+      return null;
+
+    }
+
+
+
+
 
 
 
@@ -150,8 +167,8 @@ class RewardManager {
 
 
 
-    switch(difficulty){
 
+    switch(difficulty){
 
 
       case 1:
@@ -196,6 +213,7 @@ class RewardManager {
 
 
 
+
     await addCoins(
 
       coins,
@@ -209,15 +227,28 @@ class RewardManager {
 
     if(gems > 0){
 
-
       await addGems(
 
         gems,
 
       );
 
-
     }
+
+
+
+
+
+
+
+    // تسجيل استلام المكافأة
+
+    await PuzzleProgressManager.markRewardClaimed(
+
+      rewardKey,
+
+    );
+
 
 
 
@@ -276,7 +307,6 @@ class RewardManager {
 
 
 
-
     return reward;
 
 
@@ -306,15 +336,20 @@ class RewardManager {
 
 
 
+
+
     const key =
 
-        "puzzle_daily_reward";
+    "puzzle_daily_reward";
+
+
 
 
 
     final saved =
 
     prefs.getString(key);
+
 
 
 
@@ -331,6 +366,7 @@ class RewardManager {
 
 
 
+
     final last =
 
     DateTime.parse(saved);
@@ -339,9 +375,11 @@ class RewardManager {
 
 
 
+
     final now =
 
     DateTime.now();
+
 
 
 
@@ -377,6 +415,8 @@ class RewardManager {
 
 
 
+
+
     await prefs.setString(
 
       "puzzle_daily_reward",
@@ -409,6 +449,7 @@ class RewardManager {
 
 
   }
+
 
 
 
