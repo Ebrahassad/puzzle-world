@@ -10,65 +10,62 @@ class PuzzleProgressManager {
   PuzzleProgressManager._();
 
 
-
   //==================================================
   // Keys
   //==================================================
 
-
   static const String progressKey =
       "puzzle_current_progress";
-
 
   static const String starsKey =
       "puzzle_total_stars";
 
-
   static const String coinsKey =
       "puzzle_coins";
-
 
   static const String gemsKey =
       "puzzle_gems";
 
-
   static const String hintsKey =
       "puzzle_hints";
 
-
   static const String lastWorldKey =
       "puzzle_last_world";
-
 
   static const String lastLevelKey =
       "puzzle_last_level";
 
 
-
   static const String completedLevelsKey =
       "puzzle_completed_levels";
 
-
   static const String unlockedLevelsKey =
       "puzzle_unlocked_levels";
-
 
   static const String levelStarsKey =
       "puzzle_level_stars";
 
 
-
   static const String gamesPlayedKey =
       "puzzle_games_played";
-
 
   static const String totalMovesKey =
       "puzzle_total_moves";
 
-
   static const String bestTimeKey =
       "puzzle_best_time";
 
+
+  static const String achievementsKey =
+      "puzzle_achievements";
+
+
+  static const String experienceKey =
+      "puzzle_experience";
+
+
+  static const String dailyMissionKey =
+      "puzzle_daily_missions";
 
 
   //==================================================
@@ -84,9 +81,8 @@ class PuzzleProgressManager {
 
 
 
-
   //==================================================
-  // حفظ اللعبة الحالية
+  // حفظ حالة البازل الحالية
   //==================================================
 
 
@@ -108,55 +104,39 @@ class PuzzleProgressManager {
     final prefs = await _prefs;
 
 
-
     final data = {
-
 
       "puzzleId": puzzleId,
 
-
       "levelId": levelId,
 
-
       "moves": moves,
-
 
       "seconds": seconds,
 
 
-
       "pieces": pieces.map((piece){
-
 
         return {
 
-
           "id": piece.id,
-
 
           "row": piece.row,
 
-
           "column": piece.column,
-
 
           "x": piece.position.dx,
 
-
           "y": piece.position.dy,
-
 
           "placed": piece.placed,
 
-
         };
-
 
       }).toList(),
 
 
     };
-
 
 
     await prefs.setString(
@@ -174,9 +154,8 @@ class PuzzleProgressManager {
 
 
 
-
   //==================================================
-  // قراءة اللعبة الحالية
+  // قراءة حالة البازل
   //==================================================
 
 
@@ -215,6 +194,10 @@ class PuzzleProgressManager {
 
 
 
+  //==================================================
+  // حذف البازل المحفوظ
+  //==================================================
+
 
   static Future<void>
 
@@ -234,51 +217,36 @@ class PuzzleProgressManager {
   }
 
 
-
-
-
   //==================================================
-  // ⭐ النجوم
+  // ⭐ نظام النجوم
   //==================================================
 
 
-  static Future<int>
-
-  getTotalStars() async {
-
+  static Future<int> getTotalStars() async {
 
     final prefs = await _prefs;
 
-
     return prefs.getInt(starsKey) ?? 0;
-
 
   }
 
 
 
 
-
-
-  static Future<int>
-
-  getStars() async {
-
+  static Future<int> getStars() async {
 
     return getTotalStars();
 
-
   }
 
 
 
 
+  static Future<void> addStars(
 
+      int amount,
 
-
-  static Future<void>
-
-  addStars(int amount) async {
+      ) async {
 
 
     final prefs = await _prefs;
@@ -289,9 +257,7 @@ class PuzzleProgressManager {
     prefs.getInt(starsKey) ?? 0;
 
 
-
     int value = current + amount;
-
 
 
     if(value < 0){
@@ -299,7 +265,6 @@ class PuzzleProgressManager {
       value = 0;
 
     }
-
 
 
     await prefs.setInt(
@@ -317,12 +282,11 @@ class PuzzleProgressManager {
 
 
 
+  static Future<void> saveStars(
 
+      int value,
 
-
-  static Future<void>
-
-  saveStars(int value) async {
+      ) async {
 
 
     final prefs = await _prefs;
@@ -348,9 +312,7 @@ class PuzzleProgressManager {
   //==================================================
 
 
-  static Future<int>
-
-  getCoins() async {
+  static Future<int> getCoins() async {
 
 
     final prefs = await _prefs;
@@ -364,11 +326,11 @@ class PuzzleProgressManager {
 
 
 
+  static Future<void> addCoins(
 
+      int amount,
 
-  static Future<void>
-
-  addCoins(int amount) async {
+      ) async {
 
 
     final prefs = await _prefs;
@@ -379,9 +341,7 @@ class PuzzleProgressManager {
     prefs.getInt(coinsKey) ?? 0;
 
 
-
     int value = current + amount;
-
 
 
     if(value < 0){
@@ -389,7 +349,6 @@ class PuzzleProgressManager {
       value = 0;
 
     }
-
 
 
     await prefs.setInt(
@@ -407,11 +366,11 @@ class PuzzleProgressManager {
 
 
 
+  static Future<void> saveCoins(
 
+      int value,
 
-  static Future<void>
-
-  saveCoins(int value) async {
+      ) async {
 
 
     final prefs = await _prefs;
@@ -432,16 +391,12 @@ class PuzzleProgressManager {
 
 
 
-
-
   //==================================================
   // 💎 الجواهر
   //==================================================
 
 
-  static Future<int>
-
-  getGems() async {
+  static Future<int> getGems() async {
 
 
     final prefs = await _prefs;
@@ -456,10 +411,11 @@ class PuzzleProgressManager {
 
 
 
+  static Future<void> addGems(
 
-  static Future<void>
+      int amount,
 
-  addGems(int amount) async {
+      ) async {
 
 
     final prefs = await _prefs;
@@ -470,9 +426,7 @@ class PuzzleProgressManager {
     prefs.getInt(gemsKey) ?? 0;
 
 
-
     int value = current + amount;
-
 
 
     if(value < 0){
@@ -480,7 +434,6 @@ class PuzzleProgressManager {
       value = 0;
 
     }
-
 
 
     await prefs.setInt(
@@ -498,10 +451,11 @@ class PuzzleProgressManager {
 
 
 
+  static Future<void> saveGems(
 
-  static Future<void>
+      int value,
 
-  saveGems(int value) async {
+      ) async {
 
 
     final prefs = await _prefs;
@@ -522,16 +476,12 @@ class PuzzleProgressManager {
 
 
 
-
-
   //==================================================
   // 💡 التلميحات
   //==================================================
 
 
-  static Future<int>
-
-  getHints() async {
+  static Future<int> getHints() async {
 
 
     final prefs = await _prefs;
@@ -546,10 +496,11 @@ class PuzzleProgressManager {
 
 
 
+  static Future<void> addHints(
 
-  static Future<void>
+      int amount,
 
-  addHints(int amount) async {
+      ) async {
 
 
     final prefs = await _prefs;
@@ -560,9 +511,7 @@ class PuzzleProgressManager {
     prefs.getInt(hintsKey) ?? 0;
 
 
-
     int value = current + amount;
-
 
 
     if(value < 0){
@@ -570,7 +519,6 @@ class PuzzleProgressManager {
       value = 0;
 
     }
-
 
 
     await prefs.setInt(
@@ -588,11 +536,7 @@ class PuzzleProgressManager {
 
 
 
-
-
-  static Future<bool>
-
-  useHint() async {
+  static Future<bool> useHint() async {
 
 
     final prefs = await _prefs;
@@ -603,13 +547,11 @@ class PuzzleProgressManager {
     prefs.getInt(hintsKey) ?? 0;
 
 
-
     if(current <= 0){
 
       return false;
 
     }
-
 
 
     await prefs.setInt(
@@ -621,15 +563,10 @@ class PuzzleProgressManager {
     );
 
 
-
     return true;
 
 
   }
-
-
-
-}
 
   //==================================================
   // 🏆 إكمال المراحل
@@ -680,8 +617,6 @@ class PuzzleProgressManager {
 
 
 
-
-
   static Future<bool> isCompleted(
 
       String levelKey,
@@ -701,13 +636,10 @@ class PuzzleProgressManager {
     ) ?? [];
 
 
-
     return levels.contains(levelKey);
 
 
   }
-
-
 
 
 
@@ -734,11 +666,9 @@ class PuzzleProgressManager {
 
 
 
-
   //==================================================
   // 🔓 فتح المراحل
   //==================================================
-
 
 
   static Future<void> unlockLevel(
@@ -767,7 +697,6 @@ class PuzzleProgressManager {
       levels.add(levelKey);
 
 
-
       await prefs.setStringList(
 
         unlockedLevelsKey,
@@ -781,9 +710,6 @@ class PuzzleProgressManager {
 
 
   }
-
-
-
 
 
 
@@ -809,8 +735,6 @@ class PuzzleProgressManager {
 
 
 
-    // المرحلة الأولى مفتوحة دائماً
-
     if(levelKey.endsWith("_level_1")){
 
       return true;
@@ -818,14 +742,10 @@ class PuzzleProgressManager {
     }
 
 
-
     return levels.contains(levelKey);
 
 
   }
-
-
-
 
 
 
@@ -840,18 +760,14 @@ class PuzzleProgressManager {
       ) async {
 
 
-
-    final nextLevel = currentLevel + 1;
-
+    final next = currentLevel + 1;
 
 
-    final key =
+    await unlockLevel(
 
-    "${worldId}_level_$nextLevel";
+      "${worldId}_level_$next",
 
-
-
-    await unlockLevel(key);
+    );
 
 
   }
@@ -860,13 +776,9 @@ class PuzzleProgressManager {
 
 
 
-
-
-
   //==================================================
   // ⭐ نجوم كل مرحلة
   //==================================================
-
 
 
   static Future<void> saveLevelStars(
@@ -878,32 +790,29 @@ class PuzzleProgressManager {
       ) async {
 
 
-
     final prefs = await _prefs;
 
 
+    final data = Map<String,dynamic>.from(
 
-    final data =
+      jsonDecode(
 
-    jsonDecode(
+        prefs.getString(levelStarsKey) ?? "{}",
 
-      prefs.getString(levelStarsKey) ?? "{}",
+      ),
 
     );
 
 
 
-    final oldStars =
-
-    data[levelKey] ?? 0;
+    final old = data[levelKey] ?? 0;
 
 
 
-    if(stars > oldStars){
+    if(stars > old){
 
 
       data[levelKey] = stars;
-
 
 
       await prefs.setString(
@@ -924,9 +833,6 @@ class PuzzleProgressManager {
 
 
 
-
-
-
   static Future<int> getLevelStars(
 
       String levelKey,
@@ -934,19 +840,18 @@ class PuzzleProgressManager {
       ) async {
 
 
-
     final prefs = await _prefs;
 
 
+    final data = Map<String,dynamic>.from(
 
-    final data =
+      jsonDecode(
 
-    jsonDecode(
+        prefs.getString(levelStarsKey) ?? "{}",
 
-      prefs.getString(levelStarsKey) ?? "{}",
+      ),
 
     );
-
 
 
     return data[levelKey] ?? 0;
@@ -958,12 +863,9 @@ class PuzzleProgressManager {
 
 
 
-
-
   //==================================================
-  // 🎮 آخر لعبة
+  // 🎮 آخر مستوى لعب
   //==================================================
-
 
 
   static Future<void> saveLastPuzzle(
@@ -975,9 +877,7 @@ class PuzzleProgressManager {
       ) async {
 
 
-
     final prefs = await _prefs;
-
 
 
     await prefs.setString(
@@ -987,7 +887,6 @@ class PuzzleProgressManager {
       worldId,
 
     );
-
 
 
     await prefs.setString(
@@ -1005,28 +904,17 @@ class PuzzleProgressManager {
 
 
 
-
-
-
   static Future<Map<String,String>?>
 
   getLastPuzzle() async {
 
 
-
     final prefs = await _prefs;
 
 
+    final world = prefs.getString(lastWorldKey);
 
-    final world =
-
-    prefs.getString(lastWorldKey);
-
-
-
-    final level =
-
-    prefs.getString(lastLevelKey);
+    final level = prefs.getString(lastLevelKey);
 
 
 
@@ -1035,7 +923,6 @@ class PuzzleProgressManager {
       return null;
 
     }
-
 
 
     return {
@@ -1049,31 +936,18 @@ class PuzzleProgressManager {
 
   }
 
-
-
-
-
-
-
-
   //==================================================
   // 📊 الإحصائيات
   //==================================================
 
 
-
   static Future<int> getGamesPlayed() async {
-
 
     final prefs = await _prefs;
 
-
     return prefs.getInt(gamesPlayedKey) ?? 0;
 
-
   }
-
-
 
 
 
@@ -1081,16 +955,11 @@ class PuzzleProgressManager {
 
   static Future<int> getTotalMoves() async {
 
-
     final prefs = await _prefs;
-
 
     return prefs.getInt(totalMovesKey) ?? 0;
 
-
   }
-
-
 
 
 
@@ -1098,17 +967,11 @@ class PuzzleProgressManager {
 
   static Future<int> getBestTime() async {
 
-
     final prefs = await _prefs;
-
 
     return prefs.getInt(bestTimeKey) ?? 0;
 
-
   }
-
-
-
 
 
 
@@ -1123,15 +986,12 @@ class PuzzleProgressManager {
   }) async {
 
 
-
     final prefs = await _prefs;
-
 
 
     final oldMoves =
 
     prefs.getInt(totalMovesKey) ?? 0;
-
 
 
     await prefs.setInt(
@@ -1144,12 +1004,9 @@ class PuzzleProgressManager {
 
 
 
-
-
     final oldGames =
 
     prefs.getInt(gamesPlayedKey) ?? 0;
-
 
 
     await prefs.setInt(
@@ -1162,8 +1019,6 @@ class PuzzleProgressManager {
 
 
 
-
-
     final best =
 
     prefs.getInt(bestTimeKey) ?? 0;
@@ -1171,7 +1026,6 @@ class PuzzleProgressManager {
 
 
     if(best == 0 || seconds < best){
-
 
 
       await prefs.setInt(
@@ -1192,6 +1046,232 @@ class PuzzleProgressManager {
 
 
 
+  //==================================================
+  // 🏆 الإنجازات
+  //==================================================
+
+
+  static Future<void> saveAchievement(
+
+      String id,
+
+      ) async {
+
+
+    final prefs = await _prefs;
+
+
+    final list =
+
+    prefs.getStringList(
+
+      achievementsKey,
+
+    ) ?? [];
+
+
+
+    if(!list.contains(id)){
+
+
+      list.add(id);
+
+
+      await prefs.setStringList(
+
+        achievementsKey,
+
+        list,
+
+      );
+
+
+    }
+
+
+  }
+
+
+
+
+
+  static Future<bool> hasAchievement(
+
+      String id,
+
+      ) async {
+
+
+    final prefs = await _prefs;
+
+
+    final list =
+
+    prefs.getStringList(
+
+      achievementsKey,
+
+    ) ?? [];
+
+
+    return list.contains(id);
+
+
+  }
+
+
+
+
+
+  //==================================================
+  // ⭐ الخبرة XP
+  //==================================================
+
+
+  static Future<void> addExperience(
+
+      int amount,
+
+      ) async {
+
+
+    final prefs = await _prefs;
+
+
+    final current =
+
+    prefs.getInt(experienceKey) ?? 0;
+
+
+    await prefs.setInt(
+
+      experienceKey,
+
+      current + amount,
+
+    );
+
+
+  }
+
+
+
+
+
+  static Future<int> getExperience() async {
+
+
+    final prefs = await _prefs;
+
+
+    return prefs.getInt(experienceKey) ?? 0;
+
+
+  }
+
+
+
+
+
+  //==================================================
+  // 💾 تصدير واستيراد البيانات
+  //==================================================
+
+
+  static Future<Map<String,dynamic>>
+
+  exportData() async {
+
+
+    final prefs = await _prefs;
+
+
+    final result = <String,dynamic>{};
+
+
+    for(final key in prefs.getKeys()){
+
+
+      result[key] = prefs.get(key);
+
+
+    }
+
+
+    return result;
+
+
+  }
+
+
+
+
+
+  static Future<void> importData(
+
+      Map<String,dynamic> data,
+
+      ) async {
+
+
+    final prefs = await _prefs;
+
+
+    for(final item in data.entries){
+
+
+      final value = item.value;
+
+
+      if(value is int){
+
+
+        await prefs.setInt(
+
+          item.key,
+
+          value,
+
+        );
+
+
+      }
+
+      else if(value is String){
+
+
+        await prefs.setString(
+
+          item.key,
+
+          value,
+
+        );
+
+
+      }
+
+      else if(value is List<String>){
+
+
+        await prefs.setStringList(
+
+          item.key,
+
+          value,
+
+        );
+
+
+      }
+
+
+    }
+
+
+  }
+
+
 
 
 
@@ -1200,39 +1280,16 @@ class PuzzleProgressManager {
   //==================================================
 
 
-
   static Future<void> resetAll() async {
 
 
     final prefs = await _prefs;
 
 
-
-    await prefs.remove(progressKey);
-
-    await prefs.remove(starsKey);
-
-    await prefs.remove(coinsKey);
-
-    await prefs.remove(gemsKey);
-
-    await prefs.remove(hintsKey);
-
-    await prefs.remove(completedLevelsKey);
-
-    await prefs.remove(unlockedLevelsKey);
-
-    await prefs.remove(levelStarsKey);
-
-    await prefs.remove(lastWorldKey);
-
-    await prefs.remove(lastLevelKey);
-
-    await prefs.remove(gamesPlayedKey);
-
-    await prefs.remove(totalMovesKey);
-
-    await prefs.remove(bestTimeKey);
+    await prefs.clear();
 
 
   }
+
+
+}
