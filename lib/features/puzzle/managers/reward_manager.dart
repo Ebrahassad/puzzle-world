@@ -1,64 +1,42 @@
-import 'package:shared_preferences/shared_preferences.dart';
-
 import '../models/reward_result_model.dart';
+import 'puzzle_progress_manager.dart';
 
 
 class RewardManager {
 
 
-  static const String coinsKey =
-      "puzzle_coins";
-
-
-  static const String gemsKey =
-      "puzzle_gems";
-
-
-  static const String solvedKey =
-      "puzzle_solved_count";
-
-
-  static const String dailyRewardKey =
-      "puzzle_daily_reward";
+  const RewardManager._();
 
 
 
-  // =========================
-  // العملات
-  // =========================
-
+  //========================================
+  // 🪙 قراءة العملات
+  //========================================
 
   static Future<int> getCoins() async {
 
-    final prefs =
-    await SharedPreferences.getInstance();
-
-    return prefs.getInt(coinsKey) ?? 0;
+    return PuzzleProgressManager.getCoins();
 
   }
 
 
 
+
+
+  //========================================
+  // إضافة عملات
+  //========================================
 
   static Future<void> addCoins(
+
       int amount,
+
       ) async {
 
 
-    final prefs =
-    await SharedPreferences.getInstance();
+    await PuzzleProgressManager.addCoins(
 
-
-    final current =
-        prefs.getInt(coinsKey) ?? 0;
-
-
-
-    await prefs.setInt(
-
-      coinsKey,
-
-      current + amount,
+      amount,
 
     );
 
@@ -67,28 +45,23 @@ class RewardManager {
 
 
 
+
+
+
+  //========================================
+  // خصم عملات
+  //========================================
 
   static Future<void> removeCoins(
+
       int amount,
+
       ) async {
 
 
-    final prefs =
-    await SharedPreferences.getInstance();
+    await PuzzleProgressManager.addCoins(
 
-
-    final current =
-        prefs.getInt(coinsKey) ?? 0;
-
-
-
-    await prefs.setInt(
-
-      coinsKey,
-
-      current - amount < 0
-          ? 0
-          : current - amount,
+      -amount,
 
     );
 
@@ -99,19 +72,14 @@ class RewardManager {
 
 
 
-  // =========================
-  // الجواهر
-  // =========================
-
+  //========================================
+  // 💎 قراءة الجواهر
+  //========================================
 
   static Future<int> getGems() async {
 
 
-    final prefs =
-    await SharedPreferences.getInstance();
-
-
-    return prefs.getInt(gemsKey) ?? 0;
+    return PuzzleProgressManager.getGems();
 
 
   }
@@ -120,26 +88,20 @@ class RewardManager {
 
 
 
+  //========================================
+  // إضافة جواهر
+  //========================================
 
   static Future<void> addGems(
+
       int amount,
+
       ) async {
 
 
-    final prefs =
-    await SharedPreferences.getInstance();
+    await PuzzleProgressManager.addGems(
 
-
-    final current =
-        prefs.getInt(gemsKey) ?? 0;
-
-
-
-    await prefs.setInt(
-
-      gemsKey,
-
-      current + amount,
+      amount,
 
     );
 
@@ -150,12 +112,9 @@ class RewardManager {
 
 
 
-
-
-  // =========================
-  // إنهاء لعبة البازل
-  // =========================
-
+  //========================================
+  // 🎉 مكافأة إنهاء البازل
+  //========================================
 
   static Future<RewardResultModel>
 
@@ -167,16 +126,13 @@ class RewardManager {
 
 
 
-    int coins;
-
+    int coins = 0;
 
     int gems = 0;
 
 
 
-
     switch(difficulty){
-
 
 
       case 1:
@@ -184,7 +140,6 @@ class RewardManager {
         coins = 50;
 
         break;
-
 
 
 
@@ -196,7 +151,6 @@ class RewardManager {
 
 
 
-
       case 3:
 
         coins = 150;
@@ -204,7 +158,6 @@ class RewardManager {
         gems = 1;
 
         break;
-
 
 
 
@@ -222,41 +175,26 @@ class RewardManager {
 
 
 
+    await PuzzleProgressManager.addCoins(
 
-    await addCoins(coins);
+      coins,
+
+    );
+
 
 
 
     if(gems > 0){
 
-      await addGems(gems);
+
+      await PuzzleProgressManager.addGems(
+
+        gems,
+
+      );
+
 
     }
-
-
-
-
-
-
-    final prefs =
-    await SharedPreferences.getInstance();
-
-
-
-    final solved =
-        prefs.getInt(solvedKey) ?? 0;
-
-
-
-    await prefs.setInt(
-
-      solvedKey,
-
-      solved + 1,
-
-    );
-
-
 
 
 
@@ -279,12 +217,9 @@ class RewardManager {
 
 
 
-
-
-  // =========================
-  // مكافأة إعلان
-  // =========================
-
+  //========================================
+  // 🎬 مكافأة الإعلان
+  //========================================
 
   static Future<RewardResultModel>
 
@@ -302,11 +237,15 @@ class RewardManager {
 
 
 
-    await addCoins(
+
+
+    await PuzzleProgressManager.addCoins(
 
       reward.coins,
 
     );
+
+
 
 
 
@@ -321,73 +260,9 @@ class RewardManager {
 
 
 
-
-
-  // =========================
-  // المكافأة اليومية
-  // =========================
-
-
-  static Future<bool>
-
-  canClaimDailyReward() async {
-
-
-
-    final prefs =
-    await SharedPreferences.getInstance();
-
-
-
-    final saved =
-        prefs.getString(
-
-          dailyRewardKey,
-
-        );
-
-
-
-
-    if(saved == null){
-
-      return true;
-
-    }
-
-
-
-
-
-    final last =
-    DateTime.parse(saved);
-
-
-
-    final now =
-    DateTime.now();
-
-
-
-
-    return
-
-        last.year != now.year ||
-
-            last.month != now.month ||
-
-            last.day != now.day;
-
-
-
-  }
-
-
-
-
-
-
-
+  //========================================
+  // 🎁 المكافأة اليومية
+  //========================================
 
   static Future<void>
 
@@ -395,30 +270,19 @@ class RewardManager {
 
 
 
-    final prefs =
-    await SharedPreferences.getInstance();
+    await PuzzleProgressManager.addCoins(
 
-
-
-
-    await prefs.setString(
-
-      dailyRewardKey,
-
-      DateTime.now()
-
-          .toIso8601String(),
+      100,
 
     );
 
 
 
+    await PuzzleProgressManager.addGems(
 
+      1,
 
-    await addCoins(100);
-
-
-    await addGems(1);
+    );
 
 
   }
