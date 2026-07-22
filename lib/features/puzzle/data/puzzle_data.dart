@@ -1,13 +1,10 @@
 import '../models/puzzle_model.dart';
-import '../models/puzzle_level_model.dart';
-
 
 
 class PuzzleData {
 
 
-
-  static final List<PuzzleModel> puzzles = [
+  static const List<PuzzleModel> puzzles = [
 
 
 
@@ -18,8 +15,6 @@ class PuzzleData {
       title: "عالم الحيوانات 🐻",
 
       image: "assets/images/Puzzle/animals.png",
-
-      levels: animalLevels,
 
     ),
 
@@ -34,8 +29,6 @@ class PuzzleData {
 
       image: "assets/images/Puzzle/nature.png",
 
-      levels: natureLevels,
-
     ),
 
 
@@ -49,173 +42,18 @@ class PuzzleData {
 
       image: "assets/images/Puzzle/vehicles.png",
 
-      levels: vehicleLevels,
-
     ),
 
 
 
 
-  ];
+    PuzzleModel(
 
+      id: "fruits",
 
+      title: "عالم الفواكه 🍎",
 
-
-
-
-
-
-
-  // =========================
-  // مستويات الحيوانات
-  // =========================
-
-
-  static final List<PuzzleLevelModel> animalLevels = [
-
-
-
-    PuzzleLevelModel(
-
-      id:"level_1",
-
-      gridSize:3,
-
-      stars:3,
-
-    ),
-
-
-
-    PuzzleLevelModel(
-
-      id:"level_2",
-
-      gridSize:4,
-
-      stars:3,
-
-    ),
-
-
-
-    PuzzleLevelModel(
-
-      id:"level_3",
-
-      gridSize:5,
-
-      stars:3,
-
-    ),
-
-
-
-  ];
-
-
-
-
-
-
-
-
-
-  // =========================
-  // مستويات الطبيعة
-  // =========================
-
-
-  static final List<PuzzleLevelModel> natureLevels = [
-
-
-
-    PuzzleLevelModel(
-
-      id:"level_1",
-
-      gridSize:3,
-
-      stars:3,
-
-    ),
-
-
-
-    PuzzleLevelModel(
-
-      id:"level_2",
-
-      gridSize:4,
-
-      stars:3,
-
-    ),
-
-
-
-    PuzzleLevelModel(
-
-      id:"level_3",
-
-      gridSize:6,
-
-      stars:3,
-
-    ),
-
-
-
-  ];
-
-
-
-
-
-
-
-
-
-  // =========================
-  // مستويات السيارات
-  // =========================
-
-
-  static final List<PuzzleLevelModel> vehicleLevels = [
-
-
-
-    PuzzleLevelModel(
-
-      id:"level_1",
-
-      gridSize:3,
-
-      stars:3,
-
-    ),
-
-
-
-    PuzzleLevelModel(
-
-      id:"level_2",
-
-      gridSize:5,
-
-      stars:3,
-
-    ),
-
-
-
-    PuzzleLevelModel(
-
-      id:"level_3",
-
-      gridSize:6,
-
-      stars:3,
+      image: "assets/images/Puzzle/fruits.png",
 
     ),
 
