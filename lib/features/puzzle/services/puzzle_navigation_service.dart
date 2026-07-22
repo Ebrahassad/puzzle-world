@@ -4,10 +4,12 @@ import '../models/puzzle_model.dart';
 import '../models/puzzle_level_model.dart';
 import '../models/game_result_model.dart';
 
+
 import '../screens/puzzle_home_screen.dart';
 import '../screens/puzzle_level_screen.dart';
 import '../screens/puzzle_game_screen.dart';
 import '../screens/puzzle_win_screen.dart';
+
 import '../screens/wallet_screen.dart';
 
 import '../screens/puzzle_settings_screen.dart';
@@ -19,8 +21,11 @@ import '../screens/puzzle_daily_reward_screen.dart';
 import '../screens/puzzle_event_screen.dart';
 import '../screens/puzzle_collection_screen.dart';
 
+
 import '../data/puzzle_data.dart';
 import '../data/puzzle_level_data.dart';
+
+
 
 
 
@@ -33,15 +38,18 @@ class PuzzleNavigationService {
 
 
 
+
   //==================================================
   // 🏠 الرئيسية
   //==================================================
+
 
   static Future<void> openHome(
 
       BuildContext context,
 
       ) async {
+
 
 
     await Navigator.pushAndRemoveUntil(
@@ -51,13 +59,17 @@ class PuzzleNavigationService {
       MaterialPageRoute(
 
         builder: (_) =>
+
         const PuzzleHomeScreen(),
 
       ),
 
+
           (route) => false,
 
+
     );
+
 
 
   }
@@ -68,9 +80,11 @@ class PuzzleNavigationService {
 
 
 
+
   //==================================================
-  // 🌍 العالم
+  // 🌍 فتح العالم
   //==================================================
+
 
   static Future<void> openWorld(
 
@@ -81,6 +95,7 @@ class PuzzleNavigationService {
       }) async {
 
 
+
     await Navigator.push(
 
       context,
@@ -88,6 +103,7 @@ class PuzzleNavigationService {
       MaterialPageRoute(
 
         builder: (_) =>
+
             PuzzleLevelScreen(
 
               puzzle: puzzle,
@@ -99,6 +115,7 @@ class PuzzleNavigationService {
     );
 
 
+
   }
 
 
@@ -107,9 +124,11 @@ class PuzzleNavigationService {
 
 
 
+
   //==================================================
-  // 🧩 فتح المرحلة
+  // 🧩 فتح لعبة البازل
   //==================================================
+
 
   static Future<void> openGame(
 
@@ -130,6 +149,7 @@ class PuzzleNavigationService {
       MaterialPageRoute(
 
         builder: (_) =>
+
             PuzzleGameScreen(
 
               puzzle: puzzle,
@@ -143,7 +163,9 @@ class PuzzleNavigationService {
     );
 
 
+
   }
+
 
 
 
@@ -154,6 +176,7 @@ class PuzzleNavigationService {
   //==================================================
   // 🎉 شاشة الفوز
   //==================================================
+
 
   static Future<void> openWin(
 
@@ -178,6 +201,7 @@ class PuzzleNavigationService {
       MaterialPageRoute(
 
         builder: (_) =>
+
             PuzzleWinScreen(
 
               result: result,
@@ -195,17 +219,13 @@ class PuzzleNavigationService {
     );
 
 
+
   }
 
-
-
-
-
-
-
   //==================================================
-  // ➡️ المرحلة التالية
+  // ➡️ فتح المرحلة التالية
   //==================================================
+
 
   static Future<void> openNextLevel(
 
@@ -223,9 +243,21 @@ class PuzzleNavigationService {
 
     PuzzleData.puzzles.firstWhere(
 
-          (e) => e.id == worldId,
+          (item) => item.id == worldId,
 
     );
+
+
+
+
+
+
+
+    final nextLevelNumber =
+
+        currentLevel + 1;
+
+
 
 
 
@@ -243,12 +275,6 @@ class PuzzleNavigationService {
 
 
 
-    final nextId =
-
-    "level_${currentLevel + 1}";
-
-
-
 
 
     PuzzleLevelModel? nextLevel;
@@ -257,10 +283,14 @@ class PuzzleNavigationService {
 
 
 
+
+
     for(final level in levels){
 
 
-      if(level.id == nextId){
+
+      if(level.levelNumber == nextLevelNumber){
+
 
 
         nextLevel = level;
@@ -269,7 +299,9 @@ class PuzzleNavigationService {
         break;
 
 
+
       }
+
 
 
     }
@@ -279,6 +311,8 @@ class PuzzleNavigationService {
 
 
 
+
+    // لا توجد مرحلة أخرى
 
     if(nextLevel == null){
 
@@ -295,6 +329,7 @@ class PuzzleNavigationService {
 
 
       return;
+
 
 
     }
@@ -325,9 +360,11 @@ class PuzzleNavigationService {
 
 
 
+
   //==================================================
   // 🔄 إعادة المرحلة
   //==================================================
+
 
   static Future<void> restartLevel(
 
@@ -348,6 +385,7 @@ class PuzzleNavigationService {
       MaterialPageRoute(
 
         builder: (_) =>
+
             PuzzleGameScreen(
 
               puzzle: puzzle,
@@ -361,7 +399,9 @@ class PuzzleNavigationService {
     );
 
 
+
   }
+
 
 
 
@@ -373,11 +413,13 @@ class PuzzleNavigationService {
   // 💰 المحفظة
   //==================================================
 
+
   static Future<void> openWallet(
 
       BuildContext context,
 
       ) async {
+
 
 
     await Navigator.push(
@@ -387,6 +429,7 @@ class PuzzleNavigationService {
       MaterialPageRoute(
 
         builder: (_) =>
+
         const WalletScreen(),
 
       ),
@@ -394,7 +437,9 @@ class PuzzleNavigationService {
     );
 
 
+
   }
+
 
 
 
@@ -406,11 +451,13 @@ class PuzzleNavigationService {
   // 🛒 المتجر
   //==================================================
 
+
   static Future<void> openShop(
 
       BuildContext context,
 
       ) async {
+
 
 
     await Navigator.push(
@@ -420,11 +467,13 @@ class PuzzleNavigationService {
       MaterialPageRoute(
 
         builder: (_) =>
+
         const PuzzleShopScreen(),
 
       ),
 
     );
+
 
 
   }
@@ -435,9 +484,11 @@ class PuzzleNavigationService {
 
 
 
+
   //==================================================
   // 🏆 الإنجازات
   //==================================================
+
 
   static Future<void> openAchievements(
 
@@ -454,6 +505,7 @@ class PuzzleNavigationService {
       MaterialPageRoute(
 
         builder: (_) =>
+
         const PuzzleAchievementScreen(),
 
       ),
@@ -461,23 +513,20 @@ class PuzzleNavigationService {
     );
 
 
+
   }
-
-
-
-
-
-
 
   //==================================================
   // 📊 الإحصائيات
   //==================================================
+
 
   static Future<void> openStatistics(
 
       BuildContext context,
 
       ) async {
+
 
 
     await Navigator.push(
@@ -487,6 +536,7 @@ class PuzzleNavigationService {
       MaterialPageRoute(
 
         builder: (_) =>
+
         const PuzzleStatisticsScreen(),
 
       ),
@@ -502,9 +552,11 @@ class PuzzleNavigationService {
 
 
 
+
   //==================================================
   // 👤 الملف الشخصي
   //==================================================
+
 
   static Future<void> openProfile(
 
@@ -521,6 +573,7 @@ class PuzzleNavigationService {
       MaterialPageRoute(
 
         builder: (_) =>
+
         const PuzzleProfileScreen(),
 
       ),
@@ -536,15 +589,18 @@ class PuzzleNavigationService {
 
 
 
+
   //==================================================
   // ⚙️ الإعدادات
   //==================================================
+
 
   static Future<void> openSettings(
 
       BuildContext context,
 
       ) async {
+
 
 
     await Navigator.push(
@@ -554,6 +610,7 @@ class PuzzleNavigationService {
       MaterialPageRoute(
 
         builder: (_) =>
+
         const PuzzleSettingsScreen(),
 
       ),
@@ -569,15 +626,18 @@ class PuzzleNavigationService {
 
 
 
+
   //==================================================
   // 🎁 المكافأة اليومية
   //==================================================
+
 
   static Future<void> openDailyReward(
 
       BuildContext context,
 
       ) async {
+
 
 
     await Navigator.push(
@@ -587,6 +647,7 @@ class PuzzleNavigationService {
       MaterialPageRoute(
 
         builder: (_) =>
+
         const PuzzleDailyRewardScreen(),
 
       ),
@@ -602,15 +663,18 @@ class PuzzleNavigationService {
 
 
 
+
   //==================================================
   // 🎯 الأحداث
   //==================================================
+
 
   static Future<void> openEvents(
 
       BuildContext context,
 
       ) async {
+
 
 
     await Navigator.push(
@@ -620,6 +684,7 @@ class PuzzleNavigationService {
       MaterialPageRoute(
 
         builder: (_) =>
+
         const PuzzleEventScreen(),
 
       ),
@@ -635,15 +700,18 @@ class PuzzleNavigationService {
 
 
 
+
   //==================================================
   // 🖼 المجموعة
   //==================================================
+
 
   static Future<void> openCollection(
 
       BuildContext context,
 
       ) async {
+
 
 
     await Navigator.push(
@@ -653,6 +721,7 @@ class PuzzleNavigationService {
       MaterialPageRoute(
 
         builder: (_) =>
+
         const PuzzleCollectionScreen(),
 
       ),
@@ -668,9 +737,11 @@ class PuzzleNavigationService {
 
 
 
+
   //==================================================
-  // رجوع
+  // 🔙 رجوع
   //==================================================
+
 
   static void back(
 
@@ -679,6 +750,7 @@ class PuzzleNavigationService {
         dynamic result,
 
       }) {
+
 
 
     Navigator.pop(
@@ -698,15 +770,18 @@ class PuzzleNavigationService {
 
 
 
+
   //==================================================
-  // إغلاق كل الصفحات
+  // 🏠 إغلاق كل الصفحات والعودة للرئيسية
   //==================================================
+
 
   static void popToRoot(
 
       BuildContext context,
 
       ) {
+
 
 
     Navigator.popUntil(
@@ -719,6 +794,7 @@ class PuzzleNavigationService {
 
 
   }
+
 
 
 }
