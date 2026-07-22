@@ -4,8 +4,8 @@ import '../models/puzzle_model.dart';
 import '../models/puzzle_level_model.dart';
 
 import '../services/puzzle_level_service.dart';
-
-import '../managers/puzzle_progress_manager.dart';
+import '../services/puzzle_level_progress_service.dart';
+import '../services/puzzle_level_unlock_service.dart';
 
 import 'puzzle_game_screen.dart';
 
@@ -31,6 +31,7 @@ class PuzzleLevelScreen extends StatefulWidget {
   @override
   State<PuzzleLevelScreen> createState() =>
       _PuzzleLevelScreenState();
+
 
 }
 
@@ -62,12 +63,9 @@ class _PuzzleLevelScreenState
   @override
   void initState(){
 
-
     super.initState();
 
-
     loadData();
-
 
   }
 
@@ -94,9 +92,24 @@ class _PuzzleLevelScreenState
 
 
 
+    final prepared =
+
+    await PuzzleLevelProgressService.prepareLevels(
+
+      worldId: widget.puzzle.id,
+
+      levels: data,
+
+    );
+
+
+
+
+
+
     final stars =
 
-    await PuzzleProgressManager.getTotalStars();
+    await PuzzleLevelService.getTotalStars();
 
 
 
@@ -110,8 +123,7 @@ class _PuzzleLevelScreenState
       setState((){
 
 
-
-        levels = data;
+        levels = prepared;
 
 
         totalStars = stars;
@@ -125,7 +137,6 @@ class _PuzzleLevelScreenState
 
 
     }
-
 
 
   }
@@ -144,22 +155,11 @@ class _PuzzleLevelScreenState
 
 
 
-    if(level.unlocked){
+    return await PuzzleLevelUnlockService.checkUnlocked(
 
+      worldId: widget.puzzle.id,
 
-      return true;
-
-
-    }
-
-
-
-
-    return await PuzzleProgressManager
-
-        .isLevelUnlocked(
-
-      "${widget.puzzle.id}_${level.id}",
+      level: level,
 
     );
 
@@ -207,35 +207,29 @@ class _PuzzleLevelScreenState
 
 
 
-    Navigator.push(
-
+    await Navigator.push(
 
       context,
 
-
       MaterialPageRoute(
 
+        builder: (_) => PuzzleGameScreen(
 
-        builder: (_)=>
+          puzzle: widget.puzzle,
 
+          level: level,
 
-            PuzzleGameScreen(
-
-
-              puzzle: widget.puzzle,
-
-
-              level: level,
-
-
-            ),
-
+        ),
 
       ),
 
-
     );
 
+
+
+
+
+    loadData();
 
 
   }
@@ -260,7 +254,7 @@ class _PuzzleLevelScreenState
       context: context,
 
 
-      builder:(context){
+      builder: (context){
 
 
 
@@ -270,7 +264,6 @@ class _PuzzleLevelScreenState
 
           shape:
 
-
           RoundedRectangleBorder(
 
 
@@ -278,8 +271,8 @@ class _PuzzleLevelScreenState
 
             BorderRadius.circular(25),
 
-
           ),
+
 
 
 
@@ -287,19 +280,16 @@ class _PuzzleLevelScreenState
 
           title:
 
-
           const Text(
 
-
             "🔒 المرحلة مغلقة",
-
 
             textAlign:
 
             TextAlign.center,
 
-
           ),
+
 
 
 
@@ -307,19 +297,16 @@ class _PuzzleLevelScreenState
 
           content:
 
-
           Text(
 
-
             "تحتاج ⭐ ${level.requiredStars} نجوم لفتح هذه المرحلة",
-
 
             textAlign:
 
             TextAlign.center,
 
-
           ),
+
 
 
 
@@ -331,22 +318,15 @@ class _PuzzleLevelScreenState
 
             Center(
 
-
-
               child:
 
               ElevatedButton(
 
-
-
-                onPressed:(){
-
+                onPressed: (){
 
                   Navigator.pop(context);
 
-
                 },
-
 
 
                 child:
@@ -357,17 +337,13 @@ class _PuzzleLevelScreenState
 
                 ),
 
-
-
               ),
-
-
 
             )
 
 
-          ],
 
+          ],
 
 
         );
@@ -380,6 +356,13 @@ class _PuzzleLevelScreenState
 
 
   }
+
+
+
+
+
+
+
   @override
   Widget build(BuildContext context){
 
@@ -390,25 +373,21 @@ class _PuzzleLevelScreenState
 
       return const Scaffold(
 
-
         body:
 
-
         Center(
-
 
           child:
 
           CircularProgressIndicator(),
 
-
         ),
-
 
       );
 
 
     }
+
 
 
 
@@ -421,20 +400,17 @@ class _PuzzleLevelScreenState
 
       body:
 
-
       Container(
 
 
 
         decoration:
 
-
         const BoxDecoration(
 
 
 
           gradient:
-
 
           LinearGradient(
 
@@ -475,8 +451,8 @@ class _PuzzleLevelScreenState
 
 
 
-        child:
 
+        child:
 
         SafeArea(
 
@@ -484,13 +460,11 @@ class _PuzzleLevelScreenState
 
           child:
 
-
           Column(
 
 
 
             children:[
-
 
 
 
@@ -510,7 +484,6 @@ class _PuzzleLevelScreenState
 
 
                 style:
-
 
                 const TextStyle(
 
@@ -558,8 +531,8 @@ class _PuzzleLevelScreenState
 
                 padding:
 
-
                 const EdgeInsets.symmetric(
+
 
 
                   horizontal:20,
@@ -567,12 +540,12 @@ class _PuzzleLevelScreenState
                   vertical:8,
 
 
+
                 ),
 
 
 
                 decoration:
-
 
                 BoxDecoration(
 
@@ -596,7 +569,6 @@ class _PuzzleLevelScreenState
 
                 child:
 
-
                 Text(
 
 
@@ -606,7 +578,6 @@ class _PuzzleLevelScreenState
 
 
                   style:
-
 
                   const TextStyle(
 
@@ -652,13 +623,11 @@ class _PuzzleLevelScreenState
 
                 child:
 
-
                 GridView.builder(
 
 
 
                   padding:
-
 
                   const EdgeInsets.all(20),
 
@@ -666,8 +635,8 @@ class _PuzzleLevelScreenState
 
 
 
-                  gridDelegate:
 
+                  gridDelegate:
 
                   const SliverGridDelegateWithFixedCrossAxisCount(
 
@@ -697,9 +666,11 @@ class _PuzzleLevelScreenState
 
 
 
+
                   itemCount:
 
                   levels.length,
+
 
 
 
@@ -726,7 +697,6 @@ class _PuzzleLevelScreenState
 
                       future:
 
-
                       isUnlocked(level),
 
 
@@ -745,16 +715,15 @@ class _PuzzleLevelScreenState
 
 
 
+
                         return GestureDetector(
 
 
 
-                          onTap:(){
-
+                          onTap: (){
 
 
                             openLevel(level);
-
 
 
                           },
@@ -766,13 +735,11 @@ class _PuzzleLevelScreenState
 
                           child:
 
-
                           Container(
 
 
 
                             decoration:
-
 
                             BoxDecoration(
 
@@ -785,7 +752,6 @@ class _PuzzleLevelScreenState
 
 
                               borderRadius:
-
 
                               BorderRadius.circular(25),
 
@@ -817,15 +783,9 @@ class _PuzzleLevelScreenState
 
                                   Offset(0,6),
 
-
-
                                 ),
 
-
-
                               ],
-
-
 
                             ),
 
@@ -834,9 +794,7 @@ class _PuzzleLevelScreenState
 
 
 
-
                             child:
-
 
                             Column(
 
@@ -852,19 +810,17 @@ class _PuzzleLevelScreenState
 
 
 
-
-
                                 Icon(
 
 
 
                                   unlocked
 
-                                      ?
+                                  ?
 
                                   Icons.extension
 
-                                      :
+                                  :
 
                                   Icons.lock,
 
@@ -878,15 +834,13 @@ class _PuzzleLevelScreenState
 
                                   color:
 
-
-
                                   unlocked
 
-                                      ?
+                                  ?
 
                                   Colors.orange
 
-                                      :
+                                  :
 
                                   Colors.grey,
 
@@ -912,11 +866,11 @@ class _PuzzleLevelScreenState
 
                                   level.title.isEmpty
 
-                                      ?
+                                  ?
 
                                   "مرحلة ${level.levelNumber}"
 
-                                      :
+                                  :
 
                                   level.title,
 
@@ -929,7 +883,6 @@ class _PuzzleLevelScreenState
 
 
                                   style:
-
 
                                   const TextStyle(
 
@@ -959,7 +912,7 @@ class _PuzzleLevelScreenState
 
 
 
-                                if(!unlocked)
+                                if(level.earnedStars > 0)
 
 
 
@@ -967,12 +920,11 @@ class _PuzzleLevelScreenState
 
 
 
-                                    "⭐ ${level.requiredStars}",
+                                    "⭐ ${level.earnedStars}",
 
 
 
                                     style:
-
 
                                     const TextStyle(
 
@@ -1001,6 +953,25 @@ class _PuzzleLevelScreenState
 
 
 
+                                if(!unlocked)
+
+
+
+                                  Text(
+
+
+
+                                    "🔒 ${level.requiredStars}",
+
+
+
+                                  ),
+
+
+
+
+
+
                                 if(level.completed)
 
 
@@ -1014,7 +985,6 @@ class _PuzzleLevelScreenState
 
 
                                     style:
-
 
                                     TextStyle(
 
@@ -1034,8 +1004,6 @@ class _PuzzleLevelScreenState
 
 
 
-
-
                               ],
 
 
@@ -1049,7 +1017,6 @@ class _PuzzleLevelScreenState
 
 
                         );
-
 
 
                       },
