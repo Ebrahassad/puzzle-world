@@ -1,21 +1,32 @@
 class RewardResultModel {
 
 
+  // العملات
   final int coins;
 
 
+  // الجواهر
   final int gems;
+
+
+  // النجوم
+  final int stars;
+
+
+  // التلميحات
+  final int hints;
 
 
 
   const RewardResultModel({
 
+    this.coins = 0,
 
-    required this.coins,
+    this.gems = 0,
 
+    this.stars = 0,
 
-    required this.gems,
-
+    this.hints = 0,
 
   });
 
@@ -23,49 +34,75 @@ class RewardResultModel {
 
 
 
-  // تحويل إلى Map للحفظ مستقبلاً
+  //==================================================
+  // هل توجد مكافأة
+  //==================================================
 
-  Map<String, dynamic> toJson(){
+  bool get hasReward {
 
+    return coins > 0 ||
+        gems > 0 ||
+        stars > 0 ||
+        hints > 0;
+
+  }
+
+
+
+
+
+  //==================================================
+  // JSON
+  //==================================================
+
+  Map<String,dynamic> toJson(){
 
     return {
 
-
       "coins": coins,
-
 
       "gems": gems,
 
+      "stars": stars,
+
+      "hints": hints,
 
     };
 
-
   }
 
 
 
 
 
-  // قراءة من Map
+  //==================================================
+  // FROM JSON
+  //==================================================
 
   factory RewardResultModel.fromJson(
 
-      Map<String, dynamic> json,
+      Map<String,dynamic> json,
 
       ){
 
-
     return RewardResultModel(
 
+      coins:
+      json["coins"] ?? 0,
 
-      coins: json["coins"] ?? 0,
+
+      gems:
+      json["gems"] ?? 0,
 
 
-      gems: json["gems"] ?? 0,
+      stars:
+      json["stars"] ?? 0,
 
+
+      hints:
+      json["hints"] ?? 0,
 
     );
-
 
   }
 
@@ -73,7 +110,9 @@ class RewardResultModel {
 
 
 
-  // دمج المكافآت (مثلاً مضاعفة الإعلان)
+  //==================================================
+  // مضاعفة المكافأة
+  //==================================================
 
   RewardResultModel multiply(
 
@@ -81,22 +120,81 @@ class RewardResultModel {
 
       ){
 
-
     return RewardResultModel(
 
+      coins:
+      coins * value,
 
-      coins: coins * value,
+
+      gems:
+      gems * value,
 
 
-      gems: gems * value,
+      stars:
+      stars * value,
 
+
+      hints:
+      hints * value,
 
     );
-
 
   }
 
 
+
+
+
+  //==================================================
+  // دمج مكافأتين
+  //==================================================
+
+  RewardResultModel merge(
+
+      RewardResultModel other,
+
+      ){
+
+    return RewardResultModel(
+
+      coins:
+      coins + other.coins,
+
+
+      gems:
+      gems + other.gems,
+
+
+      stars:
+      stars + other.stars,
+
+
+      hints:
+      hints + other.hints,
+
+    );
+
+  }
+
+
+
+
+
+  @override
+  String toString(){
+
+    return """
+
+RewardResultModel(
+ coins: $coins,
+ gems: $gems,
+ stars: $stars,
+ hints: $hints
+)
+
+""";
+
+  }
 
 
 }
