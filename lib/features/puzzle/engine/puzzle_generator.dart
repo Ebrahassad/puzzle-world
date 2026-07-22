@@ -13,16 +13,21 @@ class PuzzleGenerator {
   static List<PuzzlePiece> generate({
 
 
+
     required int rows,
+
 
 
     required int columns,
 
 
+
     required double imageWidth,
 
 
+
     required double imageHeight,
+
 
 
   }) {
@@ -37,15 +42,11 @@ class PuzzleGenerator {
 
 
 
-    final pieceWidth =
-
-    imageWidth / columns;
+    final pieceWidth = imageWidth / columns;
 
 
+    final pieceHeight = imageHeight / rows;
 
-    final pieceHeight =
-
-    imageHeight / rows;
 
 
 
@@ -54,6 +55,7 @@ class PuzzleGenerator {
 
 
     final verticalEdges = <String, EdgeType>{};
+
 
 
 
@@ -74,15 +76,19 @@ class PuzzleGenerator {
 
 
 
+
+
         final top = row == 0
 
             ? EdgeType.flat
 
             :
 
-        verticalEdges["${row-1}_${column}"] ??
+        verticalEdges["${row-1}_$column"]
 
-            EdgeType.flat;
+            ??
+
+        EdgeType.flat;
 
 
 
@@ -96,9 +102,11 @@ class PuzzleGenerator {
 
             :
 
-        horizontalEdges["${row}_${column-1}"] ??
+        horizontalEdges["${row}_${column-1}"]
 
-            EdgeType.flat;
+            ??
+
+        EdgeType.flat;
 
 
 
@@ -112,11 +120,8 @@ class PuzzleGenerator {
 
             :
 
-        _createRandomEdge(
+        _createRandomEdge(random);
 
-          random,
-
-        );
 
 
 
@@ -129,11 +134,7 @@ class PuzzleGenerator {
 
             :
 
-        _createRandomEdge(
-
-          random,
-
-        );
+        _createRandomEdge(random);
 
 
 
@@ -141,9 +142,10 @@ class PuzzleGenerator {
 
 
 
-        // حفظ الحواف المقابلة
+
 
         if(column < columns - 1){
+
 
 
           horizontalEdges["${row}_$column"] =
@@ -151,7 +153,9 @@ class PuzzleGenerator {
               _oppositeEdge(right);
 
 
+
         }
+
 
 
 
@@ -162,12 +166,16 @@ class PuzzleGenerator {
         if(row < rows - 1){
 
 
-          verticalEdges["$row" "_$column"] =
+
+          verticalEdges["$row_$column"] =
 
               _oppositeEdge(bottom);
 
 
+
         }
+
+
 
 
 
@@ -183,7 +191,7 @@ class PuzzleGenerator {
 
 
 
-            id:id,
+            id: id.toString(),
 
 
 
@@ -200,6 +208,8 @@ class PuzzleGenerator {
 
 
             sourceRect:
+
+
 
             Rect.fromLTWH(
 
@@ -247,6 +257,8 @@ class PuzzleGenerator {
 
             position:
 
+
+
             Offset(
 
 
@@ -273,6 +285,8 @@ class PuzzleGenerator {
 
 
 
+
+
         id++;
 
 
@@ -289,13 +303,14 @@ class PuzzleGenerator {
 
 
 
-    // خلط القطع
+
 
     pieces.shuffle(random);
 
 
 
     return pieces;
+
 
 
   }
@@ -323,6 +338,7 @@ class PuzzleGenerator {
         : EdgeType.blank;
 
 
+
   }
 
 
@@ -341,31 +357,30 @@ class PuzzleGenerator {
 
 
 
-    if(edge == EdgeType.tab){
+    switch(edge){
 
 
 
-      return EdgeType.blank;
+      case EdgeType.tab:
+
+        return EdgeType.blank;
+
+
+
+      case EdgeType.blank:
+
+        return EdgeType.tab;
+
+
+
+      case EdgeType.flat:
+
+        return EdgeType.flat;
 
 
 
     }
 
-
-
-    if(edge == EdgeType.blank){
-
-
-
-      return EdgeType.tab;
-
-
-
-    }
-
-
-
-    return EdgeType.flat;
 
 
   }
