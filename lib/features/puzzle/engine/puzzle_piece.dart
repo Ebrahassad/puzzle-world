@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 
-
 enum EdgeType {
 
   flat,
@@ -20,13 +19,8 @@ class PuzzlePiece {
 
 
 
-  // معرف القطعة
-
   final String id;
 
-
-
-  // مكانها الصحيح في الشبكة
 
   final int row;
 
@@ -35,25 +29,13 @@ class PuzzlePiece {
 
 
 
-
-
-  // رقم المكان الصحيح
-
   final int correctPosition;
 
 
 
-
-
-  // مكان قصها من الصورة الأصلية
-
   final Rect sourceRect;
 
 
-
-
-
-  // حواف القطعة
 
   final EdgeType top;
 
@@ -69,16 +51,9 @@ class PuzzlePiece {
 
 
 
-
-  // مكانها الحالي
-
   Offset position;
 
 
-
-
-
-  // هل تم تركيبها
 
   bool placed;
 
@@ -87,54 +62,29 @@ class PuzzlePiece {
 
 
 
-
   PuzzlePiece({
-
-
 
     required this.id,
 
-
-
     required this.row,
-
-
 
     required this.column,
 
-
-
     required this.correctPosition,
-
-
 
     required this.sourceRect,
 
-
-
     required this.top,
-
-
 
     required this.bottom,
 
-
-
     required this.left,
-
-
 
     required this.right,
 
-
-
     required this.position,
 
-
-
     this.placed = false,
-
-
 
   });
 
@@ -146,26 +96,18 @@ class PuzzlePiece {
 
 
 
-  // المكان الصحيح على اللوحة
+  // الموقع الصحيح الحقيقي حسب حجم القطعة
 
-  Offset get correctOffset {
-
+  Offset correctOffset(double pieceSize){
 
 
     return Offset(
 
+      column * pieceSize,
 
-
-      column.toDouble(),
-
-
-
-      row.toDouble(),
-
-
+      row * pieceSize,
 
     );
-
 
 
   }
@@ -183,25 +125,10 @@ class PuzzlePiece {
   void placeHint(double pieceSize){
 
 
-
-    position = Offset(
-
-
-
-      column * pieceSize,
-
-
-
-      row * pieceSize,
-
-
-
-    );
-
+    position = correctOffset(pieceSize);
 
 
     placed = true;
-
 
 
   }
@@ -219,13 +146,10 @@ class PuzzlePiece {
   void reset(){
 
 
-
     position = Offset.zero;
 
 
-
     placed = false;
-
 
 
   }
@@ -238,14 +162,12 @@ class PuzzlePiece {
 
 
 
-  // حفظ البيانات
+  // حفظ
 
   Map<String,dynamic> toJson(){
 
 
-
     return {
-
 
 
       "id":id,
@@ -257,6 +179,9 @@ class PuzzlePiece {
       "column":column,
 
 
+      "correctPosition":correctPosition,
+
+
       "x":position.dx,
 
 
@@ -266,9 +191,7 @@ class PuzzlePiece {
       "placed":placed,
 
 
-
     };
-
 
 
   }
@@ -281,7 +204,7 @@ class PuzzlePiece {
 
 
 
-  // استرجاع البيانات
+  // تحميل
 
   factory PuzzlePiece.fromJson(
 
@@ -290,74 +213,58 @@ class PuzzlePiece {
       ){
 
 
-
     return PuzzlePiece(
 
 
-
-      id:json['id'].toString(),
-
+      id: json['id'].toString(),
 
 
-      row:json['row'],
+      row: json['row'] ?? 0,
 
 
-
-      column:json['column'],
-
+      column: json['column'] ?? 0,
 
 
       correctPosition:
 
-      json['row'] * 100 +
-
-          json['column'],
+      json['correctPosition'] ?? 0,
 
 
 
-      sourceRect:
-
-      Rect.zero,
+      sourceRect: Rect.zero,
 
 
 
-      top:EdgeType.flat,
+      top: EdgeType.flat,
 
 
-      bottom:EdgeType.flat,
+      bottom: EdgeType.flat,
 
 
-      left:EdgeType.flat,
+      left: EdgeType.flat,
 
 
-      right:EdgeType.flat,
+      right: EdgeType.flat,
 
 
 
-      position:Offset(
-
+      position: Offset(
 
 
         (json['x'] ?? 0).toDouble(),
 
 
-
         (json['y'] ?? 0).toDouble(),
-
 
 
       ),
 
 
 
-      placed:
-
-      json['placed'] ?? false,
-
+      placed: json['placed'] ?? false,
 
 
     );
-
 
 
   }
