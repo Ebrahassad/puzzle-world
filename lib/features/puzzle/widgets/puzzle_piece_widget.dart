@@ -7,16 +7,11 @@ import '../engine/puzzle_painter.dart';
 
 class PuzzlePieceWidget extends StatefulWidget {
 
-
-
   final PuzzlePiece piece;
-
 
   final ImageProvider image;
 
-
   final double size;
-
 
 
   const PuzzlePieceWidget({
@@ -37,11 +32,7 @@ class PuzzlePieceWidget extends StatefulWidget {
   State<PuzzlePieceWidget> createState() =>
       _PuzzlePieceWidgetState();
 
-
-
 }
-
-
 
 
 
@@ -51,17 +42,11 @@ class _PuzzlePieceWidgetState
     extends State<PuzzlePieceWidget> {
 
 
-
   bool pressed = false;
 
 
 
-
-
-
-
   void setPressed(bool value){
-
 
 
     if(widget.piece.placed){
@@ -71,7 +56,6 @@ class _PuzzlePieceWidgetState
     }
 
 
-
     setState((){
 
       pressed = value;
@@ -79,11 +63,7 @@ class _PuzzlePieceWidgetState
     });
 
 
-
   }
-
-
-
 
 
 
@@ -94,13 +74,14 @@ class _PuzzlePieceWidgetState
   Widget build(BuildContext context){
 
 
+    final placed = widget.piece.placed;
+
+
 
     return RepaintBoundary(
 
 
-
       child: GestureDetector(
-
 
 
         onTapDown:(_){
@@ -110,13 +91,11 @@ class _PuzzlePieceWidgetState
         },
 
 
-
         onTapUp:(_){
 
           setPressed(false);
 
         },
-
 
 
         onTapCancel:(){
@@ -127,16 +106,12 @@ class _PuzzlePieceWidgetState
 
 
 
-
-
         child:AnimatedScale(
-
 
 
           scale:
 
           pressed ? 1.08 : 1,
-
 
 
           duration:
@@ -149,24 +124,26 @@ class _PuzzlePieceWidgetState
 
 
 
-
-
           child:AnimatedContainer(
-
 
 
             duration:
 
             const Duration(
 
-              milliseconds:120,
+              milliseconds:250,
 
             ),
 
 
 
-            decoration:BoxDecoration(
+            clipBehavior:
 
+            Clip.antiAlias,
+
+
+
+            decoration:BoxDecoration(
 
 
               borderRadius:
@@ -178,20 +155,16 @@ class _PuzzlePieceWidgetState
               boxShadow:[
 
 
-
                 BoxShadow(
-
 
 
                   color:
 
                   Colors.black.withOpacity(
 
+                    placed
 
-
-                    widget.piece.placed
-
-                        ? 0.05
+                        ? 0.08
 
                         : pressed
 
@@ -199,27 +172,23 @@ class _PuzzlePieceWidgetState
 
                         : 0.18,
 
-
-
                   ),
 
 
 
                   blurRadius:
 
-                  pressed ? 18 : 8,
+                  placed ? 5 : pressed ? 18 : 8,
 
 
 
-                  offset:Offset(
+                  offset:
 
-
+                  Offset(
 
                     0,
 
                     pressed ? 8 : 4,
-
-
 
                   ),
 
@@ -237,44 +206,93 @@ class _PuzzlePieceWidgetState
 
 
 
+            child:Stack(
 
 
-            child:CustomPaint(
-
-
-
-              size:
-
-              Size(
-
-                widget.size,
-
-                widget.size,
-
-              ),
+              children:[
 
 
 
+                CustomPaint(
 
 
-              painter:PuzzlePainter(
+                  size:
 
+                  Size(
 
+                    widget.size,
 
-                piece:
+                    widget.size,
 
-                widget.piece,
-
-
-
-                image:
-
-                widget.image,
+                  ),
 
 
 
-              ),
+                  painter:
 
+                  PuzzlePainter(
+
+
+                    piece:
+
+                    widget.piece,
+
+
+                    image:
+
+                    widget.image,
+
+
+                  ),
+
+
+
+                ),
+
+
+
+
+                if(placed)
+
+                  Positioned.fill(
+
+
+                    child:Container(
+
+
+                      decoration:
+
+                      BoxDecoration(
+
+
+                        color:
+
+                        Colors.white.withOpacity(
+
+                          0.15,
+
+                        ),
+
+
+
+                        borderRadius:
+
+                        BorderRadius.circular(12),
+
+
+
+                      ),
+
+
+
+                    ),
+
+
+                  ),
+
+
+
+              ],
 
 
             ),
@@ -288,17 +306,13 @@ class _PuzzlePieceWidgetState
         ),
 
 
-
       ),
-
 
 
     );
 
 
-
   }
-
 
 
 }
