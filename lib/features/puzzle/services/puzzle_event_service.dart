@@ -19,7 +19,14 @@ class PuzzleEventService {
 
     await PuzzleProgressManager.saveLastGame(
 
-      "$worldId-$level",
+      "$worldId-level_$level",
+
+    );
+
+
+    await PuzzleProgressManager.saveLastSession(
+
+      DateTime.now(),
 
     );
 
@@ -29,7 +36,10 @@ class PuzzleEventService {
 
 
 
-  // يستخدم عند فتح شاشة الفوز
+
+  //==================================================
+  // فتح شاشة الفوز
+  //==================================================
 
   static Future<void> levelScreenOpened({
 
@@ -42,11 +52,13 @@ class PuzzleEventService {
 
     if(worldId != null && level != null){
 
+
       await PuzzleProgressManager.saveLastGame(
 
-        "$worldId-$level",
+        "$worldId-level_$level",
 
       );
+
 
     }
 
@@ -92,7 +104,9 @@ class PuzzleEventService {
 
 
 
-  // يستخدم من WinScreen
+  //==================================================
+  // إكمال المرحلة من WinScreen
+  //==================================================
 
   static Future<void> levelCompleted({
 
@@ -122,18 +136,33 @@ class PuzzleEventService {
 
 
 
+
+
     if(worldId != null && level != null){
+
 
       await PuzzleProgressManager.saveLastGame(
 
-        "$worldId-$level",
+        "$worldId-level_$level",
 
       );
+
 
     }
 
 
+
+
+
+    await PuzzleProgressManager.saveLastSession(
+
+      DateTime.now(),
+
+    );
+
+
   }
+
 
 
 
@@ -166,7 +195,7 @@ class PuzzleEventService {
 
 
   //==================================================
-  // التلميحات
+  // استخدام تلميح
   //==================================================
 
   static Future<void> onHintUsed() async {
@@ -187,7 +216,7 @@ class PuzzleEventService {
 
 
   //==================================================
-  // مكافأة
+  // استلام مكافأة
   //==================================================
 
   static Future<void> onRewardReceived({
@@ -211,7 +240,9 @@ class PuzzleEventService {
 
 
 
-  // يستخدم عند مضاعفة المكافأة
+  //==================================================
+  // مضاعفة المكافأة
+  //==================================================
 
   static Future<void> rewardDoubled({
 
@@ -226,13 +257,34 @@ class PuzzleEventService {
   }) async {
 
 
-    // نحفظ آخر جلسة فقط
+    await PuzzleProgressManager.addReward(
+
+      coins: coins,
+
+      gems: gems,
+
+    );
+
+
 
     await PuzzleProgressManager.saveLastSession(
 
       DateTime.now(),
 
     );
+
+
+    if(worldId != null && level != null){
+
+
+      await PuzzleProgressManager.saveLastGame(
+
+        "$worldId-level_$level",
+
+      );
+
+
+    }
 
 
   }
@@ -243,7 +295,7 @@ class PuzzleEventService {
 
 
   //==================================================
-  // خروج من اللعبة
+  // الخروج من اللعبة
   //==================================================
 
   static Future<void> onGameExit() async {
