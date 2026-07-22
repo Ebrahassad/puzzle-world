@@ -1,5 +1,4 @@
 import '../managers/puzzle_progress_manager.dart';
-
 import '../models/puzzle_level_model.dart';
 
 
@@ -7,44 +6,24 @@ import '../models/puzzle_level_model.dart';
 class PuzzleLevelProgressService {
 
 
-  static Future<bool> isLevelCompleted(
 
-      String levelId,
-
-      ) async {
-
-
-    return await PuzzleProgressManager
-
-        .isCompleted(
-
-      levelId,
-
-    );
+  //==================================================
+  // هل المرحلة مكتملة
+  //==================================================
 
 
-  }
+  static Future<bool> isLevelCompleted({
+
+    required String worldId,
+
+    required String levelId,
+
+  }) async {
 
 
+    return await PuzzleProgressManager.isCompleted(
 
-
-
-
-
-
-  static Future<void> completeLevel(
-
-      String levelId,
-
-      ) async {
-
-
-
-    await PuzzleProgressManager
-
-        .completeLevel(
-
-      levelId,
+      _key(worldId, levelId),
 
     );
 
@@ -55,47 +34,23 @@ class PuzzleLevelProgressService {
 
 
 
+  //==================================================
+  // إكمال المرحلة
+  //==================================================
 
 
+  static Future<void> completeLevel({
 
-  static Future<bool> isLevelUnlocked(
+    required String worldId,
 
-      String levelId,
+    required String levelId,
 
-      ) async {
-
-
-    return await PuzzleProgressManager
-
-        .isLevelUnlocked(
-
-      levelId,
-
-    );
+  }) async {
 
 
-  }
+    await PuzzleProgressManager.completeLevel(
 
-
-
-
-
-
-
-
-  static Future<void> unlockLevel(
-
-      String levelId,
-
-      ) async {
-
-
-
-    await PuzzleProgressManager
-
-        .unlockLevel(
-
-      levelId,
+      _key(worldId, levelId),
 
     );
 
@@ -106,7 +61,63 @@ class PuzzleLevelProgressService {
 
 
 
+  //==================================================
+  // هل المرحلة مفتوحة
+  //==================================================
 
+
+  static Future<bool> isLevelUnlocked({
+
+    required String worldId,
+
+    required String levelId,
+
+  }) async {
+
+
+    return await PuzzleProgressManager.isLevelUnlocked(
+
+      _key(worldId, levelId),
+
+    );
+
+
+  }
+
+
+
+
+
+  //==================================================
+  // فتح مرحلة
+  //==================================================
+
+
+  static Future<void> unlockLevel({
+
+    required String worldId,
+
+    required String levelId,
+
+  }) async {
+
+
+    await PuzzleProgressManager.unlockLevel(
+
+      _key(worldId, levelId),
+
+    );
+
+
+  }
+
+
+
+
+
+  //==================================================
+  // فتح المرحلة التالية
+  //==================================================
 
 
   static Future<void> unlockNextLevel({
@@ -118,10 +129,7 @@ class PuzzleLevelProgressService {
   }) async {
 
 
-
-    await PuzzleProgressManager
-
-        .unlockNextLevel(
+    await PuzzleProgressManager.unlockNextLevel(
 
       worldId,
 
@@ -136,12 +144,14 @@ class PuzzleLevelProgressService {
 
 
 
+  //==================================================
+  // تجهيز قائمة المراحل
+  //==================================================
 
 
+  static Future<List<PuzzleLevelModel>> prepareLevels({
 
-  static Future<List<PuzzleLevelModel>>
-
-  prepareLevels({
+    required String worldId,
 
     required List<PuzzleLevelModel> levels,
 
@@ -156,25 +166,23 @@ class PuzzleLevelProgressService {
     for(final level in levels){
 
 
+
       final unlocked =
 
       await isLevelUnlocked(
 
-        level.id,
+        worldId: worldId,
+
+        levelId: level.id,
 
       );
 
 
 
+
       result.add(
 
-        PuzzleLevelModel(
-
-          id: level.id,
-
-          gridSize: level.gridSize,
-
-          requiredStars: level.requiredStars,
+        level.copyWith(
 
           unlocked: unlocked,
 
@@ -187,6 +195,7 @@ class PuzzleLevelProgressService {
 
 
 
+
     return result;
 
 
@@ -196,14 +205,18 @@ class PuzzleLevelProgressService {
 
 
 
+  //==================================================
+  // عدد المراحل المكتملة
+  //==================================================
 
 
+  static Future<int> getCompletedLevelsCount({
 
-  static Future<int> getCompletedLevelsCount(
+    required String worldId,
 
-      List<PuzzleLevelModel> levels,
+    required List<PuzzleLevelModel> levels,
 
-      ) async {
+  }) async {
 
 
 
@@ -214,11 +227,14 @@ class PuzzleLevelProgressService {
     for(final level in levels){
 
 
+
       final completed =
 
       await isLevelCompleted(
 
-        level.id,
+        worldId: worldId,
+
+        levelId: level.id,
 
       );
 
@@ -235,6 +251,7 @@ class PuzzleLevelProgressService {
 
 
 
+
     return count;
 
 
@@ -244,14 +261,18 @@ class PuzzleLevelProgressService {
 
 
 
+  //==================================================
+  // نسبة التقدم
+  //==================================================
 
 
+  static Future<double> getProgressPercent({
 
-  static Future<double> getProgressPercent(
+    required String worldId,
 
-      List<PuzzleLevelModel> levels,
+    required List<PuzzleLevelModel> levels,
 
-      ) async {
+  }) async {
 
 
 
@@ -264,15 +285,15 @@ class PuzzleLevelProgressService {
 
 
 
-
     final completed =
 
     await getCompletedLevelsCount(
 
-      levels,
+      worldId: worldId,
+
+      levels: levels,
 
     );
-
 
 
 
@@ -281,6 +302,30 @@ class PuzzleLevelProgressService {
 
 
   }
+
+
+
+
+
+  //==================================================
+  // إنشاء مفتاح موحد
+  //==================================================
+
+
+  static String _key(
+
+      String worldId,
+
+      String levelId,
+
+      ){
+
+
+    return "${worldId}_$levelId";
+
+
+  }
+
 
 
 }
