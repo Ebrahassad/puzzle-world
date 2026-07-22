@@ -3,99 +3,84 @@ import 'package:flutter/material.dart';
 import '../models/game_result_model.dart';
 import '../models/reward_result_model.dart';
 
-import '../models/puzzle_model.dart';
-import '../models/puzzle_level_model.dart';
-
 import '../managers/puzzle_progress_manager.dart';
 import '../managers/reward_manager.dart';
 
 import '../services/puzzle_audio_service.dart';
 import '../services/puzzle_navigation_service.dart';
-import '../services/puzzle_world_service.dart';
+import '../services/puzzle_statistics_service.dart';
+import '../services/puzzle_cloud_service.dart';
+import '../services/puzzle_event_service.dart';
 import '../services/reward_ad_service.dart';
 
 class PuzzleWinScreen extends StatefulWidget {
-
   final GameResultModel result;
 
-  final PuzzleModel puzzle;
+  final int difficulty;
 
-  final PuzzleLevelModel level;
+  final String? worldId;
 
-  final VoidCallback? onReplay;
+  final int? level;
 
   final VoidCallback? onNextLevel;
 
-  final VoidCallback? onBack;
+  final VoidCallback? onBackToWorld;
+
+  final VoidCallback? onBackToHome;
 
   const PuzzleWinScreen({
-
     super.key,
-
     required this.result,
-
-    required this.puzzle,
-
-    required this.level,
-
-    this.onReplay,
-
+    this.difficulty = 1,
+    this.worldId,
+    this.level,
     this.onNextLevel,
-
-    this.onBack,
-
+    this.onBackToWorld,
+    this.onBackToHome,
   });
 
   @override
   State<PuzzleWinScreen> createState() =>
       _PuzzleWinScreenState();
-
 }
 
 class _PuzzleWinScreenState
     extends State<PuzzleWinScreen>
     with SingleTickerProviderStateMixin {
 
-  late AnimationController controller;
-
-  late Animation<double> starAnimation;
-
-  RewardResultModel reward =
-      const RewardResultModel(
-        coins: 0,
-        gems: 0,
-      );
+  RewardResultModel? reward;
 
   bool loading = true;
 
-  bool rewardDoubled = false;
+  bool adUsed = false;
 
-  int totalStars = 0;
+  late AnimationController controller;
 
-  int totalCoins = 0;
+  late Animation<double> scaleAnimation;
 
-  int totalGems = 0;
+  String? get levelId {
+    if (widget.worldId == null ||
+        widget.level == null) {
+      return null;
+    }
+
+    return "${widget.worldId}_level_${widget.level}";
+  }
 
   @override
   void initState() {
-
     super.initState();
 
     controller = AnimationController(
-
       vsync: this,
-
       duration: const Duration(
         milliseconds: 900,
       ),
+    )..repeat(reverse: true);
 
-    )..repeat(
-        reverse: true,
-      );
-
-    starAnimation = Tween<double>(
+    scaleAnimation = Tween<double>(
       begin: 1,
-      end: 1.15,
+      end: 1.12,
     ).animate(
       CurvedAnimation(
         parent: controller,
@@ -103,185 +88,197 @@ class _PuzzleWinScreenState
       ),
     );
 
-    _prepareScreen();
-
+    _initialize();
   }
 
-  Future<void> _prepareScreen() async {
-
+  Future<void> _initialize() async {
     await PuzzleAudioService.playWinSound();
 
-    await _saveProgress();
-
-    reward = await RewardManager.completePuzzle(
-
-      difficulty: widget.level.gridSize,
-
-    );
-
-    totalStars =
-        await PuzzleProgressManager.getTotalStars();
-
-    totalCoins =
-        await RewardManager.getCoins();
-
-    totalGems =
-        await RewardManager.getGems();
+    await _completeLevel();
 
     if (!mounted) return;
 
     setState(() {
-
       loading = false;
+    });
+  }
+
+
+  //==================================================
+  // 🏆 إنهاء المرحلة وحفظ كل البيانات
+  //==================================================
+
+  Future<void> _completeLevel() async {
+    RewardResultModel result =
+        const RewardResultModel(
+          coins: 0,
+          gems: 0,
+        );
+
+    final id = levelId;
+
+    if (id != null) {
+
+      final completed =
+          await PuzzleProgressManager.isCompleted(id);
+
+
+      if (!completed) {
+
+        // حفظ المرحلة كمكتملة
+        await PuzzleProgressManager.completeLevel(id);
+
+
+        // فتح المرحلة التالية
+        await PuzzleProgressManager
+            .unlockNextLevel(id);
+
+
+        // إضافة النجوم
+        await PuzzleProgressManager
+            .addStars(
+          widget.result.stars,
+        );
+
+
+        // تسجيل الإحصائيات
+        await PuzzleStatisticsService
+            .addCompletedPuzzle(
+          stars: widget.result.stars,
+          moves: widget.result.moves,
+          seconds: widget.result.seconds,
+        );
+
+
+        // إرسال حدث إكمال المرحلة
+        await PuzzleEventService
+            .onPuzzleCompleted(
+          levelId: id,
+          stars: widget.result.stars,
+        );
+
+
+        // مزامنة التقدم
+        await PuzzleCloudService.sync();
+
+      }
+
+
+
+      // التأكد من عدم تكرار المكافأة
+
+      final claimed =
+          await PuzzleProgressManager
+              .isRewardClaimed(id);
+
+
+
+      if (!claimed) {
+
+        result =
+            await RewardManager.completePuzzle(
+          difficulty: widget.difficulty,
+        );
+
+
+        await PuzzleProgressManager
+            .markRewardClaimed(id);
+
+      }
+
+
+    } else {
+
+      // في حال لم تكن مرحلة محددة
+
+      result =
+          await RewardManager.completePuzzle(
+        difficulty: widget.difficulty,
+      );
+
+    }
+
+
+
+    if (!mounted) return;
+
+
+
+    setState(() {
+
+      reward = result;
 
     });
 
   }
 
-  Future<void> _saveProgress() async {
 
-    final levelId =
-        "${widget.puzzle.id}_level_${widget.level.gridSize}";
 
-    await PuzzleProgressManager.completeLevel(
-      levelId,
-    );
 
-    await PuzzleProgressManager.unlockNextLevel(
-      levelId,
-    );
 
-    await PuzzleProgressManager.addStars(
-      widget.result.stars,
-    );
 
-  }
 
-  // =========================
-  // 🎁 مضاعفة المكافأة
-  // =========================
+  //==================================================
+  // 🎁 مضاعفة المكافأة عن طريق الإعلان
+  //==================================================
 
-  Future<void> _doubleReward() async {
+  Future<void> doubleReward() async {
 
-    if (rewardDoubled) {
+    if (adUsed || reward == null) {
       return;
     }
 
+
     final watched =
         await RewardAdService.showRewardAd();
+
 
     if (!watched) {
       return;
     }
 
+
+    final coins =
+        reward!.coins;
+
+
+    final gems =
+        reward!.gems;
+
+
+
     await RewardManager.addCoins(
-      reward.coins,
+      coins,
     );
 
-    if (reward.gems > 0) {
+
+    if (gems > 0) {
 
       await RewardManager.addGems(
-        reward.gems,
+        gems,
       );
 
     }
 
-    totalCoins =
-        await RewardManager.getCoins();
-
-    totalGems =
-        await RewardManager.getGems();
 
     if (!mounted) return;
 
+
     setState(() {
 
-      reward = reward.multiply(2);
+      reward =
+          reward!.multiply(2);
 
-      rewardDoubled = true;
+
+      adUsed = true;
 
     });
 
   }
 
-  // =========================
-  // ▶️ المرحلة التالية
-  // =========================
-
-  Future<void> _nextLevel() async {
-
-    if (widget.onNextLevel != null) {
-
-      widget.onNextLevel!();
-
-      return;
-
-    }
-
-    await PuzzleWorldService.goToNextLevel(
-
-      context,
-
-      worldId: widget.puzzle.id,
-
-      currentLevel: widget.level.gridSize,
-
-    );
-
-  }
-
-  // =========================
-  // 🔄 إعادة اللعب
-  // =========================
-
-  Future<void> _replay() async {
-
-    if (widget.onReplay != null) {
-
-      widget.onReplay!();
-
-      return;
-
-    }
-
-    await PuzzleWorldService.replayLevel(
-
-      context,
-
-      world: widget.puzzle,
-
-      level: widget.level,
-
-    );
-
-  }
-
-  // =========================
-  // 🔙 الرجوع للعالم
-  // =========================
-
-  Future<void> _back() async {
-
-    if (widget.onBack != null) {
-
-      widget.onBack!();
-
-      return;
-
-    }
-
-    Navigator.pop(context);
-
-  }
-
-  @override
-  void dispose() {
-
-    controller.dispose();
-
-    super.dispose();
-
-  }
+  //==================================================
+  // 🎨 واجهة الشاشة
+  //==================================================
 
   @override
   Widget build(BuildContext context) {
@@ -300,9 +297,12 @@ class _PuzzleWinScreenState
 
     }
 
+
     return Scaffold(
 
-      backgroundColor: const Color(0xffF7F9FC),
+      backgroundColor:
+          Colors.lightBlue.shade50,
+
 
       body: SafeArea(
 
@@ -310,21 +310,30 @@ class _PuzzleWinScreenState
 
           child: SingleChildScrollView(
 
-            padding: const EdgeInsets.all(20),
+            padding:
+                const EdgeInsets.all(24),
+
 
             child: Column(
 
+              mainAxisAlignment:
+                  MainAxisAlignment.center,
+
+
               children: [
+
+
+                // نجمة متحركة
 
                 ScaleTransition(
 
-                  scale: starAnimation,
+                  scale: scaleAnimation,
 
                   child: const Icon(
 
-                    Icons.emoji_events,
+                    Icons.star,
 
-                    size: 110,
+                    size: 90,
 
                     color: Colors.amber,
 
@@ -332,7 +341,11 @@ class _PuzzleWinScreenState
 
                 ),
 
-                const SizedBox(height: 16),
+
+
+                const SizedBox(height:20),
+
+
 
                 const Text(
 
@@ -340,375 +353,264 @@ class _PuzzleWinScreenState
 
                   style: TextStyle(
 
-                    fontSize: 32,
+                    fontSize:34,
 
-                    fontWeight: FontWeight.bold,
+                    fontWeight:FontWeight.bold,
 
                   ),
 
                 ),
 
-                const SizedBox(height: 8),
+
+
+                const SizedBox(height:10),
+
+
 
                 Text(
 
-                  widget.puzzle.title,
+                  "أكملت المرحلة بنجاح",
 
-                  style: const TextStyle(
+                  style: TextStyle(
 
-                    fontSize: 20,
+                    fontSize:20,
 
-                    color: Colors.grey,
-
-                  ),
-
-                ),
-
-                const SizedBox(height: 25),
-
-                Card(
-
-                  elevation: 8,
-
-                  shape: RoundedRectangleBorder(
-
-                    borderRadius:
-
-                        BorderRadius.circular(20),
-
-                  ),
-
-                  child: Padding(
-
-                    padding: const EdgeInsets.all(20),
-
-                    child: Column(
-
-                      children: [
-
-                        Row(
-
-                          mainAxisAlignment:
-
-                              MainAxisAlignment.spaceBetween,
-
-                          children: [
-
-                            const Text("⭐ النجوم"),
-
-                            Text(
-
-                              "${widget.result.stars}",
-
-                              style: const TextStyle(
-
-                                fontWeight: FontWeight.bold,
-
-                              ),
-
-                            ),
-
-                          ],
-
-                        ),
-
-                        const Divider(),
-
-                        Row(
-
-                          mainAxisAlignment:
-
-                              MainAxisAlignment.spaceBetween,
-
-                          children: [
-
-                            const Text("👣 الحركات"),
-
-                            Text(
-
-                              "${widget.result.moves}",
-
-                            ),
-
-                          ],
-
-                        ),
-
-                        const Divider(),
-
-                        Row(
-
-                          mainAxisAlignment:
-
-                              MainAxisAlignment.spaceBetween,
-
-                          children: [
-
-                            const Text("⏱ الوقت"),
-
-                            Text(
-
-                              "${widget.result.seconds} ثانية",
-
-                            ),
-
-                          ],
-
-                        ),
-
-                      ],
-
-                    ),
+                    color:Colors.grey.shade700,
 
                   ),
 
                 ),
 
-                const SizedBox(height: 25),
 
-                Card(
 
-                  color: Colors.amber.shade50,
+                const SizedBox(height:30),
 
-                  elevation: 5,
 
-                  shape: RoundedRectangleBorder(
+
+
+                // بطاقة المكافآت
+
+                Container(
+
+                  padding:
+                      const EdgeInsets.all(20),
+
+
+                  decoration:
+                      BoxDecoration(
+
+                    color:Colors.white,
 
                     borderRadius:
+                        BorderRadius.circular(25),
 
-                        BorderRadius.circular(20),
+
+                    boxShadow:[
+
+                      BoxShadow(
+
+                        color:
+                            Colors.black.withOpacity(.1),
+
+                        blurRadius:12,
+
+                      ),
+
+                    ],
 
                   ),
 
-                  child: Padding(
 
-                    padding: const EdgeInsets.all(18),
 
-                    child: Column(
+                  child: Column(
 
-                      children: [
+                    children:[
 
+
+
+                      Text(
+
+                        "⭐ ${widget.result.stars}",
+
+                        style:
+                            const TextStyle(
+
+                          fontSize:35,
+
+                          color:Colors.amber,
+
+                          fontWeight:
+                              FontWeight.bold,
+
+                        ),
+
+                      ),
+
+
+
+                      const SizedBox(height:15),
+
+
+
+                      if(reward != null)
+
+                        Row(
+
+                          mainAxisAlignment:
+                              MainAxisAlignment.center,
+
+                          children:[
+
+
+                            _rewardItem(
+
+                              "🪙",
+
+                              reward!.coins,
+
+                            ),
+
+
+
+                            const SizedBox(width:25),
+
+
+
+                            _rewardItem(
+
+                              "💎",
+
+                              reward!.gems,
+
+                            ),
+
+
+                          ],
+
+                        ),
+
+
+
+                    ],
+
+                  ),
+
+                ),
+
+
+
+                const SizedBox(height:25),
+
+
+
+
+                // زر مضاعفة المكافأة
+
+                if(!adUsed && reward != null)
+
+                  ElevatedButton.icon(
+
+                    onPressed:
+                        doubleReward,
+
+
+                    icon:
+                        const Icon(
+                          Icons.ondemand_video,
+                        ),
+
+
+                    label:
                         const Text(
-
-                          "🎁 المكافأة",
-
-                          style: TextStyle(
-
-                            fontWeight: FontWeight.bold,
-
-                            fontSize: 20,
-
-                          ),
-
+                          "ضاعف المكافأة",
                         ),
 
-                        const SizedBox(height: 15),
 
-                        Row(
 
-                          mainAxisAlignment:
+                    style:
+                        ElevatedButton.styleFrom(
 
-                              MainAxisAlignment.spaceEvenly,
+                      backgroundColor:
+                          Colors.orange,
 
-                          children: [
+                      foregroundColor:
+                          Colors.white,
 
-                            Column(
 
-                              children: [
+                      padding:
+                          const EdgeInsets.symmetric(
 
-                                const Icon(
+                        horizontal:30,
 
-                                  Icons.monetization_on,
+                        vertical:15,
 
-                                  color: Colors.orange,
+                      ),
 
-                                ),
 
-                                Text(
+                      shape:
+                          RoundedRectangleBorder(
 
-                                  "${reward.coins}",
-
-                                ),
-
-                              ],
-
-                            ),
-
-                            Column(
-
-                              children: [
-
-                                const Icon(
-
-                                  Icons.diamond,
-
-                                  color: Colors.lightBlue,
-
-                                ),
-
-                                Text(
-
-                                  "${reward.gems}",
-
-                                ),
-
-                              ],
-
-                            ),
-
-                          ],
-
-                        ),
-
-                      ],
-
-                    ),
-
-                  ),
-
-                ),
-
-                const SizedBox(height: 25),
-
-                ElevatedButton.icon(
-
-                  onPressed: rewardDoubled
-                      ? null
-                      : _doubleReward,
-
-                  icon: const Icon(
-                    Icons.play_circle_fill,
-                  ),
-
-                  label: Text(
-
-                    rewardDoubled
-                        ? "تمت مضاعفة المكافأة"
-                        : "🎬 مضاعفة المكافأة",
-
-                  ),
-
-                  style: ElevatedButton.styleFrom(
-
-                    minimumSize:
-                        const Size(double.infinity, 55),
-
-                    shape: RoundedRectangleBorder(
-
-                      borderRadius:
-                          BorderRadius.circular(16),
-
-                    ),
-
-                  ),
-
-                ),
-
-                const SizedBox(height: 20),
-
-                Row(
-
-                  children: [
-
-                    Expanded(
-
-                      child: ElevatedButton(
-
-                        onPressed: _replay,
-
-                        child: const Text(
-
-                          "🔄 إعادة",
-
-                        ),
+                        borderRadius:
+                            BorderRadius.circular(30),
 
                       ),
 
                     ),
 
-                    const SizedBox(width: 12),
-
-                    Expanded(
-
-                      child: ElevatedButton(
-
-                        onPressed: _nextLevel,
-
-                        child: const Text(
-
-                          "➡ التالي",
-
-                        ),
-
-                      ),
-
-                    ),
-
-                  ],
-
-                ),
-
-                const SizedBox(height: 12),
-
-                SizedBox(
-
-                  width: double.infinity,
-
-                  child: OutlinedButton(
-
-                    onPressed: _back,
-
-                    child: const Text(
-
-                      "🏠 العودة",
-
-                    ),
-
                   ),
 
-                ),
 
-                const SizedBox(height: 20),
 
-                Text(
+                const SizedBox(height:25),
 
-                  "⭐ $totalStars",
 
-                  style: const TextStyle(
 
-                    fontWeight: FontWeight.bold,
 
-                    fontSize: 18,
+                // الأزرار
 
-                  ),
+                _buildButton(
 
-                ),
+                  title:"➡️ المرحلة التالية",
 
-                const SizedBox(height: 8),
+                  color:Colors.green,
 
-                Text(
-
-                  "🪙 $totalCoins",
-
-                  style: const TextStyle(
-
-                    fontSize: 16,
-
-                  ),
+                  onTap:_nextLevel,
 
                 ),
 
-                Text(
 
-                  "💎 $totalGems",
 
-                  style: const TextStyle(
+                const SizedBox(height:12),
 
-                    fontSize: 16,
 
-                  ),
+
+                _buildButton(
+
+                  title:"🧩 العودة للعالم",
+
+                  color:Colors.blue,
+
+                  onTap:_backWorld,
 
                 ),
+
+
+
+                const SizedBox(height:12),
+
+
+
+                _buildButton(
+
+                  title:"🏠 الرئيسية",
+
+                  color:Colors.purple,
+
+                  onTap:_home,
+
+                ),
+
+
 
               ],
 
@@ -721,6 +623,252 @@ class _PuzzleWinScreenState
       ),
 
     );
+
+  }
+
+
+
+  Widget _rewardItem(
+      String icon,
+      int value,
+      ) {
+
+    return Column(
+
+      children:[
+
+        Text(
+
+          icon,
+
+          style:
+              const TextStyle(
+
+            fontSize:35,
+
+          ),
+
+        ),
+
+
+        Text(
+
+          "$value",
+
+          style:
+              const TextStyle(
+
+            fontSize:22,
+
+            fontWeight:
+                FontWeight.bold,
+
+          ),
+
+        ),
+
+      ],
+
+    );
+
+  }
+
+  //==================================================
+  // ➡️ الانتقال للمرحلة التالية
+  //==================================================
+
+  Future<void> _nextLevel() async {
+
+    if (widget.onNextLevel != null) {
+
+      widget.onNextLevel!();
+
+      return;
+
+    }
+
+
+    if (widget.worldId != null &&
+        widget.level != null) {
+
+
+      await PuzzleNavigationService.openNextLevel(
+
+        context,
+
+        worldId: widget.worldId!,
+
+        currentLevel: widget.level!,
+
+      );
+
+
+    }
+
+  }
+
+
+
+
+
+
+
+  //==================================================
+  // 🧩 العودة للعالم
+  //==================================================
+
+  Future<void> _backToWorld() async {
+
+
+    if (widget.onBackToWorld != null) {
+
+      widget.onBackToWorld!();
+
+      return;
+
+    }
+
+
+
+    Navigator.pop(context);
+
+
+  }
+
+
+
+
+
+
+
+  //==================================================
+  // 🏠 العودة للرئيسية
+  //==================================================
+
+  Future<void> _backHome() async {
+
+
+    if (widget.onBackToHome != null) {
+
+      widget.onBackToHome!();
+
+      return;
+
+    }
+
+
+
+    Navigator.popUntil(
+
+      context,
+
+      (route) => route.isFirst,
+
+    );
+
+
+  }
+
+
+
+
+
+
+
+  //==================================================
+  // زر موحد
+  //==================================================
+
+  Widget _buildButton({
+
+    required String title,
+
+    required Color color,
+
+    required VoidCallback onTap,
+
+  }) {
+
+
+    return SizedBox(
+
+      width: double.infinity,
+
+
+      child: ElevatedButton(
+
+        onPressed: onTap,
+
+
+        style: ElevatedButton.styleFrom(
+
+          backgroundColor: color,
+
+          foregroundColor: Colors.white,
+
+
+          padding:
+              const EdgeInsets.symmetric(
+
+            vertical:16,
+
+          ),
+
+
+          shape:
+              RoundedRectangleBorder(
+
+            borderRadius:
+                BorderRadius.circular(30),
+
+          ),
+
+
+          elevation:6,
+
+        ),
+
+
+
+        child: Text(
+
+          title,
+
+          style:
+              const TextStyle(
+
+            fontSize:18,
+
+            fontWeight:
+                FontWeight.bold,
+
+          ),
+
+        ),
+
+      ),
+
+    );
+
+
+  }
+
+
+
+
+
+
+
+  //==================================================
+  // تنظيف الأنيميشن
+  //==================================================
+
+  @override
+  void dispose() {
+
+    controller.dispose();
+
+    super.dispose();
 
   }
 
