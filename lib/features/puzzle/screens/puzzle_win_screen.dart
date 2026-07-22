@@ -3,45 +3,30 @@ import 'package:flutter/material.dart';
 import '../models/game_result_model.dart';
 import '../models/reward_result_model.dart';
 
-import '../managers/puzzle_achievement_manager.dart';
-import '../managers/puzzle_cloud_service.dart';
-import '../managers/puzzle_event_service.dart';
+import '../models/puzzle_model.dart';
+import '../models/puzzle_level_model.dart';
+
 import '../managers/puzzle_progress_manager.dart';
-import '../managers/puzzle_save_manager.dart';
-import '../managers/puzzle_statistics_manager.dart';
-import '../managers/puzzle_world_manager.dart';
 import '../managers/reward_manager.dart';
 
 import '../services/puzzle_audio_service.dart';
 import '../services/puzzle_navigation_service.dart';
+import '../services/puzzle_world_service.dart';
 import '../services/reward_ad_service.dart';
-
-
 
 class PuzzleWinScreen extends StatefulWidget {
 
-
   final GameResultModel result;
 
+  final PuzzleModel puzzle;
 
-  final int difficulty;
+  final PuzzleLevelModel level;
 
-
-  final String? worldId;
-
-
-  final int? level;
-
+  final VoidCallback? onReplay;
 
   final VoidCallback? onNextLevel;
 
-
-  final VoidCallback? onBackToWorld;
-
-
-  final VoidCallback? onBackToHome;
-
-
+  final VoidCallback? onBack;
 
   const PuzzleWinScreen({
 
@@ -49,21 +34,17 @@ class PuzzleWinScreen extends StatefulWidget {
 
     required this.result,
 
-    this.difficulty = 1,
+    required this.puzzle,
 
-    this.worldId,
+    required this.level,
 
-    this.level,
+    this.onReplay,
 
     this.onNextLevel,
 
-    this.onBackToWorld,
-
-    this.onBackToHome,
+    this.onBack,
 
   });
-
-
 
   @override
   State<PuzzleWinScreen> createState() =>
@@ -71,252 +52,676 @@ class PuzzleWinScreen extends StatefulWidget {
 
 }
 
-
-
-
-
-
-
-class _PuzzleWinScreenState extends State<PuzzleWinScreen>
+class _PuzzleWinScreenState
+    extends State<PuzzleWinScreen>
     with SingleTickerProviderStateMixin {
 
+  late AnimationController controller;
 
-  RewardResultModel? reward;
+  late Animation<double> starAnimation;
 
+  RewardResultModel reward =
+      const RewardResultModel(
+        coins: 0,
+        gems: 0,
+      );
 
   bool loading = true;
 
+  bool rewardDoubled = false;
 
-  bool adUsed = false;
+  int totalStars = 0;
 
+  int totalCoins = 0;
 
-
-  late AnimationController animationController;
-
-
-  late Animation<double> scaleAnimation;
-
-
-
-
-
-
-
-  String? get _levelKey {
-    if (widget.worldId == null || widget.level == null) {
-      return null;
-    }
-
-    return "${widget.worldId}_level_${widget.level}";
-  }
-
-
-
-
-
-
+  int totalGems = 0;
 
   @override
   void initState() {
+
     super.initState();
 
-    animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
-    )..repeat(reverse: true);
+    controller = AnimationController(
 
-    scaleAnimation = Tween<double>(
+      vsync: this,
+
+      duration: const Duration(
+        milliseconds: 900,
+      ),
+
+    )..repeat(
+        reverse: true,
+      );
+
+    starAnimation = Tween<double>(
       begin: 1,
       end: 1.15,
     ).animate(
       CurvedAnimation(
-        parent: animationController,
+        parent: controller,
         curve: Curves.easeInOut,
       ),
     );
 
-    _enterWinScreen();
-    completeLevel();
+    _prepareScreen();
+
   }
 
+  Future<void> _prepareScreen() async {
 
-
-
-
-
-
-  Future<void> _enterWinScreen() async {
     await PuzzleAudioService.playWinSound();
-    await PuzzleEventService.levelScreenOpened(
-      worldId: widget.worldId,
-      level: widget.level,
-    );
-  }
 
+    await _saveProgress();
 
+    reward = await RewardManager.completePuzzle(
 
+      difficulty: widget.level.gridSize,
 
-
-
-
-  Future<void> completeLevel() async {
-    RewardResultModel rewardResult = const RewardResultModel(
-      coins: 0,
-      gems: 0,
     );
 
-    final levelKey = _levelKey;
+    totalStars =
+        await PuzzleProgressManager.getTotalStars();
 
-    if (levelKey != null) {
-      final completed =
-          await PuzzleProgressManager.isCompleted(levelKey);
+    totalCoins =
+        await RewardManager.getCoins();
 
-      if (!completed) {
-        await PuzzleProgressManager.completeLevel(levelKey);
-        await PuzzleProgressManager.unlockNextLevel(levelKey);
-        await PuzzleProgressManager.addStars(widget.result.stars);
-
-        await _afterLevelCompleted(levelKey);
-      }
-
-      final claimed =
-          await PuzzleProgressManager.isRewardClaimed(levelKey);
-
-      if (!claimed) {
-        rewardResult = await RewardManager.completePuzzle(
-          difficulty: widget.difficulty,
-        );
-
-        await PuzzleProgressManager.markRewardClaimed(levelKey);
-      }
-    } else {
-      rewardResult = await RewardManager.completePuzzle(
-        difficulty: widget.difficulty,
-      );
-    }
+    totalGems =
+        await RewardManager.getGems();
 
     if (!mounted) return;
 
     setState(() {
-      reward = rewardResult;
+
       loading = false;
+
     });
+
   }
 
+  Future<void> _saveProgress() async {
 
+    final levelId =
+        "${widget.puzzle.id}_level_${widget.level.gridSize}";
 
-
-
-
-
-  Future<void> _afterLevelCompleted(String levelKey) async {
-    await PuzzleStatisticsManager.recordPuzzleResult(
-      worldId: widget.worldId,
-      level: widget.level,
-      stars: widget.result.stars,
-      moves: widget.result.moves,
-      time: widget.result.time,
+    await PuzzleProgressManager.completeLevel(
+      levelId,
     );
 
-    await PuzzleWorldManager.updateWorldProgress(
-      worldId: widget.worldId,
-      level: widget.level,
-      stars: widget.result.stars,
+    await PuzzleProgressManager.unlockNextLevel(
+      levelId,
     );
 
-    await PuzzleSaveManager.autoSavePuzzle(
-      worldId: widget.worldId,
-      level: widget.level,
+    await PuzzleProgressManager.addStars(
+      widget.result.stars,
     );
 
-    await PuzzleCloudService.syncPuzzleProgress(
-      worldId: widget.worldId,
-      level: widget.level,
-    );
-
-    await PuzzleAchievementManager.checkPuzzleAchievements(
-      worldId: widget.worldId,
-      level: widget.level,
-      result: widget.result,
-    );
-
-    PuzzleEventService.levelCompleted(
-      worldId: widget.worldId,
-      level: widget.level,
-      stars: widget.result.stars,
-      moves: widget.result.moves,
-      seconds: widget.result.seconds,
-    );
   }
 
+  // =========================
+  // 🎁 مضاعفة المكافأة
+  // =========================
 
+  Future<void> _doubleReward() async {
 
-
-
-
-
-  Future<void> doubleReward() async {
-    if (adUsed || reward == null) {
+    if (rewardDoubled) {
       return;
     }
 
-    final watched = await RewardAdService.showRewardAd();
+    final watched =
+        await RewardAdService.showRewardAd();
 
     if (!watched) {
       return;
     }
 
-    final extraCoins = reward!.coins;
-    final extraGems = reward!.gems;
+    await RewardManager.addCoins(
+      reward.coins,
+    );
 
-    await RewardManager.addCoins(extraCoins);
+    if (reward.gems > 0) {
 
-    if (extraGems > 0) {
-      await RewardManager.addGems(extraGems);
+      await RewardManager.addGems(
+        reward.gems,
+      );
+
     }
 
-    await _afterRewardDoubled(extraCoins, extraGems);
+    totalCoins =
+        await RewardManager.getCoins();
+
+    totalGems =
+        await RewardManager.getGems();
 
     if (!mounted) return;
 
     setState(() {
-      reward = reward!.multiply(2);
-      adUsed = true;
+
+      reward = reward.multiply(2);
+
+      rewardDoubled = true;
+
     });
+
   }
 
+  // =========================
+  // ▶️ المرحلة التالية
+  // =========================
 
+  Future<void> _nextLevel() async {
 
-
-
-
-
-  Future<void> _afterRewardDoubled(int coins, int gems) async {
-    await PuzzleStatisticsManager.recordRewardDoubled(
-      worldId: widget.worldId,
-      level: widget.level,
-      coins: coins,
-      gems: gems,
-    );
-
-    PuzzleEventService.rewardDoubled(
-      worldId: widget.worldId,
-      level: widget.level,
-      coins: coins,
-      gems: gems,
-    );
-  }
-
-
-
-
-
-
-
-  Future<void> _goToNextLevel() async {
     if (widget.onNextLevel != null) {
+
       widget.onNextLevel!();
+
       return;
+
     }
 
-    final levelKey = _levelKey;
+    await PuzzleWorldService.goToNextLevel(
+
+      context,
+
+      worldId: widget.puzzle.id,
+
+      currentLevel: widget.level.gridSize,
+
+    );
+
+  }
+
+  // =========================
+  // 🔄 إعادة اللعب
+  // =========================
+
+  Future<void> _replay() async {
+
+    if (widget.onReplay != null) {
+
+      widget.onReplay!();
+
+      return;
+
+    }
+
+    await PuzzleWorldService.replayLevel(
+
+      context,
+
+      world: widget.puzzle,
+
+      level: widget.level,
+
+    );
+
+  }
+
+  // =========================
+  // 🔙 الرجوع للعالم
+  // =========================
+
+  Future<void> _back() async {
+
+    if (widget.onBack != null) {
+
+      widget.onBack!();
+
+      return;
+
+    }
+
+    Navigator.pop(context);
+
+  }
+
+  @override
+  void dispose() {
+
+    controller.dispose();
+
+    super.dispose();
+
+  }
+
+  @override
+  Widget build(BuildContext context) {
+
+    if (loading) {
+
+      return const Scaffold(
+
+        body: Center(
+
+          child: CircularProgressIndicator(),
+
+        ),
+
+      );
+
+    }
+
+    return Scaffold(
+
+      backgroundColor: const Color(0xffF7F9FC),
+
+      body: SafeArea(
+
+        child: Center(
+
+          child: SingleChildScrollView(
+
+            padding: const EdgeInsets.all(20),
+
+            child: Column(
+
+              children: [
+
+                ScaleTransition(
+
+                  scale: starAnimation,
+
+                  child: const Icon(
+
+                    Icons.emoji_events,
+
+                    size: 110,
+
+                    color: Colors.amber,
+
+                  ),
+
+                ),
+
+                const SizedBox(height: 16),
+
+                const Text(
+
+                  "🎉 أحسنت!",
+
+                  style: TextStyle(
+
+                    fontSize: 32,
+
+                    fontWeight: FontWeight.bold,
+
+                  ),
+
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+
+                  widget.puzzle.title,
+
+                  style: const TextStyle(
+
+                    fontSize: 20,
+
+                    color: Colors.grey,
+
+                  ),
+
+                ),
+
+                const SizedBox(height: 25),
+
+                Card(
+
+                  elevation: 8,
+
+                  shape: RoundedRectangleBorder(
+
+                    borderRadius:
+
+                        BorderRadius.circular(20),
+
+                  ),
+
+                  child: Padding(
+
+                    padding: const EdgeInsets.all(20),
+
+                    child: Column(
+
+                      children: [
+
+                        Row(
+
+                          mainAxisAlignment:
+
+                              MainAxisAlignment.spaceBetween,
+
+                          children: [
+
+                            const Text("⭐ النجوم"),
+
+                            Text(
+
+                              "${widget.result.stars}",
+
+                              style: const TextStyle(
+
+                                fontWeight: FontWeight.bold,
+
+                              ),
+
+                            ),
+
+                          ],
+
+                        ),
+
+                        const Divider(),
+
+                        Row(
+
+                          mainAxisAlignment:
+
+                              MainAxisAlignment.spaceBetween,
+
+                          children: [
+
+                            const Text("👣 الحركات"),
+
+                            Text(
+
+                              "${widget.result.moves}",
+
+                            ),
+
+                          ],
+
+                        ),
+
+                        const Divider(),
+
+                        Row(
+
+                          mainAxisAlignment:
+
+                              MainAxisAlignment.spaceBetween,
+
+                          children: [
+
+                            const Text("⏱ الوقت"),
+
+                            Text(
+
+                              "${widget.result.seconds} ثانية",
+
+                            ),
+
+                          ],
+
+                        ),
+
+                      ],
+
+                    ),
+
+                  ),
+
+                ),
+
+                const SizedBox(height: 25),
+
+                Card(
+
+                  color: Colors.amber.shade50,
+
+                  elevation: 5,
+
+                  shape: RoundedRectangleBorder(
+
+                    borderRadius:
+
+                        BorderRadius.circular(20),
+
+                  ),
+
+                  child: Padding(
+
+                    padding: const EdgeInsets.all(18),
+
+                    child: Column(
+
+                      children: [
+
+                        const Text(
+
+                          "🎁 المكافأة",
+
+                          style: TextStyle(
+
+                            fontWeight: FontWeight.bold,
+
+                            fontSize: 20,
+
+                          ),
+
+                        ),
+
+                        const SizedBox(height: 15),
+
+                        Row(
+
+                          mainAxisAlignment:
+
+                              MainAxisAlignment.spaceEvenly,
+
+                          children: [
+
+                            Column(
+
+                              children: [
+
+                                const Icon(
+
+                                  Icons.monetization_on,
+
+                                  color: Colors.orange,
+
+                                ),
+
+                                Text(
+
+                                  "${reward.coins}",
+
+                                ),
+
+                              ],
+
+                            ),
+
+                            Column(
+
+                              children: [
+
+                                const Icon(
+
+                                  Icons.diamond,
+
+                                  color: Colors.lightBlue,
+
+                                ),
+
+                                Text(
+
+                                  "${reward.gems}",
+
+                                ),
+
+                              ],
+
+                            ),
+
+                          ],
+
+                        ),
+
+                      ],
+
+                    ),
+
+                  ),
+
+                ),
+
+                const SizedBox(height: 25),
+
+                ElevatedButton.icon(
+
+                  onPressed: rewardDoubled
+                      ? null
+                      : _doubleReward,
+
+                  icon: const Icon(
+                    Icons.play_circle_fill,
+                  ),
+
+                  label: Text(
+
+                    rewardDoubled
+                        ? "تمت مضاعفة المكافأة"
+                        : "🎬 مضاعفة المكافأة",
+
+                  ),
+
+                  style: ElevatedButton.styleFrom(
+
+                    minimumSize:
+                        const Size(double.infinity, 55),
+
+                    shape: RoundedRectangleBorder(
+
+                      borderRadius:
+                          BorderRadius.circular(16),
+
+                    ),
+
+                  ),
+
+                ),
+
+                const SizedBox(height: 20),
+
+                Row(
+
+                  children: [
+
+                    Expanded(
+
+                      child: ElevatedButton(
+
+                        onPressed: _replay,
+
+                        child: const Text(
+
+                          "🔄 إعادة",
+
+                        ),
+
+                      ),
+
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    Expanded(
+
+                      child: ElevatedButton(
+
+                        onPressed: _nextLevel,
+
+                        child: const Text(
+
+                          "➡ التالي",
+
+                        ),
+
+                      ),
+
+                    ),
+
+                  ],
+
+                ),
+
+                const SizedBox(height: 12),
+
+                SizedBox(
+
+                  width: double.infinity,
+
+                  child: OutlinedButton(
+
+                    onPressed: _back,
+
+                    child: const Text(
+
+                      "🏠 العودة",
+
+                    ),
+
+                  ),
+
+                ),
+
+                const SizedBox(height: 20),
+
+                Text(
+
+                  "⭐ $totalStars",
+
+                  style: const TextStyle(
+
+                    fontWeight: FontWeight.bold,
+
+                    fontSize: 18,
+
+                  ),
+
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+
+                  "🪙 $totalCoins",
+
+                  style: const TextStyle(
+
+                    fontSize: 16,
+
+                  ),
+
+                ),
+
+                Text(
+
+                  "💎 $totalGems",
+
+                  style: const TextStyle(
+
+                    fontSize: 16,
+
+                  ),
+
+                ),
+
+              ],
+
+            ),
+
+          ),
+
+        ),
+
+      ),
+
+    );
+
+  }
+
+}
