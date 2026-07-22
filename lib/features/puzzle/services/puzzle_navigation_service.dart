@@ -26,7 +26,10 @@ import '../data/puzzle_level_data.dart';
 
 class PuzzleNavigationService {
 
+
   const PuzzleNavigationService._();
+
+
 
 
 
@@ -35,8 +38,11 @@ class PuzzleNavigationService {
   //==================================================
 
   static Future<void> openHome(
+
       BuildContext context,
+
       ) async {
+
 
     await Navigator.pushAndRemoveUntil(
 
@@ -49,11 +55,14 @@ class PuzzleNavigationService {
 
       ),
 
-      (route) => false,
+          (route) => false,
 
     );
 
+
   }
+
+
 
 
 
@@ -64,6 +73,7 @@ class PuzzleNavigationService {
   //==================================================
 
   static Future<void> openWorld(
+
       BuildContext context, {
 
         required PuzzleModel puzzle,
@@ -95,11 +105,14 @@ class PuzzleNavigationService {
 
 
 
+
+
   //==================================================
-  // 🧩 اللعبة
+  // 🧩 فتح المرحلة
   //==================================================
 
   static Future<void> openGame(
+
       BuildContext context, {
 
         required PuzzleModel puzzle,
@@ -107,6 +120,7 @@ class PuzzleNavigationService {
         required PuzzleLevelModel level,
 
       }) async {
+
 
 
     await Navigator.push(
@@ -135,11 +149,14 @@ class PuzzleNavigationService {
 
 
 
+
+
   //==================================================
   // 🎉 شاشة الفوز
   //==================================================
 
   static Future<void> openWin(
+
       BuildContext context, {
 
         required GameResultModel result,
@@ -151,6 +168,7 @@ class PuzzleNavigationService {
         required int level,
 
       }) async {
+
 
 
     await Navigator.pushReplacement(
@@ -183,6 +201,8 @@ class PuzzleNavigationService {
 
 
 
+
+
   //==================================================
   // ➡️ المرحلة التالية
   //==================================================
@@ -210,12 +230,6 @@ class PuzzleNavigationService {
 
 
 
-    final nextLevel =
-
-    currentLevel + 1;
-
-
-
 
     final levels =
 
@@ -228,7 +242,47 @@ class PuzzleNavigationService {
 
 
 
-    if(nextLevel > levels.length){
+
+    final nextId =
+
+    "level_${currentLevel + 1}";
+
+
+
+
+
+    PuzzleLevelModel? nextLevel;
+
+
+
+
+
+    for(final level in levels){
+
+
+      if(level.id == nextId){
+
+
+        nextLevel = level;
+
+
+        break;
+
+
+      }
+
+
+    }
+
+
+
+
+
+
+
+    if(nextLevel == null){
+
+
 
       await openWorld(
 
@@ -238,20 +292,14 @@ class PuzzleNavigationService {
 
       );
 
+
+
       return;
+
 
     }
 
 
-
-
-    final level =
-
-    levels.firstWhere(
-
-          (e) => e.level == nextLevel,
-
-    );
 
 
 
@@ -263,12 +311,15 @@ class PuzzleNavigationService {
 
       puzzle: world,
 
-      level: level,
+      level: nextLevel,
 
     );
 
 
+
   }
+
+
 
 
 
@@ -316,6 +367,8 @@ class PuzzleNavigationService {
 
 
 
+
+
   //==================================================
   // 💰 المحفظة
   //==================================================
@@ -342,6 +395,8 @@ class PuzzleNavigationService {
 
 
   }
+
+
 
 
 
@@ -378,6 +433,8 @@ class PuzzleNavigationService {
 
 
 
+
+
   //==================================================
   // 🏆 الإنجازات
   //==================================================
@@ -387,6 +444,7 @@ class PuzzleNavigationService {
       BuildContext context,
 
       ) async {
+
 
 
     await Navigator.push(
@@ -404,6 +462,8 @@ class PuzzleNavigationService {
 
 
   }
+
+
 
 
 
@@ -440,6 +500,8 @@ class PuzzleNavigationService {
 
 
 
+
+
   //==================================================
   // 👤 الملف الشخصي
   //==================================================
@@ -449,6 +511,7 @@ class PuzzleNavigationService {
       BuildContext context,
 
       ) async {
+
 
 
     await Navigator.push(
@@ -466,6 +529,8 @@ class PuzzleNavigationService {
 
 
   }
+
+
 
 
 
@@ -502,6 +567,8 @@ class PuzzleNavigationService {
 
 
 
+
+
   //==================================================
   // 🎁 المكافأة اليومية
   //==================================================
@@ -528,6 +595,8 @@ class PuzzleNavigationService {
 
 
   }
+
+
 
 
 
@@ -564,6 +633,8 @@ class PuzzleNavigationService {
 
 
 
+
+
   //==================================================
   // 🖼 المجموعة
   //==================================================
@@ -590,6 +661,8 @@ class PuzzleNavigationService {
 
 
   }
+
+
 
 
 
@@ -623,6 +696,8 @@ class PuzzleNavigationService {
 
 
 
+
+
   //==================================================
   // إغلاق كل الصفحات
   //==================================================
@@ -638,7 +713,7 @@ class PuzzleNavigationService {
 
       context,
 
-      (route) => route.isFirst,
+          (route) => route.isFirst,
 
     );
 
