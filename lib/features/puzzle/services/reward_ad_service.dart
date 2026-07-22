@@ -1,28 +1,34 @@
 import 'package:flutter/material.dart';
 
 
+
 class RewardAdService {
 
 
 
-  // =========================
-  // إعلان متابعة اللعبة المحفوظة
-  // =========================
+  static bool _isShowingAd = false;
 
+
+
+  // =========================
+  // إعلان متابعة لعبة محفوظة
+  // =========================
 
   static Future<bool> showContinueAd() async {
 
 
-
     return await _showFakeAd(
 
-      message: "🎬 جاري تحميل الإعلان للمتابعة...",
+      message:
+
+      "🎬 جاري تحميل إعلان المتابعة...",
 
 
     );
 
 
   }
+
 
 
 
@@ -31,17 +37,17 @@ class RewardAdService {
 
   // =========================
   // إعلان مكافأة
-  // (تلميحات - مضاعفة الجوائز)
+  // تلميحات + مضاعفة الجوائز
   // =========================
-
 
   static Future<bool> showRewardAd() async {
 
 
-
     return await _showFakeAd(
 
-      message: "🎁 جاري مشاهدة الإعلان للحصول على المكافأة...",
+      message:
+
+      "🎁 جاري تحميل إعلان المكافأة...",
 
 
     );
@@ -56,10 +62,9 @@ class RewardAdService {
 
 
   // =========================
-  // محاكاة الإعلان مؤقتًا
-  // سيتم استبدالها بـ AdMob
+  // محاكاة الإعلان
+  // سيتم استبدالها بـ AdMob RewardedAd
   // =========================
-
 
   static Future<bool> _showFakeAd({
 
@@ -69,7 +74,23 @@ class RewardAdService {
 
 
 
+    if(_isShowingAd){
+
+      return false;
+
+    }
+
+
+
+
+    _isShowingAd = true;
+
+
+
+
     debugPrint(message);
+
+
 
 
 
@@ -81,11 +102,32 @@ class RewardAdService {
 
 
 
+
+
+    _isShowingAd = false;
+
+
+
+
     return true;
 
 
   }
 
+
+
+
+
+  // =========================
+  // إغلاق حالة الإعلان
+  // مفيد لاحقًا مع AdMob
+  // =========================
+
+  static void reset(){
+
+    _isShowingAd = false;
+
+  }
 
 
 
