@@ -519,6 +519,59 @@ class PuzzleProgressManager {
     await addStars(stars);
   }
 
+
+//==================================================
+// حفظ آخر بازل
+//==================================================
+
+static Future<void> saveLastPuzzle(
+  String worldId,
+  String levelId,
+) async {
+
+  await saveLastGame(
+    "$worldId-$levelId",
+  );
+
+}
+
+static Future<Map<String,dynamic>?>
+getLastPlayed() async {
+
+
+  final value =
+      await PuzzleProgressManager.getLastGame();
+
+
+  if(value == null){
+
+    return null;
+
+  }
+
+
+  final parts =
+      value.split("-");
+
+
+  if(parts.length != 2){
+
+    return null;
+
+  }
+
+
+  return {
+
+    "worldId": parts[0],
+
+    "levelId": parts[1],
+
+  };
+
+
+}
+
   //==================================================
   // إعادة تعيين الإحصائيات فقط
   //==================================================
