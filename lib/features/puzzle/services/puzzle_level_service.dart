@@ -6,7 +6,6 @@ import '../models/puzzle_level_model.dart';
 import '../data/puzzle_level_data.dart';
 
 import '../managers/puzzle_progress_manager.dart';
-import '../managers/star_manager.dart';
 
 import '../screens/puzzle_level_screen.dart';
 import '../screens/puzzle_game_screen.dart';
