@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../managers/puzzle_progress_manager.dart';
+import '../managers/reward_manager.dart';
 import '../services/reward_ad_service.dart';
 
 
@@ -34,6 +35,9 @@ class _WalletScreenState extends State<WalletScreen> {
   int coins = 0;
 
 
+  int gems = 0;
+
+
   int hints = 0;
 
 
@@ -41,17 +45,18 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
+
+
+
   @override
   void initState(){
 
-
     super.initState();
-
 
     loadWallet();
 
-
   }
+
 
 
 
@@ -65,7 +70,14 @@ class _WalletScreenState extends State<WalletScreen> {
 
     final c =
 
-    await PuzzleProgressManager.getCoins();
+    await RewardManager.getCoins();
+
+
+
+    final g =
+
+    await RewardManager.getGems();
+
 
 
 
@@ -76,25 +88,37 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
-    setState((){
+
+    if(mounted){
+
+
+      setState((){
 
 
 
-      coins = c;
+        coins = c;
 
 
-      hints = h;
+        gems = g;
 
 
-      loading = false;
+        hints = h;
+
+
+        loading = false;
 
 
 
-    });
+      });
+
+
+
+    }
 
 
 
   }
+
 
 
 
@@ -114,6 +138,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
+
     if(!watched){
 
       return;
@@ -125,14 +150,10 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
+    final reward =
 
-    // مكافأة الإعلان
+    await RewardManager.rewardedAdBonus();
 
-    await PuzzleProgressManager.addCoins(
-
-      50,
-
-    );
 
 
 
@@ -147,8 +168,8 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
-    await loadWallet();
 
+    await loadWallet();
 
 
 
@@ -165,15 +186,15 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
-        const SnackBar(
+        SnackBar(
 
 
 
-          content:
+          content:Text(
 
-          Text(
 
-            "🎉 تمت زيادة المحفظة +50 عملة و +5 تلميحات",
+
+            "🎉 +${reward.coins} عملة و +5 تلميحات",
 
           ),
 
@@ -209,30 +230,20 @@ class _WalletScreenState extends State<WalletScreen> {
     if(loading){
 
 
-
       return const Scaffold(
 
 
+        body:Center(
 
-        body:
-
-        Center(
-
-          child:
-
-          CircularProgressIndicator(),
+          child:CircularProgressIndicator(),
 
         ),
-
 
 
       );
 
 
-
     }
-
-
 
 
 
@@ -295,6 +306,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
+
         child:
 
         SafeArea(
@@ -308,7 +320,6 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
             children:[
-
 
 
 
@@ -333,21 +344,18 @@ class _WalletScreenState extends State<WalletScreen> {
 
                   color:Colors.white,
 
-
                   fontSize:38,
-
 
                   fontWeight:
 
                   FontWeight.bold,
-
-
 
                 ),
 
 
 
               ),
+
 
 
 
@@ -361,16 +369,13 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
-              // شكل المحفظة
-
               Container(
 
 
 
                 width:300,
 
-
-                height:220,
+                height:250,
 
 
 
@@ -396,7 +401,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
-                    BoxShadow(
+                    const BoxShadow(
 
 
 
@@ -429,6 +434,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
+
                 child:
 
                 Column(
@@ -442,6 +448,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
                   children:[
+
 
 
 
@@ -462,9 +469,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
                         color:Colors.white,
 
-
                         fontSize:45,
-
 
                         fontWeight:
 
@@ -481,7 +486,47 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
-                    const SizedBox(height:15),
+
+
+                    const SizedBox(height:10),
+
+
+
+
+
+
+                    Text(
+
+
+
+                      "💎 $gems",
+
+
+
+                      style:
+
+                      const TextStyle(
+
+
+
+                        color:Colors.white,
+
+                        fontSize:35,
+
+                      ),
+
+
+
+                    ),
+
+
+
+
+
+
+                    const SizedBox(height:10),
+
+
 
 
 
@@ -502,10 +547,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
                         color:Colors.white,
 
-
-                        fontSize:28,
-
-
+                        fontSize:25,
 
                       ),
 
@@ -559,6 +601,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
+
                 label:
 
                 const Text(
@@ -582,6 +625,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
+
                 style:
 
                 ElevatedButton.styleFrom(
@@ -595,7 +639,6 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
                     horizontal:35,
-
 
                     vertical:18,
 
@@ -632,7 +675,6 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
-
               const SizedBox(height:20),
 
 
@@ -662,7 +704,6 @@ class _WalletScreenState extends State<WalletScreen> {
 
                   color:Colors.white,
 
-
                   fontSize:18,
 
 
@@ -672,7 +713,6 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
               ),
-
 
 
 
