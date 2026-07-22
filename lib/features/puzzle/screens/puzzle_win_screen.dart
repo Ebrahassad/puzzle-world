@@ -4,7 +4,6 @@ import '../models/game_result_model.dart';
 import '../models/reward_result_model.dart';
 
 import '../managers/reward_manager.dart';
-import '../managers/puzzle_progress_manager.dart';
 
 import '../services/puzzle_world_service.dart';
 import '../services/puzzle_navigation_service.dart';
@@ -66,10 +65,11 @@ class PuzzleWinScreen extends StatefulWidget {
 
 
 class _PuzzleWinScreenState extends State<PuzzleWinScreen>
-with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
 
 
   RewardResultModel? reward;
+
 
   bool loading = true;
 
@@ -91,42 +91,41 @@ with SingleTickerProviderStateMixin {
     super.initState();
 
 
-    animationController =
-        AnimationController(
+    animationController = AnimationController(
 
-          vsync:this,
+      vsync: this,
 
-          duration:
-          const Duration(seconds:1),
+      duration: const Duration(seconds: 1),
 
-        )
-          ..repeat(reverse:true);
+    )
+      ..repeat(reverse: true);
 
 
 
-    scaleAnimation =
-        Tween<double>(
+    scaleAnimation = Tween<double>(
 
-          begin:1,
+      begin: 1,
 
-          end:1.15,
+      end: 1.15,
 
-        ).animate(
+    ).animate(
 
-          CurvedAnimation(
+      CurvedAnimation(
 
-            parent: animationController,
+        parent: animationController,
 
-            curve: Curves.easeInOut,
+        curve: Curves.easeInOut,
 
-          ),
+      ),
 
-        );
+    );
 
 
     initialize();
 
   }
+
+
 
 
 
@@ -151,7 +150,10 @@ with SingleTickerProviderStateMixin {
 
 
 
-  // حفظ إكمال المرحلة مرة واحدة
+
+  //==================================================
+  // حفظ إكمال المرحلة
+  //==================================================
 
   Future<void> saveCompletion() async {
 
@@ -163,6 +165,7 @@ with SingleTickerProviderStateMixin {
     }
 
 
+
     if(widget.worldId == null ||
         widget.level == null){
 
@@ -170,30 +173,6 @@ with SingleTickerProviderStateMixin {
 
     }
 
-
-
-    final levelKey =
-        "${widget.worldId}_level_${widget.level}";
-
-
-
-    await PuzzleProgressManager.completeLevel(
-      levelKey,
-    );
-
-
-
-    await PuzzleProgressManager.saveLevelStars(
-      levelKey,
-      widget.result.stars,
-    );
-
-
-
-    await PuzzleProgressManager.unlockNextLevel(
-      widget.worldId!,
-      widget.level!,
-    );
 
 
 
@@ -209,6 +188,9 @@ with SingleTickerProviderStateMixin {
 
 
 
+
+
+
     await PuzzleStatisticsService.addCompletedPuzzle(
 
       stars: widget.result.stars,
@@ -221,13 +203,19 @@ with SingleTickerProviderStateMixin {
 
 
 
+
+
+
     await PuzzleSaveService.saveLastPlayed(
 
       worldId: widget.worldId!,
 
-      levelId: levelKey,
+      levelId: "level_${widget.level}",
 
     );
+
+
+
 
 
 
@@ -240,6 +228,9 @@ with SingleTickerProviderStateMixin {
       result: widget.result,
 
     );
+
+
+
 
 
 
@@ -259,11 +250,15 @@ with SingleTickerProviderStateMixin {
 
 
 
+
+
+
     await PuzzleCloudService.sync();
 
 
 
     saved = true;
+
 
   }
 
@@ -271,11 +266,16 @@ with SingleTickerProviderStateMixin {
 
 
 
+
+
+  //==================================================
+  // تحميل المكافأة
+  //==================================================
+
   Future<void> loadReward() async {
 
 
-    final result =
-    await RewardManager.completePuzzle(
+    final result = await RewardManager.completePuzzle(
 
       difficulty: widget.difficulty,
 
@@ -302,7 +302,15 @@ with SingleTickerProviderStateMixin {
 
   }
 
+
+
+
+
+
+
+  //==================================================
   // مضاعفة المكافأة بالإعلان
+  //==================================================
 
   Future<void> doubleReward() async {
 
@@ -315,8 +323,7 @@ with SingleTickerProviderStateMixin {
 
 
 
-    final watched =
-    await PuzzleRewardAdService
+    final watched = await PuzzleRewardAdService
         .watchAdForDoubleReward();
 
 
@@ -326,6 +333,7 @@ with SingleTickerProviderStateMixin {
       return;
 
     }
+
 
 
 
@@ -344,17 +352,23 @@ with SingleTickerProviderStateMixin {
 
 
     await RewardManager.addCoins(
+
       reward!.coins,
+
     );
+
 
 
     if(reward!.gems > 0){
 
       await RewardManager.addGems(
+
         reward!.gems,
+
       );
 
     }
+
 
 
 
@@ -363,6 +377,7 @@ with SingleTickerProviderStateMixin {
       return;
 
     }
+
 
 
 
@@ -377,10 +392,9 @@ with SingleTickerProviderStateMixin {
 
   }
 
-
-
-
-
+  //==================================================
+  // المرحلة التالية
+  //==================================================
 
   Future<void> nextLevel() async {
 
@@ -409,7 +423,6 @@ with SingleTickerProviderStateMixin {
 
       );
 
-
     }
 
 
@@ -419,6 +432,10 @@ with SingleTickerProviderStateMixin {
 
 
 
+
+  //==================================================
+  // العودة للعالم
+  //==================================================
 
   Future<void> backWorld() async {
 
@@ -432,7 +449,6 @@ with SingleTickerProviderStateMixin {
     }
 
 
-
     Navigator.pop(context);
 
 
@@ -442,6 +458,10 @@ with SingleTickerProviderStateMixin {
 
 
 
+
+  //==================================================
+  // العودة للرئيسية
+  //==================================================
 
   Future<void> backHome() async {
 
@@ -455,7 +475,6 @@ with SingleTickerProviderStateMixin {
     }
 
 
-
     Navigator.popUntil(
 
       context,
@@ -466,6 +485,7 @@ with SingleTickerProviderStateMixin {
 
 
   }
+
 
 
 
@@ -532,6 +552,7 @@ with SingleTickerProviderStateMixin {
             child: CircularProgressIndicator(),
 
           )
+
 
               :
 
@@ -710,15 +731,17 @@ with SingleTickerProviderStateMixin {
 
   }
 
-  Widget resultCard(){
+  //==================================================
+  // بطاقة النتيجة
+  //==================================================
 
+  Widget resultCard(){
 
     return Container(
 
       margin: const EdgeInsets.symmetric(
         horizontal:25,
       ),
-
 
       padding: const EdgeInsets.all(20),
 
@@ -727,28 +750,23 @@ with SingleTickerProviderStateMixin {
 
         color: Colors.white,
 
-        borderRadius:
-        BorderRadius.circular(25),
-
+        borderRadius: BorderRadius.circular(25),
 
         boxShadow:[
 
           BoxShadow(
 
-            color:
-            Colors.black.withOpacity(.15),
+            color: Colors.black.withOpacity(.15),
 
             blurRadius:15,
 
-            offset:
-            const Offset(0,8),
+            offset: const Offset(0,8),
 
           ),
 
         ],
 
       ),
-
 
 
       child: Column(
@@ -760,13 +778,11 @@ with SingleTickerProviderStateMixin {
 
             "⭐ النجوم: ${widget.result.stars}",
 
-            style:
-            const TextStyle(
+            style: const TextStyle(
 
               fontSize:24,
 
-              fontWeight:
-              FontWeight.bold,
+              fontWeight:FontWeight.bold,
 
             ),
 
@@ -782,8 +798,7 @@ with SingleTickerProviderStateMixin {
 
             "🧩 الحركات: ${widget.result.moves}",
 
-            style:
-            const TextStyle(
+            style: const TextStyle(
 
               fontSize:18,
 
@@ -801,15 +816,13 @@ with SingleTickerProviderStateMixin {
 
             "⏱ الوقت: ${widget.result.seconds} ثانية",
 
-            style:
-            const TextStyle(
+            style: const TextStyle(
 
               fontSize:18,
 
             ),
 
           ),
-
 
 
         ],
@@ -827,41 +840,38 @@ with SingleTickerProviderStateMixin {
 
 
 
+  //==================================================
+  // بطاقة المكافأة
+  //==================================================
 
   Widget rewardCard(){
 
-
     return Container(
 
-      margin:
-      const EdgeInsets.symmetric(
+      margin: const EdgeInsets.symmetric(
         horizontal:25,
       ),
 
 
-      padding:
-      const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
 
 
       decoration: BoxDecoration(
 
         color:Colors.white,
 
-        borderRadius:
-        BorderRadius.circular(25),
+        borderRadius:BorderRadius.circular(25),
 
 
         boxShadow:[
 
           BoxShadow(
 
-            color:
-            Colors.black.withOpacity(.15),
+            color:Colors.black.withOpacity(.15),
 
             blurRadius:15,
 
-            offset:
-            const Offset(0,8),
+            offset:const Offset(0,8),
 
           ),
 
@@ -871,13 +881,14 @@ with SingleTickerProviderStateMixin {
 
 
 
-      child: Row(
+      child:Row(
 
         mainAxisAlignment:
         MainAxisAlignment.spaceAround,
 
 
         children:[
+
 
 
           Column(
@@ -889,8 +900,7 @@ with SingleTickerProviderStateMixin {
 
                 "🪙",
 
-                style:
-                TextStyle(
+                style:TextStyle(
 
                   fontSize:40,
 
@@ -904,22 +914,22 @@ with SingleTickerProviderStateMixin {
 
                 "${reward!.coins}",
 
-                style:
-                const TextStyle(
+                style:const TextStyle(
 
                   fontSize:24,
 
-                  fontWeight:
-                  FontWeight.bold,
+                  fontWeight:FontWeight.bold,
 
                 ),
 
               ),
 
 
+
             ],
 
           ),
+
 
 
 
@@ -934,8 +944,7 @@ with SingleTickerProviderStateMixin {
 
                 "💎",
 
-                style:
-                TextStyle(
+                style:TextStyle(
 
                   fontSize:40,
 
@@ -949,22 +958,22 @@ with SingleTickerProviderStateMixin {
 
                 "${reward!.gems}",
 
-                style:
-                const TextStyle(
+                style:const TextStyle(
 
                   fontSize:24,
 
-                  fontWeight:
-                  FontWeight.bold,
+                  fontWeight:FontWeight.bold,
 
                 ),
 
               ),
 
 
+
             ],
 
           ),
+
 
 
         ],
@@ -983,6 +992,9 @@ with SingleTickerProviderStateMixin {
 
 
 
+  //==================================================
+  // زر موحد
+  //==================================================
 
   Widget actionButton(
 
@@ -997,12 +1009,12 @@ with SingleTickerProviderStateMixin {
 
     return Padding(
 
-      padding:
-      const EdgeInsets.symmetric(
+      padding:const EdgeInsets.symmetric(
 
         horizontal:35,
 
       ),
+
 
 
       child:SizedBox(
@@ -1012,37 +1024,38 @@ with SingleTickerProviderStateMixin {
         height:55,
 
 
+
         child:ElevatedButton(
 
 
           onPressed:onTap,
 
 
-          style:
-          ElevatedButton.styleFrom(
+
+          style:ElevatedButton.styleFrom(
 
 
             backgroundColor:color,
 
 
-            foregroundColor:
-            Colors.white,
+            foregroundColor:Colors.white,
 
 
             elevation:8,
 
 
-            shadowColor:
-            Colors.black38,
+            shadowColor:Colors.black38,
 
 
-            shape:
-            RoundedRectangleBorder(
+            shape:RoundedRectangleBorder(
+
 
               borderRadius:
               BorderRadius.circular(30),
 
+
             ),
+
 
           ),
 
@@ -1054,15 +1067,14 @@ with SingleTickerProviderStateMixin {
             text,
 
 
-            style:
-            const TextStyle(
+            style:const TextStyle(
 
               fontSize:20,
 
-              fontWeight:
-              FontWeight.bold,
+              fontWeight:FontWeight.bold,
 
             ),
+
 
           ),
 
