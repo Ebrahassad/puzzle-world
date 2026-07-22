@@ -709,56 +709,92 @@ class PuzzleProgressManager {
 
 
   static Future<bool> isUnlocked(
-
-      String levelId,
-
-      ) async {
+    String levelId,
+    ) async {
 
 
+  final prefs =
 
-    final prefs =
-
-    await SharedPreferences.getInstance();
+  await SharedPreferences.getInstance();
 
 
 
+  final levels =
 
+      prefs.getStringList(
 
-    final levels =
+        unlockedLevelsKey,
 
-        prefs.getStringList(
-
-          unlockedLevelsKey,
-
-        ) ?? [];
-
+      ) ?? [];
 
 
 
+  // المرحلة الأولى مفتوحة دائمًا
 
-    // أول مرحلة مفتوحة دائمًا
+  if(levelId == "level_1"){
 
-    if(levels.isEmpty){
-
-      return true;
-
-    }
-
-
-
-
-
-    return levels.contains(levelId);
-
-
+    return true;
 
   }
 
 
 
+  return levels.contains(levelId);
 
 
 
+}
+
+
+
+
+
+  // =========================
+  // فتح المرحلة التالية
+  // =========================
+
+
+  static Future<void> unlockNextLevel(
+    String currentLevelId,
+    ) async {
+
+
+  final current = int.tryParse(
+
+    currentLevelId.replaceAll(
+
+      "level_",
+
+      "",
+
+    ),
+
+  ) ?? 1;
+
+
+
+  if(current >= 30){
+
+    return;
+
+  }
+
+
+
+  final nextLevel =
+
+      "level_${current + 1}";
+
+
+
+  await unlockLevel(
+
+    nextLevel,
+
+  );
+
+
+}
 
 
 
