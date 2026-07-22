@@ -9,8 +9,32 @@ import '../services/reward_ad_service.dart';
 class PuzzleLevelUnlockService {
 
 
-
   const PuzzleLevelUnlockService._();
+
+
+
+
+
+  //==================================================
+  // مفتاح المرحلة الموحد
+  //==================================================
+
+  static String levelKey({
+
+    required String worldId,
+
+    required String levelId,
+
+  }) {
+
+
+    return "${worldId}_$levelId";
+
+
+  }
+
+
+
 
 
 
@@ -18,7 +42,6 @@ class PuzzleLevelUnlockService {
   //==================================================
   // فحص فتح المرحلة
   //==================================================
-
 
   static Future<bool> checkUnlocked({
 
@@ -30,6 +53,16 @@ class PuzzleLevelUnlockService {
 
 
 
+    // أول مرحلة مفتوحة دائماً
+
+    if(level.levelNumber == 1){
+
+      return true;
+
+    }
+
+
+
     if(level.unlocked){
 
       return true;
@@ -38,13 +71,14 @@ class PuzzleLevelUnlockService {
 
 
 
+
     return await PuzzleProgressManager.isLevelUnlocked(
 
-      _key(
+      levelKey(
 
-        worldId,
+        worldId: worldId,
 
-        level.id,
+        levelId: level.id,
 
       ),
 
@@ -58,10 +92,10 @@ class PuzzleLevelUnlockService {
 
 
 
+
   //==================================================
   // فتح بالنجوم
   //==================================================
-
 
   static Future<bool> unlockByStars({
 
@@ -73,14 +107,15 @@ class PuzzleLevelUnlockService {
 
 
 
-    final stars =
+    final totalStars =
 
     await PuzzleProgressManager.getTotalStars();
 
 
 
 
-    if(stars < level.requiredStars){
+
+    if(totalStars < level.requiredStars){
 
       return false;
 
@@ -89,13 +124,15 @@ class PuzzleLevelUnlockService {
 
 
 
+
+
     await PuzzleProgressManager.unlockLevel(
 
-      _key(
+      levelKey(
 
-        worldId,
+        worldId: worldId,
 
-        level.id,
+        levelId: level.id,
 
       ),
 
@@ -113,10 +150,10 @@ class PuzzleLevelUnlockService {
 
 
 
+
   //==================================================
   // فتح بالإعلان
   //==================================================
-
 
   static Future<bool> unlockByAd({
 
@@ -135,6 +172,7 @@ class PuzzleLevelUnlockService {
 
 
 
+
     if(!watched){
 
       return false;
@@ -144,17 +182,20 @@ class PuzzleLevelUnlockService {
 
 
 
+
+
     await PuzzleProgressManager.unlockLevel(
 
-      _key(
+      levelKey(
 
-        worldId,
+        worldId: worldId,
 
-        level.id,
+        levelId: level.id,
 
       ),
 
     );
+
 
 
 
@@ -168,10 +209,10 @@ class PuzzleLevelUnlockService {
 
 
 
+
   //==================================================
   // فتح المرحلة التالية
   //==================================================
-
 
   static Future<void> unlockNext({
 
@@ -199,10 +240,10 @@ class PuzzleLevelUnlockService {
 
 
 
+
   //==================================================
   // حالة كل المراحل
   //==================================================
-
 
   static Future<List<bool>> getLevelsStatus({
 
@@ -218,58 +259,28 @@ class PuzzleLevelUnlockService {
 
 
 
-
     for(final level in levels){
 
 
 
-      final unlocked =
+      result.add(
 
-      await checkUnlocked(
+        await checkUnlocked(
 
-        worldId: worldId,
+          worldId: worldId,
 
-        level: level,
+          level: level,
+
+        ),
 
       );
-
-
-
-      result.add(unlocked);
 
 
     }
 
 
 
-
-
     return result;
-
-
-  }
-
-
-
-
-
-
-  //==================================================
-  // مفتاح المرحلة الموحد
-  //==================================================
-
-
-  static String _key(
-
-      String worldId,
-
-      String levelId,
-
-      ){
-
-
-
-    return "${worldId}_$levelId";
 
 
   }
