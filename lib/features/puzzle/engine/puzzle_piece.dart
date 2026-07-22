@@ -17,7 +17,6 @@ enum EdgeType {
 
 
 
-
 class PuzzlePiece {
 
 
@@ -65,6 +64,7 @@ class PuzzlePiece {
 
 
   bool placed;
+
 
 
 
@@ -130,7 +130,7 @@ class PuzzlePiece {
 
 
 
-  // المكان الصحيح الحقيقي حسب حجم القطعة
+  // المكان الصحيح حسب حجم القطعة
 
   Offset correctOffset(double pieceSize){
 
@@ -162,7 +162,33 @@ class PuzzlePiece {
 
 
 
-  // تثبيت القطعة بواسطة التلميح
+  // Getter للمكان الصحيح الافتراضي
+
+  Offset get gridPosition {
+
+
+
+    return Offset(
+
+      column.toDouble(),
+
+      row.toDouble(),
+
+    );
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  // تثبيت القطعة بالتلميح
 
   void placeHint(double pieceSize){
 
@@ -186,9 +212,13 @@ class PuzzlePiece {
 
 
 
-  // إعادة القطعة
+  // إعادة القطعة للحالة الأولى
 
   void reset(){
+
+
+
+    position = Offset.zero;
 
 
 
@@ -206,21 +236,29 @@ class PuzzlePiece {
 
 
 
-  // هل القطعة في مكانها
+  // التحقق من صحة المكان
 
-  bool isCorrect(double pieceSize){
+  bool isCorrect(
+
+      double pieceSize,
+
+      ){
 
 
 
-    final target = correctOffset(pieceSize);
+    final target =
+
+    correctOffset(pieceSize);
+
+
 
 
 
     return
 
-        (position.dx - target.dx).abs() < 5 &&
+        (position - target).distance
 
-        (position.dy - target.dy).abs() < 5;
+            < pieceSize / 2;
 
 
 
@@ -249,6 +287,8 @@ class PuzzlePiece {
       "row":row,
 
       "column":column,
+
+      "correctPosition":correctPosition,
 
       "x":position.dx,
 
@@ -288,7 +328,7 @@ class PuzzlePiece {
 
       id:
 
-      json["id"].toString(),
+      json["id"]?.toString() ?? "0",
 
 
 
