@@ -1,37 +1,187 @@
 import 'package:flutter/material.dart';
 
 import '../data/puzzle_data.dart';
+import '../data/puzzle_level_data.dart';
+
 import '../models/puzzle_model.dart';
 
-import 'puzzle_levels_screen.dart';
+import '../managers/puzzle_progress_manager.dart';
+import '../managers/star_manager.dart';
+
+import 'puzzle_level_screen.dart';
 
 
 
-class PuzzleHomeScreen extends StatelessWidget {
+class PuzzleHomeScreen extends StatefulWidget {
 
   const PuzzleHomeScreen({
     super.key,
   });
 
 
+  @override
+  State<PuzzleHomeScreen> createState() =>
+      _PuzzleHomeScreenState();
+
+}
+
+
+
+
+
+class _PuzzleHomeScreenState
+    extends State<PuzzleHomeScreen> {
+
+
+
+  int totalStars = 0;
+
+  bool loading = true;
+
+
+
+
+
 
   @override
-  Widget build(BuildContext context) {
+  void initState(){
+
+    super.initState();
+
+    loadData();
+
+  }
+
+
+
+
+
+
+
+  Future<void> loadData() async {
+
+
+    final stars =
+        await PuzzleProgressManager.getTotalStars();
+
+
+    if(mounted){
+
+      setState((){
+
+        totalStars = stars;
+
+        loading = false;
+
+      });
+
+    }
+
+
+  }
+
+
+
+
+
+
+
+
+
+  void openWorld(
+      PuzzleModel puzzle,
+      ){
+
+
+
+    final levels =
+        PuzzleLevelData.getLevels(
+          puzzle.id,
+        );
+
+
+
+    if(levels.isEmpty){
+
+      return;
+
+    }
+
+
+
+
+
+
+    Navigator.push(
+
+      context,
+
+      MaterialPageRoute(
+
+        builder:(_)=>
+
+            PuzzleLevelScreen(
+
+              puzzle:puzzle,
+
+            ),
+
+      ),
+
+    );
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  @override
+  Widget build(BuildContext context){
+
+
+    if(loading){
+
+      return const Scaffold(
+
+        body:Center(
+
+          child:CircularProgressIndicator(),
+
+        ),
+
+      );
+
+    }
+
+
+
+
 
 
     return Scaffold(
 
 
-      body: Container(
+
+      body:Container(
 
 
-        decoration: const BoxDecoration(
+
+        decoration:const BoxDecoration(
 
 
-          gradient: LinearGradient(
+
+          gradient:LinearGradient(
 
 
-            colors: [
+
+            colors:[
 
               Color(0xff89F7FE),
 
@@ -40,12 +190,21 @@ class PuzzleHomeScreen extends StatelessWidget {
             ],
 
 
-            begin: Alignment.topCenter,
 
-            end: Alignment.bottomCenter,
+            begin:
+
+            Alignment.topCenter,
+
+
+
+            end:
+
+            Alignment.bottomCenter,
+
 
 
           ),
+
 
 
         ),
@@ -53,13 +212,17 @@ class PuzzleHomeScreen extends StatelessWidget {
 
 
 
-        child: SafeArea(
+
+        child:SafeArea(
 
 
-          child: Column(
+
+          child:Column(
 
 
-            children: [
+
+            children:[
+
 
 
 
@@ -68,24 +231,80 @@ class PuzzleHomeScreen extends StatelessWidget {
 
 
 
-              const Text(
+
+              Row(
+
+                mainAxisAlignment:
+                MainAxisAlignment.center,
+
+                children:[
 
 
-                "🧩 عالم البازل",
+                  const Text(
+
+                    "🧩 عالم البازل",
+
+                    style:TextStyle(
+
+                      color:Colors.white,
+
+                      fontSize:32,
+
+                      fontWeight:
+                      FontWeight.bold,
+
+                    ),
+
+                  ),
 
 
-                style: TextStyle(
+
+                  const SizedBox(width:15),
 
 
-                  color: Colors.white,
 
-                  fontSize: 36,
+                  Container(
 
-                  fontWeight: FontWeight.bold,
+                    padding:
+                    const EdgeInsets.symmetric(
+
+                      horizontal:15,
+
+                      vertical:8,
+
+                    ),
+
+                    decoration:BoxDecoration(
+
+                      color:Colors.white24,
+
+                      borderRadius:
+                      BorderRadius.circular(20),
+
+                    ),
 
 
-                ),
+                    child:Text(
 
+                      "⭐ $totalStars",
+
+                      style:const TextStyle(
+
+                        color:Colors.white,
+
+                        fontSize:22,
+
+                        fontWeight:
+                        FontWeight.bold,
+
+                      ),
+
+                    ),
+
+                  ),
+
+
+                ],
 
               ),
 
@@ -93,7 +312,11 @@ class PuzzleHomeScreen extends StatelessWidget {
 
 
 
-              const SizedBox(height:20),
+
+
+              const SizedBox(height:30),
+
+
 
 
 
@@ -102,33 +325,46 @@ class PuzzleHomeScreen extends StatelessWidget {
               Expanded(
 
 
-                child: GridView.builder(
+
+                child:GridView.builder(
 
 
-                  padding: const EdgeInsets.all(20),
 
+                  padding:
+                  const EdgeInsets.all(20),
 
-                  itemCount: PuzzleData.puzzles.length,
 
 
                   gridDelegate:
-
                   const SliverGridDelegateWithFixedCrossAxisCount(
+
 
 
                     crossAxisCount:2,
 
 
-                    crossAxisSpacing:18,
+
+                    mainAxisSpacing:20,
 
 
-                    mainAxisSpacing:18,
+
+                    crossAxisSpacing:20,
 
 
-                    childAspectRatio:0.75,
+
+                    childAspectRatio:0.85,
+
 
 
                   ),
+
+
+
+
+
+                  itemCount:
+                  PuzzleData.puzzles.length,
+
 
 
 
@@ -136,23 +372,281 @@ class PuzzleHomeScreen extends StatelessWidget {
                   itemBuilder:(context,index){
 
 
-                    final puzzle =
 
+                    final puzzle =
                     PuzzleData.puzzles[index];
 
 
 
-                    return PuzzleWorldCard(
+                    final levelCount =
+                    PuzzleLevelData
+                        .getLevels(
+                      puzzle.id,
+                    )
+                        .length;
 
-                      puzzle:puzzle,
+
+
+
+
+
+                    return GestureDetector(
+
+
+
+                      onTap:(){
+
+                        openWorld(
+                          puzzle,
+                        );
+
+                      },
+
+
+
+
+
+                      child:Container(
+
+
+
+                        decoration:BoxDecoration(
+
+
+
+                          color:Colors.white,
+
+
+
+                          borderRadius:
+                          BorderRadius.circular(30),
+
+
+
+
+                          boxShadow:[
+
+
+
+                            BoxShadow(
+
+
+
+                              color:
+                              Colors.black26,
+
+
+
+                              blurRadius:15,
+
+
+
+                              offset:
+                              const Offset(
+                                0,
+                                8,
+                              ),
+
+
+
+                            ),
+
+
+
+                          ],
+
+
+
+                        ),
+
+
+
+
+
+                        child:Column(
+
+
+
+                          mainAxisAlignment:
+                          MainAxisAlignment.center,
+
+
+
+                          children:[
+
+
+
+
+
+                            Expanded(
+
+
+
+                              child:Padding(
+
+
+
+                                padding:
+                                const EdgeInsets.all(15),
+
+
+
+                                child:Image.asset(
+
+
+
+                                  puzzle.image,
+
+
+
+                                  fit:
+                                  BoxFit.contain,
+
+
+
+                                  errorBuilder:
+                                      (context,error,stack){
+
+
+
+                                    return const Icon(
+
+                                      Icons.extension,
+
+                                      size:70,
+
+                                      color:
+                                      Colors.orange,
+
+                                    );
+
+
+
+                                  },
+
+
+
+                                ),
+
+
+
+                              ),
+
+
+
+                            ),
+
+
+
+
+
+
+
+                            Text(
+
+
+
+                              puzzle.title,
+
+
+
+                              textAlign:
+                              TextAlign.center,
+
+
+
+                              style:const TextStyle(
+
+
+
+                                fontSize:20,
+
+
+
+                                fontWeight:
+                                FontWeight.bold,
+
+
+
+                                color:
+                                Colors.blue,
+
+
+
+                              ),
+
+
+
+                            ),
+
+
+
+
+
+
+                            const SizedBox(height:8),
+
+
+
+
+
+                            Text(
+
+
+
+                              "🧩 $levelCount مراحل",
+
+
+
+                              style:const TextStyle(
+
+
+
+                                fontSize:16,
+
+
+
+                                color:
+                                Colors.grey,
+
+
+
+                              ),
+
+
+
+                            ),
+
+
+
+
+
+                            const SizedBox(height:15),
+
+
+
+                          ],
+
+
+
+                        ),
+
+
+
+                      ),
+
+
 
                     );
+
 
 
                   },
 
 
+
                 ),
+
 
 
               ),
@@ -162,348 +656,25 @@ class PuzzleHomeScreen extends StatelessWidget {
             ],
 
 
+
           ),
 
 
+
         ),
+
 
 
       ),
 
 
-    );
-
-  }
-
-}
-
-
-
-
-
-
-
-
-class PuzzleWorldCard extends StatefulWidget {
-
-
-  final PuzzleModel puzzle;
-
-
-
-  const PuzzleWorldCard({
-
-    super.key,
-
-    required this.puzzle,
-
-  });
-
-
-
-  @override
-  State<PuzzleWorldCard> createState() =>
-
-      _PuzzleWorldCardState();
-
-}
-
-
-
-
-
-class _PuzzleWorldCardState
-
-    extends State<PuzzleWorldCard> {
-
-
-  bool pressed = false;
-
-
-
-  @override
-  Widget build(BuildContext context) {
-
-
-    return GestureDetector(
-
-
-      onTapDown:(_){
-
-        setState((){
-
-          pressed=true;
-
-        });
-
-      },
-
-
-
-      onTapCancel:(){
-
-        setState((){
-
-          pressed=false;
-
-        });
-
-      },
-
-
-
-      onTapUp:(_){
-
-
-        setState((){
-
-          pressed=false;
-
-        });
-
-
-
-        Navigator.push(
-
-
-          context,
-
-
-          MaterialPageRoute(
-
-
-            builder:(_)=>PuzzleLevelsScreen(
-
-              puzzle:widget.puzzle,
-
-            ),
-
-
-          ),
-
-
-        );
-
-
-      },
-
-
-
-
-
-      child: AnimatedScale(
-
-
-        scale: pressed ? 0.95 : 1,
-
-
-        duration:
-
-        const Duration(
-
-          milliseconds:120,
-
-        ),
-
-
-
-
-
-        child: Container(
-
-
-          decoration: BoxDecoration(
-
-
-            color: Colors.white,
-
-
-            borderRadius:
-
-            BorderRadius.circular(30),
-
-
-
-            boxShadow:[
-
-
-              BoxShadow(
-
-
-                color:Colors.black.withOpacity(0.25),
-
-
-                blurRadius:15,
-
-
-                offset:
-
-                const Offset(0,8),
-
-
-              ),
-
-
-            ],
-
-
-          ),
-
-
-
-
-
-          child: Column(
-
-
-            children:[
-
-
-
-              Expanded(
-
-
-                child: Padding(
-
-
-                  padding:
-
-                  const EdgeInsets.all(15),
-
-
-                  child: Image.asset(
-
-
-                    widget.puzzle.image,
-
-
-                    fit:BoxFit.contain,
-
-
-                    errorBuilder:(context,error,stack){
-
-
-                      return const Icon(
-
-
-                        Icons.extension,
-
-
-                        size:80,
-
-
-                        color:Colors.orange,
-
-
-                      );
-
-
-                    },
-
-
-                  ),
-
-
-                ),
-
-
-              ),
-
-
-
-
-
-              Container(
-
-
-                width:double.infinity,
-
-
-                padding:
-
-                const EdgeInsets.symmetric(
-
-                  vertical:15,
-
-                ),
-
-
-
-                decoration:BoxDecoration(
-
-
-                  color:
-
-                  Colors.orange.shade400,
-
-
-                  borderRadius:
-
-                  const BorderRadius.vertical(
-
-                    bottom:
-
-                    Radius.circular(30),
-
-                  ),
-
-
-                ),
-
-
-
-
-
-                child: Text(
-
-
-                  widget.puzzle.title,
-
-
-                  textAlign:
-
-                  TextAlign.center,
-
-
-                  style:const TextStyle(
-
-
-                    color:Colors.white,
-
-
-                    fontSize:20,
-
-
-                    fontWeight:
-
-                    FontWeight.bold,
-
-
-                  ),
-
-
-                ),
-
-
-              ),
-
-
-
-            ],
-
-
-          ),
-
-
-        ),
-
-
-      ),
-
 
     );
 
 
+
   }
+
+
 
 }
