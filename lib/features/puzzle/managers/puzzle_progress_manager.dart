@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../engine/puzzle_piece.dart';
 
 
+
 class PuzzleProgressManager {
 
 
@@ -36,16 +37,16 @@ class PuzzleProgressManager {
       "puzzle_unlocked_levels";
 
 
+  static const String claimedRewardsKey =
+      "puzzle_claimed_rewards";
+
+
   static const String lastGameKey =
       "puzzle_last_game";
 
 
   static const String lastSessionKey =
       "puzzle_last_session";
-
-
-  static const String claimedRewardsKey =
-      "puzzle_claimed_rewards";
 
 
   static const String movesKey =
@@ -58,7 +59,6 @@ class PuzzleProgressManager {
 
   static const String bestTimeKey =
       "puzzle_best_time";
-
 
 
 
@@ -103,31 +103,20 @@ class PuzzleProgressManager {
       "seconds": seconds,
 
 
-      "pieces": pieces.map((piece){
+      "pieces": pieces.map((piece)=>{
 
 
-        return {
+        "id": piece.id,
 
+        "row": piece.row,
 
-          "id": piece.id,
+        "column": piece.column,
 
+        "x": piece.position.dx,
 
-          "row": piece.row,
+        "y": piece.position.dy,
 
-
-          "column": piece.column,
-
-
-          "x": piece.position.dx,
-
-
-          "y": piece.position.dy,
-
-
-          "placed": piece.placed,
-
-
-        };
+        "placed": piece.placed,
 
 
       }).toList(),
@@ -147,7 +136,6 @@ class PuzzleProgressManager {
 
 
   }
-
 
 
 
@@ -193,7 +181,6 @@ class PuzzleProgressManager {
 
 
 
-
   static Future<void> clearProgress() async {
 
 
@@ -205,7 +192,6 @@ class PuzzleProgressManager {
 
 
   }
-
 
 
 
@@ -263,10 +249,12 @@ class PuzzleProgressManager {
 
 
 
+  // الاسم المستخدم في الخدمات
+
   static Future<int> getTotalStars() async {
 
 
-    return getStars();
+    return await getStars();
 
 
   }
@@ -277,7 +265,7 @@ class PuzzleProgressManager {
 
   static Future<void> saveStars(
 
-      int amount,
+      int value,
 
       ) async {
 
@@ -290,12 +278,13 @@ class PuzzleProgressManager {
 
       starsKey,
 
-      amount,
+      value,
 
     );
 
 
   }
+
   // =========================
   // 🪙 العملات
   // =========================
@@ -463,6 +452,32 @@ class PuzzleProgressManager {
 
 
 
+  static Future<void> saveHints(
+
+      int amount,
+
+      ) async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    await prefs.setInt(
+
+      hintsKey,
+
+      amount,
+
+    );
+
+
+  }
+
+
+
+
+
   static Future<bool> useHint() async {
 
 
@@ -490,6 +505,7 @@ class PuzzleProgressManager {
       current - 1,
 
     );
+
 
 
     return true;
@@ -589,17 +605,51 @@ class PuzzleProgressManager {
     await SharedPreferences.getInstance();
 
 
-    final levels =
+    return (
 
-    prefs.getStringList(
+      prefs.getStringList(
+
+        completedLevelsKey,
+
+      ) ?? []
+
+    ).length;
+
+
+  }
+
+
+
+
+
+  static Future<void> restoreCompleted(
+
+      int count,
+
+      ) async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    final list = List.generate(
+
+      count,
+
+      (index)=>"restored_$index",
+
+    );
+
+
+
+    await prefs.setStringList(
 
       completedLevelsKey,
 
-    ) ?? [];
+      list,
 
-
-
-    return levels.length;
+    );
 
 
   }
@@ -682,7 +732,9 @@ class PuzzleProgressManager {
 
     if(levelId.endsWith("_level_1")){
 
+
       return true;
+
 
     }
 
@@ -735,29 +787,52 @@ class PuzzleProgressManager {
   }
 
   // =========================
-  // 🎮 آخر لعبة
+  // ⭐ إجمالي النجوم
   // =========================
 
+  static Future<int> getTotalStars() async {
 
-  static Future<void> saveLastGame(
+    final prefs =
+        await SharedPreferences.getInstance();
 
-      String value,
+    return prefs.getInt(starsKey) ?? 0;
 
+  }
+
+
+
+  static Future<void> saveStars(
+      int stars,
       ) async {
 
-
     final prefs =
-    await SharedPreferences.getInstance();
+        await SharedPreferences.getInstance();
 
-
-    await prefs.setString(
-
-      lastGameKey,
-
-      value,
-
+    await prefs.setInt(
+      starsKey,
+      stars,
     );
 
+  }
+
+
+
+
+  // =========================
+  // 🏆 عدد المراحل المكتملة
+  // =========================
+
+  static Future<int> getCompletedPuzzleCount() async {
+
+    final prefs =
+        await SharedPreferences.getInstance();
+
+    final levels =
+        prefs.getStringList(
+          completedLevelsKey,
+        ) ?? [];
+
+    return levels.length;
 
   }
 
@@ -765,160 +840,28 @@ class PuzzleProgressManager {
 
 
 
-  static Future<String?> getLastGame() async {
-
-
-    final prefs =
-    await SharedPreferences.getInstance();
-
-
-    return prefs.getString(
-
-      lastGameKey,
-
-    );
-
-
-  }
-
-
-
-
-
-  // =========================
-  // ⏱ آخر جلسة
-  // =========================
-
-
-  static Future<void> saveLastSession(
-
-      DateTime time,
-
+  static Future<void> restoreCompleted(
+      int count,
       ) async {
 
-
     final prefs =
-    await SharedPreferences.getInstance();
+        await SharedPreferences.getInstance();
 
+    final levels = <String>[];
 
-    await prefs.setString(
+    for(int i = 1; i <= count; i++){
 
-      lastSessionKey,
-
-      time.toIso8601String(),
-
-    );
-
-
-  }
-
-
-
-
-
-  static Future<DateTime?> getLastSession() async {
-
-
-    final prefs =
-    await SharedPreferences.getInstance();
-
-
-    final value =
-        prefs.getString(lastSessionKey);
-
-
-
-    if(value == null){
-
-      return null;
+      levels.add(
+        "restored_level_$i",
+      );
 
     }
-
-
-
-    return DateTime.tryParse(value);
-
-
-  }
-
-
-
-
-
-  // =========================
-  // 🎁 المكافآت
-  // =========================
-
-
-  static Future<bool> isRewardClaimed(
-
-      String levelId,
-
-      ) async {
-
-
-    final prefs =
-    await SharedPreferences.getInstance();
-
-
-    final rewards =
-
-    prefs.getStringList(
-
-      claimedRewardsKey,
-
-    ) ?? [];
-
-
-
-    return rewards.contains(levelId);
-
-
-  }
-
-
-
-
-
-  static Future<void> markRewardClaimed(
-
-      String levelId,
-
-      ) async {
-
-
-    final prefs =
-    await SharedPreferences.getInstance();
-
-
-    final rewards =
-
-    prefs.getStringList(
-
-      claimedRewardsKey,
-
-    ) ?? [];
-
-
-
-    if(!rewards.contains(levelId)){
-
-
-      rewards.add(levelId);
-
-
-    }
-
 
 
     await prefs.setStringList(
-
-      claimedRewardsKey,
-
-      rewards,
-
+      completedLevelsKey,
+      levels,
     );
-
 
   }
 
@@ -926,51 +869,87 @@ class PuzzleProgressManager {
 
 
 
+
   // =========================
-  // 📊 الإحصائيات
+  // 🎮 الألعاب
   // =========================
 
-
-  static Future<void> addGamePlayed() async {
-
-
-    final prefs =
-    await SharedPreferences.getInstance();
-
-
-    final current =
-        prefs.getInt("puzzle_games_played") ?? 0;
-
-
-
-    await prefs.setInt(
-
-      "puzzle_games_played",
-
-      current + 1,
-
-    );
-
-
-  }
-
-
-
+  static const String gamesPlayedKey =
+      "puzzle_games_played";
 
 
   static Future<int> getGamesPlayed() async {
 
-
     final prefs =
-    await SharedPreferences.getInstance();
-
+        await SharedPreferences.getInstance();
 
     return prefs.getInt(
-
-      "puzzle_games_played",
-
+      gamesPlayedKey,
     ) ?? 0;
 
+  }
+
+
+
+
+  static Future<void> addGamePlayed() async {
+
+    final prefs =
+        await SharedPreferences.getInstance();
+
+    final value =
+        prefs.getInt(
+          gamesPlayedKey,
+        ) ?? 0;
+
+
+    await prefs.setInt(
+      gamesPlayedKey,
+      value + 1,
+    );
+
+  }
+
+
+
+
+
+
+  // =========================
+  // 🚶 الحركات والوقت
+  // =========================
+
+  static const String totalMovesKey =
+      "puzzle_total_moves";
+
+
+  static const String bestTimeKey =
+      "puzzle_best_time";
+
+
+
+  static Future<int> getTotalMoves() async {
+
+    final prefs =
+        await SharedPreferences.getInstance();
+
+    return prefs.getInt(
+      totalMovesKey,
+    ) ?? 0;
+
+  }
+
+
+
+
+  static Future<int> getBestTime() async {
+
+    final prefs =
+        await SharedPreferences.getInstance();
+
+    return prefs.getInt(
+      bestTimeKey,
+    ) ?? 0;
 
   }
 
@@ -990,75 +969,114 @@ class PuzzleProgressManager {
 
 
     final prefs =
-    await SharedPreferences.getInstance();
+        await SharedPreferences.getInstance();
 
 
 
-    final completed =
-        prefs.getInt(completedCountKey) ?? 0;
-
-
-
-    await prefs.setInt(
-
-      completedCountKey,
-
-      completed + 1,
-
-    );
-
-
-
-    final totalMoves =
-        prefs.getInt(movesKey) ?? 0;
-
+    final oldMoves =
+        prefs.getInt(totalMovesKey) ?? 0;
 
 
     await prefs.setInt(
-
-      movesKey,
-
-      totalMoves + moves,
-
+      totalMovesKey,
+      oldMoves + moves,
     );
 
 
 
     final oldBest =
-        prefs.getInt(bestTimeKey);
+        prefs.getInt(bestTimeKey) ?? 0;
 
 
 
-    if(oldBest == null || seconds < oldBest){
-
+    if(oldBest == 0 || seconds < oldBest){
 
       await prefs.setInt(
-
         bestTimeKey,
-
         seconds,
-
       );
+
+    }
+
+
+    await addStars(stars);
+  // =========================
+  // 🎁 مكافأة المرحلة
+  // =========================
+
+
+  static const String claimedRewardsKey =
+      "puzzle_claimed_rewards";
+
+
+
+
+  static Future<bool> isRewardClaimed(
+
+      String levelId,
+
+      ) async {
+
+
+    final prefs =
+        await SharedPreferences.getInstance();
+
+
+
+    final rewards =
+        prefs.getStringList(
+          claimedRewardsKey,
+        ) ?? [];
+
+
+
+    return rewards.contains(levelId);
+
+
+  }
+
+
+
+
+
+
+  static Future<void> markRewardClaimed(
+
+      String levelId,
+
+      ) async {
+
+
+    final prefs =
+        await SharedPreferences.getInstance();
+
+
+
+    final rewards =
+        prefs.getStringList(
+          claimedRewardsKey,
+        ) ?? [];
+
+
+
+    if(!rewards.contains(levelId)){
+
+
+      rewards.add(levelId);
 
 
     }
 
 
 
-  }
 
+    await prefs.setStringList(
 
+      claimedRewardsKey,
 
+      rewards,
 
-
-  static Future<int> getTotalMoves() async {
-
-
-    final prefs =
-    await SharedPreferences.getInstance();
-
-
-    return prefs.getInt(movesKey) ?? 0;
+    );
 
 
   }
@@ -1067,14 +1085,41 @@ class PuzzleProgressManager {
 
 
 
-  static Future<int> getBestTime() async {
+
+
+
+
+  // =========================
+  // 🎮 آخر لعبة
+  // =========================
+
+
+  static const String lastGameKey =
+      "puzzle_last_game";
+
+
+
+
+
+  static Future<void> saveLastGame(
+
+      String gameId,
+
+      ) async {
 
 
     final prefs =
-    await SharedPreferences.getInstance();
+        await SharedPreferences.getInstance();
 
 
-    return prefs.getInt(bestTimeKey) ?? 0;
+
+    await prefs.setString(
+
+      lastGameKey,
+
+      gameId,
+
+    );
 
 
   }
@@ -1083,16 +1128,179 @@ class PuzzleProgressManager {
 
 
 
-  static Future<void> resetStatistics() async {
+
+  static Future<String?> getLastGame()
+
+  async {
 
 
     final prefs =
-    await SharedPreferences.getInstance();
+        await SharedPreferences.getInstance();
+
+
+
+    return prefs.getString(
+
+      lastGameKey,
+
+    );
+
+
+  }
+
+
+
+
+
+
+
+
+
+  // =========================
+  // ⏱ آخر جلسة
+  // =========================
+
+
+  static const String lastSessionKey =
+      "puzzle_last_session";
+
+
+
+
+
+  static Future<void> saveLastSession(
+
+      DateTime time,
+
+      ) async {
+
+
+    final prefs =
+        await SharedPreferences.getInstance();
+
+
+
+    await prefs.setString(
+
+      lastSessionKey,
+
+      time.toIso8601String(),
+
+    );
+
+
+  }
+
+
+
+
+
+
+  static Future<DateTime?> getLastSession()
+
+  async {
+
+
+    final prefs =
+        await SharedPreferences.getInstance();
+
+
+
+    final value =
+        prefs.getString(
+
+          lastSessionKey,
+
+        );
+
+
+
+    if(value == null){
+
+      return null;
+
+    }
+
+
+
+    return DateTime.tryParse(
+
+      value,
+
+    );
+
+
+  }
+
+
+
+
+
+
+
+
+
+  // =========================
+  // 💡 حفظ التلميحات
+  // =========================
+
+
+  static Future<void> saveHints(
+
+      int amount,
+
+      ) async {
+
+
+    final prefs =
+        await SharedPreferences.getInstance();
+
+
+
+    await prefs.setInt(
+
+      hintsKey,
+
+      amount,
+
+    );
+
+
+  }
+
+
+
+
+
+
+
+
+
+  // =========================
+  // 📊 إعادة الإحصائيات فقط
+  // =========================
+
+
+  static Future<void> resetStatistics()
+
+  async {
+
+
+    final prefs =
+        await SharedPreferences.getInstance();
+
 
 
     await prefs.remove(
 
-      movesKey,
+      gamesPlayedKey,
+
+    );
+
+
+    await prefs.remove(
+
+      totalMovesKey,
 
     );
 
@@ -1104,59 +1312,6 @@ class PuzzleProgressManager {
     );
 
 
-    await prefs.remove(
-
-      completedCountKey,
-
-    );
-
-
   }
 
-
-
-
-
-  // =========================
-  // 🔄 إعادة كل البيانات
-  // =========================
-
-
-  static Future<void> resetAll() async {
-
-
-    final prefs =
-    await SharedPreferences.getInstance();
-
-
-    await prefs.remove(progressKey);
-
-    await prefs.remove(starsKey);
-
-    await prefs.remove(coinsKey);
-
-    await prefs.remove(gemsKey);
-
-    await prefs.remove(hintsKey);
-
-    await prefs.remove(completedLevelsKey);
-
-    await prefs.remove(unlockedLevelsKey);
-
-    await prefs.remove(lastGameKey);
-
-    await prefs.remove(lastSessionKey);
-
-    await prefs.remove(claimedRewardsKey);
-
-    await prefs.remove(movesKey);
-
-    await prefs.remove(completedCountKey);
-
-    await prefs.remove(bestTimeKey);
-
-
   }
-
-
-}
