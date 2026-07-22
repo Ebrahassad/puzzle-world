@@ -1,18 +1,19 @@
 import '../managers/puzzle_progress_manager.dart';
 
 
-
 class PuzzleCloudService {
 
+
+  //==================================================
+  // 📤 تجهيز بيانات التقدم للرفع
+  //==================================================
 
   static Future<Map<String, dynamic>>
 
   uploadProgress() async {
 
 
-
     final data = {
-
 
 
       "stars":
@@ -20,6 +21,7 @@ class PuzzleCloudService {
       await PuzzleProgressManager
 
           .getTotalStars(),
+
 
 
 
@@ -31,11 +33,13 @@ class PuzzleCloudService {
 
 
 
+
       "hints":
 
       await PuzzleProgressManager
 
           .getHints(),
+
 
 
 
@@ -46,9 +50,7 @@ class PuzzleCloudService {
           .toIso8601String(),
 
 
-
     };
-
 
 
 
@@ -64,28 +66,30 @@ class PuzzleCloudService {
 
 
 
+  //==================================================
+  // 📥 استعادة التقدم
+  //==================================================
 
-  static Future<bool> restoreProgress(
+  static Future<bool>
+
+  restoreProgress(
 
       Map<String, dynamic> data,
 
       ) async {
 
 
-
     try {
 
 
-
       if(data.containsKey("stars")){
-
 
 
         await PuzzleProgressManager
 
             .saveStars(
 
-          data["stars"],
+          data["stars"] as int,
 
         );
 
@@ -99,12 +103,11 @@ class PuzzleCloudService {
       if(data.containsKey("hints")){
 
 
-
         await PuzzleProgressManager
 
             .saveHints(
 
-          data["hints"],
+          data["hints"] as int,
 
         );
 
@@ -118,12 +121,11 @@ class PuzzleCloudService {
       if(data.containsKey("completed")){
 
 
-
         await PuzzleProgressManager
 
             .restoreCompleted(
 
-          data["completed"],
+          data["completed"] as int,
 
         );
 
@@ -138,7 +140,7 @@ class PuzzleCloudService {
 
 
 
-    }catch(_){
+    } catch(_){
 
 
 
@@ -157,15 +159,20 @@ class PuzzleCloudService {
 
 
 
+  //==================================================
+  // 🔄 مزامنة التقدم
+  // حالياً محلية
+  // لاحقاً تربط Firebase
+  //==================================================
 
-  static Future<bool> sync() async {
+  static Future<bool>
 
+  sync() async {
 
 
     final data =
 
     await uploadProgress();
-
 
 
 
