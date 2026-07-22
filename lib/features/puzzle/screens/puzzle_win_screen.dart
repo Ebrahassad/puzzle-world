@@ -18,107 +18,69 @@ import '../services/puzzle_save_service.dart';
 
 
 
-
-
 class PuzzleWinScreen extends StatefulWidget {
-
 
   final GameResultModel result;
 
-
   final int difficulty;
-
 
   final String? worldId;
 
-
   final int? level;
-
 
   final VoidCallback? onNextLevel;
 
-
   final VoidCallback? onBackToWorld;
-
 
   final VoidCallback? onBackToHome;
 
 
-
-
   const PuzzleWinScreen({
-
 
     super.key,
 
-
     required this.result,
-
 
     this.difficulty = 1,
 
-
     this.worldId,
-
 
     this.level,
 
-
     this.onNextLevel,
-
 
     this.onBackToWorld,
 
-
     this.onBackToHome,
 
-
   });
-
-
-
 
 
   @override
   State<PuzzleWinScreen> createState() =>
       _PuzzleWinScreenState();
 
-
 }
 
 
 
 
-
-
-
-class _PuzzleWinScreenState
-    extends State<PuzzleWinScreen>
-    with SingleTickerProviderStateMixin {
-
+class _PuzzleWinScreenState extends State<PuzzleWinScreen>
+with SingleTickerProviderStateMixin {
 
 
   RewardResultModel? reward;
 
-
   bool loading = true;
-
 
   bool adUsed = false;
 
-
-  bool completedSaved = false;
-
-
+  bool saved = false;
 
 
   late AnimationController animationController;
 
-
   late Animation<double> scaleAnimation;
-
-
-
 
 
 
@@ -126,61 +88,45 @@ class _PuzzleWinScreenState
   @override
   void initState(){
 
-
     super.initState();
 
 
-
     animationController =
+        AnimationController(
 
-    AnimationController(
+          vsync:this,
 
-      vsync: this,
+          duration:
+          const Duration(seconds:1),
 
-      duration:
-
-      const Duration(seconds:1),
-
-    )
-      ..repeat(reverse:true);
-
-
+        )
+          ..repeat(reverse:true);
 
 
 
     scaleAnimation =
+        Tween<double>(
 
-    Tween<double>(
+          begin:1,
 
-      begin:1,
+          end:1.15,
 
-      end:1.15,
+        ).animate(
 
-    ).animate(
+          CurvedAnimation(
 
+            parent: animationController,
 
-      CurvedAnimation(
+            curve: Curves.easeInOut,
 
-        parent: animationController,
+          ),
 
-        curve: Curves.easeInOut,
-
-      ),
-
-
-    );
-
-
-
+        );
 
 
     initialize();
 
-
-
   }
-
-
 
 
 
@@ -189,17 +135,13 @@ class _PuzzleWinScreenState
   Future<void> initialize() async {
 
 
-
     await PuzzleAudioService.playWinSound();
-
 
 
     await saveCompletion();
 
 
-
     await loadReward();
-
 
 
   }
@@ -209,189 +151,111 @@ class _PuzzleWinScreenState
 
 
 
-
-  //==================================================
-  // حفظ نتيجة المرحلة مرة واحدة
-  //==================================================
-
+  // حفظ إكمال المرحلة مرة واحدة
 
   Future<void> saveCompletion() async {
 
 
-
-    if(completedSaved){
+    if(saved){
 
       return;
 
     }
-
 
 
     if(widget.worldId == null ||
-
         widget.level == null){
 
-
       return;
-
 
     }
 
 
 
+    final levelKey =
+        "${widget.worldId}_level_${widget.level}";
 
+
+
+    await PuzzleProgressManager.completeLevel(
+      levelKey,
+    );
+
+
+
+    await PuzzleProgressManager.saveLevelStars(
+      levelKey,
+      widget.result.stars,
+    );
+
+
+
+    await PuzzleProgressManager.unlockNextLevel(
+      widget.worldId!,
+      widget.level!,
+    );
 
 
 
     await PuzzleWorldService.completeLevel(
 
+      worldId: widget.worldId!,
 
-      worldId:
+      level: widget.level!,
 
-      widget.worldId!,
-
-
-
-      level:
-
-      widget.level!,
-
-
-
-      stars:
-
-      widget.result.stars,
-
-
+      stars: widget.result.stars,
 
     );
-
-
-
-
-
 
 
 
     await PuzzleStatisticsService.addCompletedPuzzle(
 
+      stars: widget.result.stars,
 
-      stars:
+      moves: widget.result.moves,
 
-      widget.result.stars,
-
-
-
-      moves:
-
-      widget.result.moves,
-
-
-
-      seconds:
-
-      widget.result.seconds,
-
-
+      seconds: widget.result.seconds,
 
     );
-
-
-
-
 
 
 
     await PuzzleSaveService.saveLastPlayed(
 
+      worldId: widget.worldId!,
 
-      worldId:
-
-      widget.worldId!,
-
-
-
-      levelId:
-
-      "level_${widget.level}",
-
-
+      levelId: levelKey,
 
     );
-
-
-
-
 
 
 
     await PuzzleAchievementService.checkPuzzleAchievements(
 
+      worldId: widget.worldId,
 
-      worldId:
+      level: widget.level,
 
-      widget.worldId,
-
-
-
-      level:
-
-      widget.level,
-
-
-
-      result:
-
-      widget.result,
-
-
+      result: widget.result,
 
     );
-
-
-
-
 
 
 
     await PuzzleEventService.levelCompleted(
 
+      worldId: widget.worldId,
 
-      worldId:
+      level: widget.level,
 
-      widget.worldId,
+      stars: widget.result.stars,
 
+      moves: widget.result.moves,
 
-
-      level:
-
-      widget.level,
-
-
-
-      stars:
-
-      widget.result.stars,
-
-
-
-      moves:
-
-      widget.result.moves,
-
-
-
-      seconds:
-
-      widget.result.seconds,
-
-
+      seconds: widget.result.seconds,
 
     );
-
-
-
-
 
 
 
@@ -399,12 +263,7 @@ class _PuzzleWinScreenState
 
 
 
-
-
-
-    completedSaved = true;
-
-
+    saved = true;
 
   }
 
@@ -412,30 +271,15 @@ class _PuzzleWinScreenState
 
 
 
-
-
-  //==================================================
-  // تحميل المكافأة
-  //==================================================
-
-
   Future<void> loadReward() async {
 
 
-
     final result =
-
     await RewardManager.completePuzzle(
 
-
-      difficulty:
-
-      widget.difficulty,
-
+      difficulty: widget.difficulty,
 
     );
-
-
 
 
 
@@ -447,26 +291,18 @@ class _PuzzleWinScreenState
 
 
 
-
-
     setState((){
-
 
       reward = result;
 
-
       loading = false;
-
 
     });
 
 
-
   }
 
-  //==================================================
-  // 🎬 مضاعفة المكافأة بالإعلان
-  //==================================================
+  // مضاعفة المكافأة بالإعلان
 
   Future<void> doubleReward() async {
 
@@ -479,12 +315,9 @@ class _PuzzleWinScreenState
 
 
 
-
     final watched =
-
     await PuzzleRewardAdService
         .watchAdForDoubleReward();
-
 
 
 
@@ -493,7 +326,6 @@ class _PuzzleWinScreenState
       return;
 
     }
-
 
 
 
@@ -511,30 +343,18 @@ class _PuzzleWinScreenState
 
 
 
-
-
-
     await RewardManager.addCoins(
-
       reward!.coins,
-
     );
-
-
-
 
 
     if(reward!.gems > 0){
 
       await RewardManager.addGems(
-
         reward!.gems,
-
       );
 
     }
-
-
 
 
 
@@ -546,78 +366,48 @@ class _PuzzleWinScreenState
 
 
 
-
-
     setState((){
-
 
       reward = reward!.multiply(2);
 
-
       adUsed = true;
-
 
     });
 
 
-
   }
 
 
 
 
 
-
-  //==================================================
-  // الانتقال للمرحلة التالية
-  //==================================================
 
   Future<void> nextLevel() async {
 
 
-
     if(widget.onNextLevel != null){
-
 
       widget.onNextLevel!();
 
-
       return;
-
 
     }
 
 
 
-
-
-
     if(widget.worldId != null &&
-
         widget.level != null){
-
 
 
       await PuzzleNavigationService.openNextLevel(
 
-
         context,
 
+        worldId: widget.worldId!,
 
-        worldId:
-
-        widget.worldId!,
-
-
-
-        currentLevel:
-
-        widget.level!,
-
-
+        currentLevel: widget.level!,
 
       );
-
 
 
     }
@@ -630,34 +420,22 @@ class _PuzzleWinScreenState
 
 
 
-
-  //==================================================
-  // العودة للعالم
-  //==================================================
-
   Future<void> backWorld() async {
-
 
 
     if(widget.onBackToWorld != null){
 
-
       widget.onBackToWorld!();
-
 
       return;
 
-
     }
-
-
 
 
 
     Navigator.pop(context);
 
 
-
   }
 
 
@@ -665,27 +443,16 @@ class _PuzzleWinScreenState
 
 
 
-
-  //==================================================
-  // العودة للرئيسية
-  //==================================================
-
   Future<void> backHome() async {
-
 
 
     if(widget.onBackToHome != null){
 
-
       widget.onBackToHome!();
-
 
       return;
 
-
     }
-
-
 
 
 
@@ -698,9 +465,7 @@ class _PuzzleWinScreenState
     );
 
 
-
   }
-
 
 
 
@@ -710,15 +475,11 @@ class _PuzzleWinScreenState
   @override
   void dispose(){
 
-
     animationController.dispose();
-
 
     super.dispose();
 
-
   }
-
 
 
 
@@ -729,168 +490,79 @@ class _PuzzleWinScreenState
   Widget build(BuildContext context){
 
 
-
     return Scaffold(
 
+      body: Container(
+
+        width: double.infinity,
+
+        height: double.infinity,
 
 
-      body:
+        decoration: const BoxDecoration(
 
-      Container(
-
-
-
-        width:
-
-        double.infinity,
-
-
-
-        height:
-
-        double.infinity,
-
-
-
-        decoration:
-
-        const BoxDecoration(
-
-
-
-          gradient:
-
-          LinearGradient(
-
-
+          gradient: LinearGradient(
 
             colors:[
 
-
               Color(0xff74EBD5),
-
 
               Color(0xffACB6E5),
 
-
             ],
 
+            begin: Alignment.topCenter,
 
-
-            begin:
-
-            Alignment.topCenter,
-
-
-
-            end:
-
-            Alignment.bottomCenter,
-
-
+            end: Alignment.bottomCenter,
 
           ),
-
-
 
         ),
 
 
 
+        child: SafeArea(
 
-
-        child:
-
-        SafeArea(
-
-
-
-          child:
-
-          loading
-
-
+          child: loading
 
               ?
 
           const Center(
 
-
-
-            child:
-
-            CircularProgressIndicator(),
-
-
+            child: CircularProgressIndicator(),
 
           )
-
-
 
               :
 
           SingleChildScrollView(
 
-
-
-            child:
-
-            Column(
-
-
+            child: Column(
 
               children:[
-
 
 
                 const SizedBox(height:30),
 
 
 
-
-
-
                 ScaleTransition(
 
+                  scale: scaleAnimation,
 
-
-                  scale:
-
-                  scaleAnimation,
-
-
-
-                  child:
-
-                  const Text(
-
-
+                  child: const Text(
 
                     "⭐",
 
-
-
-                    style:
-
-                    TextStyle(
-
-
+                    style: TextStyle(
 
                       fontSize:100,
 
-
                     ),
-
-
 
                   ),
 
-
-
                 ),
-
-
-
 
 
 
@@ -898,44 +570,21 @@ class _PuzzleWinScreenState
 
 
 
-
-
-
                 const Text(
-
-
 
                   "🎉 أحسنت! 🎉",
 
-
-
-                  style:
-
-                  TextStyle(
-
-
+                  style: TextStyle(
 
                     fontSize:36,
 
+                    fontWeight:FontWeight.bold,
 
-                    fontWeight:
-
-                    FontWeight.bold,
-
-
-                    color:
-
-                    Colors.white,
-
+                    color:Colors.white,
 
                   ),
 
-
-
                 ),
-
-
-
 
 
 
@@ -943,39 +592,19 @@ class _PuzzleWinScreenState
 
 
 
-
-
-
                 const Text(
-
-
 
                   "أكملت المرحلة بنجاح",
 
-
-
-                  style:
-
-                  TextStyle(
-
-
+                  style: TextStyle(
 
                     fontSize:22,
 
-
-                    color:
-
-                    Colors.white,
-
+                    color:Colors.white,
 
                   ),
 
-
-
                 ),
-
-
-
 
 
 
@@ -983,19 +612,11 @@ class _PuzzleWinScreenState
 
 
 
-
-
-
                 resultCard(),
 
 
 
-
-
                 const SizedBox(height:20),
-
-
-
 
 
 
@@ -1005,12 +626,7 @@ class _PuzzleWinScreenState
 
 
 
-
-
-
                 const SizedBox(height:25),
-
-
 
 
 
@@ -1018,43 +634,29 @@ class _PuzzleWinScreenState
 
                   actionButton(
 
-
                     "🎬 مضاعفة المكافأة",
-
 
                     Colors.orange,
 
-
                     doubleReward,
-
 
                   ),
 
 
 
-
-
                 const SizedBox(height:15),
 
 
 
-
-
                 actionButton(
-
 
                   "➡️ المرحلة التالية",
 
-
                   Colors.green,
-
 
                   nextLevel,
 
-
                 ),
-
-
 
 
 
@@ -1062,23 +664,15 @@ class _PuzzleWinScreenState
 
 
 
-
-
                 actionButton(
-
 
                   "🧩 العودة للعالم",
 
-
                   Colors.blue,
-
 
                   backWorld,
 
-
                 ),
-
-
 
 
 
@@ -1086,160 +680,97 @@ class _PuzzleWinScreenState
 
 
 
-
-
                 actionButton(
-
 
                   "🏠 الرئيسية",
 
-
                   Colors.purple,
-
 
                   backHome,
 
-
                 ),
-
-
-
 
 
 
                 const SizedBox(height:40),
 
 
-
               ],
-
-
 
             ),
 
-
-
           ),
-
-
 
         ),
 
-
-
       ),
-
-
 
     );
 
 
   }
 
-  //==================================================
-  // بطاقة النتيجة
-  //==================================================
-
   Widget resultCard(){
 
 
     return Container(
 
-
-      margin:
-
-      const EdgeInsets.symmetric(
-
+      margin: const EdgeInsets.symmetric(
         horizontal:25,
-
       ),
 
 
-      padding:
-
-      const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
 
 
-      decoration:
+      decoration: BoxDecoration(
 
-      BoxDecoration(
-
-
-        color:
-
-        Colors.white,
-
+        color: Colors.white,
 
         borderRadius:
-
         BorderRadius.circular(25),
 
 
         boxShadow:[
 
-
           BoxShadow(
 
-
             color:
-
             Colors.black.withOpacity(.15),
 
-
-            blurRadius:
-
-            15,
-
+            blurRadius:15,
 
             offset:
-
             const Offset(0,8),
-
 
           ),
 
-
         ],
-
 
       ),
 
 
 
-      child:
-
-      Column(
-
+      child: Column(
 
         children:[
 
 
-
           Text(
-
 
             "⭐ النجوم: ${widget.result.stars}",
 
-
             style:
-
             const TextStyle(
-
 
               fontSize:24,
 
-
               fontWeight:
-
               FontWeight.bold,
-
 
             ),
 
-
           ),
-
-
 
 
 
@@ -1247,28 +778,18 @@ class _PuzzleWinScreenState
 
 
 
-
-
           Text(
-
 
             "🧩 الحركات: ${widget.result.moves}",
 
-
             style:
-
             const TextStyle(
-
 
               fontSize:18,
 
-
             ),
 
-
           ),
-
-
 
 
 
@@ -1276,24 +797,16 @@ class _PuzzleWinScreenState
 
 
 
-
-
           Text(
-
 
             "⏱ الوقت: ${widget.result.seconds} ثانية",
 
-
             style:
-
             const TextStyle(
-
 
               fontSize:18,
 
-
             ),
-
 
           ),
 
@@ -1301,9 +814,7 @@ class _PuzzleWinScreenState
 
         ],
 
-
       ),
-
 
     );
 
@@ -1316,151 +827,97 @@ class _PuzzleWinScreenState
 
 
 
-  //==================================================
-  // بطاقة المكافأة
-  //==================================================
 
   Widget rewardCard(){
 
 
     return Container(
 
-
       margin:
-
       const EdgeInsets.symmetric(
-
         horizontal:25,
-
       ),
 
 
       padding:
-
       const EdgeInsets.all(20),
 
 
+      decoration: BoxDecoration(
 
-      decoration:
-
-      BoxDecoration(
-
-
-        color:
-
-        Colors.white,
-
+        color:Colors.white,
 
         borderRadius:
-
         BorderRadius.circular(25),
 
 
         boxShadow:[
 
-
           BoxShadow(
 
-
             color:
-
             Colors.black.withOpacity(.15),
 
-
-            blurRadius:
-
-            15,
-
+            blurRadius:15,
 
             offset:
-
             const Offset(0,8),
-
 
           ),
 
-
         ],
-
 
       ),
 
 
 
-
-      child:
-
-      Row(
-
+      child: Row(
 
         mainAxisAlignment:
-
         MainAxisAlignment.spaceAround,
-
 
 
         children:[
 
 
-
           Column(
-
 
             children:[
 
 
-
               const Text(
-
 
                 "🪙",
 
-
                 style:
-
                 TextStyle(
-
 
                   fontSize:40,
 
-
                 ),
 
-
               ),
-
-
 
 
 
               Text(
 
-
                 "${reward!.coins}",
 
-
                 style:
-
                 const TextStyle(
-
 
                   fontSize:24,
 
-
                   fontWeight:
-
                   FontWeight.bold,
 
-
                 ),
-
 
               ),
 
 
-
             ],
-
 
           ),
 
@@ -1470,72 +927,49 @@ class _PuzzleWinScreenState
 
           Column(
 
-
             children:[
-
 
 
               const Text(
 
-
                 "💎",
 
-
                 style:
-
                 TextStyle(
-
 
                   fontSize:40,
 
-
                 ),
 
-
               ),
-
-
 
 
 
               Text(
 
-
                 "${reward!.gems}",
 
-
                 style:
-
                 const TextStyle(
-
 
                   fontSize:24,
 
-
                   fontWeight:
-
                   FontWeight.bold,
 
-
                 ),
-
 
               ),
 
 
-
             ],
 
-
           ),
-
 
 
         ],
 
-
       ),
-
 
     );
 
@@ -1548,9 +982,7 @@ class _PuzzleWinScreenState
 
 
 
-  //==================================================
-  // زر موحد
-  //==================================================
+
 
   Widget actionButton(
 
@@ -1563,12 +995,9 @@ class _PuzzleWinScreenState
       ){
 
 
-
     return Padding(
 
-
       padding:
-
       const EdgeInsets.symmetric(
 
         horizontal:35,
@@ -1576,125 +1005,71 @@ class _PuzzleWinScreenState
       ),
 
 
+      child:SizedBox(
 
-      child:
+        width:double.infinity,
 
-      SizedBox(
-
-
-
-        width:
-
-        double.infinity,
+        height:55,
 
 
-
-        height:
-
-        55,
+        child:ElevatedButton(
 
 
-
-        child:
-
-        ElevatedButton(
-
-
-
-          onPressed:
-
-          onTap,
-
+          onPressed:onTap,
 
 
           style:
-
           ElevatedButton.styleFrom(
 
 
-
-            backgroundColor:
-
-            color,
-
+            backgroundColor:color,
 
 
             foregroundColor:
-
             Colors.white,
 
 
-
-            elevation:
-
-            8,
-
+            elevation:8,
 
 
             shadowColor:
-
             Colors.black38,
 
 
-
             shape:
-
             RoundedRectangleBorder(
 
-
-
               borderRadius:
-
               BorderRadius.circular(30),
 
-
-
             ),
-
-
 
           ),
 
 
 
-          child:
-
-          Text(
-
+          child:Text(
 
 
             text,
 
 
-
             style:
-
             const TextStyle(
-
-
 
               fontSize:20,
 
-
               fontWeight:
-
               FontWeight.bold,
 
-
             ),
-
-
 
           ),
 
 
-
         ),
 
-
-
       ),
-
 
     );
 
