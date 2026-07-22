@@ -1457,6 +1457,92 @@ static Future<void> removeLevel(
   }
 
 
+//==================================================
+// حذف إكمال مرحلة
+//==================================================
+
+static Future<void> removeCompletedLevel(
+
+    String levelKey,
+
+    ) async {
+
+
+  final prefs = await _prefs;
+
+
+  final levels =
+
+  prefs.getStringList(
+
+    completedLevelsKey,
+
+  ) ?? [];
+
+
+
+  levels.remove(levelKey);
+
+
+
+  await prefs.setStringList(
+
+    completedLevelsKey,
+
+    levels,
+
+  );
+
+
+}
+
+
+
+
+
+//==================================================
+// حذف نجوم مرحلة
+//==================================================
+
+static Future<void> removeLevelStars(
+
+    String levelKey,
+
+    ) async {
+
+
+  final prefs = await _prefs;
+
+
+
+  final data = Map<String,dynamic>.from(
+
+    jsonDecode(
+
+      prefs.getString(levelStarsKey) ?? "{}",
+
+    ),
+
+  );
+
+
+
+  data.remove(levelKey);
+
+
+
+  await prefs.setString(
+
+    levelStarsKey,
+
+    jsonEncode(data),
+
+  );
+
+
+}
+
+
   //==================================================
   // 🧹 إعادة ضبط النظام
   //==================================================
