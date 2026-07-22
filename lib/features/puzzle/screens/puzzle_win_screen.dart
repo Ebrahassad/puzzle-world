@@ -275,11 +275,12 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
   Future<void> loadReward() async {
 
 
-    final result = await RewardManager.completePuzzle(
-
-      difficulty: widget.difficulty,
-
-    );
+    final result =
+await RewardManager.completePuzzle(
+  difficulty: widget.difficulty,
+  rewardKey:
+  "${widget.worldId}_level_${widget.level}",
+);
 
 
 
