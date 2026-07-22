@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'puzzle_piece.dart';
 
 
-
 class PuzzleController {
-
 
 
   final List<PuzzlePiece> pieces;
@@ -22,9 +20,10 @@ class PuzzleController {
 
 
 
-
-
+  // =========================
   // تحريك قطعة
+  // =========================
+
 
   void movePiece(
 
@@ -34,14 +33,11 @@ class PuzzleController {
 
       ){
 
-
-
     if(piece.placed){
 
       return;
 
     }
-
 
 
     piece.position = position;
@@ -55,17 +51,18 @@ class PuzzleController {
 
 
 
+  // =========================
+  // فحص مكان القطعة
+  // =========================
 
-  // فحص هل القطعة في مكانها
 
   bool checkPiecePosition(
 
       PuzzlePiece piece,
 
-      double tolerance,
+      double pieceSize,
 
       ){
-
 
 
     if(piece.placed){
@@ -77,30 +74,27 @@ class PuzzleController {
 
 
 
-
     final correctX =
 
-    piece.column * tolerance;
+        piece.column * pieceSize;
 
 
 
     final correctY =
 
-    piece.row * tolerance;
+        piece.row * pieceSize;
 
 
 
 
 
-
-
-    final distanceX =
+    final dx =
 
     (piece.position.dx - correctX).abs();
 
 
 
-    final distanceY =
+    final dy =
 
     (piece.position.dy - correctY).abs();
 
@@ -109,34 +103,31 @@ class PuzzleController {
 
 
 
+    final tolerance =
 
-    if(distanceX < tolerance / 2 &&
-
-        distanceY < tolerance / 2){
-
-
-
-      piece.position = Offset(
+        pieceSize * 0.35;
 
 
 
-        correctX,
-
-        correctY,
 
 
+
+
+    if(dx <= tolerance && dy <= tolerance){
+
+
+
+      lockPiece(
+
+        piece,
+
+        pieceSize,
 
       );
 
 
 
-      piece.placed = true;
-
-
-
       return true;
-
-
 
     }
 
@@ -145,6 +136,51 @@ class PuzzleController {
 
 
     return false;
+
+
+  }
+
+
+
+
+
+
+
+
+
+  // =========================
+  // تثبيت القطعة
+  // =========================
+
+
+  void lockPiece(
+
+      PuzzlePiece piece,
+
+      double pieceSize,
+
+      ){
+
+
+
+    piece.position = Offset(
+
+
+
+      piece.column * pieceSize,
+
+
+
+      piece.row * pieceSize,
+
+
+
+    );
+
+
+
+
+    piece.placed = true;
 
 
 
@@ -158,7 +194,50 @@ class PuzzleController {
 
 
 
+  // =========================
+  // تثبيت بالتلميح
+  // =========================
+
+
+  void applyHint(
+
+      PuzzlePiece piece,
+
+      double pieceSize,
+
+      ){
+
+
+
+    if(piece.placed){
+
+      return;
+
+    }
+
+
+
+    piece.placeHint(
+
+      pieceSize,
+
+    );
+
+
+  }
+
+
+
+
+
+
+
+
+
+  // =========================
   // عدد القطع المكتملة
+  // =========================
+
 
   int get completedPieces {
 
@@ -175,6 +254,29 @@ class PuzzleController {
         .length;
 
 
+  }
+
+
+
+
+
+
+
+
+
+  // =========================
+  // القطع المتبقية
+  // =========================
+
+
+  int get remainingPieces {
+
+
+
+    return pieces.length -
+
+        completedPieces;
+
 
   }
 
@@ -185,7 +287,11 @@ class PuzzleController {
 
 
 
+
+  // =========================
   // نسبة الإنجاز
+  // =========================
+
 
   double get progress {
 
@@ -213,7 +319,11 @@ class PuzzleController {
 
 
 
-  // هل انتهت اللعبة
+
+  // =========================
+  // هل اكتملت اللعبة؟
+  // =========================
+
 
   bool get isCompleted {
 
@@ -226,7 +336,6 @@ class PuzzleController {
     );
 
 
-
   }
 
 
@@ -236,7 +345,11 @@ class PuzzleController {
 
 
 
-  // إعادة ضبط اللعبة
+
+  // =========================
+  // إعادة اللعبة
+  // =========================
+
 
   void reset(){
 
@@ -246,7 +359,7 @@ class PuzzleController {
 
 
 
-      piece.placed = false;
+      piece.reset();
 
 
 
@@ -263,9 +376,17 @@ class PuzzleController {
 
 
 
-  // تثبيت كل القطع
 
-  void completeAll(){
+  // =========================
+  // إنهاء تلقائي (للتجربة أو التلميحات)
+  // =========================
+
+
+  void completeAll(
+
+      double pieceSize,
+
+      ){
 
 
 
@@ -273,32 +394,17 @@ class PuzzleController {
 
 
 
-      piece.placed = true;
+      lockPiece(
 
+        piece,
 
-
-      piece.position = Offset(
-
-
-
-        piece.column *
-
-            (pieces.first.sourceRect.width),
-
-
-
-        piece.row *
-
-            (pieces.first.sourceRect.height),
-
-
+        pieceSize,
 
       );
 
 
 
     }
-
 
 
   }
