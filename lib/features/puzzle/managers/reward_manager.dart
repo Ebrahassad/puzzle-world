@@ -1,5 +1,5 @@
 import '../models/reward_result_model.dart';
-import 'puzzle_progress_manager.dart';
+import '../managers/puzzle_progress_manager.dart';
 
 
 class RewardManager {
@@ -9,9 +9,10 @@ class RewardManager {
 
 
 
-  //========================================
-  // 🪙 قراءة العملات
-  //========================================
+  //==================================================
+  // 🪙 العملات
+  //==================================================
+
 
   static Future<int> getCoins() async {
 
@@ -22,10 +23,6 @@ class RewardManager {
 
 
 
-
-  //========================================
-  // إضافة عملات
-  //========================================
 
   static Future<void> addCoins(
 
@@ -47,11 +44,6 @@ class RewardManager {
 
 
 
-
-  //========================================
-  // خصم عملات
-  //========================================
-
   static Future<void> removeCoins(
 
       int amount,
@@ -72,9 +64,12 @@ class RewardManager {
 
 
 
-  //========================================
-  // 💎 قراءة الجواهر
-  //========================================
+
+
+  //==================================================
+  // 💎 الجواهر
+  //==================================================
+
 
   static Future<int> getGems() async {
 
@@ -88,9 +83,6 @@ class RewardManager {
 
 
 
-  //========================================
-  // إضافة جواهر
-  //========================================
 
   static Future<void> addGems(
 
@@ -112,9 +104,33 @@ class RewardManager {
 
 
 
-  //========================================
-  // 🎉 مكافأة إنهاء البازل
-  //========================================
+
+  static Future<void> removeGems(
+
+      int amount,
+
+      ) async {
+
+
+    await PuzzleProgressManager.addGems(
+
+      -amount,
+
+    );
+
+
+  }
+
+
+
+
+
+
+
+  //==================================================
+  // 🎮 إكمال البازل وإعطاء المكافأة
+  //==================================================
+
 
   static Future<RewardResultModel>
 
@@ -126,13 +142,14 @@ class RewardManager {
 
 
 
-    int coins = 0;
+    int coins;
 
     int gems = 0;
 
 
 
     switch(difficulty){
+
 
 
       case 1:
@@ -175,7 +192,9 @@ class RewardManager {
 
 
 
-    await PuzzleProgressManager.addCoins(
+
+
+    await addCoins(
 
       coins,
 
@@ -184,10 +203,12 @@ class RewardManager {
 
 
 
+
+
     if(gems > 0){
 
 
-      await PuzzleProgressManager.addGems(
+      await addGems(
 
         gems,
 
@@ -195,6 +216,8 @@ class RewardManager {
 
 
     }
+
+
 
 
 
@@ -217,9 +240,11 @@ class RewardManager {
 
 
 
-  //========================================
+
+  //==================================================
   // 🎬 مكافأة الإعلان
-  //========================================
+  //==================================================
+
 
   static Future<RewardResultModel>
 
@@ -239,11 +264,12 @@ class RewardManager {
 
 
 
-    await PuzzleProgressManager.addCoins(
+    await addCoins(
 
       reward.coins,
 
     );
+
 
 
 
@@ -260,9 +286,82 @@ class RewardManager {
 
 
 
-  //========================================
+
+  //==================================================
   // 🎁 المكافأة اليومية
-  //========================================
+  //==================================================
+
+
+  static Future<bool>
+
+  canClaimDailyReward() async {
+
+
+
+    final prefs =
+
+    await SharedPreferences.getInstance();
+
+
+
+    const key =
+
+        "puzzle_daily_reward";
+
+
+
+    final saved =
+
+    prefs.getString(key);
+
+
+
+
+
+    if(saved == null){
+
+      return true;
+
+    }
+
+
+
+
+
+
+    final last =
+
+    DateTime.parse(saved);
+
+
+
+
+
+    final now =
+
+    DateTime.now();
+
+
+
+
+
+    return
+
+        last.year != now.year ||
+
+            last.month != now.month ||
+
+            last.day != now.day;
+
+
+  }
+
+
+
+
+
+
+
 
   static Future<void>
 
@@ -270,7 +369,27 @@ class RewardManager {
 
 
 
-    await PuzzleProgressManager.addCoins(
+    final prefs =
+
+    await SharedPreferences.getInstance();
+
+
+
+    await prefs.setString(
+
+      "puzzle_daily_reward",
+
+      DateTime.now()
+
+          .toIso8601String(),
+
+    );
+
+
+
+
+
+    await addCoins(
 
       100,
 
@@ -278,7 +397,9 @@ class RewardManager {
 
 
 
-    await PuzzleProgressManager.addGems(
+
+
+    await addGems(
 
       1,
 
@@ -286,6 +407,7 @@ class RewardManager {
 
 
   }
+
 
 
 
