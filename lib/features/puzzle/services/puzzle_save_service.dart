@@ -121,24 +121,17 @@ class PuzzleSaveService {
 
   static Future<void> saveLastPlayed({
 
-    required String worldId,
+  required String worldId,
 
-    required String levelId,
+  required String levelId,
 
-  }) async {
+}) async {
 
+  await PuzzleProgressManager.saveLastGame(
+    "${worldId}_$levelId",
+  );
 
-    await PuzzleProgressManager.saveLastGame(
-
-      "$worldId-$levelId",
-
-    );
-
-
-  }
-
-
-
+}
 
 
   //==================================================
@@ -189,9 +182,8 @@ class PuzzleSaveService {
 
   static Future<void> clearLastPlayed() async {
 
-    await PuzzleProgressManager.saveLastGame("");
-
-  }
-
+  await PuzzleProgressManager.saveLastGame(
+    "",
+  );
 
 }
