@@ -1,7 +1,6 @@
 class GameResultModel {
 
-
-  // عدد النجوم التي حصل عليها اللاعب
+  // عدد النجوم
   final int stars;
 
 
@@ -9,9 +8,8 @@ class GameResultModel {
   final int moves;
 
 
-  // زمن إنهاء المرحلة
+  // وقت إنهاء المرحلة
   final Duration time;
-
 
 
   const GameResultModel({
@@ -28,13 +26,41 @@ class GameResultModel {
 
 
 
-  // =========================
-  // وقت اللعب بالثواني
-  // =========================
+  //==================================================
+  // الوقت بالثواني
+  //==================================================
 
-  int get seconds {
+  int get seconds => time.inSeconds;
 
-    return time.inSeconds;
+
+
+
+
+  //==================================================
+  // تقييم النتيجة
+  //==================================================
+
+  String get rating {
+
+    if(stars >= 3){
+
+      return "ممتاز";
+
+    }
+
+    if(stars == 2){
+
+      return "جيد جداً";
+
+    }
+
+    if(stars == 1){
+
+      return "جيد";
+
+    }
+
+    return "حاول مرة أخرى";
 
   }
 
@@ -42,27 +68,31 @@ class GameResultModel {
 
 
 
-  // =========================
-  // تحويل إلى JSON
-  // =========================
+  //==================================================
+  // هل النتيجة كاملة
+  //==================================================
 
-  Map<String, dynamic> toJson(){
+  bool get isPerfect => stars == 3;
 
+
+
+
+
+  //==================================================
+  // JSON
+  //==================================================
+
+  Map<String,dynamic> toJson(){
 
     return {
 
-
       "stars": stars,
-
 
       "moves": moves,
 
-
       "seconds": seconds,
 
-
     };
-
 
   }
 
@@ -70,43 +100,35 @@ class GameResultModel {
 
 
 
-  // =========================
-  // قراءة من JSON
-  // =========================
+  //==================================================
+  // FROM JSON
+  //==================================================
 
   factory GameResultModel.fromJson(
 
-      Map<String, dynamic> json,
+      Map<String,dynamic> json,
 
       ){
 
-
     return GameResultModel(
 
-
       stars:
-
       json["stars"] ?? 0,
 
 
       moves:
-
       json["moves"] ?? 0,
 
 
       time:
-
       Duration(
 
         seconds:
-
         json["seconds"] ?? 0,
 
       ),
 
-
     );
-
 
   }
 
@@ -114,9 +136,9 @@ class GameResultModel {
 
 
 
-  // =========================
-  // تحسين النتيجة
-  // =========================
+  //==================================================
+  // COPY
+  //==================================================
 
   GameResultModel copyWith({
 
@@ -128,31 +150,80 @@ class GameResultModel {
 
   }){
 
-
     return GameResultModel(
 
-
       stars:
-
       stars ?? this.stars,
 
 
       moves:
-
       moves ?? this.moves,
 
 
       time:
-
       time ?? this.time,
 
-
     );
-
 
   }
 
 
 
+
+
+  //==================================================
+  // مقارنة النتائج
+  //==================================================
+
+  bool isBetterThan(
+      GameResultModel other,
+      ){
+
+    if(stars > other.stars){
+
+      return true;
+
+    }
+
+
+    if(stars == other.stars &&
+        moves < other.moves){
+
+      return true;
+
+    }
+
+
+    if(stars == other.stars &&
+        moves == other.moves &&
+        seconds < other.seconds){
+
+      return true;
+
+    }
+
+
+    return false;
+
+  }
+
+
+
+
+
+  @override
+  String toString(){
+
+    return """
+
+GameResultModel(
+ stars: $stars,
+ moves: $moves,
+ seconds: $seconds
+)
+
+""";
+
+  }
 
 }
