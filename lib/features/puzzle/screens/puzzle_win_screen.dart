@@ -244,25 +244,17 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
       if(!completed){
 
 
-
-        await PuzzleProgressManager
-            .completeLevel(id);
+  await PuzzleProgressManager.completeLevel(id);
 
 
-
-        await PuzzleProgressManager
-            .unlockNextLevel(id);
+  await PuzzleProgressManager.unlockNextLevel(id);
 
 
 
-        
+  await afterCompleted();
 
 
-        await afterCompleted();
-
-
-
-      }
+}
 
 
 
@@ -376,14 +368,13 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-      await PuzzleSaveService.autoSavePuzzle(
+      await PuzzleSaveService.saveLastPlayed(
 
-        worldId: widget.worldId!,
+  worldId: widget.worldId!,
 
-        level: widget.level!,
+  levelId: "level_${widget.level}",
 
-      );
-
+);
 
 
 
@@ -474,7 +465,17 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
         reward!.gems;
 
 
+await PuzzleEventService.rewardDoubled(
 
+  worldId: widget.worldId,
+
+  level: widget.level,
+
+  coins: coins,
+
+  gems: gems,
+
+);
 
 
 
@@ -500,7 +501,9 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
     }
 
-
+await PuzzleProgressManager.saveLastSession(
+  DateTime.now(),
+);
 
 
 
