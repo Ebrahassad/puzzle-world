@@ -255,11 +255,7 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-        await PuzzleProgressManager
-            .addStars(
-          widget.result.stars,
-        );
-
+        
 
 
         await afterCompleted();
