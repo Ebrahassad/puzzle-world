@@ -8,6 +8,7 @@ import '../engine/puzzle_painter.dart';
 class PuzzlePieceWidget extends StatefulWidget {
 
 
+
   final PuzzlePiece piece;
 
 
@@ -20,18 +21,13 @@ class PuzzlePieceWidget extends StatefulWidget {
 
   const PuzzlePieceWidget({
 
-
     super.key,
-
 
     required this.piece,
 
-
     required this.image,
 
-
     required this.size,
-
 
   });
 
@@ -40,6 +36,8 @@ class PuzzlePieceWidget extends StatefulWidget {
   @override
   State<PuzzlePieceWidget> createState() =>
       _PuzzlePieceWidgetState();
+
+
 
 }
 
@@ -53,91 +51,91 @@ class _PuzzlePieceWidgetState
     extends State<PuzzlePieceWidget> {
 
 
+
   bool pressed = false;
 
 
 
 
 
+
+
+  void setPressed(bool value){
+
+
+
+    if(widget.piece.placed){
+
+      return;
+
+    }
+
+
+
+    setState((){
+
+      pressed = value;
+
+    });
+
+
+
+  }
+
+
+
+
+
+
+
+
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context){
 
 
 
-    return GestureDetector(
+    return RepaintBoundary(
 
 
 
-      onTapDown:(_){
-
-
-        setState((){
-
-
-          pressed = true;
-
-
-        });
-
-
-      },
+      child: GestureDetector(
 
 
 
-      onTapUp:(_){
+        onTapDown:(_){
 
+          setPressed(true);
 
-        setState((){
-
-
-          pressed = false;
-
-
-        });
-
-
-      },
+        },
 
 
 
-      onTapCancel:(){
+        onTapUp:(_){
 
+          setPressed(false);
 
-        setState((){
-
-
-          pressed = false;
-
-
-        });
-
-
-      },
+        },
 
 
 
-      child:AnimatedScale(
+        onTapCancel:(){
 
+          setPressed(false);
 
-
-        scale:
-
-        pressed ? 1.12 : 1,
-
-
-
-        duration:
-
-        const Duration(
-
-          milliseconds:150,
-
-        ),
+        },
 
 
 
 
-        child:AnimatedContainer(
+
+        child:AnimatedScale(
+
+
+
+          scale:
+
+          pressed ? 1.08 : 1,
 
 
 
@@ -145,68 +143,7 @@ class _PuzzlePieceWidgetState
 
           const Duration(
 
-            milliseconds:150,
-
-          ),
-
-
-
-          decoration:
-
-          BoxDecoration(
-
-
-
-            boxShadow:[
-
-
-
-              BoxShadow(
-
-
-
-                color:
-
-                Colors.black.withOpacity(
-
-
-
-                  pressed ? 0.35 : 0.15,
-
-
-
-                ),
-
-
-
-                blurRadius:
-
-                pressed ? 18 : 8,
-
-
-
-                offset:Offset(
-
-
-
-                  0,
-
-
-                  pressed ? 10 : 5,
-
-
-
-                ),
-
-
-
-              ),
-
-
-
-            ],
-
-
+            milliseconds:120,
 
           ),
 
@@ -214,20 +151,85 @@ class _PuzzlePieceWidgetState
 
 
 
-          child:CustomPaint(
+          child:AnimatedContainer(
 
 
 
-            size:
+            duration:
 
-            Size(
+            const Duration(
+
+              milliseconds:120,
+
+            ),
 
 
 
-              widget.size,
+            decoration:BoxDecoration(
 
 
-              widget.size,
+
+              borderRadius:
+
+              BorderRadius.circular(12),
+
+
+
+              boxShadow:[
+
+
+
+                BoxShadow(
+
+
+
+                  color:
+
+                  Colors.black.withOpacity(
+
+
+
+                    widget.piece.placed
+
+                        ? 0.05
+
+                        : pressed
+
+                        ? 0.35
+
+                        : 0.18,
+
+
+
+                  ),
+
+
+
+                  blurRadius:
+
+                  pressed ? 18 : 8,
+
+
+
+                  offset:Offset(
+
+
+
+                    0,
+
+                    pressed ? 8 : 4,
+
+
+
+                  ),
+
+
+
+                ),
+
+
+
+              ],
 
 
 
@@ -236,21 +238,42 @@ class _PuzzlePieceWidgetState
 
 
 
-            painter:
 
-            PuzzlePainter(
-
-
-
-              piece:
-
-              widget.piece,
+            child:CustomPaint(
 
 
 
-              image:
+              size:
 
-              widget.image,
+              Size(
+
+                widget.size,
+
+                widget.size,
+
+              ),
+
+
+
+
+
+              painter:PuzzlePainter(
+
+
+
+                piece:
+
+                widget.piece,
+
+
+
+                image:
+
+                widget.image,
+
+
+
+              ),
 
 
 
@@ -273,7 +296,9 @@ class _PuzzlePieceWidgetState
     );
 
 
+
   }
+
 
 
 }
