@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 
+
 enum EdgeType {
 
   flat,
@@ -13,6 +14,10 @@ enum EdgeType {
 
 
 
+
+
+
+
 class PuzzlePiece {
 
 
@@ -22,6 +27,7 @@ class PuzzlePiece {
 
 
   final int row;
+
 
 
   final int column;
@@ -39,10 +45,13 @@ class PuzzlePiece {
   final EdgeType top;
 
 
+
   final EdgeType bottom;
 
 
+
   final EdgeType left;
+
 
 
   final EdgeType right;
@@ -61,15 +70,6 @@ class PuzzlePiece {
 
 
 
-  final double width;
-
-
-  final double height;
-
-
-
-
-
 
 
   PuzzlePiece({
@@ -79,28 +79,37 @@ class PuzzlePiece {
     required this.id,
 
 
+
     required this.row,
+
 
 
     required this.column,
 
 
+
     required this.correctPosition,
+
 
 
     required this.sourceRect,
 
 
+
     required this.top,
+
 
 
     required this.bottom,
 
 
+
     required this.left,
 
 
+
     required this.right,
+
 
 
     required this.position,
@@ -108,13 +117,6 @@ class PuzzlePiece {
 
 
     this.placed = false,
-
-
-
-    this.width = 0,
-
-
-    this.height = 0,
 
 
 
@@ -128,23 +130,26 @@ class PuzzlePiece {
 
 
 
-  // المكان الصحيح الحقيقي على اللوحة
+  // المكان الصحيح الحقيقي حسب حجم القطعة
 
-
-  Offset correctOffset(double pieceWidth,double pieceHeight){
+  Offset correctOffset(double pieceSize){
 
 
 
     return Offset(
 
 
-      column * pieceWidth,
+
+      column * pieceSize,
 
 
-      row * pieceHeight,
+
+      row * pieceSize,
+
 
 
     );
+
 
 
   }
@@ -157,28 +162,13 @@ class PuzzlePiece {
 
 
 
-  // تثبيت القطعة بالتلميح
+  // تثبيت القطعة بواسطة التلميح
 
-
-  void placeHint(
-
-
-
-      double pieceWidth,
-
-      double pieceHeight,
-
-      ){
+  void placeHint(double pieceSize){
 
 
 
-    position = correctOffset(
-
-      pieceWidth,
-
-      pieceHeight,
-
-    );
+    position = correctOffset(pieceSize);
 
 
 
@@ -196,59 +186,10 @@ class PuzzlePiece {
 
 
 
-  // هل القطعة في مكانها؟
-
-
-  bool isCorrect(
-
-
-
-      double pieceWidth,
-
-      double pieceHeight,
-
-      double tolerance,
-
-      ){
-
-
-
-    final target = correctOffset(
-
-      pieceWidth,
-
-      pieceHeight,
-
-    );
-
-
-
-    return
-
-        (position.dx - target.dx).abs() < tolerance &&
-
-        (position.dy - target.dy).abs() < tolerance;
-
-
-
-  }
-
-
-
-
-
-
-
-
-
   // إعادة القطعة
-
 
   void reset(){
 
-
-
-    position = Offset.zero;
 
 
     placed = false;
@@ -265,8 +206,35 @@ class PuzzlePiece {
 
 
 
-  // تحويل للحفظ
+  // هل القطعة في مكانها
 
+  bool isCorrect(double pieceSize){
+
+
+
+    final target = correctOffset(pieceSize);
+
+
+
+    return
+
+        (position.dx - target.dx).abs() < 5 &&
+
+        (position.dy - target.dy).abs() < 5;
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  // حفظ البيانات
 
   Map<String,dynamic> toJson(){
 
@@ -278,18 +246,13 @@ class PuzzlePiece {
 
       "id":id,
 
-
       "row":row,
-
 
       "column":column,
 
-
       "x":position.dx,
 
-
       "y":position.dy,
-
 
       "placed":placed,
 
@@ -309,8 +272,7 @@ class PuzzlePiece {
 
 
 
-  // استرجاع من الحفظ
-
+  // استرجاع البيانات
 
   factory PuzzlePiece.fromJson(
 
@@ -324,15 +286,21 @@ class PuzzlePiece {
 
 
 
-      id: json["id"].toString(),
+      id:
+
+      json["id"].toString(),
 
 
 
-      row: json["row"] ?? 0,
+      row:
+
+      json["row"] ?? 0,
 
 
 
-      column: json["column"] ?? 0,
+      column:
+
+      json["column"] ?? 0,
 
 
 
@@ -348,20 +316,33 @@ class PuzzlePiece {
 
 
 
-      top: EdgeType.flat,
+      top:
 
-
-      bottom: EdgeType.flat,
-
-
-      left: EdgeType.flat,
-
-
-      right: EdgeType.flat,
+      EdgeType.flat,
 
 
 
-      position: Offset(
+      bottom:
+
+      EdgeType.flat,
+
+
+
+      left:
+
+      EdgeType.flat,
+
+
+
+      right:
+
+      EdgeType.flat,
+
+
+
+      position:
+
+      Offset(
 
 
 
