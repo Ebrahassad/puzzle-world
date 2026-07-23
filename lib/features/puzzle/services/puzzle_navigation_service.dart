@@ -13,6 +13,8 @@ import '../screens/wallet_screen.dart';
 import '../data/puzzle_data.dart';
 import '../data/puzzle_level_data.dart';
 
+import '../services/puzzle_level_unlock_service.dart';
+
 
 
 class PuzzleNavigationService {
@@ -28,9 +30,7 @@ class PuzzleNavigationService {
   //==================================================
 
   static Future<void> openHome(
-
       BuildContext context,
-
       ) async {
 
 
@@ -96,7 +96,7 @@ class PuzzleNavigationService {
 
 
   //==================================================
-  // 🧩 فتح لعبة البازل
+  // 🧩 فتح اللعبة
   //==================================================
 
   static Future<void> openGame(
@@ -108,6 +108,33 @@ class PuzzleNavigationService {
         required PuzzleLevelModel level,
 
       }) async {
+
+
+
+    final unlocked =
+
+    await PuzzleLevelUnlockService.checkUnlocked(
+
+      worldId: puzzle.id,
+
+      level: level,
+
+    );
+
+
+
+
+
+    if(!unlocked){
+
+      return;
+
+    }
+
+
+
+
+
 
 
     await Navigator.push(
@@ -138,7 +165,7 @@ class PuzzleNavigationService {
 
 
   //==================================================
-  // 🎉 شاشة الفوز
+  // 🎉 الفوز
   //==================================================
 
   static Future<void> openWin(
@@ -154,6 +181,7 @@ class PuzzleNavigationService {
         required int level,
 
       }) async {
+
 
 
     await Navigator.pushReplacement(
@@ -202,17 +230,28 @@ class PuzzleNavigationService {
       }) async {
 
 
-    final world =
 
-    PuzzleData.puzzles.firstWhere(
+    PuzzleModel? world =
 
-          (item) => item.id == worldId,
+    PuzzleData.getById(
+
+      worldId,
 
     );
 
 
 
-    final nextLevelNumber = currentLevel + 1;
+
+
+    if(world == null){
+
+      return;
+
+    }
+
+
+
+
 
 
 
@@ -226,17 +265,23 @@ class PuzzleNavigationService {
 
 
 
+
+
     PuzzleLevelModel? nextLevel;
+
+
 
 
 
     for(final level in levels){
 
 
-      if(level.levelNumber == nextLevelNumber){
+
+      if(level.levelNumber == currentLevel + 1){
 
 
         nextLevel = level;
+
 
         break;
 
@@ -245,6 +290,10 @@ class PuzzleNavigationService {
 
 
     }
+
+
+
+
 
 
 
@@ -262,7 +311,12 @@ class PuzzleNavigationService {
 
       return;
 
+
     }
+
+
+
+
 
 
 
