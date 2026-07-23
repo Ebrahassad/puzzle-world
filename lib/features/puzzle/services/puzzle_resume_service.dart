@@ -5,6 +5,15 @@ import '../managers/puzzle_progress_manager.dart';
 class PuzzleResumeService {
 
 
+  const PuzzleResumeService._();
+
+
+
+
+  //==================================================
+  // ▶️ هل يوجد لعبة مستأنفة
+  //==================================================
+
   static Future<bool> hasResumeGame() async {
 
 
@@ -30,10 +39,13 @@ class PuzzleResumeService {
 
 
 
-  static Future<Map<String, dynamic>?>
+  //==================================================
+  // 📂 بيانات الاستكمال
+  //==================================================
+
+  static Future<Map<String,String>?>
 
   getResumeData() async {
-
 
 
     return await PuzzleProgressManager
@@ -49,6 +61,10 @@ class PuzzleResumeService {
 
 
 
+
+  //==================================================
+  // 💾 حفظ الاستكمال
+  //==================================================
 
   static Future<void> saveResumeGame({
 
@@ -102,13 +118,19 @@ class PuzzleResumeService {
 
 
 
-  static Future<void> clearResumeGame() async {
+  //==================================================
+  // 🗑 مسح الاستكمال
+  //==================================================
 
+  static Future<void> clearResumeGame() async {
 
 
     await PuzzleProgressManager
 
         .clearLastPuzzle();
+
+
+
 
 
     await PuzzleProgressManager
@@ -125,10 +147,13 @@ class PuzzleResumeService {
 
 
 
+  //==================================================
+  // 🌍 عالم الاستكمال
+  //==================================================
+
   static Future<String?>
 
   getResumeWorld() async {
-
 
 
     final data =
@@ -139,7 +164,7 @@ class PuzzleResumeService {
 
 
 
-    return data?["worldId"]?.toString();
+    return data?["worldId"];
 
 
   }
@@ -151,10 +176,13 @@ class PuzzleResumeService {
 
 
 
+  //==================================================
+  // 🧩 مرحلة الاستكمال
+  //==================================================
+
   static Future<String?>
 
   getResumeLevel() async {
-
 
 
     final data =
@@ -165,7 +193,7 @@ class PuzzleResumeService {
 
 
 
-    return data?["levelId"]?.toString();
+    return data?["levelId"];
 
 
   }
