@@ -1001,7 +1001,35 @@ static Future<bool> isRewardClaimed(
   }
 
 
+//==================================================
+// ➕ إضافة مجموع الحركات
+//==================================================
 
+
+static Future<void> addTotalMoves(
+
+    int moves,
+
+    ) async {
+
+
+  final prefs = await _prefs;
+
+
+  final current =
+      prefs.getInt(totalMovesKey) ?? 0;
+
+
+  await prefs.setInt(
+
+    totalMovesKey,
+
+    current + moves,
+
+  );
+
+
+}
 
 
   static Future<int> getBestTime() async {
@@ -1725,7 +1753,94 @@ static Future<void> clearPuzzleState(
 
 
 }
+//==================================================
+// 🎮 حالة اللعب الحالية
+//==================================================
 
+
+static const String gameStateKey =
+    "puzzle_game_state";
+
+
+
+static Future<void> saveGameState({
+
+  required String worldId,
+
+  required String levelId,
+
+  required int moves,
+
+  required int seconds,
+
+}) async {
+
+
+  final prefs = await _prefs;
+
+
+  final data = {
+
+    "worldId": worldId,
+
+    "levelId": levelId,
+
+    "moves": moves,
+
+    "seconds": seconds,
+
+  };
+
+
+  await prefs.setString(
+    gameStateKey,
+    jsonEncode(data),
+  );
+
+
+}
+
+
+
+static Future<Map<String,dynamic>?>
+getGameState() async {
+
+
+  final prefs = await _prefs;
+
+
+  final value =
+      prefs.getString(gameStateKey);
+
+
+  if(value == null){
+
+    return null;
+
+  }
+
+
+  return Map<String,dynamic>.from(
+    jsonDecode(value),
+  );
+
+
+}
+
+
+
+static Future<void> clearGameState() async {
+
+
+  final prefs = await _prefs;
+
+
+  await prefs.remove(
+    gameStateKey,
+  );
+
+
+}
 
 //==================================================
 // 🎯 أعلى نتيجة
@@ -1961,7 +2076,44 @@ static Future<void> saveDarkMode(
 
 }
 
+//==================================================
+// 🔔 نظام الإشعارات
+//==================================================
 
+static const String notificationsKey =
+    "puzzle_notifications";
+
+
+static Future<List<Map<String,dynamic>>>
+getNotifications() async {
+
+  final prefs = await _prefs;
+
+  final data =
+      jsonDecode(
+        prefs.getString(notificationsKey) ?? "[]",
+      );
+
+  return List<Map<String,dynamic>>.from(
+    data,
+  );
+
+}
+
+
+
+static Future<void> saveNotifications(
+    List<Map<String,dynamic>> notifications,
+    ) async {
+
+  final prefs = await _prefs;
+
+  await prefs.setString(
+    notificationsKey,
+    jsonEncode(notifications),
+  );
+
+}
 //==================================================
 // ⭐ التقييم
 //==================================================
@@ -2039,8 +2191,47 @@ static Future<void> resetTutorial() async {
       .remove(tutorialKey);
 
 }
+//==================================================
+// 🔄 إعادة ضبط التقدم فقط
+//==================================================
 
 
+static Future<void> resetProgress() async {
+
+
+  final prefs = await _prefs;
+
+
+  await prefs.remove(progressKey);
+
+  await prefs.remove(completedLevelsKey);
+
+  await prefs.remove(unlockedLevelsKey);
+
+  await prefs.remove(levelStarsKey);
+
+  await prefs.remove(lastWorldKey);
+
+  await prefs.remove(lastLevelKey);
+
+
+}
+
+//==================================================
+// 🗑️ حذف جميع بيانات اللاعب
+//==================================================
+
+
+static Future<void> resetAllData() async {
+
+
+  final prefs = await _prefs;
+
+
+  await prefs.clear();
+
+
+}
   //==================================================
   // 🧹 إعادة ضبط النظام
   //==================================================
