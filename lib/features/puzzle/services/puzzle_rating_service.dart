@@ -5,8 +5,16 @@ import '../managers/puzzle_progress_manager.dart';
 class PuzzleRatingService {
 
 
-  static Future<bool> canRate() async {
+  const PuzzleRatingService._();
 
+
+
+
+  //==================================================
+  // ⭐ هل يمكن التقييم
+  //==================================================
+
+  static Future<bool> canRate() async {
 
 
     final rated =
@@ -31,12 +39,15 @@ class PuzzleRatingService {
 
 
 
+  //==================================================
+  // 💾 حفظ التقييم
+  //==================================================
+
   static Future<void> saveRating({
 
     required int rating,
 
   }) async {
-
 
 
     await PuzzleProgressManager
@@ -57,8 +68,11 @@ class PuzzleRatingService {
 
 
 
-  static Future<int> getRating() async {
+  //==================================================
+  // 📊 جلب التقييم
+  //==================================================
 
+  static Future<int> getRating() async {
 
 
     return await PuzzleProgressManager
@@ -75,6 +89,10 @@ class PuzzleRatingService {
 
 
 
+  //==================================================
+  // 💬 رسالة التقييم
+  //==================================================
+
   static String getRatingMessage(
 
       int rating,
@@ -86,11 +104,9 @@ class PuzzleRatingService {
     switch(rating){
 
 
-
       case 5:
 
         return "رائع جداً! ⭐⭐⭐⭐⭐";
-
 
 
       case 4:
@@ -98,11 +114,9 @@ class PuzzleRatingService {
         return "ممتاز! ⭐⭐⭐⭐";
 
 
-
       case 3:
 
         return "جيد 👍⭐⭐⭐";
-
 
 
       case 2:
@@ -110,16 +124,15 @@ class PuzzleRatingService {
         return "سنحسن اللعبة أكثر";
 
 
-
       case 1:
 
         return "شكراً لملاحظتك";
 
 
-
       default:
 
         return "";
+
 
     }
 
@@ -133,8 +146,11 @@ class PuzzleRatingService {
 
 
 
-  static Future<void> resetRating() async {
+  //==================================================
+  // 🔄 إعادة التقييم
+  //==================================================
 
+  static Future<void> resetRating() async {
 
 
     await PuzzleProgressManager
