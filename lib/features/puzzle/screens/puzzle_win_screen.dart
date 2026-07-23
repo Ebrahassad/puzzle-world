@@ -519,24 +519,17 @@ await RewardManager.completePuzzle(
 
         decoration: const BoxDecoration(
 
-          gradient: LinearGradient(
+  image: DecorationImage(
 
-            colors:[
+    image: AssetImage(
+      "assets/images/background/home_background.png",
+    ),
 
-              Color(0xff74EBD5),
+    fit: BoxFit.cover,
 
-              Color(0xffACB6E5),
+  ),
 
-            ],
-
-            begin: Alignment.topCenter,
-
-            end: Alignment.bottomCenter,
-
-          ),
-
-        ),
-
+),
 
 
         child: SafeArea(
@@ -563,26 +556,34 @@ await RewardManager.completePuzzle(
 
                 const SizedBox(height:30),
 
+Image.asset(
+  "assets/images/ui/puzzle_logo.png",
+  width:70,
+  height:70,
+),
 
+const SizedBox(height:10),
+
+const Text(
+  "Puzzle World",
+  style: TextStyle(
+    color:Colors.white,
+    fontSize:28,
+    fontWeight:FontWeight.bold,
+  ),
+),
 
                 ScaleTransition(
 
-                  scale: scaleAnimation,
+  scale: scaleAnimation,
 
-                  child: const Text(
+  child: Image.asset(
+    "assets/images/ui/puzzle_logo.png",
+    width:120,
+    height:120,
+  ),
 
-                    "⭐",
-
-                    style: TextStyle(
-
-                      fontSize:100,
-
-                    ),
-
-                  ),
-
-                ),
-
+),
 
 
                 const SizedBox(height:15),
@@ -684,15 +685,10 @@ await RewardManager.completePuzzle(
 
 
                 actionButton(
-
-                  "🧩 العودة للعالم",
-
-                  Colors.blue,
-
-                  backWorld,
-
-                ),
-
+ "العودة للعالم 🌍",
+ Colors.blue,
+ backWorld,
+),
 
 
                 const SizedBox(height:15),
