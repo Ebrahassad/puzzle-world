@@ -5,10 +5,18 @@ import '../managers/puzzle_progress_manager.dart';
 class PuzzleNotificationCenterService {
 
 
+  const PuzzleNotificationCenterService._();
+
+
+
+
+  //==================================================
+  // 🔔 جلب الإشعارات
+  //==================================================
+
   static Future<List<Map<String,dynamic>>>
 
   getNotifications() async {
-
 
 
     return await PuzzleProgressManager
@@ -24,6 +32,10 @@ class PuzzleNotificationCenterService {
 
 
 
+
+  //==================================================
+  // ➕ إضافة إشعار
+  //==================================================
 
   static Future<void> addNotification({
 
@@ -96,6 +108,10 @@ class PuzzleNotificationCenterService {
 
 
 
+  //==================================================
+  // ✅ تعليم كمقروء
+  //==================================================
+
   static Future<void> markAsRead({
 
     required int index,
@@ -145,6 +161,10 @@ class PuzzleNotificationCenterService {
 
 
 
+  //==================================================
+  // 🔢 عدد غير المقروء
+  //==================================================
+
   static Future<int> getUnreadCount() async {
 
 
@@ -174,6 +194,10 @@ class PuzzleNotificationCenterService {
 
 
 
+
+  //==================================================
+  // 🗑 حذف الكل
+  //==================================================
 
   static Future<void> clearAll() async {
 
