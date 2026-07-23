@@ -1,41 +1,43 @@
 import 'package:flutter/material.dart';
 
 import '../screens/puzzle_game_screen.dart';
-
 import '../screens/puzzle_level_screen.dart';
 
 import '../models/puzzle_model.dart';
-
 import '../models/puzzle_level_model.dart';
+
+import '../services/puzzle_level_unlock_service.dart';
 
 
 
 class PuzzleNavigationGuardService {
 
 
+  const PuzzleNavigationGuardService._();
+
+
+
+
+  //==================================================
+  // 🔐 فحص إمكانية فتح المرحلة
+  //==================================================
+
   static Future<bool> canOpenLevel({
 
-    required BuildContext context,
-
-    required PuzzleModel puzzle,
+    required String worldId,
 
     required PuzzleLevelModel level,
 
   }) async {
 
 
+    return await PuzzleLevelUnlockService.checkUnlocked(
 
-    if(level.unlocked){
+      worldId: worldId,
 
-      return true;
+      level: level,
 
-    }
-
-
-
-
-
-    return false;
+    );
 
 
   }
@@ -46,6 +48,10 @@ class PuzzleNavigationGuardService {
 
 
 
+
+  //==================================================
+  // 🧩 فتح المرحلة
+  //==================================================
 
   static Future<void> openLevel({
 
@@ -63,9 +69,7 @@ class PuzzleNavigationGuardService {
 
     await canOpenLevel(
 
-      context: context,
-
-      puzzle: puzzle,
+      worldId: puzzle.id,
 
       level: level,
 
@@ -77,9 +81,13 @@ class PuzzleNavigationGuardService {
 
     if(!allowed){
 
+
       return;
 
+
     }
+
+
 
 
 
@@ -112,6 +120,10 @@ class PuzzleNavigationGuardService {
 
 
 
+
+  //==================================================
+  // 🔙 العودة للمراحل
+  //==================================================
 
   static void backToLevels({
 
@@ -149,12 +161,15 @@ class PuzzleNavigationGuardService {
 
 
 
+  //==================================================
+  // ❌ إغلاق البازل
+  //==================================================
+
   static void closePuzzle(
 
-      BuildContext context,
+    BuildContext context,
 
-      ) {
-
+  ) {
 
 
     Navigator.pop(
@@ -165,6 +180,9 @@ class PuzzleNavigationGuardService {
 
 
   }
+
+
+
 
 
 }
