@@ -1500,6 +1500,546 @@ static Future<void> removeLevelStars(
 
 }
 
+//==================================================
+// ❤️ المفضلة
+//==================================================
+
+static const String favoritePuzzlesKey =
+    "puzzle_favorite_puzzles";
+
+
+static Future<List<String>> getFavoritePuzzles() async {
+
+  final prefs = await _prefs;
+
+  return prefs.getStringList(favoritePuzzlesKey) ?? [];
+
+}
+
+
+static Future<void> saveFavoritePuzzles(
+    List<String> list,
+    ) async {
+
+  final prefs = await _prefs;
+
+  await prefs.setStringList(
+    favoritePuzzlesKey,
+    list,
+  );
+
+}
+
+
+//==================================================
+// 📜 سجل اللعب
+//==================================================
+
+static const String historyKey =
+    "puzzle_history";
+
+
+static Future<List<Map<String,dynamic>>>
+getPuzzleHistory() async {
+
+  final prefs = await _prefs;
+
+  final data =
+      jsonDecode(
+        prefs.getString(historyKey) ?? "[]",
+      );
+
+
+  return List<Map<String,dynamic>>.from(
+    data,
+  );
+
+}
+
+
+
+static Future<void> savePuzzleHistory(
+    List<Map<String,dynamic>> history,
+    ) async {
+
+  final prefs = await _prefs;
+
+
+  await prefs.setString(
+    historyKey,
+    jsonEncode(history),
+  );
+
+
+}
+
+
+
+static Future<void> clearPuzzleHistory() async {
+
+  final prefs = await _prefs;
+
+  await prefs.remove(historyKey);
+
+}
+
+
+//==================================================
+// 🏆 الترتيب
+//==================================================
+
+static const String leaderboardKey =
+    "puzzle_leaderboard";
+
+
+static Future<List<Map<String,dynamic>>>
+getLeaderboard() async {
+
+  final prefs = await _prefs;
+
+
+  final data =
+      jsonDecode(
+        prefs.getString(leaderboardKey) ?? "[]",
+      );
+
+
+  return List<Map<String,dynamic>>.from(
+    data,
+  );
+
+}
+
+
+
+static Future<void> saveLeaderboardScore(
+    Map<String,dynamic> score,
+    ) async {
+
+
+  final list =
+      await getLeaderboard();
+
+
+  list.add(score);
+
+
+  await (await _prefs).setString(
+    leaderboardKey,
+    jsonEncode(list),
+  );
+
+
+}
+
+
+//==================================================
+// 💾 حالات المراحل
+//==================================================
+
+static const String statesKey =
+    "puzzle_states";
+
+
+
+static Future<void> savePuzzleState(
+    String levelId,
+    Map<String,dynamic> state,
+    ) async {
+
+
+  final prefs = await _prefs;
+
+
+  final all =
+      jsonDecode(
+        prefs.getString(statesKey) ?? "{}",
+      );
+
+
+  all[levelId] = state;
+
+
+  await prefs.setString(
+    statesKey,
+    jsonEncode(all),
+  );
+
+
+}
+
+
+
+static Future<Map<String,dynamic>?>
+getPuzzleState(
+    String levelId,
+    ) async {
+
+
+  final prefs = await _prefs;
+
+
+  final all =
+      jsonDecode(
+        prefs.getString(statesKey) ?? "{}",
+      );
+
+
+  if(!all.containsKey(levelId)){
+
+    return null;
+
+  }
+
+
+  return Map<String,dynamic>.from(
+    all[levelId],
+  );
+
+
+}
+
+
+
+static Future<void> clearPuzzleState(
+    String levelId,
+    ) async {
+
+
+  final prefs = await _prefs;
+
+
+  final all =
+      jsonDecode(
+        prefs.getString(statesKey) ?? "{}",
+      );
+
+
+  all.remove(levelId);
+
+
+  await prefs.setString(
+    statesKey,
+    jsonEncode(all),
+  );
+
+
+}
+
+
+//==================================================
+// 🎯 أعلى نتيجة
+//==================================================
+
+static const String highScoresKey =
+    "puzzle_high_scores";
+
+
+
+static Future<int> getHighScore(
+    String levelId,
+    ) async {
+
+
+  final prefs = await _prefs;
+
+
+  final data =
+      jsonDecode(
+        prefs.getString(highScoresKey) ?? "{}",
+      );
+
+
+  return data[levelId] ?? 0;
+
+
+}
+
+
+
+static Future<void> saveHighScore(
+    String levelId,
+    int score,
+    ) async {
+
+
+  final prefs = await _prefs;
+
+
+  final data =
+      jsonDecode(
+        prefs.getString(highScoresKey) ?? "{}",
+      );
+
+
+  data[levelId] = score;
+
+
+  await prefs.setString(
+    highScoresKey,
+    jsonEncode(data),
+  );
+
+
+}
+
+
+//==================================================
+// ⏱ وقت اللعب
+//==================================================
+
+static const String playTimeKey =
+    "puzzle_play_time";
+
+
+
+static Future<void> addPlayTime(
+    int seconds,
+    ) async {
+
+
+  final prefs = await _prefs;
+
+
+  final current =
+      prefs.getInt(playTimeKey) ?? 0;
+
+
+  await prefs.setInt(
+    playTimeKey,
+    current + seconds,
+  );
+
+
+}
+
+
+//==================================================
+// 👤 الملف الشخصي
+//==================================================
+
+static const String playerNameKey =
+    "puzzle_player_name";
+
+
+static Future<void> savePlayerName(
+    String name,
+    ) async {
+
+
+  final prefs = await _prefs;
+
+
+  await prefs.setString(
+    playerNameKey,
+    name,
+  );
+
+
+}
+
+
+
+static Future<String> getPlayerName() async {
+
+
+  final prefs = await _prefs;
+
+
+  return prefs.getString(playerNameKey) ?? "لاعب";
+
+
+}
+
+
+//==================================================
+// 🌐 اللغة
+//==================================================
+
+static const String languageKey =
+    "puzzle_language";
+
+
+static Future<void> saveLanguage(
+    String language,
+    ) async {
+
+
+  final prefs = await _prefs;
+
+
+  await prefs.setString(
+    languageKey,
+    language,
+  );
+
+
+}
+
+
+
+static Future<String> getLanguage() async {
+
+
+  final prefs = await _prefs;
+
+
+  return prefs.getString(languageKey) ?? "ar";
+
+
+}
+
+
+//==================================================
+// ⚙️ الإعدادات
+//==================================================
+
+static const String soundKey =
+    "puzzle_sound";
+
+static const String vibrationKey =
+    "puzzle_vibration";
+
+static const String darkModeKey =
+    "puzzle_dark_mode";
+
+
+static Future<bool> isSoundEnabled() async {
+
+  return (await _prefs).getBool(soundKey) ?? true;
+
+}
+
+
+
+static Future<void> saveSoundEnabled(
+    bool value,
+    ) async {
+
+  await (await _prefs)
+      .setBool(soundKey,value);
+
+}
+
+
+
+static Future<bool> isVibrationEnabled() async {
+
+  return (await _prefs)
+      .getBool(vibrationKey) ?? true;
+
+}
+
+
+
+static Future<void> saveVibrationEnabled(
+    bool value,
+    ) async {
+
+  await (await _prefs)
+      .setBool(vibrationKey,value);
+
+}
+
+
+
+static Future<bool> isDarkMode() async {
+
+  return (await _prefs)
+      .getBool(darkModeKey) ?? false;
+
+}
+
+
+
+static Future<void> saveDarkMode(
+    bool value,
+    ) async {
+
+  await (await _prefs)
+      .setBool(darkModeKey,value);
+
+}
+
+
+//==================================================
+// ⭐ التقييم
+//==================================================
+
+static const String ratingKey =
+    "puzzle_rating";
+
+
+static Future<bool> isRated() async {
+
+  return (await _prefs)
+      .containsKey(ratingKey);
+
+}
+
+
+
+static Future<void> saveRating(
+    int rating,
+    ) async {
+
+  await (await _prefs)
+      .setInt(ratingKey,rating);
+
+}
+
+
+
+static Future<int> getRating() async {
+
+  return (await _prefs)
+      .getInt(ratingKey) ?? 0;
+
+}
+
+
+
+static Future<void> resetRating() async {
+
+  await (await _prefs)
+      .remove(ratingKey);
+
+}
+
+
+//==================================================
+// 📚 البرنامج التعليمي
+//==================================================
+
+static const String tutorialKey =
+    "puzzle_tutorial";
+
+
+static Future<bool> isTutorialCompleted() async {
+
+  return (await _prefs)
+      .getBool(tutorialKey) ?? false;
+
+}
+
+
+
+static Future<void> completeTutorial() async {
+
+  await (await _prefs)
+      .setBool(tutorialKey,true);
+
+}
+
+
+
+static Future<void> resetTutorial() async {
+
+  await (await _prefs)
+      .remove(tutorialKey);
+
+}
+
 
   //==================================================
   // 🧹 إعادة ضبط النظام
