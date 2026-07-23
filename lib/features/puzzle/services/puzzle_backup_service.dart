@@ -1,172 +1,35 @@
 import '../managers/puzzle_progress_manager.dart';
 
-
-
 class PuzzleBackupService {
+  const PuzzleBackupService._();
 
+  //==================================================
+  // إنشاء نسخة احتياطية
+  //==================================================
 
-  static Future<Map<String, dynamic>>
-
-  createBackup() async {
-
-
-
-    final stars =
-
-    await PuzzleProgressManager
-
-        .getTotalStars();
-
-
-
-
-
-    final hints =
-
-    await PuzzleProgressManager
-
-        .getHints();
-
-
-
-
-
-    final progress =
-
-    await PuzzleProgressManager
-
-        .getProgress();
-
-
-
-
-
-    return {
-
-
-
-      "stars": stars,
-
-
-      "hints": hints,
-
-
-      "progress": progress,
-
-
-      "date":
-
-      DateTime.now()
-
-          .toIso8601String(),
-
-
-
-    };
-
-
+  static Future<Map<String, dynamic>> createBackup() async {
+    return await PuzzleProgressManager.exportData();
   }
 
-
-
-
-
-
-
+  //==================================================
+  // استعادة نسخة احتياطية
+  //==================================================
 
   static Future<void> restoreBackup(
-
-      Map<String, dynamic> data,
-
-      ) async {
-
-
-
-    if(data.containsKey("stars")){
-
-
-
-      await PuzzleProgressManager
-
-          .saveStars(
-
-        data["stars"],
-
-      );
-
-
-    }
-
-
-
-
-
-    if(data.containsKey("hints")){
-
-
-
-      await PuzzleProgressManager
-
-          .saveHints(
-
-        data["hints"],
-
-      );
-
-
-    }
-
-
-
-
-
-    if(data.containsKey("progress")){
-
-
-
-      await PuzzleProgressManager
-
-          .restoreProgress(
-
-        data["progress"],
-
-      );
-
-
-    }
-
-
+    Map<String, dynamic> data,
+  ) async {
+    await PuzzleProgressManager.importData(
+      data,
+    );
   }
 
-
-
-
-
-
-
+  //==================================================
+  // التحقق من صحة النسخة
+  //==================================================
 
   static bool isValidBackup(
-
-      Map<String, dynamic> data,
-
-      ) {
-
-
-
-    return data.containsKey(
-
-      "stars",
-
-    ) &&
-
-        data.containsKey(
-
-          "progress",
-
-        );
-
-
+    Map<String, dynamic> data,
+  ) {
+    return data.isNotEmpty;
   }
-
-
 }
