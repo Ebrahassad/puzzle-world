@@ -1,8 +1,11 @@
 import '../managers/puzzle_progress_manager.dart';
 
 
-
 class PuzzleSettingsService {
+
+
+  const PuzzleSettingsService._();
+
 
 
   static Future<Map<String, dynamic>>
@@ -10,59 +13,33 @@ class PuzzleSettingsService {
   getSettings() async {
 
 
-
     final sound =
-
-    await PuzzleProgressManager
-
-        .isSoundEnabled();
-
-
-
+        await PuzzleProgressManager
+            .isSoundEnabled();
 
 
     final darkMode =
-
-    await PuzzleProgressManager
-
-        .isDarkMode();
-
-
-
+        await PuzzleProgressManager
+            .isDarkMode();
 
 
     final vibration =
-
-    await PuzzleProgressManager
-
-        .isVibrationEnabled();
-
-
-
+        await PuzzleProgressManager
+            .isVibrationEnabled();
 
 
     return {
 
-
-
       "sound": sound,
-
 
       "darkMode": darkMode,
 
-
       "vibration": vibration,
-
-
 
     };
 
 
   }
-
-
-
-
 
 
 
@@ -74,9 +51,7 @@ class PuzzleSettingsService {
       ) async {
 
 
-
     await PuzzleProgressManager
-
         .saveSoundEnabled(
 
       value,
@@ -89,10 +64,6 @@ class PuzzleSettingsService {
 
 
 
-
-
-
-
   static Future<void> setDarkMode(
 
       bool value,
@@ -100,9 +71,7 @@ class PuzzleSettingsService {
       ) async {
 
 
-
     await PuzzleProgressManager
-
         .saveDarkMode(
 
       value,
@@ -115,10 +84,6 @@ class PuzzleSettingsService {
 
 
 
-
-
-
-
   static Future<void> setVibration(
 
       bool value,
@@ -126,9 +91,7 @@ class PuzzleSettingsService {
       ) async {
 
 
-
     await PuzzleProgressManager
-
         .saveVibrationEnabled(
 
       value,
@@ -141,16 +104,10 @@ class PuzzleSettingsService {
 
 
 
-
-
-
-
   static Future<void> resetSettings() async {
 
 
-
     await PuzzleProgressManager
-
         .saveSoundEnabled(
 
       true,
@@ -158,11 +115,7 @@ class PuzzleSettingsService {
     );
 
 
-
-
-
     await PuzzleProgressManager
-
         .saveDarkMode(
 
       false,
@@ -170,11 +123,7 @@ class PuzzleSettingsService {
     );
 
 
-
-
-
     await PuzzleProgressManager
-
         .saveVibrationEnabled(
 
       true,
