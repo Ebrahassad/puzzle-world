@@ -4,6 +4,10 @@ import '../managers/puzzle_progress_manager.dart';
 class PuzzleCloudService {
 
 
+  const PuzzleCloudService._();
+
+
+
   //==================================================
   // 📤 تجهيز بيانات التقدم للرفع
   //==================================================
@@ -13,49 +17,45 @@ class PuzzleCloudService {
   uploadProgress() async {
 
 
-    final data = {
+    return {
 
 
       "stars":
 
-      await PuzzleProgressManager
-
-          .getTotalStars(),
-
+      await PuzzleProgressManager.getTotalStars(),
 
 
 
       "completed":
 
-      await PuzzleProgressManager
-
-          .getCompletedPuzzleCount(),
-
+      await PuzzleProgressManager.getCompletedCount(),
 
 
 
       "hints":
 
-      await PuzzleProgressManager
+      await PuzzleProgressManager.getHints(),
 
-          .getHints(),
 
+
+      "coins":
+
+      await PuzzleProgressManager.getCoins(),
+
+
+
+      "gems":
+
+      await PuzzleProgressManager.getGems(),
 
 
 
       "timestamp":
 
-      DateTime.now()
-
-          .toIso8601String(),
+      DateTime.now().toIso8601String(),
 
 
     };
-
-
-
-
-    return data;
 
 
   }
@@ -74,7 +74,7 @@ class PuzzleCloudService {
 
   restoreProgress(
 
-      Map<String, dynamic> data,
+      Map<String,dynamic> data,
 
       ) async {
 
@@ -82,19 +82,36 @@ class PuzzleCloudService {
     try {
 
 
+
       if(data.containsKey("stars")){
 
 
-        await PuzzleProgressManager
+        final current =
 
-            .saveStars(
+        await PuzzleProgressManager.getTotalStars();
 
-          data["stars"] as int,
 
-        );
+        final value =
+
+        (data["stars"] as int) - current;
+
+
+
+        if(value > 0){
+
+
+          await PuzzleProgressManager.addStars(
+
+            value,
+
+          );
+
+
+        }
 
 
       }
+
 
 
 
@@ -103,13 +120,62 @@ class PuzzleCloudService {
       if(data.containsKey("hints")){
 
 
-        await PuzzleProgressManager
+        final current =
 
-            .saveHints(
+        await PuzzleProgressManager.getHints();
 
-          data["hints"] as int,
 
-        );
+        final value =
+
+        (data["hints"] as int) - current;
+
+
+
+        if(value > 0){
+
+
+          await PuzzleProgressManager.addHints(
+
+            value,
+
+          );
+
+
+        }
+
+
+      }
+
+
+
+
+
+
+      if(data.containsKey("coins")){
+
+
+        final current =
+
+        await PuzzleProgressManager.getCoins();
+
+
+        final value =
+
+        (data["coins"] as int) - current;
+
+
+
+        if(value > 0){
+
+
+          await PuzzleProgressManager.addCoins(
+
+            value,
+
+          );
+
+
+        }
 
 
       }
@@ -118,20 +184,35 @@ class PuzzleCloudService {
 
 
 
-      if(data.containsKey("completed")){
+
+      if(data.containsKey("gems")){
 
 
-        await PuzzleProgressManager
+        final current =
 
-            .restoreCompleted(
+        await PuzzleProgressManager.getGems();
 
-          data["completed"] as int,
 
-        );
+        final value =
+
+        (data["gems"] as int) - current;
+
+
+
+        if(value > 0){
+
+
+          await PuzzleProgressManager.addGems(
+
+            value,
+
+          );
+
+
+        }
 
 
       }
-
 
 
 
@@ -140,12 +221,10 @@ class PuzzleCloudService {
 
 
 
-    } catch(_){
-
+    }catch(_){
 
 
       return false;
-
 
 
     }
@@ -160,20 +239,13 @@ class PuzzleCloudService {
 
 
   //==================================================
-  // 🔄 مزامنة التقدم
-  // حالياً محلية
-  // لاحقاً تربط Firebase
+  // 🔄 مزامنة
   //==================================================
 
-  static Future<bool>
-
-  sync() async {
+  static Future<bool> sync() async {
 
 
-    final data =
-
-    await uploadProgress();
-
+    final data = await uploadProgress();
 
 
 
