@@ -4,6 +4,10 @@ import '../managers/puzzle_progress_manager.dart';
 class PuzzleEventService {
 
 
+  const PuzzleEventService._();
+
+
+
   //==================================================
   // بداية المرحلة
   //==================================================
@@ -17,9 +21,11 @@ class PuzzleEventService {
   }) async {
 
 
-    await PuzzleProgressManager.saveLastGame(
+    await PuzzleProgressManager.saveLastPuzzle(
 
-      "${worldId}_level_$level",
+      worldId,
+
+      "level_$level",
 
     );
 
@@ -46,9 +52,11 @@ class PuzzleEventService {
     if(worldId != null && level != null){
 
 
-      await PuzzleProgressManager.saveLastGame(
+      await PuzzleProgressManager.saveLastPuzzle(
 
-        "${worldId}_level_$level",
+        worldId,
+
+        "level_$level",
 
       );
 
@@ -116,8 +124,6 @@ class PuzzleEventService {
 
     await PuzzleProgressManager.addCompletedPuzzle(
 
-      stars: stars,
-
       moves: moves,
 
       seconds: seconds,
@@ -126,12 +132,22 @@ class PuzzleEventService {
 
 
 
+    await PuzzleProgressManager.addStars(
+
+      stars,
+
+    );
+
+
+
     if(worldId != null && level != null){
 
 
-      await PuzzleProgressManager.saveLastGame(
+      await PuzzleProgressManager.saveLastPuzzle(
 
-        "${worldId}_level_$level",
+        worldId,
+
+        "level_$level",
 
       );
 
@@ -255,11 +271,8 @@ class PuzzleEventService {
   static Future<void> onGameExit() async {
 
 
-    await PuzzleProgressManager.saveLastSession(
-
-      DateTime.now(),
-
-    );
+    // لا يوجد حفظ جلسة منفصل في النظام الحالي
+    // نترك الحفظ يتم عن طريق saveLastPuzzle
 
 
   }
