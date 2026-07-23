@@ -3,7 +3,12 @@ import '../engine/puzzle_piece.dart';
 import '../managers/puzzle_progress_manager.dart';
 
 
+
 class PuzzleSaveService {
+
+
+  const PuzzleSaveService._();
+
 
 
   //==================================================
@@ -47,12 +52,10 @@ class PuzzleSaveService {
 
 
   //==================================================
-  // 📂 تحميل اللعبة المحفوظة
+  // 📂 تحميل اللعبة
   //==================================================
 
-  static Future<Map<String,dynamic>?>
-
-  loadGame() async {
+  static Future<Map<String,dynamic>?> loadGame() async {
 
 
     return await PuzzleProgressManager.loadProgress();
@@ -65,7 +68,7 @@ class PuzzleSaveService {
 
 
   //==================================================
-  // هل يوجد حفظ لهذه المرحلة
+  // هل يوجد حفظ
   //==================================================
 
   static Future<bool> hasSavedGame({
@@ -78,6 +81,7 @@ class PuzzleSaveService {
 
 
     final saved = await loadGame();
+
 
 
     if(saved == null){
@@ -121,29 +125,38 @@ class PuzzleSaveService {
 
   static Future<void> saveLastPlayed({
 
-  required String worldId,
+    required String worldId,
 
-  required String levelId,
+    required String levelId,
 
-}) async {
+  }) async {
 
-  await PuzzleProgressManager.saveLastGame(
-    "${worldId}_$levelId",
-  );
 
-}
+    await PuzzleProgressManager.saveLastPuzzle(
+
+      worldId,
+
+      levelId,
+
+    );
+
+
+  }
+
+
+
 
 
   //==================================================
   // جلب آخر مرحلة لعب
   //==================================================
 
-  static Future<String?>
+  static Future<Map<String,String>?>
 
   getLastPlayed() async {
 
 
-    return await PuzzleProgressManager.getLastGame();
+    return await PuzzleProgressManager.getLastPuzzle();
 
 
   }
@@ -154,36 +167,49 @@ class PuzzleSaveService {
 
   //==================================================
   // حفظ تلقائي بعد الفوز
-  // مستخدم من PuzzleWinScreen
   //==================================================
 
-    static Future<void> autoSavePuzzle({
+  static Future<void> autoSavePuzzle({
 
-  required String worldId,
+    required String worldId,
 
-  required int level,
+    required int level,
 
-}) async {
+  }) async {
 
-  await PuzzleProgressManager.saveLastGame(
-    "${worldId}_level_$level",
-  );
 
-  await PuzzleProgressManager.saveLastSession(
-    DateTime.now(),
-  );
+    await PuzzleProgressManager.saveLastPuzzle(
 
-}
+      worldId,
+
+      "level_$level",
+
+    );
+
+
+  }
+
+
+
 
 
   //==================================================
-  // 🗑 مسح آخر لعبة
+  // مسح آخر لعبة
   //==================================================
 
   static Future<void> clearLastPlayed() async {
 
-  await PuzzleProgressManager.saveLastGame(
-    "",
-  );
+
+    await PuzzleProgressManager.saveLastPuzzle(
+
+      "",
+
+      "",
+
+    );
+
+
+  }
+
 
 }
