@@ -2,303 +2,73 @@ import 'dart:convert';
 
 import '../managers/puzzle_progress_manager.dart';
 
-
-
 class PuzzleBackupManagerService {
+  const PuzzleBackupManagerService._();
 
+  //==================================================
+  // إنشاء نسخة احتياطية
+  //==================================================
 
   static Future<String> createBackup() async {
+    final data =
+        await PuzzleProgressManager.exportData();
 
-
-
-    final backup = {
-
-
-
-      "stars":
-
-      await PuzzleProgressManager
-
-          .getTotalStars(),
-
-
-
-      "hints":
-
-      await PuzzleProgressManager
-
-          .getHints(),
-
-
-
-      "completed":
-
-      await PuzzleProgressManager
-
-          .getCompletedPuzzleCount(),
-
-
-
-      "levels":
-
-      await PuzzleProgressManager
-
-          .getProgress(),
-
-
-
-      "createdAt":
-
-      DateTime.now()
-
-          .toIso8601String(),
-
-
-
-    };
-
-
-
-
-
-    return jsonEncode(
-
-      backup,
-
-    );
-
-
+    return jsonEncode(data);
   }
 
-
-
-
-
-
-
+  //==================================================
+  // استعادة نسخة احتياطية
+  //==================================================
 
   static Future<bool> restoreBackup(
-
-      String backup,
-
-      ) async {
-
-
-
+    String backup,
+  ) async {
     try {
+      final decoded = jsonDecode(backup);
 
-
-
-      final data =
-
-      jsonDecode(
-
-        backup,
-
-      );
-
-
-
-
-
-      if(data is! Map){
-
+      if (decoded is! Map<String, dynamic>) {
         return false;
-
       }
 
-
-
-
-
-      if(data.containsKey("stars")){
-
-
-
-        await PuzzleProgressManager
-
-            .saveStars(
-
-          data["stars"],
-
-        );
-
-
-      }
-
-
-
-
-
-      if(data.containsKey("hints")){
-
-
-
-        await PuzzleProgressManager
-
-            .saveHints(
-
-          data["hints"],
-
-        );
-
-
-      }
-
-
-
-
-
-      if(data.containsKey("levels")){
-
-
-
-        await PuzzleProgressManager
-
-            .restoreProgress(
-
-          data["levels"],
-
-        );
-
-
-      }
-
-
-
-
-
-      if(data.containsKey("completed")){
-
-
-
-        await PuzzleProgressManager
-
-            .restoreCompleted(
-
-          data["completed"],
-
-        );
-
-
-      }
-
-
-
-
+      await PuzzleProgressManager.importData(
+        decoded,
+      );
 
       return true;
-
-
-
-    }catch(_){
-
-
-
+    } catch (_) {
       return false;
-
-
-
     }
-
-
   }
 
+  //==================================================
+  // معاينة النسخة
+  //==================================================
 
-
-
-
-
-
-
-  static Map<String,dynamic> preview(
-
-      String backup,
-
-      ) {
-
-
-
+  static Map<String, dynamic> preview(
+    String backup,
+  ) {
     try {
-
-
-
-      return Map<String,dynamic>.from(
-
-        jsonDecode(
-
-          backup,
-
-        ),
-
+      return Map<String, dynamic>.from(
+        jsonDecode(backup),
       );
-
-
-
-    }catch(_){
-
-
-
+    } catch (_) {
       return {};
-
     }
-
-
   }
 
-
-
-
-
-
-
+  //==================================================
+  // التحقق من صحة النسخة
+  //==================================================
 
   static bool validate(
-
-      String backup,
-
-      ) {
-
-
-
+    String backup,
+  ) {
     try {
+      final data = jsonDecode(backup);
 
-
-
-      final data =
-
-      jsonDecode(
-
-        backup,
-
-      );
-
-
-
-
-
-      return data is Map &&
-
-          data.containsKey(
-
-            "stars",
-
-          );
-
-
-
-    }catch(_){
-
-
-
+      return data is Map;
+    } catch (_) {
       return false;
-
-
-
     }
-
-
   }
-
-
 }
