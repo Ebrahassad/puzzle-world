@@ -5,6 +5,15 @@ import '../managers/puzzle_progress_manager.dart';
 class PuzzlePurchaseService {
 
 
+  const PuzzlePurchaseService._();
+
+
+
+
+  //==================================================
+  // 💡 شراء تلميح
+  //==================================================
+
   static Future<bool> buyHint({
 
     required int price,
@@ -15,9 +24,7 @@ class PuzzlePurchaseService {
 
     final stars =
 
-    await PuzzleProgressManager
-
-        .getTotalStars();
+    await PuzzleProgressManager.getTotalStars();
 
 
 
@@ -33,9 +40,7 @@ class PuzzlePurchaseService {
 
 
 
-    await PuzzleProgressManager
-
-        .addStars(
+    await PuzzleProgressManager.addStars(
 
       -price,
 
@@ -45,9 +50,7 @@ class PuzzlePurchaseService {
 
 
 
-    await PuzzleProgressManager
-
-        .addHints(
+    await PuzzleProgressManager.addHints(
 
       1,
 
@@ -69,6 +72,10 @@ class PuzzlePurchaseService {
 
 
 
+  //==================================================
+  // 🔓 شراء فتح مرحلة
+  //==================================================
+
   static Future<bool> buyUnlock({
 
     required String levelId,
@@ -81,9 +88,7 @@ class PuzzlePurchaseService {
 
     final stars =
 
-    await PuzzleProgressManager
-
-        .getTotalStars();
+    await PuzzleProgressManager.getTotalStars();
 
 
 
@@ -99,9 +104,7 @@ class PuzzlePurchaseService {
 
 
 
-    await PuzzleProgressManager
-
-        .addStars(
+    await PuzzleProgressManager.addStars(
 
       -price,
 
@@ -111,9 +114,7 @@ class PuzzlePurchaseService {
 
 
 
-    await PuzzleProgressManager
-
-        .unlockLevel(
+    await PuzzleProgressManager.unlockLevel(
 
       levelId,
 
@@ -135,6 +136,10 @@ class PuzzlePurchaseService {
 
 
 
+  //==================================================
+  // ❤️ شراء حياة إضافية
+  //==================================================
+
   static Future<bool> buyExtraLife({
 
     required int price,
@@ -145,9 +150,7 @@ class PuzzlePurchaseService {
 
     final stars =
 
-    await PuzzleProgressManager
-
-        .getTotalStars();
+    await PuzzleProgressManager.getTotalStars();
 
 
 
@@ -163,9 +166,7 @@ class PuzzlePurchaseService {
 
 
 
-    await PuzzleProgressManager
-
-        .addStars(
+    await PuzzleProgressManager.addStars(
 
       -price,
 
@@ -175,9 +176,7 @@ class PuzzlePurchaseService {
 
 
 
-    await PuzzleProgressManager
-
-        .addLives(
+    await PuzzleProgressManager.addLives(
 
       1,
 
@@ -199,13 +198,14 @@ class PuzzlePurchaseService {
 
 
 
+  //==================================================
+  // ⭐ الرصيد الحالي
+  //==================================================
+
   static Future<int> getBalance() async {
 
 
-
-    return await PuzzleProgressManager
-
-        .getTotalStars();
+    return await PuzzleProgressManager.getTotalStars();
 
 
   }
