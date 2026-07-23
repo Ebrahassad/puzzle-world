@@ -5,6 +5,10 @@ import 'dart:async';
 class PuzzleTimerService {
 
 
+  PuzzleTimerService();
+
+  
+
   Timer? _timer;
 
 
@@ -90,7 +94,6 @@ class PuzzleTimerService {
   void pause(){
 
 
-
     _timer?.cancel();
 
 
@@ -133,7 +136,6 @@ class PuzzleTimerService {
   void reset(){
 
 
-
     _timer?.cancel();
 
 
@@ -153,7 +155,6 @@ class PuzzleTimerService {
 
 
   void dispose(){
-
 
 
     _timer?.cancel();
