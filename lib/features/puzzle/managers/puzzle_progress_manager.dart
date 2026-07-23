@@ -2353,32 +2353,5 @@ static Future<void> resetAll() async {
 
 
 }
-  //==================================================
-  // 🧹 إعادة ضبط النظام
-  //==================================================
-
-
-  static Future<void> resetAll() async {
-
-  final prefs = await _prefs;
-
-  await prefs.remove(progressKey);
-
-  await prefs.remove(completedLevelsKey);
-
-  await prefs.remove(unlockedLevelsKey);
-
-  await prefs.remove(levelStarsKey);
-
-  await prefs.remove(starsKey);
-
-  await prefs.remove(coinsKey);
-
-  await prefs.remove(gemsKey);
-
-  await prefs.remove(hintsKey);
-
-}
-
-
+  
 }
