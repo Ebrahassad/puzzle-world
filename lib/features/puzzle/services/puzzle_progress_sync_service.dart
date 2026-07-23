@@ -5,6 +5,15 @@ import '../managers/puzzle_progress_manager.dart';
 class PuzzleProgressSyncService {
 
 
+  const PuzzleProgressSyncService._();
+
+
+
+
+  //==================================================
+  // 📊 ملخص التقدم
+  //==================================================
+
   static Future<Map<String, dynamic>>
 
   getProgressSummary() async {
@@ -67,6 +76,10 @@ class PuzzleProgressSyncService {
 
 
 
+  //==================================================
+  // 🧩 مزامنة مرحلة
+  //==================================================
+
   static Future<void> syncLevel({
 
     required String levelId,
@@ -128,6 +141,10 @@ class PuzzleProgressSyncService {
 
 
 
+  //==================================================
+  // 🌍 مزامنة آخر عالم
+  //==================================================
+
   static Future<void> syncWorld({
 
     required String worldId,
@@ -153,6 +170,10 @@ class PuzzleProgressSyncService {
 
 
 
+
+  //==================================================
+  // 🔄 إعادة المزامنة
+  //==================================================
 
   static Future<void> resetSync() async {
 
