@@ -5,8 +5,16 @@ import '../managers/puzzle_progress_manager.dart';
 class PuzzleTutorialService {
 
 
-  static Future<bool> isCompleted() async {
+  const PuzzleTutorialService._();
 
+
+
+
+  //==================================================
+  // 📘 هل تم إنهاء الشرح
+  //==================================================
+
+  static Future<bool> isCompleted() async {
 
 
     return await PuzzleProgressManager
@@ -23,8 +31,11 @@ class PuzzleTutorialService {
 
 
 
-  static Future<void> complete() async {
+  //==================================================
+  // ✅ إنهاء الشرح
+  //==================================================
 
+  static Future<void> complete() async {
 
 
     await PuzzleProgressManager
@@ -41,8 +52,11 @@ class PuzzleTutorialService {
 
 
 
-  static Future<void> reset() async {
+  //==================================================
+  // 🔄 إعادة الشرح
+  //==================================================
 
+  static Future<void> reset() async {
 
 
     await PuzzleProgressManager
@@ -59,14 +73,16 @@ class PuzzleTutorialService {
 
 
 
+  //==================================================
+  // 📚 خطوات التعليم
+  //==================================================
+
   static List<Map<String, String>>
 
   getSteps() {
 
 
-
     return [
-
 
 
       {
@@ -78,7 +94,6 @@ class PuzzleTutorialService {
         "description":
 
         "اسحب قطع الصورة وضعها في المكان الصحيح",
-
 
 
       },
@@ -98,7 +113,6 @@ class PuzzleTutorialService {
         "رتب جميع القطع حتى تكتمل الصورة",
 
 
-
       },
 
 
@@ -114,7 +128,6 @@ class PuzzleTutorialService {
         "description":
 
         "أنهِ المراحل لتحصل على نجوم ومكافآت",
-
 
 
       },
@@ -134,13 +147,10 @@ class PuzzleTutorialService {
         "يمكنك استخدام النجوم أو الإعلانات للحصول على تلميحات",
 
 
-
       },
 
 
-
     ];
-
 
 
   }
@@ -152,8 +162,11 @@ class PuzzleTutorialService {
 
 
 
-  static int getStepsCount(){
+  //==================================================
+  // 🔢 عدد الخطوات
+  //==================================================
 
+  static int getStepsCount(){
 
 
     return getSteps().length;
