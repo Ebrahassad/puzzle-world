@@ -167,48 +167,25 @@ class _PuzzleHomeScreenState
 
     return Scaffold(
 
+  body:Container(
 
+    decoration: const BoxDecoration(
 
-      body:Container(
+      image: DecorationImage(
 
-
-
-        decoration:const BoxDecoration(
-
-
-
-          gradient:LinearGradient(
-
-
-
-            colors:[
-
-              Color(0xff89F7FE),
-
-              Color(0xff66A6FF),
-
-            ],
-
-
-
-            begin:
-
-            Alignment.topCenter,
-
-
-
-            end:
-
-            Alignment.bottomCenter,
-
-
-
-          ),
-
-
-
+        image: AssetImage(
+          "assets/images/background/home_background.png",
         ),
 
+        fit: BoxFit.cover,
+
+      ),
+
+    ),
+
+    child: Container(
+
+      color: Colors.black.withOpacity(0.15),
 
 
 
