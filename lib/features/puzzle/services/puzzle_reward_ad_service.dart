@@ -7,17 +7,22 @@ import '../managers/puzzle_progress_manager.dart';
 class PuzzleRewardAdService {
 
 
-  static Future<bool> watchAdForHint() async {
 
+  const PuzzleRewardAdService._();
+
+
+
+
+  //==================================================
+  // 💡 إعلان تلميح
+  //==================================================
+
+  static Future<bool> watchAdForHint() async {
 
 
     final watched =
 
-    await RewardAdService
-
-        .showRewardAd();
-
-
+    await RewardAdService.showRewardAd();
 
 
 
@@ -29,17 +34,11 @@ class PuzzleRewardAdService {
 
 
 
-
-
-    await PuzzleProgressManager
-
-        .addHints(
+    await PuzzleProgressManager.addHints(
 
       1,
 
     );
-
-
 
 
 
@@ -54,6 +53,9 @@ class PuzzleRewardAdService {
 
 
 
+  //==================================================
+  // 🔓 إعلان فتح مرحلة
+  //==================================================
 
   static Future<bool> watchAdForUnlock({
 
@@ -65,11 +67,7 @@ class PuzzleRewardAdService {
 
     final watched =
 
-    await RewardAdService
-
-        .showRewardAd();
-
-
+    await RewardAdService.showRewardAd();
 
 
 
@@ -81,11 +79,7 @@ class PuzzleRewardAdService {
 
 
 
-
-
-    await PuzzleProgressManager
-
-        .unlockLevel(
+    await PuzzleProgressManager.unlockLevel(
 
       levelId,
 
@@ -93,8 +87,6 @@ class PuzzleRewardAdService {
 
 
 
-
-
     return true;
 
 
@@ -106,6 +98,9 @@ class PuzzleRewardAdService {
 
 
 
+  //==================================================
+  // ⭐ إعلان نجمة إضافية
+  //==================================================
 
   static Future<bool> watchAdForExtraStars() async {
 
@@ -113,11 +108,7 @@ class PuzzleRewardAdService {
 
     final watched =
 
-    await RewardAdService
-
-        .showRewardAd();
-
-
+    await RewardAdService.showRewardAd();
 
 
 
@@ -129,17 +120,11 @@ class PuzzleRewardAdService {
 
 
 
-
-
-    await PuzzleProgressManager
-
-        .addStars(
+    await PuzzleProgressManager.addStars(
 
       1,
 
     );
-
-
 
 
 
@@ -154,17 +139,18 @@ class PuzzleRewardAdService {
 
 
 
+  //==================================================
+  // 🎁 مضاعفة المكافأة
+  //==================================================
 
   static Future<bool> watchAdForDoubleReward() async {
 
 
-
-    return await RewardAdService
-
-        .showDoubleRewardAd();
+    return await RewardAdService.showDoubleRewardAd();
 
 
   }
+
 
 
 }
