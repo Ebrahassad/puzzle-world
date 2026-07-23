@@ -852,6 +852,10 @@ static Future<void> unlockWorld(
 
 
 
+//==================================================
+// 🌍 التحقق من فتح العالم
+//==================================================
+
 static Future<bool> isWorldUnlocked(
     String worldId,
     ) async {
@@ -866,10 +870,17 @@ static Future<bool> isWorldUnlocked(
       ) ?? [];
 
 
+  // 🌟 العالم الأول مفتوح تلقائياً
+  if(worldId == "world_1"){
+
+    return true;
+
+  }
+
+
   return worlds.contains(worldId);
 
 }
-
 
 
 static Future<void> unlockAllLevels(
@@ -1260,7 +1271,42 @@ static Future<void> addTotalMoves(
 
   }
 
+//==================================================
+// 🎯 المهام اليومية
+//==================================================
 
+static Future<List<Map<String,dynamic>>>
+getDailyMissions() async {
+
+  final prefs = await _prefs;
+
+  final data =
+      jsonDecode(
+        prefs.getString(dailyMissionKey) ?? "[]",
+      );
+
+
+  return List<Map<String,dynamic>>.from(
+    data,
+  );
+
+}
+
+
+
+static Future<void> saveDailyMissions(
+    List<Map<String,dynamic>> missions,
+    ) async {
+
+  final prefs = await _prefs;
+
+
+  await prefs.setString(
+    dailyMissionKey,
+    jsonEncode(missions),
+  );
+
+}
 
 
 
