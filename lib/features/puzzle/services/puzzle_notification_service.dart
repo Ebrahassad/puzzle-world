@@ -5,6 +5,11 @@ import 'package:flutter/material.dart';
 class PuzzleNotificationService {
 
 
+  const PuzzleNotificationService._();
+
+
+
+
   static void showSuccess({
 
     required BuildContext context,
