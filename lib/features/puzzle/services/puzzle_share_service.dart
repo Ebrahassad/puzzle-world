@@ -5,6 +5,15 @@ import 'package:flutter/services.dart';
 class PuzzleShareService {
 
 
+  const PuzzleShareService._();
+
+
+
+
+  //==================================================
+  // 🏆 نسخ نتيجة الفوز
+  //==================================================
+
   static Future<void> shareResult({
 
     required String worldName,
@@ -51,6 +60,10 @@ class PuzzleShareService {
 
 
 
+  //==================================================
+  // 📋 نسخ نص
+  //==================================================
+
   static Future<void> copyResult({
 
     required String text,
@@ -78,6 +91,10 @@ class PuzzleShareService {
 
 
 
+
+  //==================================================
+  // 📝 إنشاء نص المشاركة
+  //==================================================
 
   static String buildShareText({
 
