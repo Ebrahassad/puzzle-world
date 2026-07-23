@@ -4,13 +4,15 @@ import '../managers/puzzle_progress_manager.dart';
 class PuzzleAchievementService {
 
 
+  const PuzzleAchievementService._();
+
+
+
   //==================================================
-  // جلب الإنجازات
+  // 🏆 جلب الإنجازات
   //==================================================
 
-  static Future<List<String>>
-
-  getAchievements() async {
+  static Future<List<String>> getAchievements() async {
 
 
     final result = <String>[];
@@ -18,22 +20,19 @@ class PuzzleAchievementService {
 
 
     final stars =
-        await PuzzleProgressManager
-            .getTotalStars();
+        await PuzzleProgressManager.getTotalStars();
 
 
 
 
     final completed =
-        await PuzzleProgressManager
-            .getCompletedPuzzleCount();
+        await PuzzleProgressManager.getCompletedCount();
 
 
 
 
     final hints =
-        await PuzzleProgressManager
-            .getHints();
+        await PuzzleProgressManager.getHints();
 
 
 
@@ -105,12 +104,10 @@ class PuzzleAchievementService {
 
 
   //==================================================
-  // فحص إنجاز معين
+  // هل الإنجاز موجود
   //==================================================
 
-  static Future<bool>
-
-  hasAchievement(
+  static Future<bool> hasAchievement(
 
       String name,
 
@@ -122,12 +119,7 @@ class PuzzleAchievementService {
 
 
 
-
-    return achievements.contains(
-
-      name,
-
-    );
+    return achievements.contains(name);
 
 
   }
@@ -142,14 +134,11 @@ class PuzzleAchievementService {
   // عدد الإنجازات
   //==================================================
 
-  static Future<int>
-
-  getAchievementCount() async {
+  static Future<int> getAchievementCount() async {
 
 
     final achievements =
         await getAchievements();
-
 
 
 
@@ -165,13 +154,10 @@ class PuzzleAchievementService {
 
 
   //==================================================
-  // يستخدم بعد إكمال المرحلة
-  // من PuzzleWinScreen
+  // فحص الإنجازات بعد الفوز
   //==================================================
 
-  static Future<void>
-
-  checkPuzzleAchievements({
+  static Future<void> checkPuzzleAchievements({
 
     String? worldId,
 
@@ -181,9 +167,6 @@ class PuzzleAchievementService {
 
   }) async {
 
-
-    // الإنجازات تعتمد على الإحصائيات الحالية
-    // ويتم حسابها تلقائياً من getAchievements()
 
     await getAchievements();
 
