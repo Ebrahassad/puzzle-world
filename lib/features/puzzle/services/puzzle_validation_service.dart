@@ -5,6 +5,15 @@ import '../engine/puzzle_piece.dart';
 class PuzzleValidationService {
 
 
+  const PuzzleValidationService._();
+
+
+
+
+  //==================================================
+  // 🧩 فحص صحة القطعة
+  //==================================================
+
   static bool isPieceCorrect({
 
     required PuzzlePiece piece,
@@ -12,7 +21,6 @@ class PuzzleValidationService {
     required double pieceSize,
 
   }) {
-
 
 
     return piece.isCorrect(
@@ -31,12 +39,15 @@ class PuzzleValidationService {
 
 
 
+  //==================================================
+  // 🏆 هل البازل مكتمل
+  //==================================================
+
   static bool isPuzzleCompleted(
 
       List<PuzzlePiece> pieces,
 
       ) {
-
 
 
     return pieces.every(
@@ -55,12 +66,15 @@ class PuzzleValidationService {
 
 
 
+  //==================================================
+  // ✅ عدد القطع الصحيحة
+  //==================================================
+
   static int getPlacedPiecesCount(
 
       List<PuzzlePiece> pieces,
 
       ) {
-
 
 
     return pieces.where(
@@ -79,12 +93,15 @@ class PuzzleValidationService {
 
 
 
+  //==================================================
+  // ⏳ القطع المتبقية
+  //==================================================
+
   static int getRemainingPiecesCount(
 
       List<PuzzlePiece> pieces,
 
       ) {
-
 
 
     return pieces.where(
@@ -103,12 +120,15 @@ class PuzzleValidationService {
 
 
 
+  //==================================================
+  // 📊 نسبة الإنجاز
+  //==================================================
+
   static double getProgress(
 
       List<PuzzlePiece> pieces,
 
       ) {
-
 
 
     if(pieces.isEmpty){
@@ -137,12 +157,15 @@ class PuzzleValidationService {
 
 
 
+  //==================================================
+  // 🚚 هل يمكن تحريك القطعة
+  //==================================================
+
   static bool canMovePiece(
 
       PuzzlePiece piece,
 
       ) {
-
 
 
     return !piece.placed;
@@ -157,12 +180,15 @@ class PuzzleValidationService {
 
 
 
+  //==================================================
+  // ⚠️ وجود قطع غير صالحة
+  //==================================================
+
   static bool hasInvalidPieces(
 
       List<PuzzlePiece> pieces,
 
       ) {
-
 
 
     return pieces.any(
