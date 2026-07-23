@@ -1,73 +1,78 @@
 import 'dart:convert';
 
-
-
 import '../managers/puzzle_progress_manager.dart';
-
+import '../managers/reward_manager.dart';
 
 
 class PuzzleExportService {
 
 
-  static Future<String> exportData() async {
+  const PuzzleExportService._();
 
+
+
+  //==================================================
+  // 📤 تصدير بيانات اللاعب
+  //==================================================
+
+  static Future<String> exportData() async {
 
 
     final data = {
 
 
-
+      // ⭐ النجوم
       "stars":
-
-      await PuzzleProgressManager
-
-          .getTotalStars(),
+      await PuzzleProgressManager.getTotalStars(),
 
 
 
+      // 💡 التلميحات
       "hints":
-
-      await PuzzleProgressManager
-
-          .getHints(),
+      await PuzzleProgressManager.getHints(),
 
 
 
+      // 🧩 تقدم البازل
       "progress":
-
-      await PuzzleProgressManager
-
-          .getProgress(),
+      await PuzzleProgressManager.getProgress(),
 
 
 
+      // 🏆 عدد المراحل المكتملة
       "completed":
-
-      await PuzzleProgressManager
-
-          .getCompletedPuzzleCount(),
+      await PuzzleProgressManager.getCompletedPuzzleCount(),
 
 
 
+      // 💰 العملات
+      "coins":
+      await RewardManager.getCoins(),
+
+
+
+      // 💎 الجواهر
+      "gems":
+      await RewardManager.getGems(),
+
+
+
+      // آخر عالم ومرحلة
+      "lastPuzzle":
+      await PuzzleProgressManager.getLastPuzzle(),
+
+
+
+      // تاريخ النسخة
       "date":
-
-      DateTime.now()
-
-          .toIso8601String(),
-
+      DateTime.now().toIso8601String(),
 
 
     };
 
 
 
-
-
-    return jsonEncode(
-
-      data,
-
-    );
+    return jsonEncode(data);
 
 
   }
@@ -77,7 +82,9 @@ class PuzzleExportService {
 
 
 
-
+  //==================================================
+  // 📥 استيراد البيانات
+  //==================================================
 
   static Future<bool> importData(
 
@@ -86,20 +93,10 @@ class PuzzleExportService {
       ) async {
 
 
-
     try {
 
 
-
-      final data =
-
-      jsonDecode(
-
-        json,
-
-      );
-
-
+      final data = jsonDecode(json);
 
 
 
@@ -116,12 +113,9 @@ class PuzzleExportService {
       if(data.containsKey("stars")){
 
 
+        await PuzzleProgressManager.saveStars(
 
-        await PuzzleProgressManager
-
-            .saveStars(
-
-          data["stars"],
+          data["stars"] ?? 0,
 
         );
 
@@ -135,12 +129,73 @@ class PuzzleExportService {
       if(data.containsKey("hints")){
 
 
+        await PuzzleProgressManager.saveHints(
 
-        await PuzzleProgressManager
+          data["hints"] ?? 0,
 
-            .saveHints(
+        );
 
-          data["hints"],
+
+      }
+
+
+
+
+
+      if(data.containsKey("progress")){
+
+
+        await PuzzleProgressManager.restoreProgress(
+
+          data["progress"],
+
+        );
+
+
+      }
+
+
+
+
+
+      if(data.containsKey("completed")){
+
+
+        await PuzzleProgressManager.restoreCompleted(
+
+          data["completed"] ?? 0,
+
+        );
+
+
+      }
+
+
+
+
+
+      if(data.containsKey("coins")){
+
+
+        await RewardManager.saveCoins(
+
+          data["coins"] ?? 0,
+
+        );
+
+
+      }
+
+
+
+
+
+      if(data.containsKey("gems")){
+
+
+        await RewardManager.saveGems(
+
+          data["gems"] ?? 0,
 
         );
 
@@ -158,9 +213,7 @@ class PuzzleExportService {
     }catch(_){
 
 
-
       return false;
-
 
 
     }
@@ -174,6 +227,9 @@ class PuzzleExportService {
 
 
 
+  //==================================================
+  // 👁 معاينة النسخة
+  //==================================================
 
   static Map<String,dynamic> decodePreview(
 
@@ -182,9 +238,7 @@ class PuzzleExportService {
       ) {
 
 
-
     try {
-
 
 
       return Map<String,dynamic>.from(
@@ -194,13 +248,52 @@ class PuzzleExportService {
       );
 
 
-
     }catch(_){
-
 
 
       return {};
 
+    }
+
+
+  }
+
+
+
+
+
+
+
+  //==================================================
+  // التحقق من النسخة
+  //==================================================
+
+  static bool isValidExport(
+
+      String json,
+
+      ) {
+
+
+    try {
+
+
+      final data = jsonDecode(json);
+
+
+
+      return data is Map &&
+
+          data.containsKey("stars") &&
+
+          data.containsKey("progress");
+
+
+
+    }catch(_){
+
+
+      return false;
 
 
     }
