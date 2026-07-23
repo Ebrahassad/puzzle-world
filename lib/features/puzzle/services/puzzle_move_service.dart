@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import '../engine/puzzle_piece.dart';
 
 
@@ -5,7 +7,15 @@ import '../engine/puzzle_piece.dart';
 class PuzzleMoveService {
 
 
+  PuzzleMoveService();
+
+
+
+
+
   int _moves = 0;
+
+
 
 
   int get moves => _moves;
@@ -16,6 +26,10 @@ class PuzzleMoveService {
 
 
 
+
+  //==================================================
+  // ➕ إضافة حركة
+  //==================================================
 
   void addMove(){
 
@@ -32,6 +46,10 @@ class PuzzleMoveService {
 
 
 
+  //==================================================
+  // 🔄 إعادة الضبط
+  //==================================================
+
   void reset(){
 
 
@@ -46,6 +64,10 @@ class PuzzleMoveService {
 
 
 
+
+  //==================================================
+  // ↩️ تراجع
+  //==================================================
 
   void undoMove(){
 
@@ -82,6 +104,10 @@ class PuzzleMoveService {
 
 
 
+
+  //==================================================
+  // 🧩 تحريك قطعة
+  //==================================================
 
   void movePiece({
 
@@ -129,6 +155,10 @@ class PuzzleMoveService {
 
 
 
+  //==================================================
+  // ✅ فحص الحركة
+  //==================================================
+
   bool checkMove({
 
     required PuzzlePiece piece,
@@ -155,6 +185,10 @@ class PuzzleMoveService {
 
 
 
+  //==================================================
+  // ⭐ حساب النقاط
+  //==================================================
+
   int calculateScore({
 
     required int stars,
@@ -171,11 +205,13 @@ class PuzzleMoveService {
 
 
 
-    score += seconds > 0
+    if(seconds > 0){
 
-        ? (1000 ~/ seconds)
 
-        : 0;
+      score += 1000 ~/ seconds;
+
+
+    }
 
 
 
@@ -189,7 +225,9 @@ class PuzzleMoveService {
 
     if(score < 0){
 
+
       score = 0;
+
 
     }
 
