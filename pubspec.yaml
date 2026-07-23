@@ -42,6 +42,8 @@ flutter:
 
     - assets/images/background/
 
+    - assets/images/ui/
+
     - assets/icon/
 
 
