@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'features/puzzle/screens/puzzle_home_screen.dart';
+import 'app/splash_screen.dart';
 
 
 class PuzzleWorldApp extends StatelessWidget {
@@ -15,20 +15,23 @@ class PuzzleWorldApp extends StatelessWidget {
 
     return MaterialApp(
 
-      debugShowCheckedModeBanner:false,
+      debugShowCheckedModeBanner: false,
 
-      title:'Puzzle World',
+      title: "Puzzle World",
+
 
       theme: ThemeData(
 
-        useMaterial3:true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+        ),
 
-        colorSchemeSeed:Colors.blue,
+        useMaterial3: true,
 
       ),
 
 
-      home:const PuzzleHomeScreen(),
+      home: const SplashScreen(),
 
     );
 
