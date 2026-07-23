@@ -1,17 +1,20 @@
 import '../managers/puzzle_progress_manager.dart';
 
 
-
 class PuzzleStatisticsService {
 
 
+  const PuzzleStatisticsService._();
+
+
+
+  //==================================================
+  // 🎮 عدد الألعاب التي تم لعبها
+  //==================================================
+
   static Future<int> getPlayedCount() async {
 
-
-    return await PuzzleProgressManager
-
-        .getGamesPlayed();
-
+    return await PuzzleProgressManager.getGamesPlayed();
 
   }
 
@@ -19,17 +22,13 @@ class PuzzleStatisticsService {
 
 
 
-
-
+  //==================================================
+  // 🏆 عدد المراحل المكتملة
+  //==================================================
 
   static Future<int> getCompletedCount() async {
 
-
-
-    return await PuzzleProgressManager
-
-        .getCompletedPuzzleCount();
-
+    return await PuzzleProgressManager.getCompletedCount();
 
   }
 
@@ -37,17 +36,13 @@ class PuzzleStatisticsService {
 
 
 
-
-
+  //==================================================
+  // ⭐ مجموع النجوم
+  //==================================================
 
   static Future<int> getTotalStars() async {
 
-
-
-    return await PuzzleProgressManager
-
-        .getTotalStars();
-
+    return await PuzzleProgressManager.getTotalStars();
 
   }
 
@@ -55,17 +50,13 @@ class PuzzleStatisticsService {
 
 
 
-
-
+  //==================================================
+  // 🧩 مجموع الحركات
+  //==================================================
 
   static Future<int> getTotalMoves() async {
 
-
-
-    return await PuzzleProgressManager
-
-        .getTotalMoves();
-
+    return await PuzzleProgressManager.getTotalMoves();
 
   }
 
@@ -73,17 +64,13 @@ class PuzzleStatisticsService {
 
 
 
-
-
+  //==================================================
+  // ⏱ أفضل وقت
+  //==================================================
 
   static Future<int> getBestTime() async {
 
-
-
-    return await PuzzleProgressManager
-
-        .getBestTime();
-
+    return await PuzzleProgressManager.getBestTime();
 
   }
 
@@ -91,26 +78,9 @@ class PuzzleStatisticsService {
 
 
 
-
-
-
-  static Future<void> addGamePlayed() async {
-
-
-
-    await PuzzleProgressManager
-
-        .addGamePlayed();
-
-
-  }
-
-
-
-
-
-
-
+  //==================================================
+  // إضافة لعبة مكتملة
+  //==================================================
 
   static Future<void> addCompletedPuzzle({
 
@@ -123,16 +93,18 @@ class PuzzleStatisticsService {
   }) async {
 
 
-
-    await PuzzleProgressManager
-
-        .addCompletedPuzzle(
-
-      stars: stars,
+    await PuzzleProgressManager.addCompletedPuzzle(
 
       moves: moves,
 
       seconds: seconds,
+
+    );
+
+
+    await PuzzleProgressManager.addStars(
+
+      stars,
 
     );
 
@@ -143,47 +115,34 @@ class PuzzleStatisticsService {
 
 
 
+  //==================================================
+  // الحصول على الإحصائيات
+  //==================================================
 
-
-
-  static Future<Map<String,dynamic>>
-
-  getStatistics() async {
-
+  static Future<Map<String,dynamic>> getStatistics() async {
 
 
     return {
 
 
-
       "played":
-
       await getPlayedCount(),
 
 
-
       "completed":
-
       await getCompletedCount(),
 
 
-
       "stars":
-
       await getTotalStars(),
 
 
-
       "moves":
-
       await getTotalMoves(),
 
 
-
       "bestTime":
-
       await getBestTime(),
-
 
 
     };
@@ -195,21 +154,18 @@ class PuzzleStatisticsService {
 
 
 
+  //==================================================
+  // إعادة ضبط الإحصائيات
+  //==================================================
+
+  static Future<void> resetStatistics() async {
 
 
-
-  static Future<void>
-
-  resetStatistics() async {
-
-
-
-    await PuzzleProgressManager
-
-        .resetStatistics();
+    await PuzzleProgressManager.resetAll();
 
 
   }
+
 
 
 }
