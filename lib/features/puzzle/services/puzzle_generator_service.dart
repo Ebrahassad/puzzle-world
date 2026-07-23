@@ -9,6 +9,16 @@ import '../engine/puzzle_piece.dart';
 class PuzzleGeneratorService {
 
 
+  const PuzzleGeneratorService._();
+
+
+
+
+
+  //==================================================
+  // 🧩 إنشاء قطع البازل
+  //==================================================
+
   static List<PuzzlePiece> generatePieces({
 
     required int gridSize,
@@ -35,28 +45,49 @@ class PuzzleGeneratorService {
 
 
 
+    final random = Random();
+
+
+
 
 
     for(int row = 0; row < gridSize; row++){
+
 
 
       for(int column = 0; column < gridSize; column++){
 
 
 
+
+
         pieces.add(
+
+
 
           PuzzlePiece(
 
+
+
             id: "piece_$index",
+
+
 
             row: row,
 
+
+
             column: column,
+
+
 
             correctPosition: index,
 
-            sourceRect: Rect.fromLTWH(
+
+
+            sourceRect:
+
+            Rect.fromLTWH(
 
               column * pieceSize,
 
@@ -68,6 +99,10 @@ class PuzzleGeneratorService {
 
             ),
 
+
+
+
+
             top: EdgeType.flat,
 
             bottom: EdgeType.flat,
@@ -76,28 +111,44 @@ class PuzzleGeneratorService {
 
             right: EdgeType.flat,
 
-            position: Offset(
 
-              Random().nextDouble() *
 
-                  imageSize,
 
-              Random().nextDouble() *
 
-                  imageSize,
+            position:
+
+            Offset(
+
+              random.nextDouble()
+
+                  * (imageSize - pieceSize),
+
+
+
+              random.nextDouble()
+
+                  * (imageSize - pieceSize),
 
             ),
 
+
+
           ),
 
+
+
         );
+
+
 
 
 
         index++;
 
 
+
       }
+
 
 
     }
@@ -122,9 +173,16 @@ class PuzzleGeneratorService {
 
 
 
+  //==================================================
+  // 🔄 إعادة خلط القطع
+  //==================================================
+
+
   static List<PuzzlePiece> regenerate({
 
     required List<PuzzlePiece> pieces,
+
+    required double boardSize,
 
   }) {
 
@@ -142,15 +200,24 @@ class PuzzleGeneratorService {
 
       piece.position = Offset(
 
-        random.nextDouble() * 300,
+        random.nextDouble()
 
-        random.nextDouble() * 300,
+            * boardSize,
+
+
+
+        random.nextDouble()
+
+            * boardSize,
 
       );
 
 
 
+
+
       piece.placed = false;
+
 
 
     }
@@ -169,6 +236,11 @@ class PuzzleGeneratorService {
 
 
 
+
+
+  //==================================================
+  // 🔢 عدد القطع
+  //==================================================
 
 
   static int totalPieces(
@@ -191,6 +263,11 @@ class PuzzleGeneratorService {
 
 
 
+  //==================================================
+  // 📐 حجم القطعة
+  //==================================================
+
+
   static double calculatePieceSize({
 
     required double boardSize,
@@ -202,6 +279,52 @@ class PuzzleGeneratorService {
 
 
     return boardSize / gridSize;
+
+
+  }
+
+
+
+
+
+  //==================================================
+  // ⭐ مستوى الصعوبة
+  //==================================================
+
+
+  static int calculateDifficulty(
+
+      int gridSize,
+
+      ) {
+
+
+
+    if(gridSize <= 3){
+
+      return 1;
+
+    }
+
+
+
+    if(gridSize == 4){
+
+      return 2;
+
+    }
+
+
+
+    if(gridSize == 5){
+
+      return 3;
+
+    }
+
+
+
+    return 4;
 
 
   }
