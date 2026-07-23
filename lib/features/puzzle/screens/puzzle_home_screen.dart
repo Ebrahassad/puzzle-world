@@ -6,7 +6,7 @@ import '../data/puzzle_level_data.dart';
 import '../models/puzzle_model.dart';
 
 import '../managers/puzzle_progress_manager.dart';
-import '../managers/star_manager.dart';
+
 
 import 'puzzle_level_screen.dart';
 
@@ -231,82 +231,60 @@ class _PuzzleHomeScreenState
 
 
 
+Row(
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: [
 
-              Row(
+    Image.asset(
+      "assets/images/ui/puzzle_logo.png",
+      width: 65,
+      height: 65,
+      fit: BoxFit.contain,
+    ),
 
-                mainAxisAlignment:
-                MainAxisAlignment.center,
+    const SizedBox(width: 12),
 
-                children:[
+    const Text(
+      "Puzzle World",
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: 32,
+        fontWeight: FontWeight.bold,
+        shadows: [
+          Shadow(
+            color: Colors.black38,
+            blurRadius: 8,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+    ),
 
+    const SizedBox(width: 15),
 
-                  const Text(
+    Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 15,
+        vertical: 8,
+      ),
 
-                    "🧩 عالم البازل",
+      decoration: BoxDecoration(
+        color: Colors.white24,
+        borderRadius: BorderRadius.circular(20),
+      ),
 
-                    style:TextStyle(
+      child: Text(
+        "⭐ $totalStars",
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
 
-                      color:Colors.white,
-
-                      fontSize:32,
-
-                      fontWeight:
-                      FontWeight.bold,
-
-                    ),
-
-                  ),
-
-
-
-                  const SizedBox(width:15),
-
-
-
-                  Container(
-
-                    padding:
-                    const EdgeInsets.symmetric(
-
-                      horizontal:15,
-
-                      vertical:8,
-
-                    ),
-
-                    decoration:BoxDecoration(
-
-                      color:Colors.white24,
-
-                      borderRadius:
-                      BorderRadius.circular(20),
-
-                    ),
-
-
-                    child:Text(
-
-                      "⭐ $totalStars",
-
-                      style:const TextStyle(
-
-                        color:Colors.white,
-
-                        fontSize:22,
-
-                        fontWeight:
-                        FontWeight.bold,
-
-                      ),
-
-                    ),
-
-                  ),
-
-
-                ],
-
-              ),
+  ],
+),
 
 
 
