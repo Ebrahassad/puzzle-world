@@ -7,8 +7,16 @@ import '../managers/puzzle_progress_manager.dart';
 class PuzzleVibrationService {
 
 
-  static Future<void> vibrateShort() async {
+  const PuzzleVibrationService._();
 
+
+
+
+  //==================================================
+  // ✨ اهتزاز خفيف
+  //==================================================
+
+  static Future<void> vibrateShort() async {
 
 
     final enabled =
@@ -31,9 +39,7 @@ class PuzzleVibrationService {
 
 
 
-    await HapticFeedback
-
-        .lightImpact();
+    await HapticFeedback.lightImpact();
 
 
   }
@@ -44,11 +50,14 @@ class PuzzleVibrationService {
 
 
 
+
+  //==================================================
+  // 🏆 اهتزاز نجاح
+  //==================================================
 
   static Future<void> vibrateSuccess() async {
 
 
-
     final enabled =
 
     await PuzzleProgressManager
@@ -69,9 +78,7 @@ class PuzzleVibrationService {
 
 
 
-    await HapticFeedback
-
-        .mediumImpact();
+    await HapticFeedback.mediumImpact();
 
 
   }
@@ -82,11 +89,14 @@ class PuzzleVibrationService {
 
 
 
+
+  //==================================================
+  // ❌ اهتزاز خطأ
+  //==================================================
 
   static Future<void> vibrateError() async {
 
 
-
     final enabled =
 
     await PuzzleProgressManager
@@ -107,9 +117,7 @@ class PuzzleVibrationService {
 
 
 
-    await HapticFeedback
-
-        .heavyImpact();
+    await HapticFeedback.heavyImpact();
 
 
   }
@@ -120,13 +128,16 @@ class PuzzleVibrationService {
 
 
 
+
+  //==================================================
+  // ⚙️ تغيير الحالة
+  //==================================================
 
   static Future<void> setEnabled(
 
       bool value,
 
       ) async {
-
 
 
     await PuzzleProgressManager
@@ -147,8 +158,11 @@ class PuzzleVibrationService {
 
 
 
-  static Future<bool> isEnabled() async {
+  //==================================================
+  // 🔍 حالة الاهتزاز
+  //==================================================
 
+  static Future<bool> isEnabled() async {
 
 
     return await PuzzleProgressManager
