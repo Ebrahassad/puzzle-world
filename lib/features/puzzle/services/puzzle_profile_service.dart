@@ -5,17 +5,22 @@ import '../managers/puzzle_progress_manager.dart';
 class PuzzleProfileService {
 
 
-  static Future<Map<String, dynamic>>
+  const PuzzleProfileService._();
 
-  getProfile() async {
+
+
+
+  //==================================================
+  // 👤 بيانات الملف الشخصي
+  //==================================================
+
+  static Future<Map<String, dynamic>> getProfile() async {
 
 
 
     final stars =
 
-    await PuzzleProgressManager
-
-        .getTotalStars();
+    await PuzzleProgressManager.getTotalStars();
 
 
 
@@ -23,9 +28,7 @@ class PuzzleProfileService {
 
     final completed =
 
-    await PuzzleProgressManager
-
-        .getCompletedPuzzleCount();
+    await PuzzleProgressManager.getCompletedPuzzleCount();
 
 
 
@@ -33,9 +36,7 @@ class PuzzleProfileService {
 
     final hints =
 
-    await PuzzleProgressManager
-
-        .getHints();
+    await PuzzleProgressManager.getHints();
 
 
 
@@ -43,16 +44,13 @@ class PuzzleProfileService {
 
     final games =
 
-    await PuzzleProgressManager
-
-        .getGamesPlayed();
+    await PuzzleProgressManager.getGamesPlayed();
 
 
 
 
 
     return {
-
 
 
       "stars": stars,
@@ -67,7 +65,6 @@ class PuzzleProfileService {
       "games": games,
 
 
-
     };
 
 
@@ -80,6 +77,10 @@ class PuzzleProfileService {
 
 
 
+  //==================================================
+  // ✏️ تحديث الاسم
+  //==================================================
+
   static Future<void> updateName({
 
     required String name,
@@ -87,10 +88,7 @@ class PuzzleProfileService {
   }) async {
 
 
-
-    await PuzzleProgressManager
-
-        .savePlayerName(
+    await PuzzleProgressManager.savePlayerName(
 
       name,
 
@@ -106,13 +104,14 @@ class PuzzleProfileService {
 
 
 
+  //==================================================
+  // 🏷️ جلب الاسم
+  //==================================================
+
   static Future<String> getName() async {
 
 
-
-    return await PuzzleProgressManager
-
-        .getPlayerName();
+    return await PuzzleProgressManager.getPlayerName();
 
 
   }
@@ -124,13 +123,14 @@ class PuzzleProfileService {
 
 
 
+  //==================================================
+  // 🔄 إعادة ضبط الملف
+  //==================================================
+
   static Future<void> resetProfile() async {
 
 
-
-    await PuzzleProgressManager
-
-        .resetProgress();
+    await PuzzleProgressManager.resetProgress();
 
 
   }
