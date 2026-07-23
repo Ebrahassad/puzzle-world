@@ -1,240 +1,50 @@
-import '../managers/puzzle_progress_manager.dart';
-
-
-
 class PuzzleAnalyticsService {
-
+  const PuzzleAnalyticsService._();
 
   static Future<void> levelStarted({
-
     required String worldId,
-
     required int level,
-
   }) async {
-
-
-
-    await PuzzleProgressManager
-
-        .sendAnalytics(
-
-      "level_started",
-
-      {
-
-        "worldId": worldId,
-
-        "level": level,
-
-      },
-
-    );
-
-
+    // سيتم ربط Firebase Analytics لاحقاً
   }
-
-
-
-
-
-
-
 
   static Future<void> levelCompleted({
-
     required String worldId,
-
     required int level,
-
     required int stars,
-
     required int moves,
-
     required int seconds,
-
   }) async {
-
-
-
-    await PuzzleProgressManager
-
-        .sendAnalytics(
-
-      "level_completed",
-
-      {
-
-        "worldId": worldId,
-
-        "level": level,
-
-        "stars": stars,
-
-        "moves": moves,
-
-        "seconds": seconds,
-
-      },
-
-    );
-
-
+    // سيتم ربط Firebase Analytics لاحقاً
   }
-
-
-
-
-
-
-
 
   static Future<void> worldOpened({
-
     required String worldId,
-
   }) async {
-
-
-
-    await PuzzleProgressManager
-
-        .sendAnalytics(
-
-      "world_opened",
-
-      {
-
-        "worldId": worldId,
-
-      },
-
-    );
-
-
+    // سيتم ربط Firebase Analytics لاحقاً
   }
-
-
-
-
-
-
-
 
   static Future<void> rewardClaimed({
-
     required String rewardType,
-
     required int amount,
-
   }) async {
-
-
-
-    await PuzzleProgressManager
-
-        .sendAnalytics(
-
-      "reward_claimed",
-
-      {
-
-        "type": rewardType,
-
-        "amount": amount,
-
-      },
-
-    );
-
-
+    // سيتم ربط Firebase Analytics لاحقاً
   }
-
-
-
-
-
-
-
 
   static Future<void> adWatched({
-
     required String adType,
-
   }) async {
-
-
-
-    await PuzzleProgressManager
-
-        .sendAnalytics(
-
-      "ad_watched",
-
-      {
-
-        "type": adType,
-
-      },
-
-    );
-
-
+    // سيتم ربط Firebase Analytics لاحقاً
   }
-
-
-
-
-
-
-
 
   static Future<void> hintUsed({
-
     required String worldId,
-
     required int level,
-
   }) async {
-
-
-
-    await PuzzleProgressManager
-
-        .sendAnalytics(
-
-      "hint_used",
-
-      {
-
-        "worldId": worldId,
-
-        "level": level,
-
-      },
-
-    );
-
-
+    // سيتم ربط Firebase Analytics لاحقاً
   }
-
-
-
-
-
-
-
 
   static Future<void> resetAnalytics() async {
-
-
-
-    await PuzzleProgressManager
-
-        .clearAnalytics();
-
-
+    // لا شيء حالياً
   }
-
-
 }
