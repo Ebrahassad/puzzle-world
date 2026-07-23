@@ -347,289 +347,115 @@ Row(
 
                     return GestureDetector(
 
+  onTap: () {
+    openWorld(puzzle);
+  },
 
+  child: Container(
 
-                      onTap:(){
+    decoration: BoxDecoration(
 
-                        openWorld(
-                          puzzle,
-                        );
+      gradient: const LinearGradient(
+        colors: [
+          Colors.white,
+          Color(0xffF1F8FF),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ),
 
-                      },
+      borderRadius: BorderRadius.circular(30),
 
+      boxShadow: const [
+        BoxShadow(
+          color: Colors.black26,
+          blurRadius: 18,
+          offset: Offset(0, 10),
+        ),
+      ],
 
+    ),
 
+    child: Column(
 
+      mainAxisAlignment: MainAxisAlignment.center,
 
-                      child:Container(
+      children: [
 
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(18),
 
+            child: Image.asset(
+              puzzle.image,
 
-                        decoration:BoxDecoration(
+              fit: BoxFit.contain,
 
+              errorBuilder:
+              (context,error,stack){
 
+                return const Icon(
+                  Icons.extension,
+                  size:80,
+                  color:Colors.orange,
+                );
 
-                          color:Colors.white,
+              },
 
-
-
-                          borderRadius:
-                          BorderRadius.circular(30),
-
-
-
-
-                          boxShadow:[
-
-
-
-                            BoxShadow(
-
-
-
-                              color:
-                              Colors.black26,
-
-
-
-                              blurRadius:15,
-
-
-
-                              offset:
-                              const Offset(
-                                0,
-                                8,
-                              ),
-
-
-
-                            ),
-
-
-
-                          ],
-
-
-
-                        ),
-
-
-
-
-
-                        child:Column(
-
-
-
-                          mainAxisAlignment:
-                          MainAxisAlignment.center,
-
-
-
-                          children:[
-
-
-
-
-
-                            Expanded(
-
-
-
-                              child:Padding(
-
-
-
-                                padding:
-                                const EdgeInsets.all(15),
-
-
-
-                                child:Image.asset(
-
-
-
-                                  puzzle.image,
-
-
-
-                                  fit:
-                                  BoxFit.contain,
-
-
-
-                                  errorBuilder:
-                                      (context,error,stack){
-
-
-
-                                    return const Icon(
-
-                                      Icons.extension,
-
-                                      size:70,
-
-                                      color:
-                                      Colors.orange,
-
-                                    );
-
-
-
-                                  },
-
-
-
-                                ),
-
-
-
-                              ),
-
-
-
-                            ),
-
-
-
-
-
-
-
-                            Text(
-
-
-
-                              puzzle.title,
-
-
-
-                              textAlign:
-                              TextAlign.center,
-
-
-
-                              style:const TextStyle(
-
-
-
-                                fontSize:20,
-
-
-
-                                fontWeight:
-                                FontWeight.bold,
-
-
-
-                                color:
-                                Colors.blue,
-
-
-
-                              ),
-
-
-
-                            ),
-
-
-
-
-
-
-                            const SizedBox(height:8),
-
-
-
-
-
-                            Text(
-
-
-
-                              "🧩 $levelCount مراحل",
-
-
-
-                              style:const TextStyle(
-
-
-
-                                fontSize:16,
-
-
-
-                                color:
-                                Colors.grey,
-
-
-
-                              ),
-
-
-
-                            ),
-
-
-
-
-
-                            const SizedBox(height:15),
-
-
-
-                          ],
-
-
-
-                        ),
-
-
-
-                      ),
-
-
-
-                    );
-
-
-
-                  },
-
-
-
-                ),
-
-
-
-              ),
-
-
-
-            ],
-
-
+            ),
 
           ),
+        ),
 
 
+        Text(
+          puzzle.title,
+
+          textAlign: TextAlign.center,
+
+          style: const TextStyle(
+            fontSize:20,
+            fontWeight:FontWeight.bold,
+            color:Colors.blue,
+          ),
 
         ),
 
 
+        const SizedBox(height:10),
+
+
+        Text(
+          "🧩 $levelCount مراحل",
+
+          style: const TextStyle(
+            fontSize:16,
+            color:Colors.grey,
+          ),
+
+        ),
+
+
+                            const SizedBox(height:15),
+
+                  ],
+
+                ),
+
+              ),
+
+            );
+
+          },
+
+        ),
 
       ),
 
+    ),
 
+  );
 
-    );
-
-
-
-  }
-
-
+}
 
 }
