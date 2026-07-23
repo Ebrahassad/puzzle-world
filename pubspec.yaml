@@ -1,29 +1,21 @@
-name: puzzle_world
-description: Jigsaw Puzzle Game
+flutter_launcher_icons:
+  android: true
+  ios: false
 
-publish_to: "none"
+  image_path: assets/icon/app_icon.png
 
-version: 1.0.0+1
+  adaptive_icon_background: "#87CEEB"
+  adaptive_icon_foreground: assets/icon/app_icon.png
 
-environment:
-  sdk: ">=3.3.0 <4.0.0"
+flutter_native_splash:
+  android: true
+  ios: false
 
-dependencies:
-  flutter:
-    sdk: flutter
+  background_image: assets/images/background/home_background.png
+  image: assets/icon/app_icon.png
 
-  flutter_riverpod: ^2.6.1
+  android_12:
+    background_image: assets/images/background/home_background.png
+    image: assets/icon/app_icon.png
 
-  cupertino_icons: ^1.0.8
-
-
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-
-
-flutter:
-  uses-material-design: true
-
-  assets:
-    - assets/images/Puzzle/
+  fullscreen: true
