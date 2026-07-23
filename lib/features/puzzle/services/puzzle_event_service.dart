@@ -36,8 +36,9 @@ class PuzzleEventService {
 
 
 
+
   //==================================================
-  // فتح شاشة الفوز
+  // فتح شاشة المرحلة
   //==================================================
 
   static Future<void> levelScreenOpened({
@@ -70,8 +71,9 @@ class PuzzleEventService {
 
 
 
+
   //==================================================
-  // إكمال المرحلة
+  // إكمال البازل
   //==================================================
 
   static Future<void> onPuzzleCompleted({
@@ -90,14 +92,8 @@ class PuzzleEventService {
     );
 
 
-    await PuzzleProgressManager.addStars(
-
-      stars,
-
-    );
-
-
   }
+
 
 
 
@@ -132,14 +128,6 @@ class PuzzleEventService {
 
 
 
-    await PuzzleProgressManager.addStars(
-
-      stars,
-
-    );
-
-
-
     if(worldId != null && level != null){
 
 
@@ -156,6 +144,7 @@ class PuzzleEventService {
 
 
   }
+
 
 
 
@@ -185,6 +174,7 @@ class PuzzleEventService {
 
 
 
+
   //==================================================
   // استخدام تلميح
   //==================================================
@@ -201,8 +191,9 @@ class PuzzleEventService {
 
 
 
+
   //==================================================
-  // مكافأة
+  // مكافأة نجوم
   //==================================================
 
   static Future<void> onRewardReceived({
@@ -220,6 +211,7 @@ class PuzzleEventService {
 
 
   }
+
 
 
 
@@ -245,6 +237,7 @@ class PuzzleEventService {
     );
 
 
+
     if(gems > 0){
 
 
@@ -264,16 +257,15 @@ class PuzzleEventService {
 
 
 
+
   //==================================================
-  // خروج من اللعبة
+  // خروج
   //==================================================
 
   static Future<void> onGameExit() async {
 
 
-    // لا يوجد حفظ جلسة منفصل في النظام الحالي
-    // نترك الحفظ يتم عن طريق saveLastPuzzle
-
+    // الحفظ يتم عن طريق PuzzleProgressManager
 
   }
 
