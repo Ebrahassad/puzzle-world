@@ -813,7 +813,81 @@ static Future<bool> isRewardClaimed(
 
   }
 
+//==================================================
+// 🌍 فتح العوالم
+//==================================================
 
+static const String unlockedWorldsKey =
+    "puzzle_unlocked_worlds";
+
+
+static Future<void> unlockWorld(
+    String worldId,
+    ) async {
+
+
+  final prefs = await _prefs;
+
+
+  final worlds =
+      prefs.getStringList(
+        unlockedWorldsKey,
+      ) ?? [];
+
+
+  if(!worlds.contains(worldId)){
+
+
+    worlds.add(worldId);
+
+
+    await prefs.setStringList(
+      unlockedWorldsKey,
+      worlds,
+    );
+
+  }
+
+}
+
+
+
+static Future<bool> isWorldUnlocked(
+    String worldId,
+    ) async {
+
+
+  final prefs = await _prefs;
+
+
+  final worlds =
+      prefs.getStringList(
+        unlockedWorldsKey,
+      ) ?? [];
+
+
+  return worlds.contains(worldId);
+
+}
+
+
+
+static Future<void> unlockAllLevels(
+    String worldId,
+    ) async {
+
+
+  for(int i = 1; i <= 100; i++){
+
+
+    await unlockLevel(
+      "${worldId}_level_$i",
+    );
+
+
+  }
+
+}
 
   //==================================================
   // ⭐ نجوم كل مرحلة
@@ -1578,9 +1652,11 @@ getPuzzleHistory() async {
       );
 
 
-  return List<Map<String,dynamic>>.from(
-    data,
-  );
+  return (data as List)
+    .map(
+      (e)=>Map<String,dynamic>.from(e),
+    )
+    .toList();
 
 }
 
@@ -2222,8 +2298,7 @@ static Future<void> resetProgress() async {
 //==================================================
 
 
-static Future<void> resetAllData() async {
-
+static Future<void> resetAll() async {
 
   final prefs = await _prefs;
 
