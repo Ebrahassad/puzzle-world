@@ -1,9 +1,7 @@
 import '../data/puzzle_data.dart';
-
 import '../data/puzzle_level_data.dart';
 
 import '../models/puzzle_model.dart';
-
 import '../models/puzzle_level_model.dart';
 
 import '../services/puzzle_cache_service.dart';
@@ -13,26 +11,26 @@ import '../services/puzzle_cache_service.dart';
 class PuzzleLoadingService {
 
 
-  static Future<List<PuzzleModel>>
-
-  loadWorlds() async {
+  const PuzzleLoadingService._();
 
 
 
-    final worlds =
 
-    PuzzleData.puzzles;
+  //==================================================
+  // 🌍 تحميل جميع العوالم
+  //==================================================
+
+  static Future<List<PuzzleModel>> loadWorlds() async {
 
 
+    final worlds = PuzzleData.puzzles;
 
 
 
     for(final world in worlds){
 
 
-      PuzzleCacheService
-
-          .cacheWorld(
+      PuzzleCacheService.cacheWorld(
 
         world,
 
@@ -40,8 +38,6 @@ class PuzzleLoadingService {
 
 
     }
-
-
 
 
 
@@ -57,21 +53,20 @@ class PuzzleLoadingService {
 
 
 
-  static Future<PuzzleModel?>
+  //==================================================
+  // 🌍 تحميل عالم معين
+  //==================================================
 
-  loadWorld({
+  static Future<PuzzleModel?> loadWorld({
 
     required String worldId,
 
   }) async {
 
 
-
     final cached =
 
-    PuzzleCacheService
-
-        .getWorld(
+    PuzzleCacheService.getWorld(
 
       worldId,
 
@@ -83,9 +78,13 @@ class PuzzleLoadingService {
 
     if(cached != null){
 
+
       return cached;
 
+
     }
+
+
 
 
 
@@ -94,16 +93,17 @@ class PuzzleLoadingService {
     for(final world in PuzzleData.puzzles){
 
 
+
       if(world.id == worldId){
 
 
-        PuzzleCacheService
 
-            .cacheWorld(
+        PuzzleCacheService.cacheWorld(
 
           world,
 
         );
+
 
 
         return world;
@@ -130,9 +130,11 @@ class PuzzleLoadingService {
 
 
 
-  static Future<List<PuzzleLevelModel>>
+  //==================================================
+  // 🧩 تحميل مراحل العالم
+  //==================================================
 
-  loadLevels({
+  static Future<List<PuzzleLevelModel>> loadLevels({
 
     required String worldId,
 
@@ -142,9 +144,7 @@ class PuzzleLoadingService {
 
     final cached =
 
-    PuzzleCacheService
-
-        .getLevels(
+    PuzzleCacheService.getLevels(
 
       worldId,
 
@@ -166,11 +166,11 @@ class PuzzleLoadingService {
 
 
 
+
+
     final levels =
 
-    PuzzleLevelData
-
-        .getLevels(
+    PuzzleLevelData.getLevels(
 
       worldId,
 
@@ -180,15 +180,17 @@ class PuzzleLoadingService {
 
 
 
-    PuzzleCacheService
 
-        .cacheLevels(
+
+    PuzzleCacheService.cacheLevels(
 
       worldId: worldId,
 
       levels: levels,
 
     );
+
+
 
 
 
@@ -206,9 +208,11 @@ class PuzzleLoadingService {
 
 
 
-  static Future<PuzzleLevelModel?>
+  //==================================================
+  // 🧩 تحميل مرحلة معينة
+  //==================================================
 
-  loadLevel({
+  static Future<PuzzleLevelModel?> loadLevel({
 
     required String worldId,
 
@@ -230,19 +234,27 @@ class PuzzleLoadingService {
 
 
 
+
+
     for(final level in levels){
+
 
 
       if(level.id == levelId){
 
 
+
         return level;
+
 
 
       }
 
 
+
     }
+
+
 
 
 
@@ -260,15 +272,22 @@ class PuzzleLoadingService {
 
 
 
+  //==================================================
+  // 🧹 مسح الكاش
+  //==================================================
+
   static void clearCache(){
 
 
-    PuzzleCacheService
 
-        .clear();
+    PuzzleCacheService.clear();
+
 
 
   }
+
+
+
 
 
 }
