@@ -278,11 +278,8 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
     final result =
 await RewardManager.completePuzzle(
   difficulty: widget.difficulty,
-  rewardKey:
-  "${widget.worldId}_level_${widget.level}",
+  rewardKey: "${widget.worldId}_level_${widget.level}",
 );
-
-
 
     if(!mounted){
 
