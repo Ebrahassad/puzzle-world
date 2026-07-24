@@ -253,7 +253,7 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-    await PuzzleCloudService.sync();
+    
 
 
 
@@ -337,7 +337,7 @@ await RewardManager.completePuzzle(
 
     await PuzzleEventService.rewardDoubled(
 
-      worldId: widget.worldId,
+      
 
       level: widget.level,
 
