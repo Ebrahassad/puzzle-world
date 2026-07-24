@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../managers/puzzle_progress_manager.dart';
 import '../models/puzzle_model.dart';
 import '../models/puzzle_level_model.dart';
 
