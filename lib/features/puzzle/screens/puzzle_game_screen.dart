@@ -855,25 +855,20 @@ class _PuzzleGameScreenState
 
   
 Navigator.pushReplacement(
-
+Navigator.pushReplacement(
   context,
-
   MaterialPageRoute(
-
     builder: (_) => PuzzleWinScreen(
-
       result: GameResultModel(
-  stars: 3,
-  moves: moves,
-  time: Duration(
-    seconds: seconds,
+        stars: 3,
+        moves: moves,
+        time: Duration(
+          seconds: seconds,
+        ),
+      ),
+    ),
   ),
-),
-
-  ),
-
 );
-
   }
 
 
