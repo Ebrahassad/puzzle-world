@@ -49,7 +49,12 @@ workflows:
 
       - name: Build APK
         script: |
-          flutter build apk --release --split-per-abi -v
+          flutter build apk --release -v
+
+      - name: Find APK
+        script: |
+          find . -name "*.apk"
 
     artifacts:
-      - build/**/outputs/**/*.apk
+      - build/app/outputs/flutter-apk/*.apk
+      - android/app/build/outputs/**/*.apk
