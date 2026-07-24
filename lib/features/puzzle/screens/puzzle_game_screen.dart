@@ -853,7 +853,7 @@ class _PuzzleGameScreenState
 
 
 
-    Navigator.pushReplacement(
+  
 Navigator.pushReplacement(
 
   context,
@@ -863,16 +863,12 @@ Navigator.pushReplacement(
     builder: (_) => PuzzleWinScreen(
 
       result: GameResultModel(
-
-        stars: 3,
-
-        moves: moves,
-
-        time: seconds,
-
-      ),
-
-    ),
+  stars: 3,
+  moves: moves,
+  time: Duration(
+    seconds: seconds,
+  ),
+),
 
   ),
 
