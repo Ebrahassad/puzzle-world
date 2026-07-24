@@ -853,8 +853,7 @@ class _PuzzleGameScreenState
 
 
 
-  
-Navigator.pushReplacement(
+
 Navigator.pushReplacement(
   context,
   MaterialPageRoute(
