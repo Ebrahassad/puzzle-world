@@ -49,7 +49,9 @@ workflows:
 
       - name: Build APK
         script: |
-          flutter build apk --release -v
+          cd android
+          ./gradlew assembleRelease
+          cd ..
 
       - name: Find APK
         script: |
