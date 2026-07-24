@@ -858,25 +858,15 @@ class _PuzzleGameScreenState
       context,
 
       MaterialPageRoute(
-
 builder: (_) => PuzzleWinScreen(
 
   result: GameResultModel(
-
     stars: 3,
-
     moves: moves,
-
     seconds: seconds,
-
   ),
 
-
-),),
-
-      ),
-
-    );
+),
 
 
   }
