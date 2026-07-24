@@ -5,12 +5,12 @@
     <!-- خلفية الشاشة -->
     <item android:drawable="@color/ic_launcher_background" />
 
-    <!-- شعار التطبيق في المنتصف -->
+    <!-- شعار Puzzle World -->
     <item>
 
         <bitmap
             android:gravity="center"
-            android:src="@drawable/ic_launcher_foreground" />
+            android:src="@drawable/puzzle_logo" />
 
     </item>
 
