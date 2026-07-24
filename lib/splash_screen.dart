@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-import '../features/puzzle/screens/puzzle_home_screen.dart';
+import 'features/puzzle/screens/puzzle_home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
