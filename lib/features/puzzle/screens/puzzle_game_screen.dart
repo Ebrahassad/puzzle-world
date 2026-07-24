@@ -859,19 +859,21 @@ class _PuzzleGameScreenState
 
       MaterialPageRoute(
 
-        builder: (_) => PuzzleWinScreen(
+builder: (_) => PuzzleWinScreen(
 
-          puzzle: widget.puzzle,
+  result: GameResultModel(
 
-          level: widget.level,
+    stars: 3,
 
-          stars: 3,
+    moves: moves,
 
-          moves: moves,
+    seconds: seconds,
 
-          seconds: seconds,
+  ),
 
-        ),
+  level: int.tryParse(widget.level.id) ?? 1,
+
+),),
 
       ),
 
