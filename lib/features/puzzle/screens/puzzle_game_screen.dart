@@ -1039,35 +1039,32 @@ class _PuzzleGameScreenState
 
               children: pieces.map((piece) {
 
+return PuzzlePieceWidget(
 
-                return PuzzlePieceWidget(
+  key: ValueKey(piece.id),
 
-                  key: ValueKey(piece.id),
+  piece: piece,
 
-                  piece: piece,
-
-                  pieceSize: pieceSize,
-
-                  imagePath: widget.puzzle.image,
+  imagePath: widget.puzzle.image,
 
 
-                  onDrop: (position) {
+  onDrop: (position) {
 
-                    dropPiece(
+    dropPiece(
 
-                      piece,
+      piece,
 
-                      position,
+      position,
 
-                    );
+    );
 
-                  },
-
-
-                );
+  },
 
 
-              }).toList(),
+);
+                
+
+              }).cast<Widget>().toList(),
 
 
             ),
