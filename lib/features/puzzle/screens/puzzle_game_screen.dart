@@ -457,4 +457,696 @@ class _PuzzleGameScreenState
     return result ?? false;
 
   }
+  
+  // تشغيل عداد الوقت
+
+  void startTimer() {
+
+
+    timer?.cancel();
+
+
+
+    timer = Timer.periodic(
+
+      const Duration(seconds: 1),
+
+          (_) {
+
+
+        if(!mounted || finishing) {
+
+          return;
+
+        }
+
+
+
+        setState(() {
+
+          seconds++;
+
+        });
+
+
+      },
+
+    );
+
+
   }
+
+
+
+
+
+
+
+  // حفظ تقدم اللعبة
+
+  Future<void> saveGame() async {
+
+
+    await PuzzleProgressManager.saveProgress(
+
+
+      puzzleId:
+
+      widget.puzzle.id,
+
+
+      levelId:
+
+      widget.level.id,
+
+
+      pieces:
+
+      pieces,
+
+
+      moves:
+
+      moves,
+
+
+      seconds:
+
+      seconds,
+
+
+    );
+
+
+  }
+
+  // وضع قطعة البازل في مكانها
+
+  Future<void> dropPiece(
+
+      PuzzlePiece piece,
+
+      Offset globalPosition,
+
+      ) async {
+
+
+    if(piece.placed || finishing) {
+
+      return;
+
+    }
+
+
+
+    final RenderBox box =
+
+    context.findRenderObject()
+
+    as RenderBox;
+
+
+
+    final boardPosition =
+
+    box.globalToLocal(
+
+      globalPosition,
+
+    );
+
+
+
+    final correctedPosition = Offset(
+
+
+      (boardPosition.dx - pieceSize / 2)
+
+          .clamp(
+
+        0,
+
+        boardSize - pieceSize,
+
+      ),
+
+
+
+      (boardPosition.dy - pieceSize / 2)
+
+          .clamp(
+
+        0,
+
+        boardSize - pieceSize,
+
+      ),
+
+
+    );
+
+
+
+
+
+    setState(() {
+
+
+      moves++;
+
+
+
+      piece.position =
+
+          correctedPosition;
+
+
+
+      controller.checkPiecePosition(
+
+        piece,
+
+        pieceSize,
+
+      );
+
+
+    });
+
+
+
+
+
+    await saveGame();
+
+
+
+    checkCompleted();
+
+
+  }
+
+
+
+
+
+
+
+  // فحص انتهاء المرحلة
+
+  void checkCompleted() {
+
+
+    if(controller.isCompleted && !finishing) {
+
+
+      finishGame();
+
+
+    }
+
+
+  }
+
+
+
+
+
+
+
+  // استخدام تلميح
+
+  Future<void> usePuzzleHint() async {
+
+
+    if(finishing) {
+
+      return;
+
+    }
+
+
+
+    bool available =
+
+    await PuzzleHintManager.consumeHint();
+
+
+
+
+
+    if(!available) {
+
+
+      final watched =
+
+      await RewardAdService.showRewardAd();
+
+
+
+
+      if(watched) {
+
+
+        await PuzzleHintManager.addHints(3);
+
+
+        available = true;
+
+
+      }
+
+
+    }
+
+
+
+
+
+    if(!available) {
+
+      return;
+
+    }
+
+
+
+
+
+    final piece =
+
+    PuzzleHintManager.findAvailablePiece(
+
+      pieces,
+
+    );
+
+
+
+
+
+    if(piece == null) {
+
+      return;
+
+    }
+
+
+
+
+
+    setState(() {
+
+
+      controller.applyHint(
+
+        piece,
+
+        pieceSize,
+
+      );
+
+
+      moves++;
+
+
+    });
+
+
+
+
+
+    await saveGame();
+
+
+
+    await loadHints();
+
+
+
+    checkCompleted();
+
+
+  }
+
+  // إنهاء المرحلة
+
+  Future<void> finishGame() async {
+
+
+    if(finishing) {
+
+      return;
+
+    }
+
+
+    finishing = true;
+
+
+
+    timer?.cancel();
+
+
+
+    await PuzzleProgressManager.completeLevel(
+
+      widget.level.id,
+
+    );
+
+
+
+    await PuzzleProgressManager.addCompletedPuzzle(
+
+      moves: moves,
+
+      seconds: seconds,
+
+    );
+
+
+
+    await PuzzleProgressManager.saveLevelStars(
+
+      widget.level.id,
+
+      3,
+
+    );
+
+
+
+    await PuzzleProgressManager.addStars(
+
+      3,
+
+    );
+
+
+
+    if(!mounted) {
+
+      return;
+
+    }
+
+
+
+    Navigator.pushReplacement(
+
+      context,
+
+      MaterialPageRoute(
+
+        builder: (_) => PuzzleWinScreen(
+
+          puzzle: widget.puzzle,
+
+          level: widget.level,
+
+          stars: 3,
+
+          moves: moves,
+
+          seconds: seconds,
+
+        ),
+
+      ),
+
+    );
+
+
+  }
+
+
+
+
+
+
+
+  @override
+  void dispose() {
+
+
+    timer?.cancel();
+
+
+    super.dispose();
+
+
+  }
+
+  @override
+  Widget build(BuildContext context) {
+
+
+    if(loading) {
+
+      return const Scaffold(
+
+        body: Center(
+
+          child: CircularProgressIndicator(),
+
+        ),
+
+      );
+
+    }
+
+
+
+    return Scaffold(
+
+      backgroundColor: Colors.blue.shade50,
+
+
+      appBar: AppBar(
+
+        title: Text(
+
+          widget.level.title,
+
+        ),
+
+        centerTitle: true,
+
+
+      ),
+
+
+
+      body: Column(
+
+        children: [
+
+
+
+          const SizedBox(height: 15),
+
+
+
+
+          // معلومات المرحلة
+
+          Row(
+
+            mainAxisAlignment:
+
+            MainAxisAlignment.spaceEvenly,
+
+            children: [
+
+
+              Text(
+
+                "🧩 الحركات: $moves",
+
+                style: const TextStyle(
+
+                  fontSize: 18,
+
+                  fontWeight: FontWeight.bold,
+
+                ),
+
+              ),
+
+
+
+              Text(
+
+                "⏱ $seconds",
+
+                style: const TextStyle(
+
+                  fontSize: 18,
+
+                  fontWeight: FontWeight.bold,
+
+                ),
+
+              ),
+
+
+
+              TextButton(
+
+                onPressed: usePuzzleHint,
+
+                child: Text(
+
+                  "💡 $hints",
+
+                  style: const TextStyle(
+
+                    fontSize: 18,
+
+                  ),
+
+                ),
+
+              ),
+
+
+            ],
+
+          ),
+
+
+
+
+
+          const SizedBox(height: 15),
+
+
+
+
+
+          // لوحة البازل
+
+          SizedBox(
+
+            width: boardSize,
+
+            height: boardSize,
+
+
+            child: Stack(
+
+
+              children: pieces.map((piece) {
+
+
+                return PuzzlePieceWidget(
+
+                  key: ValueKey(piece.id),
+
+                  piece: piece,
+
+                  pieceSize: pieceSize,
+
+                  imagePath: widget.puzzle.image,
+
+
+                  onDrop: (position) {
+
+                    dropPiece(
+
+                      piece,
+
+                      position,
+
+                    );
+
+                  },
+
+
+                );
+
+
+              }).toList(),
+
+
+            ),
+
+          ),
+
+
+
+
+
+          const SizedBox(height: 20),
+
+
+
+
+
+          ElevatedButton.icon(
+
+            onPressed: () async {
+
+
+              await saveGame();
+
+
+
+              if(context.mounted) {
+
+
+                ScaffoldMessenger.of(context)
+
+                    .showSnackBar(
+
+                  const SnackBar(
+
+                    content:
+
+                    Text(
+
+                      "💾 تم حفظ اللعبة",
+
+                    ),
+
+                  ),
+
+                );
+
+
+              }
+
+
+            },
+
+
+            icon: const Icon(
+
+              Icons.save,
+
+            ),
+
+
+            label: const Text(
+
+              "حفظ اللعبة",
+
+            ),
+
+
+          ),
+
+
+
+        ],
+
+      ),
+
+    );
+
+
+  }
+
+
+}
