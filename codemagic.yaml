@@ -3,10 +3,9 @@ workflows:
     name: Puzzle World Android Release
 
     environment:
-      flutter: stable
+      flutter: 3.35.2
 
     scripts:
-
       - name: Clean project
         script: |
           flutter clean
