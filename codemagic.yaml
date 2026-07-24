@@ -53,8 +53,8 @@ workflows:
 
       - name: Find APK
         script: |
+          echo "Searching APK files..."
           find . -name "*.apk"
 
     artifacts:
-      - build/app/outputs/flutter-apk/*.apk
-      - android/app/build/outputs/**/*.apk
+      - "**/*.apk"
