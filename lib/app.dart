@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'app/splash_screen.dart';
+import 'splash_screen.dart';
 
 
 class PuzzleWorldApp extends StatelessWidget {
