@@ -23,10 +23,6 @@ workflows:
         script: |
           flutter --version
           java -version
-          cd android
-          chmod +x gradlew
-          ./gradlew --version
-          cd ..
 
       - name: Check dependencies
         script: |
@@ -40,12 +36,6 @@ workflows:
       - name: Generate native splash
         script: |
           dart run flutter_native_splash:create
-
-      - name: Clean Android Gradle
-        script: |
-          cd android
-          ./gradlew clean
-          cd ..
 
       - name: Build APK
         script: |
