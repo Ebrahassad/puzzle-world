@@ -13,11 +13,19 @@ workflows:
 
       - name: Create local.properties
         script: |
-          echo "flutter.sdk=$HOME/programs/flutter" > android/local.properties
+          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
 
       - name: Get packages
         script: |
           flutter pub get
+
+      - name: Check environment
+        script: |
+          flutter --version
+          java -version
+          cd android
+          ./gradlew --version
+          cd ..
 
       - name: Check dependencies
         script: |
@@ -32,9 +40,15 @@ workflows:
         script: |
           dart run flutter_native_splash:create
 
+      - name: Clean Android Gradle
+        script: |
+          cd android
+          ./gradlew clean
+          cd ..
+
       - name: Build APK
         script: |
-          flutter build apk --release -v
+          flutter build apk --release --split-per-abi -v
 
     artifacts:
       - build/**/outputs/**/*.apk
