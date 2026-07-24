@@ -868,6 +868,8 @@ Navigator.pushReplacement(
 
         moves: moves,
 
+        time: seconds,
+
       ),
 
     ),
