@@ -41,12 +41,13 @@ workflows:
         script: |
           flutter build apk --release -v || true
 
-      - name: Find APK
+      - name: Check APK output
         script: |
-          echo "Searching APK files..."
-          find . -type f -name "*.apk" -print
-          echo "Checking build outputs..."
-          ls -R build/app/outputs || true
+          echo "Checking APK locations..."
+          ls -la build/app/outputs/flutter-apk || true
+          ls -la build/app/outputs/apk/release || true
+          find build -name "*.apk" -print || true
 
     artifacts:
-      - "**/*.apk"
+      - build/app/outputs/flutter-apk/*.apk
+      - build/app/outputs/apk/release/*.apk
