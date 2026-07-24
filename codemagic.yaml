@@ -7,6 +7,14 @@ workflows:
 
     scripts:
 
+      - name: Clean project
+        script: |
+          flutter clean
+
+      - name: Create local.properties
+        script: |
+          echo "flutter.sdk=$HOME/programs/flutter" > android/local.properties
+
       - name: Get packages
         script: |
           flutter pub get
