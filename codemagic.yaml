@@ -28,11 +28,6 @@ workflows:
           ./gradlew --version
           cd ..
 
-      - name: Check dependencies
-        script: |
-          flutter pub deps | grep audioplayers
-          flutter pub deps | grep shared_preferences
-
       - name: Generate launcher icons
         script: |
           dart run flutter_launcher_icons
