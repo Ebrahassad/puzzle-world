@@ -106,11 +106,8 @@ class _PuzzleLevelScreenState
 
 
 
-
-    final stars =
-
-    await PuzzleLevelService.getTotalStars();
-
+final stars =
+    await PuzzleLevelProgressService.getTotalStars();
 
 
 
