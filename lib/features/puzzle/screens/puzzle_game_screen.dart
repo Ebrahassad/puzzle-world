@@ -871,7 +871,6 @@ builder: (_) => PuzzleWinScreen(
 
   ),
 
-  level: int.tryParse(widget.level.id) ?? 1,
 
 ),),
 
