@@ -349,23 +349,7 @@ await RewardManager.completePuzzle(
 
 
 
-    await RewardManager.addCoins(
-
-      reward!.coins,
-
-    );
-
-
-
-    if(reward!.gems > 0){
-
-      await RewardManager.addGems(
-
-        reward!.gems,
-
-      );
-
-    }
+    
 
 
 
