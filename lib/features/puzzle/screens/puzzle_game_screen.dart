@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../models/game_result_model.dart';
-
+import '../models/puzzle_level_model.dart';
 import '../models/puzzle_model.dart';
 
 import '../engine/puzzle_controller.dart';
@@ -854,20 +854,27 @@ class _PuzzleGameScreenState
 
 
     Navigator.pushReplacement(
+Navigator.pushReplacement(
 
-      context,
+  context,
 
-      MaterialPageRoute(
-builder: (_) => PuzzleWinScreen(
+  MaterialPageRoute(
 
-  result: GameResultModel(
-    stars: 3,
-    moves: moves,
-    seconds: seconds,
+    builder: (_) => PuzzleWinScreen(
+
+      result: GameResultModel(
+
+        stars: 3,
+
+        moves: moves,
+
+      ),
+
+    ),
+
   ),
 
-),
-
+);
 
   }
 
