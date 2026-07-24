@@ -6,6 +6,7 @@ workflows:
       flutter: 3.35.2
 
     scripts:
+
       - name: Clean project
         script: |
           flutter clean
@@ -17,6 +18,11 @@ workflows:
       - name: Get packages
         script: |
           flutter pub get
+
+      - name: Check dependencies
+        script: |
+          flutter pub deps | grep audioplayers
+          flutter pub deps | grep shared_preferences
 
       - name: Generate launcher icons
         script: |
