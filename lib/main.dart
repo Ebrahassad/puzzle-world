@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'app.dart';
 
 void main() {
   runApp(
-    const ProviderScope(
-      child: PuzzleWorldApp(),
+    const MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Text("TEST"),
+        ),
+      ),
     ),
   );
 }
