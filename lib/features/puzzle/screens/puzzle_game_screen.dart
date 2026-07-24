@@ -1036,24 +1036,13 @@ return PuzzlePieceWidget(
 
   piece: piece,
 
-  imagePath: widget.puzzle.image,
+  image: AssetImage(
+    widget.puzzle.image,
+  ),
 
+  size: pieceSize,
 
-  onDrop: (position) {
-
-    dropPiece(
-
-      piece,
-
-      position,
-
-    );
-
-  },
-
-
-);
-                
+);        
 
               }).cast<Widget>().toList(),
 
