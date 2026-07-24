@@ -339,7 +339,7 @@ await RewardManager.completePuzzle(
 
       
 
-      level: widget.level,
+      
 
       coins: reward!.coins,
 
