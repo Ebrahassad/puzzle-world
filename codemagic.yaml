@@ -1,6 +1,6 @@
 workflows:
   android-workflow:
-    name: Puzzle World Android Release
+    name: Puzzle World Test APK
 
     environment:
       flutter: stable
@@ -10,19 +10,10 @@ workflows:
       - name: Clean
         script: |
           flutter clean
-          rm -f pubspec.lock
 
       - name: Get packages
         script: |
           flutter pub get
-
-      - name: Check ads version
-        script: |
-          flutter pub deps | grep google_mobile_ads
-
-      - name: Generate launcher icons
-        script: |
-          dart run flutter_launcher_icons
 
       - name: Build APK
         script: |
