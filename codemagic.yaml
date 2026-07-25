@@ -11,6 +11,10 @@ workflows:
         script: |
           flutter clean
 
+      - name: Remove old lock
+        script: |
+          rm -f pubspec.lock
+
       - name: Get packages
         script: |
           flutter pub get
@@ -22,10 +26,6 @@ workflows:
       - name: Generate native splash
         script: |
           dart run flutter_native_splash:create
-
-      - name: Upgrade packages
-        script: |
-          flutter pub upgrade
 
       - name: Build APK
         script: |
