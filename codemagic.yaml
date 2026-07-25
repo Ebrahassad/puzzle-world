@@ -13,6 +13,13 @@ workflows:
     scripts:
 
 
+      - name: Check environment
+        script: |
+          flutter --version
+          flutter doctor -v
+          java -version
+
+
       - name: Clean project
         script: |
           flutter clean
@@ -35,7 +42,7 @@ workflows:
 
       - name: Build APK
         script: |
-          flutter build apk --release -v
+          flutter build apk --release --split-per-abi -v
 
 
       - name: Debug APK output
@@ -43,12 +50,12 @@ workflows:
           echo "===== Checking APK files ====="
           find . -name "*.apk" -print
 
-          echo "===== Checking build folders ====="
-          ls -la build || true
-          ls -la build/app || true
-          ls -la build/app/outputs || true
+          echo "===== Checking Flutter APK folder ====="
           ls -la build/app/outputs/flutter-apk || true
+
+          echo "===== Checking Android APK folder ====="
           ls -la android/app/build/outputs/apk/release || true
+
 
 
     artifacts:
