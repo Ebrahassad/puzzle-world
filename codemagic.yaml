@@ -6,14 +6,9 @@ workflows:
       flutter: stable
 
     scripts:
-
       - name: Clean project
         script: |
           flutter clean
-
-      - name: Recreate Android
-        script: |
-          flutter create --platforms android .
 
       - name: Get packages
         script: |
