@@ -6,13 +6,20 @@ workflows:
       flutter: stable
 
     scripts:
+
       - name: Clean project
         script: |
           flutter clean
+          rm -f pubspec.lock
+          flutter pub cache repair
 
       - name: Get packages
         script: |
           flutter pub get
+
+      - name: Verify google_mobile_ads version
+        script: |
+          flutter pub deps | grep google_mobile_ads
 
       - name: Generate launcher icons
         script: |
