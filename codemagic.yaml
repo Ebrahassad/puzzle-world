@@ -11,6 +11,10 @@ workflows:
         script: |
           flutter clean
 
+      - name: Recreate Android
+        script: |
+          flutter create --platforms android .
+
       - name: Get packages
         script: |
           flutter pub get
