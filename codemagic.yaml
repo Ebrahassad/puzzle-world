@@ -15,6 +15,10 @@ workflows:
         script: |
           flutter create .
 
+      - name: Upgrade packages
+        script: |
+          flutter pub upgrade
+
       - name: Build APK
         script: |
           flutter build apk --release
