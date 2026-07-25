@@ -7,11 +7,6 @@ workflows:
 
     scripts:
 
-      - name: Check project
-        script: |
-          pwd
-          cat pubspec.yaml
-
       - name: Clean
         script: |
           flutter clean
@@ -28,10 +23,6 @@ workflows:
       - name: Generate launcher icons
         script: |
           dart run flutter_launcher_icons
-
-      - name: Generate native splash
-        script: |
-          dart run flutter_native_splash:create
 
       - name: Build APK
         script: |
