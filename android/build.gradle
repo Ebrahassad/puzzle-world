@@ -1,3 +1,7 @@
+plugins {
+    // لا تضع شيء هنا
+}
+
 rootProject.buildDir = "../build"
 
 subprojects {
