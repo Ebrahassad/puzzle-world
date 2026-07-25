@@ -7,17 +7,17 @@ workflows:
 
     scripts:
 
-      - name: Clean project
+      - name: Reset pub cache
         script: |
           flutter clean
+          rm -rf ~/.pub-cache/hosted/pub.dev/google_mobile_ads-5.3.1
           rm -f pubspec.lock
-          flutter pub cache repair
 
       - name: Get packages
         script: |
           flutter pub get
 
-      - name: Verify google_mobile_ads version
+      - name: Check ads version
         script: |
           flutter pub deps | grep google_mobile_ads
 
