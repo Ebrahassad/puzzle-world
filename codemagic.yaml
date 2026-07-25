@@ -7,13 +7,21 @@ workflows:
 
     scripts:
 
+      - name: Clean project
+        script: |
+          flutter clean
+
       - name: Get packages
         script: |
           flutter pub get
 
-      - name: Recreate Android
+      - name: Generate launcher icons
         script: |
-          flutter create .
+          dart run flutter_launcher_icons
+
+      - name: Generate native splash
+        script: |
+          dart run flutter_native_splash:create
 
       - name: Upgrade packages
         script: |
