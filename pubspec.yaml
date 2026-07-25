@@ -9,21 +9,28 @@ version: 1.0.0+1
 environment:
   sdk: ">=3.12.0 <4.0.0"
 
-
 dependencies:
-
   flutter:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
 
+  shared_preferences: ^2.5.3
+
+  audioplayers: ^6.5.0
+
+  confetti: ^0.8.0
 
 dev_dependencies:
-
   flutter_test:
     sdk: flutter
 
-
 flutter:
-
   uses-material-design: true
+
+  assets:
+    - assets/images/Puzzle/
+    - assets/images/background/
+    - assets/images/ui/
+    - assets/icon/
+    - assets/audio/
