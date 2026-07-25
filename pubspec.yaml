@@ -1,25 +1,96 @@
-workflows:
-  android-workflow:
-    name: Puzzle World Android Release
+name: puzzle_world
 
-    environment:
-      flutter: stable
+description: Jigsaw Puzzle Game
 
-    scripts:
+publish_to: "none"
 
-      - name: Remove old pub cache
-        script: |
-          rm -rf ~/.pub-cache/hosted/pub.dev/google_mobile_ads-5.3.1
-          rm -f pubspec.lock
+version: 1.0.0+1
 
-      - name: Get packages
-        script: |
-          flutter pub get
-          flutter pub deps | grep google_mobile_ads
 
-      - name: Build APK
-        script: |
-          flutter build apk --release
+environment:
+  sdk: ">=3.3.0 <4.0.0"
 
-    artifacts:
-      - build/app/outputs/flutter-apk/*.apk
+
+dependencies:
+
+  flutter:
+    sdk: flutter
+
+  flutter_riverpod: ^2.6.1
+
+  cupertino_icons: ^1.0.8
+
+  audioplayers: ^6.5.0
+
+  shared_preferences: ^2.5.3
+
+  google_mobile_ads: ^6.0.0
+
+  confetti: ^0.8.0
+
+  firebase_core: ^3.15.1
+
+  firebase_crashlytics: ^4.3.10
+
+
+
+dev_dependencies:
+
+  flutter_test:
+    sdk: flutter
+
+  flutter_launcher_icons: ^0.14.4
+
+  flutter_native_splash: ^2.4.6
+
+
+
+flutter:
+
+  uses-material-design: true
+
+
+  assets:
+
+    - assets/images/Puzzle/
+    - assets/images/background/
+    - assets/images/ui/
+    - assets/icon/
+    - assets/audio/
+
+
+
+flutter_launcher_icons:
+
+  android: true
+
+  ios: false
+
+  min_sdk_android: 21
+
+  image_path: assets/icon/app_icon.png
+
+  adaptive_icon_background: "#87CEEB"
+
+  adaptive_icon_foreground: assets/icon/app_icon.png
+
+
+
+flutter_native_splash:
+
+  android: true
+
+  ios: false
+
+  color: "#87CEEB"
+
+  image: assets/icon/app_icon.png
+
+  fullscreen: true
+
+
+  android_12:
+
+    color: "#87CEEB"
+
+    image: assets/icon/app_icon.png
