@@ -1,6 +1,42 @@
+workflows:
+
+  android-workflow:
+
+    name: Puzzle World Android Release
+
+
+    environment:
+
+      flutter: stable
+
+
+    scripts:
+
+
+      - name: Clean project
+        script: |
+          flutter clean
+
+
+      - name: Get packages
+        script: |
+          flutter pub get
+
+
+      - name: Generate launcher icons
+        script: |
+          dart run flutter_launcher_icons
+
+
+      - name: Generate native splash
+        script: |
+          dart run flutter_native_splash:create
+
+
       - name: Build APK
         script: |
           flutter build apk --release -v
+
 
       - name: Debug APK output
         script: |
@@ -14,6 +50,9 @@
           ls -la build/app/outputs/flutter-apk || true
           ls -la android/app/build/outputs/apk/release || true
 
+
     artifacts:
+
       - build/app/outputs/flutter-apk/*.apk
+
       - android/app/build/outputs/apk/release/*.apk
