@@ -11,10 +11,6 @@ workflows:
         script: |
           flutter clean
 
-      - name: Remove old lock
-        script: |
-          rm -f pubspec.lock
-
       - name: Get packages
         script: |
           flutter pub get
