@@ -6,10 +6,13 @@ publish_to: "none"
 
 version: 1.0.0+1
 
+
 environment:
   sdk: ">=3.12.0 <4.0.0"
 
+
 dependencies:
+
   flutter:
     sdk: flutter
 
@@ -19,20 +22,45 @@ dependencies:
   confetti: ^0.8.0
   google_mobile_ads: ^6.0.0
 
+
+
 dev_dependencies:
+
   flutter_test:
     sdk: flutter
 
+
+
 flutter:
+
   uses-material-design: true
 
-  flutter:
-  uses-material-design: true
+
 
   assets:
+
     - assets/images/Puzzle/
     - assets/images/background/
     - assets/images/ui/
     - assets/images/world/
+    - assets/images/Reward/
     - assets/icon/
     - assets/audio/
+
+
+
+  fonts:
+
+    - family: Cairo
+
+      fonts:
+
+        - asset: assets/fonts/Cairo-Regular.ttf
+
+        - asset: assets/fonts/Cairo-SemiBold.ttf
+
+          weight: 600
+
+        - asset: assets/fonts/Cairo-Bold.ttf
+
+          weight: 700
