@@ -10,16 +10,23 @@ import 'island_screen.dart';
 
 class WorldMapScreen extends StatefulWidget {
 
+
   const WorldMapScreen({
+
     super.key,
+
   });
+
 
 
   @override
   State<WorldMapScreen> createState() =>
       _WorldMapScreenState();
 
+
 }
+
+
 
 
 
@@ -29,12 +36,16 @@ class _WorldMapScreenState
 
   int totalStars = 0;
 
+
   bool loading = true;
 
 
 
+
+
+
   @override
-  void initState() {
+  void initState(){
 
     super.initState();
 
@@ -44,15 +55,22 @@ class _WorldMapScreenState
 
 
 
+
+
+
+
   Future<void> loadStars() async {
+
 
     final stars =
         await PuzzleProgressManager.getTotalStars();
 
 
+
+
     if(mounted){
 
-      setState(() {
+      setState((){
 
         totalStars = stars;
 
@@ -62,35 +80,50 @@ class _WorldMapScreenState
 
     }
 
+
   }
 
 
 
 
 
+
+
   void openWorld(
+
       PuzzleModel world,
-      ) {
+
+      ){
+
 
 
     if(totalStars < world.requiredStars){
 
+
+
       ScaffoldMessenger.of(context)
           .showSnackBar(
+
 
         SnackBar(
 
           content: Text(
-            "تحتاج ${world.requiredStars} نجمة لفتح ${world.title}",
+
+            "تحتاج ⭐ ${world.requiredStars} لفتح ${world.title}",
+
           ),
 
         ),
+
 
       );
 
       return;
 
     }
+
+
+
 
 
 
@@ -101,13 +134,17 @@ class _WorldMapScreenState
       MaterialPageRoute(
 
         builder: (_) =>
+
             IslandScreen(
+
               island: world,
+
             ),
 
       ),
 
     );
+
 
   }
 
@@ -116,15 +153,24 @@ class _WorldMapScreenState
 
 
 
+
+
   Widget islandButton(
+
       String id,
+
       double x,
+
       double y,
-      ) {
+
+      ){
+
 
 
     final world =
     PuzzleData.getById(id);
+
+
 
 
     if(world == null){
@@ -135,29 +181,45 @@ class _WorldMapScreenState
 
 
 
+
+
     final locked =
         totalStars < world.requiredStars;
 
 
 
+
+
+
+
     return Positioned(
 
-      left: x - 55,
 
-      top: y - 55,
+      left: x - 40,
 
-      width: 110,
 
-      height: 110,
+      top: y - 40,
+
+
+      width: 80,
+
+
+      height: 80,
+
 
 
       child: GestureDetector(
 
+
+
         onTap: (){
+
 
           openWorld(world);
 
+
         },
+
 
 
         child: Stack(
@@ -165,44 +227,102 @@ class _WorldMapScreenState
           alignment:
           Alignment.center,
 
+
+
           children: [
+
+
+
+
+            // مكان الجزيرة
+
+            Container(
+
+              decoration:
+              BoxDecoration(
+
+
+                color:
+                Colors.white24,
+
+
+                shape:
+                BoxShape.circle,
+
+
+
+                border:
+                Border.all(
+
+                  color:
+                  Colors.white54,
+
+                  width:2,
+
+                ),
+
+
+              ),
+
+            ),
+
+
+
+
 
 
             if(locked)
 
+
               Container(
 
-                decoration: BoxDecoration(
+                decoration:
+                const BoxDecoration(
+
 
                   color:
-                  Colors.black38,
+                  Colors.black45,
 
-                  borderRadius:
-                  BorderRadius.circular(60),
+
+                  shape:
+                  BoxShape.circle,
+
 
                 ),
 
-                child: const Icon(
+
+                child:
+                const Icon(
+
 
                   Icons.lock,
+
 
                   color:
                   Colors.white,
 
-                  size:45,
+
+                  size:35,
+
 
                 ),
+
 
               ),
 
 
+
           ],
+
 
         ),
 
+
       ),
 
+
     );
+
 
   }
 
@@ -211,15 +331,22 @@ class _WorldMapScreenState
 
 
 
+
+
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context){
+
 
 
     if(loading){
 
+
       return const Scaffold(
 
-        body: Center(
+
+        body:
+        Center(
 
           child:
           CircularProgressIndicator(),
@@ -228,279 +355,493 @@ class _WorldMapScreenState
 
       );
 
+
     }
+
+
+
+
 
 
 
     return Scaffold(
 
-      body: Stack(
+
+
+      body:
+      Stack(
+
+
 
         children: [
 
 
 
+
+
           Positioned.fill(
+
+
 
             child: Image.asset(
 
+
+
               "assets/images/world/world_map.jpg",
 
-              fit: BoxFit.cover,
+
+
+              fit:
+              BoxFit.cover,
+
+
+
 
               errorBuilder:
                   (context,error,stackTrace){
 
+
+
                 return Container(
+
 
                   color:
                   Colors.lightBlue,
 
+
                 );
+
 
               },
 
+
+
             ),
 
+
+
           ),
+
+
+
 
 
 
 
           SafeArea(
 
+
+
             child: Column(
+
+
 
               children: [
 
 
 
+
+
+
                 Padding(
+
+
 
                   padding:
                   const EdgeInsets.symmetric(
+
                     horizontal:15,
+
                   ),
+
+
 
                   child: Row(
 
+
+
                     mainAxisAlignment:
                     MainAxisAlignment.spaceBetween,
+
+
 
                     children: [
 
 
 
+
+
                       IconButton(
+
+
 
                         onPressed: (){
 
+
                           // الإعدادات لاحقاً
+
 
                         },
 
-                        icon: const Icon(
+
+
+                        icon:
+                        const Icon(
+
+
 
                           Icons.settings,
+
+
 
                           color:
                           Colors.white,
 
+
+
                           size:32,
+
 
                         ),
 
+
+
                       ),
+
+
 
 
 
 
                       const Text(
 
+
+
                         "🌍 Puzzle World",
 
-                        style: TextStyle(
+
+
+                        style:
+                        TextStyle(
+
+
 
                           color:
                           Colors.white,
 
+
+
                           fontSize:30,
+
+
 
                           fontWeight:
                           FontWeight.bold,
 
-                          shadows: [
+
+
+                          shadows:[
+
+
 
                             Shadow(
+
+
 
                               color:
                               Colors.black45,
 
-                              blurRadius:8,
+
+
+                              blurRadius:
+                              8,
+
+
 
                             ),
 
+
                           ],
+
+
 
                         ),
 
+
+
                       ),
+
+
+
 
 
 
 
                       Container(
 
+
+
                         padding:
                         const EdgeInsets.symmetric(
 
+
+
                           horizontal:12,
+
+
 
                           vertical:8,
 
+
+
                         ),
+
+
 
                         decoration:
                         BoxDecoration(
 
+
+
                           color:
                           Colors.white24,
+
+
 
                           borderRadius:
                           BorderRadius.circular(20),
 
+
+
                         ),
 
-                        child: Text(
+
+
+
+                        child:
+                        Text(
+
+
 
                           "⭐ $totalStars",
+
+
 
                           style:
                           const TextStyle(
 
+
+
                             color:
                             Colors.white,
 
+
+
                             fontSize:20,
+
+
 
                             fontWeight:
                             FontWeight.bold,
 
+
+
                           ),
 
+
+
                         ),
+
+
 
                       ),
 
 
 
+
+
                     ],
+
+
 
                   ),
 
+
+
                 ),
+
+
+
 
 
 
 
                 Expanded(
 
-                  child: Stack(
-
-                    children: [
 
 
-
-                      // جزيرة الحيوانات
-
-                      islandButton(
-
-                        "animals",
-
-                        256,
-
-                        200,
-
-                      ),
+                  child:
+                  LayoutBuilder(
 
 
 
-                      // جزيرة السيارات
-
-                      islandButton(
-
-                        "cars",
-
-                        212,
-
-                        552,
-
-                      ),
+                    builder:
+                        (context,constraints){
 
 
 
-                      // جزيرة الفضاء
-
-                      islandButton(
-
-                        "space",
-
-                        732,
-
-                        252,
-
-                      ),
+                      final width =
+                          constraints.maxWidth;
 
 
 
-                      // جزيرة المعالم
-
-                      islandButton(
-
-                        "landmarks",
-
-                        784,
-
-                        568,
-
-                      ),
+                      final height =
+                          constraints.maxHeight;
 
 
 
-                      // جزيرة الطبيعة
-
-                      islandButton(
-
-                        "nature",
-
-                        380,
-
-                        793,
-
-                      ),
 
 
 
-                    ],
+                      return Stack(
+
+
+
+                        children: [
+
+
+
+
+
+                          // الحيوانات
+
+                          islandButton(
+
+                            "animals",
+
+                            width * 0.256,
+
+                            height * 0.20,
+
+                          ),
+
+
+
+
+
+
+                          // السيارات
+
+                          islandButton(
+
+                            "cars",
+
+                            width * 0.212,
+
+                            height * 0.552,
+
+                          ),
+
+
+
+
+
+
+                          // الفضاء
+
+                          islandButton(
+
+                            "space",
+
+                            width * 0.732,
+
+                            height * 0.252,
+
+                          ),
+
+
+
+
+
+
+                          // المعالم
+
+                          islandButton(
+
+                            "landmarks",
+
+                            width * 0.784,
+
+                            height * 0.568,
+
+                          ),
+
+
+
+
+
+
+                          // الطبيعة
+
+                          islandButton(
+
+                            "nature",
+
+                            width * 0.380,
+
+                            height * 0.793,
+
+                          ),
+
+
+
+
+
+                        ],
+
+
+
+                      );
+
+
+
+                    },
+
 
                   ),
+
+
 
                 ),
 
 
+
+
+
               ],
 
+
+
             ),
+
+
 
           ),
 
 
+
         ],
+
+
 
       ),
 
+
+
     );
 
+
   }
+
 
 }
