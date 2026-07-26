@@ -4,34 +4,31 @@ import '../data/puzzle_data.dart';
 import '../managers/puzzle_progress_manager.dart';
 import '../models/puzzle_model.dart';
 
+import '../widgets/game_toolbar.dart';
+
 import 'island_screen.dart';
 
 
 
 class WorldMapScreen extends StatefulWidget {
 
-
   const WorldMapScreen({
-
     super.key,
-
   });
-
 
 
   @override
   State<WorldMapScreen> createState() =>
       _WorldMapScreenState();
 
-
 }
 
 
 
 
-
 class _WorldMapScreenState
-    extends State<WorldMapScreen> {
+    extends State<WorldMapScreen>
+    with SingleTickerProviderStateMixin {
 
 
   int totalStars = 0;
@@ -41,19 +38,55 @@ class _WorldMapScreenState
 
 
 
+  late AnimationController _floatController;
+
+  late Animation<double> _floatAnimation;
+
+
 
 
 
   @override
-  void initState(){
+  void initState() {
 
     super.initState();
 
+
     loadStars();
 
+
+
+    _floatController = AnimationController(
+
+      vsync: this,
+
+      duration: const Duration(seconds: 3),
+
+    )..repeat(
+      reverse: true,
+    );
+
+
+
+    _floatAnimation = Tween<double>(
+
+      begin: -5,
+
+      end: 5,
+
+    ).animate(
+
+      CurvedAnimation(
+
+        parent: _floatController,
+
+        curve: Curves.easeInOut,
+
+      ),
+
+    );
+
   }
-
-
 
 
 
@@ -63,8 +96,7 @@ class _WorldMapScreenState
 
 
     final stars =
-        await PuzzleProgressManager.getTotalStars();
-
+    await PuzzleProgressManager.getTotalStars();
 
 
 
@@ -80,7 +112,6 @@ class _WorldMapScreenState
 
     }
 
-
   }
 
 
@@ -89,42 +120,7 @@ class _WorldMapScreenState
 
 
 
-  void openWorld(
-
-      PuzzleModel world,
-
-      ){
-
-
-
-    if(totalStars < world.requiredStars){
-
-
-
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-
-
-        SnackBar(
-
-          content: Text(
-
-            "تحتاج ⭐ ${world.requiredStars} لفتح ${world.title}",
-
-          ),
-
-        ),
-
-
-      );
-
-      return;
-
-    }
-
-
-
-
+  void openWorld(PuzzleModel world){
 
 
     Navigator.push(
@@ -145,9 +141,7 @@ class _WorldMapScreenState
 
     );
 
-
   }
-
 
 
 
@@ -166,10 +160,8 @@ class _WorldMapScreenState
       ){
 
 
-
     final world =
     PuzzleData.getById(id);
-
 
 
 
@@ -182,137 +174,62 @@ class _WorldMapScreenState
 
 
 
-
-    final locked =
-        totalStars < world.requiredStars;
-
-
-
-
-
-
-
     return Positioned(
-
 
       left: x - 40,
 
-
       top: y - 40,
 
-
       width: 80,
-
 
       height: 80,
 
 
 
-      child: GestureDetector(
+      child: AnimatedBuilder(
+
+        animation: _floatAnimation,
 
 
+        builder: (context, child){
 
-        onTap: (){
+
+          return Transform.translate(
+
+            offset: Offset(
+
+              0,
+
+              _floatAnimation.value,
+
+            ),
 
 
-          openWorld(world);
+            child: child,
+
+          );
 
 
         },
 
 
 
-        child: Stack(
+        child: GestureDetector(
 
-          alignment:
-          Alignment.center,
-
+          onTap: (){
 
 
-          children: [
+            openWorld(world);
 
 
+          },
 
 
-            // مكان الجزيرة
+          child: Container(
 
-            Container(
+            color: Colors.transparent,
 
-              decoration:
-              BoxDecoration(
-
-
-                color:
-                Colors.white24,
-
-
-                shape:
-                BoxShape.circle,
-
-
-
-                border:
-                Border.all(
-
-                  color:
-                  Colors.white54,
-
-                  width:2,
-
-                ),
-
-
-              ),
-
-            ),
-
-
-
-
-
-
-            if(locked)
-
-
-              Container(
-
-                decoration:
-                const BoxDecoration(
-
-
-                  color:
-                  Colors.black45,
-
-
-                  shape:
-                  BoxShape.circle,
-
-
-                ),
-
-
-                child:
-                const Icon(
-
-
-                  Icons.lock,
-
-
-                  color:
-                  Colors.white,
-
-
-                  size:35,
-
-
-                ),
-
-
-              ),
-
-
-
-          ],
+          ),
 
 
         ),
@@ -320,13 +237,24 @@ class _WorldMapScreenState
 
       ),
 
-
     );
-
 
   }
 
 
+
+
+
+
+
+  @override
+  void dispose(){
+
+    _floatController.dispose();
+
+    super.dispose();
+
+  }
 
 
 
@@ -341,23 +269,17 @@ class _WorldMapScreenState
 
     if(loading){
 
-
       return const Scaffold(
 
+        body: Center(
 
-        body:
-        Center(
-
-          child:
-          CircularProgressIndicator(),
+          child: CircularProgressIndicator(),
 
         ),
 
       );
 
-
     }
-
 
 
 
@@ -368,57 +290,71 @@ class _WorldMapScreenState
 
 
 
-      body:
-      Stack(
-
-
+      body: Stack(
 
         children: [
 
 
 
 
-
           Positioned.fill(
-
-
 
             child: Image.asset(
 
+              "assets/images/World/world_map.jpg",
 
 
-              "assets/images/world/world_map.jpg",
-
-
-
-              fit:
-              BoxFit.cover,
-
+              fit: BoxFit.cover,
 
 
 
               errorBuilder:
-                  (context,error,stackTrace){
 
+                  (context,error,stackTrace){
 
 
                 return Container(
 
-
-                  color:
-                  Colors.lightBlue,
-
+                  color: Colors.lightBlue,
 
                 );
-
 
               },
 
 
-
             ),
 
+          ),
 
+
+
+
+
+
+
+          Positioned(
+
+            top: 0,
+
+            left: 0,
+
+            right: 0,
+
+
+            child: GameToolbar(
+
+              logo:
+
+              "assets/images/UI/puzzle_logo.png",
+
+
+              stars: totalStars,
+
+
+              rewards: 0,
+
+
+            ),
 
           ),
 
@@ -431,400 +367,110 @@ class _WorldMapScreenState
           SafeArea(
 
 
+            child: LayoutBuilder(
 
-            child: Column(
 
+              builder:
 
+                  (context,constraints){
 
-              children: [
 
 
+                final width =
+                    constraints.maxWidth;
 
 
 
+                final height =
+                    constraints.maxHeight;
 
-                Padding(
 
 
 
-                  padding:
-                  const EdgeInsets.symmetric(
 
-                    horizontal:15,
+                return Stack(
 
-                  ),
+                  children: [
 
 
 
-                  child: Row(
 
+                    islandButton(
 
+                      "animals",
 
-                    mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween,
+                      width * 0.256,
 
+                      height * 0.20,
 
+                    ),
 
-                    children: [
 
 
 
 
+                    islandButton(
 
-                      IconButton(
+                      "cars",
 
+                      width * 0.212,
 
+                      height * 0.552,
 
-                        onPressed: (){
+                    ),
 
 
-                          // الإعدادات لاحقاً
 
 
-                        },
 
+                    islandButton(
 
+                      "space",
 
-                        icon:
-                        const Icon(
+                      width * 0.732,
 
+                      height * 0.252,
 
+                    ),
 
-                          Icons.settings,
 
 
 
-                          color:
-                          Colors.white,
 
+                    islandButton(
 
+                      "landmarks",
 
-                          size:32,
+                      width * 0.784,
 
+                      height * 0.568,
 
-                        ),
+                    ),
 
 
 
-                      ),
 
 
+                    islandButton(
 
+                      "nature",
 
+                      width * 0.380,
 
+                      height * 0.793,
 
-                      const Text(
+                    ),
 
 
 
-                        "🌍 Puzzle World",
+                  ],
 
+                );
 
-
-                        style:
-                        TextStyle(
-
-
-
-                          color:
-                          Colors.white,
-
-
-
-                          fontSize:30,
-
-
-
-                          fontWeight:
-                          FontWeight.bold,
-
-
-
-                          shadows:[
-
-
-
-                            Shadow(
-
-
-
-                              color:
-                              Colors.black45,
-
-
-
-                              blurRadius:
-                              8,
-
-
-
-                            ),
-
-
-                          ],
-
-
-
-                        ),
-
-
-
-                      ),
-
-
-
-
-
-
-
-                      Container(
-
-
-
-                        padding:
-                        const EdgeInsets.symmetric(
-
-
-
-                          horizontal:12,
-
-
-
-                          vertical:8,
-
-
-
-                        ),
-
-
-
-                        decoration:
-                        BoxDecoration(
-
-
-
-                          color:
-                          Colors.white24,
-
-
-
-                          borderRadius:
-                          BorderRadius.circular(20),
-
-
-
-                        ),
-
-
-
-
-                        child:
-                        Text(
-
-
-
-                          "⭐ $totalStars",
-
-
-
-                          style:
-                          const TextStyle(
-
-
-
-                            color:
-                            Colors.white,
-
-
-
-                            fontSize:20,
-
-
-
-                            fontWeight:
-                            FontWeight.bold,
-
-
-
-                          ),
-
-
-
-                        ),
-
-
-
-                      ),
-
-
-
-
-
-                    ],
-
-
-
-                  ),
-
-
-
-                ),
-
-
-
-
-
-
-
-                Expanded(
-
-
-
-                  child:
-                  LayoutBuilder(
-
-
-
-                    builder:
-                        (context,constraints){
-
-
-
-                      final width =
-                          constraints.maxWidth;
-
-
-
-                      final height =
-                          constraints.maxHeight;
-
-
-
-
-
-
-                      return Stack(
-
-
-
-                        children: [
-
-
-
-
-
-                          // الحيوانات
-
-                          islandButton(
-
-                            "animals",
-
-                            width * 0.256,
-
-                            height * 0.20,
-
-                          ),
-
-
-
-
-
-
-                          // السيارات
-
-                          islandButton(
-
-                            "cars",
-
-                            width * 0.212,
-
-                            height * 0.552,
-
-                          ),
-
-
-
-
-
-
-                          // الفضاء
-
-                          islandButton(
-
-                            "space",
-
-                            width * 0.732,
-
-                            height * 0.252,
-
-                          ),
-
-
-
-
-
-
-                          // المعالم
-
-                          islandButton(
-
-                            "landmarks",
-
-                            width * 0.784,
-
-                            height * 0.568,
-
-                          ),
-
-
-
-
-
-
-                          // الطبيعة
-
-                          islandButton(
-
-                            "nature",
-
-                            width * 0.380,
-
-                            height * 0.793,
-
-                          ),
-
-
-
-
-
-                        ],
-
-
-
-                      );
-
-
-
-                    },
-
-
-                  ),
-
-
-
-                ),
-
-
-
-
-
-              ],
-
+              },
 
 
             ),
-
-
 
           ),
 
@@ -832,16 +478,10 @@ class _WorldMapScreenState
 
         ],
 
-
-
       ),
-
-
 
     );
 
-
   }
-
 
 }
