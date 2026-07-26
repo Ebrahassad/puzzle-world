@@ -8,6 +8,7 @@ import '../models/puzzle_model.dart';
 import 'puzzle_level_screen.dart';
 
 
+
 class WorldMapScreen extends StatefulWidget {
 
   const WorldMapScreen({
@@ -52,7 +53,7 @@ class _WorldMapScreenState
 
     if(mounted){
 
-      setState((){
+      setState(() {
 
         totalStars = stars;
 
@@ -68,11 +69,12 @@ class _WorldMapScreenState
 
 
 
-  void openIsland(
-      PuzzleModel puzzle,
-      ){
+  void openWorld(
+      PuzzleModel world,
+      ) {
 
-    if(totalStars < puzzle.requiredStars){
+
+    if(totalStars < world.requiredStars){
 
       ScaffoldMessenger.of(context)
           .showSnackBar(
@@ -80,7 +82,7 @@ class _WorldMapScreenState
         SnackBar(
 
           content: Text(
-            "تحتاج ${puzzle.requiredStars} نجمة لفتح ${puzzle.title}",
+            "تحتاج ${world.requiredStars} نجمة لفتح ${world.title}",
           ),
 
         ),
@@ -95,8 +97,9 @@ class _WorldMapScreenState
 
     final levels =
         PuzzleLevelData.getLevels(
-          puzzle.id,
+          world.id,
         );
+
 
 
     if(levels.isEmpty){
@@ -115,7 +118,7 @@ class _WorldMapScreenState
 
         builder: (_) =>
             PuzzleLevelScreen(
-              puzzle: puzzle,
+              puzzle: world,
             ),
 
       ),
@@ -123,6 +126,8 @@ class _WorldMapScreenState
     );
 
   }
+
+
 
 
 
@@ -149,287 +154,333 @@ class _WorldMapScreenState
 
 
 
+
     return Scaffold(
 
-      body: Container(
+      body: Stack(
 
-        decoration: const BoxDecoration(
+        children: [
 
-          image: DecorationImage(
 
-            image: AssetImage(
-              "assets/images/background/home_background.png",
+
+          Positioned.fill(
+
+            child: Image.asset(
+
+              "assets/images/world/world_map.jpg",
+
+              fit: BoxFit.cover,
+
+              errorBuilder:
+                  (context,error,stackTrace){
+
+                return Container(
+
+                  color:
+                  Colors.lightBlue,
+
+                );
+
+              },
+
             ),
-
-            fit: BoxFit.cover,
 
           ),
 
-        ),
 
 
 
-        child: SafeArea(
+          SafeArea(
 
-          child: Column(
+            child: Column(
 
-            children: [
-
-
-              const SizedBox(height:20),
+              children: [
 
 
 
-              Row(
-
-                mainAxisAlignment:
-                MainAxisAlignment.center,
-
-                children: [
-
-
-                  const Text(
-
-                    "🌍 Puzzle World",
-
-                    style: TextStyle(
-
-                      color: Colors.white,
-
-                      fontSize: 30,
-
-                      fontWeight:
-                      FontWeight.bold,
-
-                    ),
-
-                  ),
+                const SizedBox(height:20),
 
 
 
-                  const SizedBox(width:20),
+                Row(
+
+                  mainAxisAlignment:
+                  MainAxisAlignment.center,
+
+                  children: [
 
 
 
-                  Container(
+                    const Text(
 
-                    padding:
-                    const EdgeInsets.symmetric(
-                      horizontal:15,
-                      vertical:8,
-                    ),
+                      "Puzzle World",
 
-                    decoration: BoxDecoration(
-
-                      color: Colors.white24,
-
-                      borderRadius:
-                      BorderRadius.circular(20),
-
-                    ),
-
-
-                    child: Text(
-
-                      "⭐ $totalStars",
-
-                      style:
-                      const TextStyle(
+                      style: TextStyle(
 
                         color: Colors.white,
 
-                        fontSize:20,
+                        fontSize:32,
 
                         fontWeight:
                         FontWeight.bold,
+
+                        shadows: [
+
+                          Shadow(
+
+                            color:
+                            Colors.black45,
+
+                            blurRadius:8,
+
+                          ),
+
+                        ],
 
                       ),
 
                     ),
 
-                  ),
 
 
-                ],
+                    const SizedBox(width:20),
 
-              ),
 
 
+                    Container(
 
+                      padding:
+                      const EdgeInsets.symmetric(
 
-              const SizedBox(height:20),
+                        horizontal:15,
 
+                        vertical:8,
 
+                      ),
 
+                      decoration: BoxDecoration(
 
+                        color:
+                        Colors.white24,
 
-              Expanded(
+                        borderRadius:
+                        BorderRadius.circular(20),
 
-                child: GridView.builder(
+                      ),
 
-                  padding:
-                  const EdgeInsets.all(20),
+                      child: Text(
 
+                        "⭐ $totalStars",
 
-                  itemCount:
-                  PuzzleData.puzzles.length,
+                        style:
+                        const TextStyle(
 
+                          color:
+                          Colors.white,
 
-                  gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
+                          fontSize:20,
 
-                    crossAxisCount:2,
+                          fontWeight:
+                          FontWeight.bold,
 
-                    crossAxisSpacing:20,
+                        ),
 
-                    mainAxisSpacing:20,
+                      ),
 
-                    childAspectRatio:0.8,
+                    ),
 
-                  ),
 
 
+                  ],
 
-                  itemBuilder:
-                  (context,index){
+                ),
 
 
-                    final island =
-                    PuzzleData.puzzles[index];
 
 
 
-                    final locked =
-                    totalStars <
-                        island.requiredStars;
+                Expanded(
 
+                  child: GridView.builder(
 
+                    padding:
+                    const EdgeInsets.all(25),
 
-                    return GestureDetector(
 
+                    itemCount:
+                    PuzzleData.puzzles.length,
 
-                      onTap:(){
 
-                        openIsland(island);
+                    gridDelegate:
+                    const SliverGridDelegateWithFixedCrossAxisCount(
 
-                      },
+                      crossAxisCount:2,
 
+                      crossAxisSpacing:25,
 
+                      mainAxisSpacing:25,
 
-                      child: Stack(
+                    ),
 
-                        alignment:
-                        Alignment.center,
 
 
-                        children: [
+                    itemBuilder:
+                        (context,index){
 
 
 
-                          Container(
+                      final world =
+                      PuzzleData.puzzles[index];
 
-                            decoration:
-                            BoxDecoration(
 
-                              borderRadius:
-                              BorderRadius.circular(35),
 
-                              boxShadow:
-                              const [
+                      final locked =
+                      totalStars <
+                          world.requiredStars;
 
-                                BoxShadow(
 
-                                  color:
-                                  Colors.black38,
 
-                                  blurRadius:15,
+                      return GestureDetector(
 
-                                  offset:
-                                  Offset(0,8),
+                        onTap:(){
 
-                                ),
+                          openWorld(world);
 
-                              ],
+                        },
 
-                            ),
 
 
-                            child: ClipRRect(
+                        child: Stack(
 
-                              borderRadius:
-                              BorderRadius.circular(35),
+                          alignment:
+                          Alignment.center,
 
+                          children: [
 
-                              child:
-                              Image.asset(
 
-                                island.image,
-
-                                fit:
-                                BoxFit.contain,
-
-
-                              ),
-
-                            ),
-
-                          ),
-
-
-
-
-                          if(locked)
 
                             Container(
 
                               decoration:
                               BoxDecoration(
 
-                                color:
-                                Colors.black45,
-
                                 borderRadius:
                                 BorderRadius.circular(35),
+
+                                boxShadow:
+                                const [
+
+                                  BoxShadow(
+
+                                    color:
+                                    Colors.black38,
+
+                                    blurRadius:15,
+
+                                    offset:
+                                    Offset(0,8),
+
+                                  ),
+
+                                ],
 
                               ),
 
 
-                              child:
-                              const Icon(
 
-                                Icons.lock,
+                              child: ClipRRect(
 
-                                color:
-                                Colors.white,
+                                borderRadius:
+                                BorderRadius.circular(35),
 
-                                size:55,
+
+                                child:
+                                Image.asset(
+
+                                  world.image,
+
+                                  fit:
+                                  BoxFit.contain,
+
+                                  errorBuilder:
+                                      (context,error,stack){
+
+                                    return const Icon(
+
+                                      Icons.image_not_supported,
+
+                                      size:70,
+
+                                      color:
+                                      Colors.white,
+
+                                    );
+
+                                  },
+
+                                ),
 
                               ),
 
                             ),
 
 
-                        ],
-
-                      ),
-
-                    );
 
 
-                  },
+                            if(locked)
 
+                              Container(
+
+                                decoration:
+                                BoxDecoration(
+
+                                  color:
+                                  Colors.black45,
+
+                                  borderRadius:
+                                  BorderRadius.circular(35),
+
+                                ),
+
+
+                                child:
+                                const Icon(
+
+                                  Icons.lock,
+
+                                  size:60,
+
+                                  color:
+                                  Colors.white,
+
+                                ),
+
+                              ),
+
+
+
+                          ],
+
+                        ),
+
+                      );
+
+                    },
+
+
+                  ),
 
                 ),
 
-              ),
 
+              ],
 
-            ],
-
+            ),
 
           ),
 
-        ),
+
+        ],
 
       ),
 
