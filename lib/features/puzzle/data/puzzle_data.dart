@@ -90,7 +90,7 @@ class PuzzleData {
     PuzzleModel(
   id: "landmarks",
   title: "جزيرة المعالم",
-  image: "assets/images/islands/city_island.png",
+  image: "assets/images/islands/city_island.jpg",
   description: "اكتشف أشهر المعالم حول العالم وحل الألغاز الممتعة",
   totalLevels: 10,
   requiredStars: 100,
