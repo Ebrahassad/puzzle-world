@@ -1,24 +1,37 @@
 class PuzzleModel {
-  // معرف العالم
+
+
+  // معرف الجزيرة
   final String id;
 
-  // اسم العالم
+
+  // اسم الجزيرة
   final String title;
 
-  // صورة العالم
+
+  // صورة الجزيرة
   final String image;
 
-  // وصف العالم (مستقبلاً)
+
+  // وصف الجزيرة
   final String description;
 
-  // عدد المراحل داخل العالم
+
+  // عدد المراحل داخل الجزيرة
   final int totalLevels;
 
-  // هل العالم مفتوح
+
+  // هل الجزيرة مفتوحة
   final bool unlocked;
 
-  // النجوم المطلوبة لفتح العالم
+
+  // النجوم المطلوبة لفتح الجزيرة
   final int requiredStars;
+
+
+  // ترتيب الجزيرة في الخريطة
+  final int order;
+
 
 
   const PuzzleModel({
@@ -37,7 +50,11 @@ class PuzzleModel {
 
     this.requiredStars = 0,
 
+    this.order = 0,
+
   });
+
+
 
 
 
@@ -62,6 +79,8 @@ class PuzzleModel {
       "unlocked": unlocked,
 
       "requiredStars": requiredStars,
+
+      "order": order,
 
     };
 
@@ -105,6 +124,10 @@ class PuzzleModel {
       requiredStars:
       json["requiredStars"] ?? 0,
 
+
+      order:
+      json["order"] ?? 0,
+
     );
 
   }
@@ -133,6 +156,8 @@ class PuzzleModel {
 
     int? requiredStars,
 
+    int? order,
+
   }) {
 
 
@@ -140,21 +165,31 @@ class PuzzleModel {
 
       id: id ?? this.id,
 
+
       title: title ?? this.title,
 
+
       image: image ?? this.image,
+
 
       description:
       description ?? this.description,
 
+
       totalLevels:
       totalLevels ?? this.totalLevels,
+
 
       unlocked:
       unlocked ?? this.unlocked,
 
+
       requiredStars:
       requiredStars ?? this.requiredStars,
+
+
+      order:
+      order ?? this.order,
 
     );
 
@@ -165,7 +200,7 @@ class PuzzleModel {
 
 
   //==================================================
-  // مقارنة العوالم
+  // مقارنة الجزر
   //==================================================
 
   @override
@@ -207,11 +242,13 @@ PuzzleModel(
  id: $id,
  title: $title,
  levels: $totalLevels,
- unlocked: $unlocked
+ unlocked: $unlocked,
+ order: $order
 )
 
 """;
 
   }
+
 
 }
