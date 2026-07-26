@@ -1,145 +1,92 @@
 import 'package:flutter/material.dart';
 
+import '../data/puzzle_data.dart';
+import '../data/puzzle_level_data.dart';
 import '../managers/puzzle_progress_manager.dart';
-import '../managers/reward_manager.dart';
-import '../services/reward_ad_service.dart';
+import '../models/puzzle_model.dart';
+
+import 'puzzle_level_screen.dart';
 
 
 
-class WalletScreen extends StatefulWidget {
+class WorldMapScreen extends StatefulWidget {
 
-
-  const WalletScreen({
-
+  const WorldMapScreen({
     super.key,
-
   });
 
 
-
   @override
-  State<WalletScreen> createState() =>
-      _WalletScreenState();
+  State<WorldMapScreen> createState() =>
+      _WorldMapScreenState();
 
 }
 
 
 
+class _WorldMapScreenState
+    extends State<WorldMapScreen> {
 
 
-
-
-class _WalletScreenState extends State<WalletScreen> {
-
-
-  int coins = 0;
-
-
-  int gems = 0;
-
-
-  int hints = 0;
-
+  int totalStars = 0;
 
   bool loading = true;
 
 
 
-
-
-
   @override
-  void initState(){
+  void initState() {
 
     super.initState();
 
-    loadWallet();
+    loadStars();
 
   }
 
 
 
+  Future<void> loadStars() async {
+
+    final stars =
+        await PuzzleProgressManager.getTotalStars();
 
 
+    if (mounted) {
 
+      setState(() {
 
-
-  Future<void> loadWallet() async {
-
-
-
-    final c =
-
-    await RewardManager.getCoins();
-
-
-
-    final g =
-
-    await RewardManager.getGems();
-
-
-
-
-    final h =
-
-    await PuzzleProgressManager.getHints();
-
-
-
-
-
-    if(mounted){
-
-
-      setState((){
-
-
-
-        coins = c;
-
-
-        gems = g;
-
-
-        hints = h;
-
+        totalStars = stars;
 
         loading = false;
 
-
-
       });
 
-
-
     }
-
-
 
   }
 
 
 
 
+  void openWorld(
+      PuzzleModel world,
+      ) {
 
 
+    if (totalStars < world.requiredStars) {
 
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
 
+        SnackBar(
 
-  Future<void> addWallet() async {
+          content: Text(
+            "تحتاج ${world.requiredStars} نجمة لفتح ${world.title}",
+          ),
 
+        ),
 
-
-    final watched =
-
-    await RewardAdService.showRewardAd();
-
-
-
-
-
-    if(!watched){
+      );
 
       return;
 
@@ -147,75 +94,125 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
+    final levels =
+        PuzzleLevelData.getLevels(
+          world.id,
+        );
 
 
+    if (levels.isEmpty) {
 
-    final reward =
-
-    await RewardManager.rewardedAdBonus();
-
-
-
-
-
-    await PuzzleProgressManager.addHints(
-
-      5,
-
-    );
-
-
-
-
-
-
-    await loadWallet();
-
-
-
-
-
-
-    if(mounted){
-
-
-
-      ScaffoldMessenger.of(context)
-
-          .showSnackBar(
-
-
-
-        SnackBar(
-
-
-
-          content:Text(
-
-
-
-            "🎉 +${reward.coins} عملة و +5 تلميحات",
-
-          ),
-
-
-
-        ),
-
-
-
-      );
-
-
+      return;
 
     }
 
 
 
+    Navigator.push(
+
+      context,
+
+      MaterialPageRoute(
+
+        builder: (_) => PuzzleLevelScreen(
+          puzzle: world,
+        ),
+
+      ),
+
+    );
+
   }
 
 
 
+
+
+  Widget islandButton(
+      String id,
+      double x,
+      double y,
+      ) {
+
+
+    final world =
+    PuzzleData.getById(id);
+
+
+    if (world == null) {
+
+      return const SizedBox();
+
+    }
+
+
+
+    final locked =
+        totalStars < world.requiredStars;
+
+
+
+    return Positioned(
+
+      left: x - 55,
+
+      top: y - 55,
+
+      width: 110,
+
+      height: 110,
+
+      child: GestureDetector(
+
+        onTap: () {
+
+          openWorld(world);
+
+        },
+
+
+        child: Stack(
+
+          alignment: Alignment.center,
+
+          children: [
+
+
+            if (locked)
+
+              Container(
+
+                decoration: BoxDecoration(
+
+                  color: Colors.black38,
+
+                  borderRadius:
+                  BorderRadius.circular(60),
+
+                ),
+
+                child: const Icon(
+
+                  Icons.lock,
+
+                  color: Colors.white,
+
+                  size: 45,
+
+                ),
+
+              ),
+
+
+          ],
+
+        ),
+
+      ),
+
+    );
+
+  }
 
 
 
@@ -226,517 +223,227 @@ class _WalletScreenState extends State<WalletScreen> {
   Widget build(BuildContext context) {
 
 
-
-    if(loading){
-
+    if (loading) {
 
       return const Scaffold(
 
+        body: Center(
 
-        body:Center(
-
-          child:CircularProgressIndicator(),
+          child: CircularProgressIndicator(),
 
         ),
 
-
       );
-
 
     }
 
 
 
-
-
     return Scaffold(
 
+      body: Stack(
 
-
-      body:
-
-      Container(
-
-
-
-        decoration:
-
-        const BoxDecoration(
+        children: [
 
 
 
-          gradient:
+          Positioned.fill(
 
-          LinearGradient(
+            child: Image.asset(
 
+              "assets/images/world/world_map.jpg",
 
+              fit: BoxFit.cover,
 
-            colors:[
-
-
-
-              Color(0xffFFD166),
-
-              Color(0xffFF9F1C),
-
-
-
-            ],
-
-
-
-            begin:
-
-            Alignment.topCenter,
-
-
-
-            end:
-
-            Alignment.bottomCenter,
-
-
+            ),
 
           ),
 
 
 
-        ),
 
+          SafeArea(
 
+            child: Column(
 
+              children: [
 
 
-        child:
+                const SizedBox(height:20),
 
-        SafeArea(
 
 
-
-          child:
-
-          Column(
-
-
-
-            children:[
-
-
-
-              const SizedBox(height:30),
-
-
-
-
-              const Text(
-
-
-
-                "👜 محفظتي",
-
-
-
-                style:
-
-                TextStyle(
-
-
-
-                  color:Colors.white,
-
-                  fontSize:38,
-
-                  fontWeight:
-
-                  FontWeight.bold,
-
-                ),
-
-
-
-              ),
-
-
-
-
-
-
-              const SizedBox(height:40),
-
-
-
-
-
-
-
-              Container(
-
-
-
-                width:300,
-
-                height:250,
-
-
-
-                decoration:
-
-                BoxDecoration(
-
-
-
-                  color:
-
-                  Colors.brown.shade400,
-
-
-
-                  borderRadius:
-
-                  BorderRadius.circular(35),
-
-
-
-                  boxShadow:[
-
-
-
-                    const BoxShadow(
-
-
-
-                      color:
-
-                      Colors.black26,
-
-
-
-                      blurRadius:20,
-
-
-
-                      offset:
-
-                      Offset(0,12),
-
-
-
-                    ),
-
-
-
-                  ],
-
-
-
-                ),
-
-
-
-
-
-                child:
-
-                Column(
-
-
+                Row(
 
                   mainAxisAlignment:
-
                   MainAxisAlignment.center,
 
+                  children: [
 
 
-                  children:[
+                    const Text(
 
+                      "🌍 Puzzle World",
 
+                      style: TextStyle(
 
+                        color: Colors.white,
 
-
-                    Text(
-
-
-
-                      "🪙 $coins",
-
-
-
-                      style:
-
-                      const TextStyle(
-
-
-
-                        color:Colors.white,
-
-                        fontSize:45,
+                        fontSize: 32,
 
                         fontWeight:
-
                         FontWeight.bold,
 
+                        shadows: [
 
+                          Shadow(
+
+                            color: Colors.black45,
+
+                            blurRadius: 8,
+
+                          ),
+
+                        ],
 
                       ),
-
-
 
                     ),
 
 
 
+                    const SizedBox(width:20),
 
 
 
-                    const SizedBox(height:10),
+                    Container(
 
+                      padding:
+                      const EdgeInsets.symmetric(
 
+                        horizontal:15,
 
-
-
-
-                    Text(
-
-
-
-                      "💎 $gems",
-
-
-
-                      style:
-
-                      const TextStyle(
-
-
-
-                        color:Colors.white,
-
-                        fontSize:35,
+                        vertical:8,
 
                       ),
 
+                      decoration: BoxDecoration(
 
+                        color: Colors.black26,
 
-                    ),
-
-
-
-
-
-
-                    const SizedBox(height:10),
-
-
-
-
-
-
-                    Text(
-
-
-
-                      "💡 $hints تلميحات",
-
-
-
-                      style:
-
-                      const TextStyle(
-
-
-
-                        color:Colors.white,
-
-                        fontSize:25,
+                        borderRadius:
+                        BorderRadius.circular(20),
 
                       ),
 
+                      child: Text(
 
+                        "⭐ $totalStars",
+
+                        style: const TextStyle(
+
+                          color: Colors.white,
+
+                          fontSize:20,
+
+                          fontWeight:
+                          FontWeight.bold,
+
+                        ),
+
+                      ),
 
                     ),
-
-
 
                   ],
 
-
-
                 ),
 
 
 
-              ),
+                Expanded(
+
+                  child: LayoutBuilder(
+
+                    builder:
+                        (context,constraints) {
+
+
+                      return Stack(
+
+                        children: [
 
 
 
+                          // جزيرة الحيوانات
+                          islandButton(
+                            "animals",
+                            256,
+                            200,
+                          ),
 
 
 
-
-              const SizedBox(height:50),
-
-
-
-
-
-
-              ElevatedButton.icon(
+                          // جزيرة السيارات
+                          islandButton(
+                            "cars",
+                            212,
+                            552,
+                          ),
 
 
 
-                onPressed:addWallet,
+                          // جزيرة الفضاء
+                          islandButton(
+                            "space",
+                            732,
+                            252,
+                          ),
 
 
 
-                icon:
-
-                const Icon(
-
-                  Icons.play_circle,
-
-                  size:35,
-
-                ),
+                          // جزيرة المعالم
+                          islandButton(
+                            "landmarks",
+                            784,
+                            568,
+                          ),
 
 
 
+                          // جزيرة الطبيعة
+                          islandButton(
+                            "nature",
+                            380,
+                            793,
+                          ),
 
 
-                label:
 
-                const Text(
+                        ],
 
+                      );
 
-
-                  "🎬 زيادة المحفظة",
-
-                  style:
-
-                  TextStyle(
-
-                    fontSize:22,
+                    },
 
                   ),
 
-
-
                 ),
 
 
+              ],
 
-
-
-                style:
-
-                ElevatedButton.styleFrom(
-
-
-
-                  padding:
-
-                  const EdgeInsets.symmetric(
-
-
-
-                    horizontal:35,
-
-                    vertical:18,
-
-
-
-                  ),
-
-
-
-                  shape:
-
-                  RoundedRectangleBorder(
-
-
-
-                    borderRadius:
-
-                    BorderRadius.circular(30),
-
-
-
-                  ),
-
-
-
-                ),
-
-
-
-              ),
-
-
-
-
-
-
-              const SizedBox(height:20),
-
-
-
-
-
-
-              const Text(
-
-
-
-                "شاهد إعلان واحصل على عملات وتلميحات إضافية ✨",
-
-
-
-                textAlign:
-
-                TextAlign.center,
-
-
-
-                style:
-
-                TextStyle(
-
-
-
-                  color:Colors.white,
-
-                  fontSize:18,
-
-
-
-                ),
-
-
-
-              ),
-
-
-
-            ],
-
-
+            ),
 
           ),
 
 
-
-        ),
-
-
+        ],
 
       ),
 
-
-
     );
 
-
-
   }
-
 
 }
