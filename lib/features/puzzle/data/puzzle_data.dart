@@ -1,29 +1,25 @@
 import '../models/puzzle_model.dart';
 
 
-
 class PuzzleData {
 
 
   static const List<PuzzleModel> puzzles = [
 
 
-
     PuzzleModel(
 
       id: "animals",
 
-      title: "عالم الحيوانات 🐻",
+      title: "جزيرة الحيوانات",
 
       image:
-      "assets/images/Puzzle/animals.png",
+      "assets/images/islands/animals_island.webp",
 
       description:
-      "اكتشف الحيوانات الجميلة وحل البازل الخاص بها",
+      "اكتشف الحيوانات الجميلة وحل الألغاز الخاصة بها",
 
       totalLevels: 10,
-
-      unlocked: true,
 
       requiredStars: 0,
 
@@ -31,23 +27,19 @@ class PuzzleData {
 
 
 
-
-
     PuzzleModel(
 
-      id: "nature",
+      id: "cars",
 
-      title: "عالم الطبيعة 🌳",
+      title: "جزيرة السيارات",
 
       image:
-      "assets/images/Puzzle/nature.png",
+      "assets/images/islands/cars_island.png",
 
       description:
-      "مناظر طبيعية وألغاز ممتعة",
+      "سيارات ومركبات ومغامرات مليئة بالتحدي",
 
       totalLevels: 10,
-
-      unlocked: false,
 
       requiredStars: 20,
 
@@ -55,23 +47,19 @@ class PuzzleData {
 
 
 
-
-
     PuzzleModel(
 
-      id: "vehicles",
+      id: "space",
 
-      title: "عالم السيارات 🚗",
+      title: "جزيرة الفضاء",
 
       image:
-      "assets/images/Puzzle/vehicles.png",
+      "assets/images/islands/space_island.png",
 
       description:
-      "سيارات ومركبات بطريقة تعليمية",
+      "اكتشف الكواكب والصواريخ وأسرار الفضاء",
 
       totalLevels: 10,
-
-      unlocked: false,
 
       requiredStars: 50,
 
@@ -79,23 +67,19 @@ class PuzzleData {
 
 
 
-
-
     PuzzleModel(
 
-      id: "fruits",
+      id: "cartoon",
 
-      title: "عالم الفواكه 🍎",
+      title: "جزيرة الشخصيات الكرتونية",
 
       image:
-      "assets/images/Puzzle/fruits.png",
+      "assets/images/islands/cartoon_characters_island.png",
 
       description:
-      "تعلم الفواكه من خلال اللعب",
+      "شخصيات كرتونية ومغامرات ممتعة",
 
       totalLevels: 10,
-
-      unlocked: false,
 
       requiredStars: 80,
 
@@ -103,17 +87,32 @@ class PuzzleData {
 
 
 
+    PuzzleModel(
+
+      id: "landmarks",
+
+      title: "جزيرة المعالم",
+
+      image:
+      "assets/images/islands/landmarks_island.png",
+
+      description:
+      "اكتشف أشهر المعالم حول العالم وحل الألغاز",
+
+      totalLevels: 10,
+
+      requiredStars: 100,
+
+    ),
+
+
   ];
 
 
 
+  // جلب جزيرة بواسطة المعرف
 
-
-  // جلب عالم بواسطة المعرف
-
-  static PuzzleModel? getById(
-      String id,
-      ){
+  static PuzzleModel? getById(String id) {
 
     try {
 
@@ -131,9 +130,7 @@ class PuzzleData {
 
 
 
-
-
-  // عدد العوالم
+  // عدد الجزر
 
   static int get count => puzzles.length;
 
