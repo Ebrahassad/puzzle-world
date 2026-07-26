@@ -1,66 +1,88 @@
-class PuzzleModel {
+class PuzzleLevelModel {
 
 
-  // معرف الجزيرة
+  // معرف المستوى
   final String id;
 
 
-  // اسم الجزيرة
+  // رقم المستوى
+  final int levelNumber;
+
+
+  // اسم المستوى
   final String title;
 
 
-  // صورة الجزيرة
-  final String image;
+  // حجم شبكة البازل
+  final int gridSize;
 
 
-  // وصف الجزيرة
-  final String description;
-
-
-  // عدد المراحل داخل الجزيرة
-  final int totalLevels;
-
-
-  // هل الجزيرة مفتوحة
-  final bool unlocked;
-
-
-  // النجوم المطلوبة لفتح الجزيرة
+  // النجوم المطلوبة لفتح المستوى
   final int requiredStars;
 
 
-  // ترتيب الجزيرة في الخريطة
-  final int order;
+  // هل المستوى مفتوح
+  final bool unlocked;
 
 
 
-  const PuzzleModel({
+  const PuzzleLevelModel({
 
     required this.id,
 
+    required this.levelNumber,
+
     required this.title,
 
-    this.image = "",
+    required this.gridSize,
 
-    this.description = "",
+    required this.requiredStars,
 
-    this.totalLevels = 10,
-
-    this.unlocked = true,
-
-    this.requiredStars = 0,
-
-    this.order = 0,
+    this.unlocked = false,
 
   });
 
 
 
+  // نسخة معدلة
+
+  PuzzleLevelModel copyWith({
+
+    String? id,
+
+    int? levelNumber,
+
+    String? title,
+
+    int? gridSize,
+
+    int? requiredStars,
+
+    bool? unlocked,
+
+  }) {
+
+    return PuzzleLevelModel(
+
+      id: id ?? this.id,
+
+      levelNumber: levelNumber ?? this.levelNumber,
+
+      title: title ?? this.title,
+
+      gridSize: gridSize ?? this.gridSize,
+
+      requiredStars: requiredStars ?? this.requiredStars,
+
+      unlocked: unlocked ?? this.unlocked,
+
+    );
+
+  }
 
 
-  //==================================================
+
   // تحويل إلى JSON
-  //==================================================
 
   Map<String, dynamic> toJson() {
 
@@ -68,19 +90,15 @@ class PuzzleModel {
 
       "id": id,
 
+      "levelNumber": levelNumber,
+
       "title": title,
 
-      "image": image,
-
-      "description": description,
-
-      "totalLevels": totalLevels,
-
-      "unlocked": unlocked,
+      "gridSize": gridSize,
 
       "requiredStars": requiredStars,
 
-      "order": order,
+      "unlocked": unlocked,
 
     };
 
@@ -88,104 +106,31 @@ class PuzzleModel {
 
 
 
-
-
-  //==================================================
   // قراءة من JSON
-  //==================================================
 
-  factory PuzzleModel.fromJson(
+  factory PuzzleLevelModel.fromJson(
       Map<String, dynamic> json,
       ) {
 
-    return PuzzleModel(
+    return PuzzleLevelModel(
 
       id: json["id"] ?? "",
 
+      levelNumber: json["levelNumber"] ?? 0,
+
       title: json["title"] ?? "",
 
-      image: json["image"] ?? "",
+      gridSize: json["gridSize"] ?? 3,
 
-      description: json["description"] ?? "",
+      requiredStars: json["requiredStars"] ?? 0,
 
-      totalLevels:
-      json["totalLevels"] ?? 10,
-
-      unlocked:
-      json["unlocked"] ?? true,
-
-      requiredStars:
-      json["requiredStars"] ?? 0,
-
-      order:
-      json["order"] ?? 0,
+      unlocked: json["unlocked"] ?? false,
 
     );
 
   }
 
 
-
-
-
-  //==================================================
-  // نسخة معدلة
-  //==================================================
-
-  PuzzleModel copyWith({
-
-    String? id,
-
-    String? title,
-
-    String? image,
-
-    String? description,
-
-    int? totalLevels,
-
-    bool? unlocked,
-
-    int? requiredStars,
-
-    int? order,
-
-  }) {
-
-    return PuzzleModel(
-
-      id: id ?? this.id,
-
-      title: title ?? this.title,
-
-      image: image ?? this.image,
-
-      description:
-      description ?? this.description,
-
-      totalLevels:
-      totalLevels ?? this.totalLevels,
-
-      unlocked:
-      unlocked ?? this.unlocked,
-
-      requiredStars:
-      requiredStars ?? this.requiredStars,
-
-      order:
-      order ?? this.order,
-
-    );
-
-  }
-
-
-
-
-
-  //==================================================
-  // مقارنة الجزر
-  //==================================================
 
   @override
   bool operator ==(Object other) {
@@ -196,13 +141,10 @@ class PuzzleModel {
 
     }
 
-
-    return other is PuzzleModel &&
+    return other is PuzzleLevelModel &&
         other.id == id;
 
   }
-
-
 
 
 
@@ -211,29 +153,19 @@ class PuzzleModel {
 
 
 
-
-
-  //==================================================
-  // عرض نصي للتصحيح
-  //==================================================
-
   @override
   String toString() {
 
     return """
-
-PuzzleModel(
+PuzzleLevelModel(
  id: $id,
+ level: $levelNumber,
  title: $title,
- levels: $totalLevels,
- unlocked: $unlocked,
- requiredStars: $requiredStars,
- order: $order
+ grid: $gridSize,
+ unlocked: $unlocked
 )
-
 """;
 
   }
-
 
 }
