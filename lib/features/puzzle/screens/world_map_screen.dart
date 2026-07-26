@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../data/puzzle_data.dart';
-import '../data/puzzle_level_data.dart';
 import '../managers/puzzle_progress_manager.dart';
 import '../models/puzzle_model.dart';
 
-import 'puzzle_level_screen.dart';
+import 'island_screen.dart';
 
 
 
@@ -95,21 +94,6 @@ class _WorldMapScreenState
 
 
 
-    final levels =
-        PuzzleLevelData.getLevels(
-          world.id,
-        );
-
-
-
-    if(levels.isEmpty){
-
-      return;
-
-    }
-
-
-
     Navigator.push(
 
       context,
@@ -117,8 +101,8 @@ class _WorldMapScreenState
       MaterialPageRoute(
 
         builder: (_) =>
-            PuzzleLevelScreen(
-              puzzle: world,
+            IslandScreen(
+              island: world,
             ),
 
       ),
@@ -127,6 +111,100 @@ class _WorldMapScreenState
 
   }
 
+
+
+
+
+
+  Widget islandButton(
+      String id,
+      double x,
+      double y,
+      ) {
+
+
+    final world =
+    PuzzleData.getById(id);
+
+
+    if(world == null){
+
+      return const SizedBox();
+
+    }
+
+
+
+    final locked =
+        totalStars < world.requiredStars;
+
+
+
+    return Positioned(
+
+      left: x - 55,
+
+      top: y - 55,
+
+      width: 110,
+
+      height: 110,
+
+
+      child: GestureDetector(
+
+        onTap: (){
+
+          openWorld(world);
+
+        },
+
+
+        child: Stack(
+
+          alignment:
+          Alignment.center,
+
+          children: [
+
+
+            if(locked)
+
+              Container(
+
+                decoration: BoxDecoration(
+
+                  color:
+                  Colors.black38,
+
+                  borderRadius:
+                  BorderRadius.circular(60),
+
+                ),
+
+                child: const Icon(
+
+                  Icons.lock,
+
+                  color:
+                  Colors.white,
+
+                  size:45,
+
+                ),
+
+              ),
+
+
+          ],
+
+        ),
+
+      ),
+
+    );
+
+  }
 
 
 
@@ -151,7 +229,6 @@ class _WorldMapScreenState
       );
 
     }
-
 
 
 
@@ -198,275 +275,213 @@ class _WorldMapScreenState
 
 
 
-                const SizedBox(height:20),
+                Padding(
+
+                  padding:
+                  const EdgeInsets.symmetric(
+                    horizontal:15,
+                  ),
+
+                  child: Row(
+
+                    mainAxisAlignment:
+                    MainAxisAlignment.spaceBetween,
+
+                    children: [
 
 
 
-                Row(
+                      IconButton(
 
-                  mainAxisAlignment:
-                  MainAxisAlignment.center,
+                        onPressed: (){
 
-                  children: [
+                          // الإعدادات لاحقاً
 
+                        },
 
+                        icon: const Icon(
 
-                    const Text(
-
-                      "Puzzle World",
-
-                      style: TextStyle(
-
-                        color: Colors.white,
-
-                        fontSize:32,
-
-                        fontWeight:
-                        FontWeight.bold,
-
-                        shadows: [
-
-                          Shadow(
-
-                            color:
-                            Colors.black45,
-
-                            blurRadius:8,
-
-                          ),
-
-                        ],
-
-                      ),
-
-                    ),
-
-
-
-                    const SizedBox(width:20),
-
-
-
-                    Container(
-
-                      padding:
-                      const EdgeInsets.symmetric(
-
-                        horizontal:15,
-
-                        vertical:8,
-
-                      ),
-
-                      decoration: BoxDecoration(
-
-                        color:
-                        Colors.white24,
-
-                        borderRadius:
-                        BorderRadius.circular(20),
-
-                      ),
-
-                      child: Text(
-
-                        "⭐ $totalStars",
-
-                        style:
-                        const TextStyle(
+                          Icons.settings,
 
                           color:
                           Colors.white,
 
-                          fontSize:20,
-
-                          fontWeight:
-                          FontWeight.bold,
+                          size:32,
 
                         ),
 
                       ),
 
-                    ),
 
 
 
-                  ],
+                      const Text(
+
+                        "🌍 Puzzle World",
+
+                        style: TextStyle(
+
+                          color:
+                          Colors.white,
+
+                          fontSize:30,
+
+                          fontWeight:
+                          FontWeight.bold,
+
+                          shadows: [
+
+                            Shadow(
+
+                              color:
+                              Colors.black45,
+
+                              blurRadius:8,
+
+                            ),
+
+                          ],
+
+                        ),
+
+                      ),
+
+
+
+
+                      Container(
+
+                        padding:
+                        const EdgeInsets.symmetric(
+
+                          horizontal:12,
+
+                          vertical:8,
+
+                        ),
+
+                        decoration:
+                        BoxDecoration(
+
+                          color:
+                          Colors.white24,
+
+                          borderRadius:
+                          BorderRadius.circular(20),
+
+                        ),
+
+                        child: Text(
+
+                          "⭐ $totalStars",
+
+                          style:
+                          const TextStyle(
+
+                            color:
+                            Colors.white,
+
+                            fontSize:20,
+
+                            fontWeight:
+                            FontWeight.bold,
+
+                          ),
+
+                        ),
+
+                      ),
+
+
+
+                    ],
+
+                  ),
 
                 ),
 
 
 
 
-
                 Expanded(
 
-                  child: GridView.builder(
+                  child: Stack(
 
-                    padding:
-                    const EdgeInsets.all(25),
+                    children: [
 
 
-                    itemCount:
-                    PuzzleData.puzzles.length,
 
+                      // جزيرة الحيوانات
 
-                    gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
+                      islandButton(
 
-                      crossAxisCount:2,
+                        "animals",
 
-                      crossAxisSpacing:25,
+                        256,
 
-                      mainAxisSpacing:25,
+                        200,
 
-                    ),
+                      ),
 
 
 
-                    itemBuilder:
-                        (context,index){
+                      // جزيرة السيارات
 
+                      islandButton(
 
+                        "cars",
 
-                      final world =
-                      PuzzleData.puzzles[index];
+                        212,
 
+                        552,
 
+                      ),
 
-                      final locked =
-                      totalStars <
-                          world.requiredStars;
 
 
+                      // جزيرة الفضاء
 
-                      return GestureDetector(
+                      islandButton(
 
-                        onTap:(){
+                        "space",
 
-                          openWorld(world);
+                        732,
 
-                        },
+                        252,
 
+                      ),
 
 
-                        child: Stack(
 
-                          alignment:
-                          Alignment.center,
+                      // جزيرة المعالم
 
-                          children: [
+                      islandButton(
 
+                        "landmarks",
 
+                        784,
 
-                            Container(
+                        568,
 
-                              decoration:
-                              BoxDecoration(
+                      ),
 
-                                borderRadius:
-                                BorderRadius.circular(35),
 
-                                boxShadow:
-                                const [
 
-                                  BoxShadow(
+                      // جزيرة الطبيعة
 
-                                    color:
-                                    Colors.black38,
+                      islandButton(
 
-                                    blurRadius:15,
+                        "nature",
 
-                                    offset:
-                                    Offset(0,8),
+                        380,
 
-                                  ),
+                        793,
 
-                                ],
+                      ),
 
-                              ),
 
 
-
-                              child: ClipRRect(
-
-                                borderRadius:
-                                BorderRadius.circular(35),
-
-
-                                child:
-                                Image.asset(
-
-                                  world.image,
-
-                                  fit:
-                                  BoxFit.contain,
-
-                                  errorBuilder:
-                                      (context,error,stack){
-
-                                    return const Icon(
-
-                                      Icons.image_not_supported,
-
-                                      size:70,
-
-                                      color:
-                                      Colors.white,
-
-                                    );
-
-                                  },
-
-                                ),
-
-                              ),
-
-                            ),
-
-
-
-
-                            if(locked)
-
-                              Container(
-
-                                decoration:
-                                BoxDecoration(
-
-                                  color:
-                                  Colors.black45,
-
-                                  borderRadius:
-                                  BorderRadius.circular(35),
-
-                                ),
-
-
-                                child:
-                                const Icon(
-
-                                  Icons.lock,
-
-                                  size:60,
-
-                                  color:
-                                  Colors.white,
-
-                                ),
-
-                              ),
-
-
-
-                          ],
-
-                        ),
-
-                      );
-
-                    },
-
+                    ],
 
                   ),
 
