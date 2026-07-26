@@ -69,15 +69,15 @@ class PuzzleData {
 
     PuzzleModel(
 
-      id: "cartoon",
+      id: "nature",
 
-      title: "جزيرة الشخصيات الكرتونية",
+      title: "جزيرة الطبيعة",
 
       image:
-      "assets/images/islands/cartoon_characters_island.png",
+      "assets/images/islands/nature_island.jpg",
 
       description:
-      "شخصيات كرتونية ومغامرات ممتعة",
+      "استكشف جمال الطبيعة وحل الألغاز الممتعة",
 
       totalLevels: 10,
 
@@ -88,18 +88,26 @@ class PuzzleData {
 
 
     PuzzleModel(
-  id: "landmarks",
-  title: "جزيرة المعالم",
-  image: "assets/images/islands/city_island.jpg",
-  description: "اكتشف أشهر المعالم حول العالم وحل الألغاز الممتعة",
-  totalLevels: 10,
-  requiredStars: 100,
-),
 
-    
+      id: "landmarks",
+
+      title: "جزيرة المعالم",
+
+      image:
+      "assets/images/islands/city_island.jpg",
+
+      description:
+      "اكتشف أشهر المعالم حول العالم وحل الألغاز الممتعة",
+
+      totalLevels: 10,
+
+      requiredStars: 100,
+
+    ),
 
 
   ];
+
 
 
 
@@ -120,6 +128,7 @@ class PuzzleData {
     }
 
   }
+
 
 
 
