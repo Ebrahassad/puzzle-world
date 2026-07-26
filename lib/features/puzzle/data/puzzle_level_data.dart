@@ -46,6 +46,54 @@ class PuzzleLevelData {
         requiredStars: 9,
       ),
 
+      PuzzleLevelModel(
+        id: "level_5",
+        levelNumber: 5,
+        title: "حيوانات المزرعة",
+        gridSize: 6,
+        requiredStars: 15,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_6",
+        levelNumber: 6,
+        title: "عالم البحار",
+        gridSize: 7,
+        requiredStars: 20,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_7",
+        levelNumber: 7,
+        title: "الحيوانات البرية",
+        gridSize: 7,
+        requiredStars: 30,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_8",
+        levelNumber: 8,
+        title: "أسرار الغابة",
+        gridSize: 8,
+        requiredStars: 40,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_9",
+        levelNumber: 9,
+        title: "أبطال الحيوانات",
+        gridSize: 8,
+        requiredStars: 50,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_10",
+        levelNumber: 10,
+        title: "التحدي النهائي",
+        gridSize: 9,
+        requiredStars: 70,
+      ),
+
     ],
 
 
@@ -88,180 +136,3 @@ class PuzzleLevelData {
         gridSize: 6,
         requiredStars: 9,
       ),
-
-    ],
-
-
-
-    //==================================================
-    // جزيرة الفضاء
-    //==================================================
-
-    "space": [
-
-      PuzzleLevelModel(
-        id: "level_1",
-        levelNumber: 1,
-        title: "رحلة البداية",
-        gridSize: 3,
-        requiredStars: 0,
-        unlocked: true,
-      ),
-
-      PuzzleLevelModel(
-        id: "level_2",
-        levelNumber: 2,
-        title: "الكواكب",
-        gridSize: 4,
-        requiredStars: 3,
-      ),
-
-      PuzzleLevelModel(
-        id: "level_3",
-        levelNumber: 3,
-        title: "الصواريخ",
-        gridSize: 5,
-        requiredStars: 6,
-      ),
-
-      PuzzleLevelModel(
-        id: "level_4",
-        levelNumber: 4,
-        title: "أسرار الفضاء",
-        gridSize: 6,
-        requiredStars: 9,
-      ),
-
-    ],
-
-
-
-    //==================================================
-    // جزيرة الطبيعة
-    //==================================================
-
-    "nature": [
-
-      PuzzleLevelModel(
-        id: "level_1",
-        levelNumber: 1,
-        title: "البداية",
-        gridSize: 3,
-        requiredStars: 0,
-        unlocked: true,
-      ),
-
-      PuzzleLevelModel(
-        id: "level_2",
-        levelNumber: 2,
-        title: "الجبال والأنهار",
-        gridSize: 4,
-        requiredStars: 3,
-      ),
-
-      PuzzleLevelModel(
-        id: "level_3",
-        levelNumber: 3,
-        title: "جمال الطبيعة",
-        gridSize: 5,
-        requiredStars: 6,
-      ),
-
-      PuzzleLevelModel(
-        id: "level_4",
-        levelNumber: 4,
-        title: "تحدي الطبيعة",
-        gridSize: 6,
-        requiredStars: 9,
-      ),
-
-    ],
-
-
-
-    //==================================================
-    // جزيرة المعالم
-    //==================================================
-
-    "landmarks": [
-
-      PuzzleLevelModel(
-        id: "level_1",
-        levelNumber: 1,
-        title: "البداية",
-        gridSize: 3,
-        requiredStars: 0,
-        unlocked: true,
-      ),
-
-      PuzzleLevelModel(
-        id: "level_2",
-        levelNumber: 2,
-        title: "معالم مشهورة",
-        gridSize: 4,
-        requiredStars: 3,
-      ),
-
-      PuzzleLevelModel(
-        id: "level_3",
-        levelNumber: 3,
-        title: "حول العالم",
-        gridSize: 5,
-        requiredStars: 6,
-      ),
-
-      PuzzleLevelModel(
-        id: "level_4",
-        levelNumber: 4,
-        title: "تحدي المعالم",
-        gridSize: 6,
-        requiredStars: 9,
-      ),
-
-    ],
-
-
-  };
-
-
-
-
-  static List<PuzzleLevelModel> getLevels(
-      String puzzleId,
-      ){
-
-    return levels[puzzleId] ?? [];
-
-  }
-
-
-
-
-  static PuzzleLevelModel? getLevel({
-
-    required String puzzleId,
-
-    required String levelId,
-
-  }) {
-
-
-    final worldLevels = getLevels(puzzleId);
-
-
-    try {
-
-      return worldLevels.firstWhere(
-            (level) => level.id == levelId,
-      );
-
-    } catch (_) {
-
-      return null;
-
-    }
-
-  }
-
-
-}
