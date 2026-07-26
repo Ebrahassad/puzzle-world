@@ -23,6 +23,8 @@ class PuzzleData {
 
       requiredStars: 0,
 
+      order: 1,
+
     ),
 
 
@@ -42,6 +44,8 @@ class PuzzleData {
       totalLevels: 10,
 
       requiredStars: 20,
+
+      order: 2,
 
     ),
 
@@ -63,6 +67,8 @@ class PuzzleData {
 
       requiredStars: 50,
 
+      order: 3,
+
     ),
 
 
@@ -74,7 +80,7 @@ class PuzzleData {
       title: "جزيرة الطبيعة",
 
       image:
-      "assets/images/islands/nature_island.png",
+      "assets/images/islands/natural_island.png",
 
       description:
       "استكشف جمال الطبيعة وحل الألغاز الممتعة",
@@ -82,6 +88,8 @@ class PuzzleData {
       totalLevels: 10,
 
       requiredStars: 80,
+
+      order: 4,
 
     ),
 
@@ -103,6 +111,8 @@ class PuzzleData {
 
       requiredStars: 100,
 
+      order: 5,
+
     ),
 
 
@@ -113,7 +123,9 @@ class PuzzleData {
 
   // جلب جزيرة بواسطة المعرف
 
-  static PuzzleModel? getById(String id) {
+  static PuzzleModel? getById(
+      String id,
+      ) {
 
     try {
 
@@ -126,6 +138,23 @@ class PuzzleData {
       return null;
 
     }
+
+  }
+
+
+
+
+  // جلب جميع الجزر مرتبة
+
+  static List<PuzzleModel> get orderedPuzzles {
+
+    final list = [...puzzles];
+
+    list.sort(
+          (a, b) => a.order.compareTo(b.order),
+    );
+
+    return list;
 
   }
 
