@@ -7,11 +7,13 @@ import '../engine/puzzle_painter.dart';
 
 class PuzzlePieceWidget extends StatefulWidget {
 
+
   final PuzzlePiece piece;
 
   final ImageProvider image;
 
   final double size;
+
 
 
   const PuzzlePieceWidget({
@@ -28,6 +30,8 @@ class PuzzlePieceWidget extends StatefulWidget {
 
 
 
+
+
   @override
   State<PuzzlePieceWidget> createState() =>
       _PuzzlePieceWidgetState();
@@ -38,15 +42,116 @@ class PuzzlePieceWidget extends StatefulWidget {
 
 
 
+
+
 class _PuzzlePieceWidgetState
-    extends State<PuzzlePieceWidget> {
+    extends State<PuzzlePieceWidget>
+    with SingleTickerProviderStateMixin {
 
 
   bool pressed = false;
 
 
 
+  late AnimationController _glowController;
+
+
+  late Animation<double> _glowAnimation;
+
+
+
+
+
+
+
+  @override
+  void initState(){
+
+    super.initState();
+
+
+
+    _glowController = AnimationController(
+
+      vsync: this,
+
+      duration: const Duration(seconds:2),
+
+    );
+
+
+
+    _glowAnimation = Tween<double>(
+
+      begin:0,
+
+      end:1,
+
+    ).animate(
+
+      CurvedAnimation(
+
+        parent:_glowController,
+
+        curve: Curves.easeInOut,
+
+      ),
+
+    );
+
+
+
+    if(widget.piece.placed){
+
+      _glowController.repeat(
+
+        reverse:true,
+
+      );
+
+    }
+
+  }
+
+
+
+
+
+
+
+
+  @override
+  void didUpdateWidget(
+      covariant PuzzlePieceWidget oldWidget,
+      ){
+
+
+    super.didUpdateWidget(oldWidget);
+
+
+
+    if(widget.piece.placed &&
+        !oldWidget.piece.placed){
+
+
+      _glowController.repeat(
+
+        reverse:true,
+
+      );
+
+    }
+
+  }
+
+
+
+
+
+
+
   void setPressed(bool value){
+
 
 
     if(widget.piece.placed){
@@ -56,9 +161,10 @@ class _PuzzlePieceWidgetState
     }
 
 
+
     setState((){
 
-      pressed = value;
+      pressed=value;
 
     });
 
@@ -70,11 +176,34 @@ class _PuzzlePieceWidgetState
 
 
 
+
+
+  @override
+  void dispose(){
+
+
+    _glowController.dispose();
+
+
+    super.dispose();
+
+  }
+
+
+
+
+
+
+
+
   @override
   Widget build(BuildContext context){
 
 
-    final placed = widget.piece.placed;
+    final placed =
+        widget.piece.placed;
+
+
 
 
 
@@ -84,6 +213,7 @@ class _PuzzlePieceWidgetState
       child: GestureDetector(
 
 
+
         onTapDown:(_){
 
           setPressed(true);
@@ -91,11 +221,13 @@ class _PuzzlePieceWidgetState
         },
 
 
+
         onTapUp:(_){
 
           setPressed(false);
 
         },
+
 
 
         onTapCancel:(){
@@ -106,12 +238,15 @@ class _PuzzlePieceWidgetState
 
 
 
-        child:AnimatedScale(
+
+        child: AnimatedScale(
+
 
 
           scale:
 
-          pressed ? 1.08 : 1,
+          pressed ? 1.04 : 1,
+
 
 
           duration:
@@ -124,14 +259,16 @@ class _PuzzlePieceWidgetState
 
 
 
-          child:AnimatedContainer(
+
+          child: AnimatedContainer(
+
 
 
             duration:
 
             const Duration(
 
-              milliseconds:250,
+              milliseconds:300,
 
             ),
 
@@ -146,39 +283,55 @@ class _PuzzlePieceWidgetState
             decoration:BoxDecoration(
 
 
+
               borderRadius:
 
               BorderRadius.circular(12),
 
 
 
+
               boxShadow:[
 
 
+
                 BoxShadow(
+
 
 
                   color:
 
                   Colors.black.withOpacity(
 
+
+
                     placed
 
-                        ? 0.08
+                        ?0.12
 
-                        : pressed
+                        :pressed
 
-                        ? 0.35
+                        ?0.35
 
-                        : 0.18,
+                        :0.18,
 
                   ),
 
 
 
+
                   blurRadius:
 
-                  placed ? 5 : pressed ? 18 : 8,
+                  placed
+
+                      ?10
+
+                      :pressed
+
+                      ?18
+
+                      :8,
+
 
 
 
@@ -188,32 +341,33 @@ class _PuzzlePieceWidgetState
 
                     0,
 
-                    pressed ? 8 : 4,
+                    pressed ?8:4,
 
                   ),
-
 
 
                 ),
 
 
-
               ],
-
 
 
             ),
 
 
 
+
             child:Stack(
+
 
 
               children:[
 
 
 
+
                 CustomPaint(
+
 
 
                   size:
@@ -228,14 +382,17 @@ class _PuzzlePieceWidgetState
 
 
 
+
                   painter:
 
                   PuzzlePainter(
 
 
+
                     piece:
 
                     widget.piece,
+
 
 
                     image:
@@ -247,17 +404,130 @@ class _PuzzlePieceWidgetState
 
 
 
+
                 ),
 
 
 
+
+
+
+
+                // لمعة القطعة بعد التركيب
+
+                if(placed)
+
+                  AnimatedBuilder(
+
+
+
+                    animation:
+
+                    _glowAnimation,
+
+
+
+                    builder:
+
+                        (context,child){
+
+
+
+                      return Positioned.fill(
+
+
+
+                        child: Container(
+
+
+
+                          decoration:
+
+                          BoxDecoration(
+
+
+
+                            borderRadius:
+
+                            BorderRadius.circular(12),
+
+
+
+                            gradient:
+
+                            LinearGradient(
+
+
+
+                              begin:
+
+                              Alignment.topLeft,
+
+
+
+                              end:
+
+                              Alignment.bottomRight,
+
+
+
+                              colors:[
+
+
+
+                                Colors.white.withOpacity(
+
+                                  0.35 *
+
+                                      _glowAnimation.value,
+
+                                ),
+
+
+
+                                Colors.transparent,
+
+
+
+                              ],
+
+
+
+                            ),
+
+
+
+                          ),
+
+
+
+                        ),
+
+
+
+                      );
+
+
+
+                    },
+
+
+                  ),
+
+
+
+
+
+                // طبقة نجاح خفيفة
 
                 if(placed)
 
                   Positioned.fill(
 
 
-                    child:Container(
+
+                    child: Container(
+
 
 
                       decoration:
@@ -265,11 +535,12 @@ class _PuzzlePieceWidgetState
                       BoxDecoration(
 
 
+
                         color:
 
                         Colors.white.withOpacity(
 
-                          0.15,
+                          0.08,
 
                         ),
 
@@ -288,11 +559,14 @@ class _PuzzlePieceWidgetState
                     ),
 
 
+
                   ),
 
 
 
+
               ],
+
 
 
             ),
@@ -306,7 +580,9 @@ class _PuzzlePieceWidgetState
         ),
 
 
+
       ),
+
 
 
     );
