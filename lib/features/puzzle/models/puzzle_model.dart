@@ -44,7 +44,7 @@ class PuzzleModel {
 
     this.description = "",
 
-    this.totalLevels = 0,
+    this.totalLevels = 10,
 
     this.unlocked = true,
 
@@ -102,28 +102,20 @@ class PuzzleModel {
 
       id: json["id"] ?? "",
 
-
       title: json["title"] ?? "",
-
 
       image: json["image"] ?? "",
 
-
-      description:
-      json["description"] ?? "",
-
+      description: json["description"] ?? "",
 
       totalLevels:
-      json["totalLevels"] ?? 0,
-
+      json["totalLevels"] ?? 10,
 
       unlocked:
       json["unlocked"] ?? true,
 
-
       requiredStars:
       json["requiredStars"] ?? 0,
-
 
       order:
       json["order"] ?? 0,
@@ -160,33 +152,25 @@ class PuzzleModel {
 
   }) {
 
-
     return PuzzleModel(
 
       id: id ?? this.id,
 
-
       title: title ?? this.title,
 
-
       image: image ?? this.image,
-
 
       description:
       description ?? this.description,
 
-
       totalLevels:
       totalLevels ?? this.totalLevels,
-
 
       unlocked:
       unlocked ?? this.unlocked,
 
-
       requiredStars:
       requiredStars ?? this.requiredStars,
-
 
       order:
       order ?? this.order,
@@ -243,6 +227,7 @@ PuzzleModel(
  title: $title,
  levels: $totalLevels,
  unlocked: $unlocked,
+ requiredStars: $requiredStars,
  order: $order
 )
 
