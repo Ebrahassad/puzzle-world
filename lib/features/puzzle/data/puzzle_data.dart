@@ -74,7 +74,7 @@ class PuzzleData {
       title: "جزيرة الطبيعة",
 
       image:
-      "assets/images/islands/nature_island.jpg",
+      "assets/images/islands/nature_island.png",
 
       description:
       "استكشف جمال الطبيعة وحل الألغاز الممتعة",
