@@ -19,7 +19,7 @@ class GameToolbar extends StatefulWidget {
   final VoidCallback? onBack;
 
 
-  final GlobalKey? starKey;
+  final GlobalKey starKey;
 
 
 
@@ -37,12 +37,14 @@ class GameToolbar extends StatefulWidget {
     required this.coins,
 
 
+    required this.starKey,
+
+
     this.onBack,
 
-
-    this.starKey,
-
   });
+
+
 
 
 
@@ -61,7 +63,10 @@ class GameToolbar extends StatefulWidget {
 
 
 
+
 class _GameToolbarState extends State<GameToolbar>{
+
+
 
 
 
@@ -90,10 +95,63 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
+
+
+
+  Offset? getStarPosition(){
+
+
+
+    final RenderBox? box =
+
+    widget.starKey.currentContext
+
+        ?.findRenderObject()
+
+    as RenderBox?;
+
+
+
+
+
+    if(box == null){
+
+      return null;
+
+    }
+
+
+
+
+
+    return box.localToGlobal(
+
+      box.size.center(
+
+        Offset.zero,
+
+      ),
+
+    );
+
+
+
+  }
+
+
+
+
+
+
+
+
+
   void showSettings(BuildContext context){
 
 
+
     showDialog(
+
 
       context:context,
 
@@ -101,7 +159,9 @@ class _GameToolbarState extends State<GameToolbar>{
       builder:(_){
 
 
+
         return AlertDialog(
+
 
 
           title:
@@ -114,16 +174,22 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
+
+
           content:
 
           const Column(
+
+
 
             mainAxisSize:
 
             MainAxisSize.min,
 
 
+
             children:[
+
 
 
               Text(
@@ -133,7 +199,11 @@ class _GameToolbarState extends State<GameToolbar>{
               ),
 
 
+
+
               SizedBox(height:10),
+
+
 
 
               Text(
@@ -143,7 +213,12 @@ class _GameToolbarState extends State<GameToolbar>{
               ),
 
 
+
+
+
               SizedBox(height:10),
+
+
 
 
               Text(
@@ -153,23 +228,36 @@ class _GameToolbarState extends State<GameToolbar>{
               ),
 
 
+
             ],
+
 
 
           ),
 
 
 
+
+
           actions:[
+
 
 
             TextButton(
 
+
+
               onPressed:(){
+
+
 
                 Navigator.pop(context);
 
+
+
               },
+
+
 
               child:
 
@@ -179,17 +267,25 @@ class _GameToolbarState extends State<GameToolbar>{
 
               ),
 
-            )
+
+
+            ),
+
+
 
           ],
+
 
 
         );
 
 
+
       },
 
+
     );
+
 
 
   }
@@ -199,8 +295,13 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
+
+
+
   @override
+
   Widget build(BuildContext context){
+
 
 
     return SafeArea(
@@ -210,9 +311,12 @@ class _GameToolbarState extends State<GameToolbar>{
       child:Container(
 
 
+
         margin:
 
         const EdgeInsets.all(12),
+
+
 
 
 
@@ -220,11 +324,18 @@ class _GameToolbarState extends State<GameToolbar>{
 
         const EdgeInsets.symmetric(
 
+
+
           horizontal:12,
 
           vertical:8,
 
+
+
         ),
+
+
+
 
 
 
@@ -233,9 +344,13 @@ class _GameToolbarState extends State<GameToolbar>{
         BoxDecoration(
 
 
+
           color:
 
           Colors.black38,
+
+
+
 
 
           borderRadius:
@@ -243,18 +358,31 @@ class _GameToolbarState extends State<GameToolbar>{
           BorderRadius.circular(35),
 
 
+
+
+
+
           border:
 
           Border.all(
+
+
 
             color:
 
             Colors.white30,
 
+
+
           ),
 
 
+
         ),
+
+
+
+
 
 
 
@@ -268,32 +396,58 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
+
+
           children:[
+
+
+
 
 
 
             GestureDetector(
 
+
+
               onTap:(){
+
+
 
                 showSettings(context);
 
+
+
               },
+
 
 
               child:
 
               const Icon(
 
+
+
                 Icons.settings,
 
-                color:Colors.white,
+
+
+                color:
+
+                Colors.white,
+
+
 
                 size:30,
 
+
+
               ),
 
+
+
             ),
+
+
 
 
 
@@ -301,13 +455,26 @@ class _GameToolbarState extends State<GameToolbar>{
 
             Image.asset(
 
+
+
               widget.logo,
+
+
 
               height:45,
 
-              fit:BoxFit.contain,
+
+
+              fit:
+
+              BoxFit.contain,
+
+
 
             ),
+
+
+
 
 
 
@@ -315,7 +482,10 @@ class _GameToolbarState extends State<GameToolbar>{
             Row(
 
 
+
               children:[
+
+
 
 
 
@@ -333,9 +503,15 @@ class _GameToolbarState extends State<GameToolbar>{
 
                   _counterBox(
 
+
+
                     "⭐",
 
+
+
                     widget.stars,
+
+
 
                   ),
 
@@ -347,7 +523,11 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
+
+
                 const SizedBox(width:6),
+
+
 
 
 
@@ -358,7 +538,11 @@ class _GameToolbarState extends State<GameToolbar>{
 
                   onTap:(){
 
+
+
                     openWallet(context);
+
+
 
                   },
 
@@ -368,9 +552,15 @@ class _GameToolbarState extends State<GameToolbar>{
 
                   _counterBox(
 
+
+
                     "🪙",
 
+
+
                     widget.coins,
+
+
 
                   ),
 
@@ -385,6 +575,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
             ),
+
 
 
 
@@ -403,30 +594,52 @@ class _GameToolbarState extends State<GameToolbar>{
     );
 
 
+
   }
 
+
+
+
+
+
+
+
+
   Widget _counterBox(
+
+
 
       String icon,
 
       int value,
 
+
+
       ){
+
+
 
 
 
     return Container(
 
 
+
       padding:
 
       const EdgeInsets.symmetric(
+
+
 
         horizontal:10,
 
         vertical:6,
 
+
+
       ),
+
+
 
 
 
@@ -435,14 +648,19 @@ class _GameToolbarState extends State<GameToolbar>{
       BoxDecoration(
 
 
+
         color:
 
         Colors.white24,
 
 
+
+
+
         borderRadius:
 
         BorderRadius.circular(18),
+
 
 
       ),
@@ -451,9 +669,8 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-      child:
 
-      Text(
+      child:Text(
 
 
 
@@ -467,9 +684,13 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
+
+
           color:
 
           Colors.white,
+
+
 
 
 
@@ -477,9 +698,13 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
+
+
           fontWeight:
 
           FontWeight.bold,
+
+
 
 
 
@@ -494,7 +719,10 @@ class _GameToolbarState extends State<GameToolbar>{
     );
 
 
+
   }
+
+
 
 
 
