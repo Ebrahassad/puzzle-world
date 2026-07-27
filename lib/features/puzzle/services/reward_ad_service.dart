@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 class RewardAdService {
 
 
-
   static bool _isShowingAd = false;
 
 
   static bool get isShowingAd => _isShowingAd;
+
 
 
 
@@ -24,19 +24,30 @@ class RewardAdService {
   static Future<bool> showContinueAd() async {
 
 
-
-    return await _showFakeAd(
-
-      message:
-
-      "🎬 جاري تحميل إعلان المتابعة...",
+    try {
 
 
-      duration:
+      return await _showFakeAd(
 
-      const Duration(seconds:2),
+        message:
 
-    );
+        "🎬 جاري تحميل إعلان المتابعة...",
+
+
+        duration:
+
+        const Duration(seconds:2),
+
+      );
+
+
+    } catch(_){
+
+
+      return false;
+
+
+    }
 
 
   }
@@ -57,19 +68,30 @@ class RewardAdService {
   static Future<bool> showRewardAd() async {
 
 
-
-    return await _showFakeAd(
-
-      message:
-
-      "🎁 جاري تحميل إعلان المكافأة...",
+    try {
 
 
-      duration:
+      return await _showFakeAd(
 
-      const Duration(seconds:2),
+        message:
 
-    );
+        "🎁 جاري تحميل إعلان المكافأة...",
+
+
+        duration:
+
+        const Duration(seconds:2),
+
+      );
+
+
+    } catch(_){
+
+
+      return false;
+
+
+    }
 
 
   }
@@ -90,19 +112,30 @@ class RewardAdService {
   static Future<bool> showDoubleRewardAd() async {
 
 
-
-    return await _showFakeAd(
-
-      message:
-
-      "✨ جاري تشغيل إعلان مضاعفة الجائزة...",
+    try {
 
 
-      duration:
+      return await _showFakeAd(
 
-      const Duration(seconds:3),
+        message:
 
-    );
+        "✨ جاري تشغيل إعلان مضاعفة الجائزة...",
+
+
+        duration:
+
+        const Duration(seconds:3),
+
+      );
+
+
+    } catch(_){
+
+
+      return false;
+
+
+    }
 
 
   }
@@ -117,6 +150,7 @@ class RewardAdService {
 
   // =========================
   // محاكاة الإعلان
+  //
   // لاحقاً تستبدل بـ AdMob RewardedAd
   // =========================
 
@@ -132,13 +166,10 @@ class RewardAdService {
   }) async {
 
 
-
     if(_isShowingAd){
 
 
-
       return false;
-
 
 
     }
@@ -146,43 +177,47 @@ class RewardAdService {
 
 
 
+    try {
+
+
+      _isShowingAd = true;
 
 
 
-    _isShowingAd = true;
-
-
-
-
-
-    debugPrint(message);
-
-
+      debugPrint(message);
 
 
 
 
-    await Future.delayed(
+      await Future.delayed(
 
-      duration,
+        duration,
 
-    );
-
-
+      );
 
 
 
 
-
-    _isShowingAd = false;
-
+      return true;
 
 
 
+    } catch(_){
 
 
-    return true;
+      return false;
 
+
+
+    } finally {
+
+
+
+      _isShowingAd = false;
+
+
+
+    }
 
 
   }
@@ -203,9 +238,7 @@ class RewardAdService {
   static void reset(){
 
 
-
     _isShowingAd = false;
-
 
 
   }
