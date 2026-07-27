@@ -11,11 +11,9 @@ import '../managers/puzzle_progress_manager.dart';
 import '../managers/reward_manager.dart';
 
 import '../screens/puzzle_home_screen.dart';
-
 import '../screens/wallet_screen.dart';
 
 import '../services/puzzle_navigation_service.dart';
-
 
 
 class PuzzleWorldService {
@@ -180,23 +178,7 @@ class PuzzleWorldService {
 
 
 
-  //==================================================
-  // فتح العالم
-  //==================================================
-
-  static Future<void> openWorld(
-
-    BuildContext context,
-
-    PuzzleModel world,
-
-    ) async {
-
-
-  Navigator.pop(context);
-
-
-}
+  
 
 
 
