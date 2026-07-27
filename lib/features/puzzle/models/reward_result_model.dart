@@ -18,6 +18,8 @@ class RewardResultModel {
 
 
 
+
+
   const RewardResultModel({
 
     this.coins = 0,
@@ -28,7 +30,15 @@ class RewardResultModel {
 
     this.hints = 0,
 
-  });
+  })
+      : assert(coins >= 0),
+        assert(gems >= 0),
+        assert(stars >= 0),
+        assert(hints >= 0);
+
+
+
+
 
 
 
@@ -40,12 +50,21 @@ class RewardResultModel {
 
   bool get hasReward {
 
+
     return coins > 0 ||
+
         gems > 0 ||
+
         stars > 0 ||
+
         hints > 0;
 
+
   }
+
+
+
+
 
 
 
@@ -57,9 +76,15 @@ class RewardResultModel {
 
   bool get hasGoldenStar {
 
+
     return stars > 0;
 
+
   }
+
+
+
+
 
 
 
@@ -71,19 +96,30 @@ class RewardResultModel {
 
   Map<String,dynamic> toJson(){
 
+
     return {
+
 
       "coins": coins,
 
+
       "gems": gems,
+
 
       "stars": stars,
 
+
       "hints": hints,
+
 
     };
 
+
   }
+
+
+
+
 
 
 
@@ -99,26 +135,63 @@ class RewardResultModel {
 
       ){
 
+
+
+    int value(dynamic data){
+
+
+      if(data is int && data >= 0){
+
+        return data;
+
+      }
+
+
+      return 0;
+
+
+    }
+
+
+
+
+
+
     return RewardResultModel(
 
+
       coins:
-      json["coins"] ?? 0,
+
+      value(json["coins"]),
+
 
 
       gems:
-      json["gems"] ?? 0,
+
+      value(json["gems"]),
+
 
 
       stars:
-      json["stars"] ?? 0,
+
+      value(json["stars"]),
+
 
 
       hints:
-      json["hints"] ?? 0,
+
+      value(json["hints"]),
+
+
 
     );
 
+
   }
+
+
+
+
 
 
 
@@ -134,26 +207,55 @@ class RewardResultModel {
 
       ){
 
+
+
+    if(value <= 0){
+
+      return this;
+
+    }
+
+
+
+
+
+
+
     return RewardResultModel(
 
+
       coins:
+
       coins * value,
 
 
+
       gems:
+
       gems * value,
 
 
+
       stars:
+
       stars * value,
 
 
+
       hints:
+
       hints * value,
+
+
 
     );
 
+
   }
+
+
+
+
 
 
 
@@ -169,24 +271,37 @@ class RewardResultModel {
 
       ){
 
+
+
     return RewardResultModel(
 
+
       coins:
+
       coins + other.coins,
 
 
+
       gems:
+
       gems + other.gems,
 
 
+
       stars:
+
       stars + other.stars,
 
 
+
       hints:
+
       hints + other.hints,
 
+
+
     );
+
 
   }
 
@@ -194,8 +309,59 @@ class RewardResultModel {
 
 
 
+
+
+
+
+  //==================================================
+  // COPY
+  //==================================================
+
+  RewardResultModel copyWith({
+
+    int? coins,
+
+    int? gems,
+
+    int? stars,
+
+    int? hints,
+
+  }){
+
+
+    return RewardResultModel(
+
+
+      coins: coins ?? this.coins,
+
+
+      gems: gems ?? this.gems,
+
+
+      stars: stars ?? this.stars,
+
+
+      hints: hints ?? this.hints,
+
+
+    );
+
+
+  }
+
+
+
+
+
+
+
+
+
   @override
+
   String toString(){
+
 
     return """
 
@@ -207,6 +373,7 @@ RewardResultModel(
 )
 
 """;
+
 
   }
 
