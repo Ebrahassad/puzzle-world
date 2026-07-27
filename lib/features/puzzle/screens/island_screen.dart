@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../data/puzzle_level_data.dart';
+
 import '../managers/puzzle_progress_manager.dart';
+
 import '../models/puzzle_model.dart';
+import '../models/puzzle_level_model.dart';
 
 import '../widgets/game_toolbar.dart';
 
 import 'puzzle_game_screen.dart';
-
 
 
 class IslandScreen extends StatefulWidget {
@@ -166,15 +169,39 @@ class _IslandScreenState
 
 
 
+void openLevel(int level) {
 
-void openLevel(int level){
 
   if(!unlocked){
 
     showLockedDialog();
 
     return;
+
   }
+
+
+
+  final levels =
+
+  PuzzleLevelData.getLevels(
+
+    widget.island.id,
+
+  );
+
+
+
+  final selectedLevel =
+
+  levels.firstWhere(
+
+    (item) =>
+
+    item.levelNumber == level,
+
+  );
+
 
 
   Navigator.push(
@@ -189,13 +216,14 @@ void openLevel(int level){
 
         puzzle: widget.island,
 
-        levelNumber: level,
+        level: selectedLevel,
 
       ),
 
     ),
 
   );
+
 
 }
 
