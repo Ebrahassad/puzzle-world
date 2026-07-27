@@ -28,44 +28,120 @@ class PuzzlePainter extends CustomPainter {
   });
 
 
+@override
+void paint(
+    Canvas canvas,
+    Size size,
+    ) {
+
+
+  final path = createPiecePath(size);
+
+
+
+  // ظل القطعة
+
+  canvas.drawPath(
+
+    path,
+
+    Paint()
+
+      ..color = Colors.black.withOpacity(0.25)
+
+      ..maskFilter = const MaskFilter.blur(
+
+        BlurStyle.normal,
+
+        4,
+
+      ),
+
+  );
 
 
 
 
 
-  @override
-  void paint(
+  // رسم الصورة داخل القطعة
 
-      Canvas canvas,
-
-      Size size,
-
-      ){
+  if(cachedImage != null){
 
 
 
-    final path = createPiecePath(size);
+    canvas.save();
+
+
+
+    canvas.clipPath(path);
 
 
 
 
-    // ظل القطعة
 
-    canvas.drawPath(
+    final imageWidth =
 
-      path,
+    cachedImage!.width.toDouble();
 
-      Paint()
 
-        ..color = Colors.black.withOpacity(0.25)
 
-        ..maskFilter = const MaskFilter.blur(
+    final imageHeight =
 
-          BlurStyle.normal,
+    cachedImage!.height.toDouble();
 
-          4,
 
-        ),
+
+
+
+
+    /*
+      تحويل إحداثيات القطعة
+      حسب الحجم الحقيقي للصورة
+
+      يعمل مع:
+      512
+      1024
+      2048
+      وأي حجم آخر
+    */
+
+
+
+    final scaleX =
+
+        imageWidth / 1024;
+
+
+
+    final scaleY =
+
+        imageHeight / 1024;
+
+
+
+
+
+
+
+    final source = Rect.fromLTWH(
+
+
+
+      piece.sourceRect.left * scaleX,
+
+
+
+      piece.sourceRect.top * scaleY,
+
+
+
+      piece.sourceRect.width * scaleX,
+
+
+
+      piece.sourceRect.height * scaleY,
+
+
 
     );
 
@@ -75,81 +151,17 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-    // رسم الصورة داخل القطعة
+    final destination = Rect.fromLTWH(
 
-    if(cachedImage != null){
+      0,
 
+      0,
 
+      size.width,
 
-      canvas.save();
+      size.height,
 
-
-
-      canvas.clipPath(path);
-
-
-
-      final imageSize = Size(
-
-        cachedImage!.width.toDouble(),
-
-        cachedImage!.height.toDouble(),
-
-      );
-
-
-
-      final source = Rect.fromLTWH(
-
-        piece.sourceRect.left,
-
-        piece.sourceRect.top,
-
-        piece.sourceRect.width,
-
-        piece.sourceRect.height,
-
-      );
-
-
-
-
-      final destination = Rect.fromLTWH(
-
-        0,
-
-        0,
-
-        size.width,
-
-        size.height,
-
-      );
-
-
-
-
-
-      canvas.drawImageRect(
-
-        cachedImage!,
-
-        source,
-
-        destination,
-
-        Paint()
-
-          ..filterQuality = FilterQuality.high,
-
-      );
-
-
-
-      canvas.restore();
-
-
-    }
+    );
 
 
 
@@ -157,30 +169,69 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-    // إطار القطعة
+    canvas.drawImageRect(
 
-    canvas.drawPath(
 
-      path,
+
+      cachedImage!,
+
+
+
+      source,
+
+
+
+      destination,
+
+
 
       Paint()
 
-        ..style = PaintingStyle.stroke
+        ..filterQuality = FilterQuality.high,
 
-        ..strokeWidth = piece.placed ? 3 : 1.5
-
-        ..color = piece.placed
-
-            ? Colors.greenAccent
-
-            : Colors.white,
 
 
     );
+
+
+
+
+
+
+    canvas.restore();
 
 
 
   }
+
+
+
+
+
+
+  // إطار القطعة
+
+  canvas.drawPath(
+
+    path,
+
+    Paint()
+
+      ..style = PaintingStyle.stroke
+
+      ..strokeWidth = piece.placed ? 3 : 1.5
+
+      ..color = piece.placed
+
+          ? Colors.greenAccent
+
+          : Colors.white,
+
+
+  );
+
+
+}
 
 
 
