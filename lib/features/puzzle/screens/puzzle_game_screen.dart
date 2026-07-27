@@ -233,14 +233,9 @@ class _PuzzleGameScreenState
 
 
     controller = PuzzleController(
-
-
-
-      pieces:pieces,
-
-
-
-    );
+  pieces: pieces,
+  boardOffsetY: boardSize + 50,
+);
 
 
 
