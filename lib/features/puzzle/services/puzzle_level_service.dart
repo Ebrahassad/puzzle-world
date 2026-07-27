@@ -7,9 +7,7 @@ import '../data/puzzle_level_data.dart';
 
 import '../managers/puzzle_progress_manager.dart';
 
-import '../screens/puzzle_level_screen.dart';
 import '../screens/puzzle_game_screen.dart';
-
 
 
 class PuzzleLevelService {
@@ -230,43 +228,7 @@ class PuzzleLevelService {
 
 
 
-  //==================================================
-  // 🌍 فتح قائمة المراحل
-  //==================================================
-
-
-  static Future<void> openWorldLevels(
-
-      BuildContext context,
-
-      PuzzleModel puzzle,
-
-      ) async {
-
-
-
-    await Navigator.push(
-
-      context,
-
-      MaterialPageRoute(
-
-        builder: (_) =>
-
-            PuzzleLevelScreen(
-
-              puzzle: puzzle,
-
-            ),
-
-      ),
-
-    );
-
-
-  }
-
-
+  
 
 
 
