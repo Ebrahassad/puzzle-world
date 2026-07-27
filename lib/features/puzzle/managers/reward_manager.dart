@@ -393,38 +393,34 @@ class RewardManager {
 
       await addCoins(
 
-        reward.coins,
+  doubled.coins,
 
-      );
-
-
-
-
-
-
-      await addStars(
-
-        reward.stars,
-
-      );
+);
 
 
 
 
 
+await addStars(
 
-      if(reward.gems > 0){
+  doubled.stars,
 
-        await addGems(
-
-          reward.gems,
-
-        );
-
-      }
+);
 
 
 
+
+
+
+if(doubled.gems > 0){
+
+  await addGems(
+
+    doubled.gems,
+
+  );
+
+}
 
 
 
