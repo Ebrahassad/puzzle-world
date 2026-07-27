@@ -47,11 +47,18 @@ class _IslandScreenState
   int totalStars = 0;
 
 
+  int coins = 0;
+
+
   int rewards = 0;
 
 
 
   bool unlocked = true;
+
+
+
+  final GlobalKey starKey = GlobalKey();
 
 
 
@@ -208,12 +215,6 @@ class _IslandScreenState
 
   }
 
-
-
-
-
-
-
   void showLockedDialog(){
 
 
@@ -315,7 +316,7 @@ class _IslandScreenState
 
 
 
-                Text(
+                const Text(
 
                   "اكمل المراحل السابقة لفتح المستوى",
 
@@ -601,25 +602,6 @@ class _IslandScreenState
   }
 
   @override
-  void dispose(){
-
-
-    floatController.dispose();
-
-
-    super.dispose();
-
-
-  }
-
-
-
-
-
-
-
-
-  @override
   Widget build(BuildContext context){
 
 
@@ -638,8 +620,6 @@ class _IslandScreenState
 
 
 
-
-          // خلفية شاشة المستويات
 
           Positioned.fill(
 
@@ -705,8 +685,6 @@ class _IslandScreenState
 
 
 
-
-          // الجزيرة العائمة
 
           Align(
 
@@ -848,8 +826,6 @@ class _IslandScreenState
 
 
 
-          // شريط المعلومات
-
           Positioned(
 
 
@@ -880,9 +856,21 @@ class _IslandScreenState
 
 
 
+              coins:
+
+              coins,
+
+
+
               rewards:
 
               rewards,
+
+
+
+              starKey:
+
+              starKey,
 
 
 
@@ -908,8 +896,6 @@ class _IslandScreenState
 
 
 
-
-          // عنوان الجزيرة
 
           Positioned(
 
@@ -987,8 +973,6 @@ class _IslandScreenState
 
 
 
-          // قائمة المستويات
-
           Positioned.fill(
 
 
@@ -1058,6 +1042,25 @@ class _IslandScreenState
 
 
   }
+
+
+
+
+
+
+
+  @override
+  void dispose(){
+
+
+    floatController.dispose();
+
+
+    super.dispose();
+
+
+  }
+
 
 
 }
