@@ -11,6 +11,8 @@ class PuzzlePainter extends CustomPainter {
 
   final PuzzlePiece piece;
 
+  final ImageProvider image;
+
   final ui.Image? cachedImage;
 
 
@@ -18,6 +20,8 @@ class PuzzlePainter extends CustomPainter {
   PuzzlePainter({
 
     required this.piece,
+
+    required this.image,
 
     this.cachedImage,
 
@@ -70,7 +74,8 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-    // رسم الصورة
+
+    // رسم الصورة داخل القطعة
 
     if(cachedImage != null){
 
@@ -84,34 +89,58 @@ class PuzzlePainter extends CustomPainter {
 
 
 
+      final imageSize = Size(
+
+        cachedImage!.width.toDouble(),
+
+        cachedImage!.height.toDouble(),
+
+      );
+
+
+
+      final source = Rect.fromLTWH(
+
+        piece.sourceRect.left,
+
+        piece.sourceRect.top,
+
+        piece.sourceRect.width,
+
+        piece.sourceRect.height,
+
+      );
+
+
+
+
+      final destination = Rect.fromLTWH(
+
+        0,
+
+        0,
+
+        size.width,
+
+        size.height,
+
+      );
+
+
+
+
 
       canvas.drawImageRect(
 
         cachedImage!,
 
+        source,
 
-        piece.sourceRect,
-
-
-
-        Rect.fromLTWH(
-
-          0,
-
-          0,
-
-          size.width,
-
-          size.height,
-
-        ),
-
-
+        destination,
 
         Paint()
 
           ..filterQuality = FilterQuality.high,
-
 
       );
 
@@ -120,9 +149,7 @@ class PuzzlePainter extends CustomPainter {
       canvas.restore();
 
 
-
     }
-
 
 
 
@@ -166,7 +193,6 @@ class PuzzlePainter extends CustomPainter {
   Path createPiecePath(Size size){
 
 
-
     final path = Path();
 
 
@@ -176,8 +202,6 @@ class PuzzlePainter extends CustomPainter {
     final h = size.height;
 
     final tab = w * 0.20;
-
-
 
 
 
@@ -219,8 +243,6 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-
-
     path.lineTo(
 
       w,
@@ -252,8 +274,6 @@ class PuzzlePainter extends CustomPainter {
       h,
 
     );
-
-
 
 
 
@@ -323,7 +343,6 @@ class PuzzlePainter extends CustomPainter {
 
     return path;
 
-
   }
 
 
@@ -345,7 +364,6 @@ class PuzzlePainter extends CustomPainter {
       double tab,
 
       ){
-
 
 
     if(type == EdgeType.tab){
@@ -419,7 +437,6 @@ class PuzzlePainter extends CustomPainter {
       ){
 
 
-
     if(type == EdgeType.tab){
 
 
@@ -487,7 +504,6 @@ class PuzzlePainter extends CustomPainter {
       double tab,
 
       ){
-
 
 
     if(type == EdgeType.tab){
@@ -559,7 +575,6 @@ class PuzzlePainter extends CustomPainter {
       ){
 
 
-
     if(type == EdgeType.tab){
 
 
@@ -622,7 +637,6 @@ class PuzzlePainter extends CustomPainter {
       covariant PuzzlePainter oldDelegate,
 
       ){
-
 
 
     return oldDelegate.piece != piece ||
