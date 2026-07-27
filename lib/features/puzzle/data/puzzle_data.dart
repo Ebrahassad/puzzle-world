@@ -7,7 +7,7 @@ class PuzzleData {
     PuzzleModel(
       id: "animals",
       title: "جزيرة الحيوانات",
-      image: "assets/images/Islands/animals_island.png",
+      image: "assets/images/islands/animals_island.png",
       description: "اكتشف الحيوانات الجميلة وحل الألغاز الخاصة بها",
       totalLevels: 10,
       requiredStars: 0,
@@ -18,7 +18,7 @@ class PuzzleData {
     PuzzleModel(
       id: "cars",
       title: "جزيرة السيارات",
-      image: "assets/images/Islands/cars_island.png",
+      image: "assets/images/islands/cars_island.png",
       description: "سيارات ومركبات ومغامرات مليئة بالتحدي",
       totalLevels: 10,
       requiredStars: 20,
@@ -29,7 +29,7 @@ class PuzzleData {
     PuzzleModel(
       id: "space",
       title: "جزيرة الفضاء",
-      image: "assets/images/Islands/space_island.png",
+      image: "assets/images/islands/space_island.png",
       description: "اكتشف الكواكب والصواريخ وأسرار الفضاء",
       totalLevels: 10,
       requiredStars: 50,
@@ -40,7 +40,7 @@ class PuzzleData {
     PuzzleModel(
       id: "nature",
       title: "جزيرة الطبيعة",
-      image: "assets/images/Islands/nature_island.png",
+      image: "assets/images/islands/nature_island.png",
       description: "استكشف جمال الطبيعة وحل الألغاز الممتعة",
       totalLevels: 10,
       requiredStars: 80,
@@ -51,7 +51,7 @@ class PuzzleData {
     PuzzleModel(
       id: "landmarks",
       title: "جزيرة المعالم العالمية",
-      image: "assets/images/Islands/world_landmarks_island.png",
+      image: "assets/images/islands/world_landmarks_island.png",
       description: "اكتشف أشهر المعالم حول العالم وحل الألغاز الممتعة",
       totalLevels: 10,
       requiredStars: 100,
