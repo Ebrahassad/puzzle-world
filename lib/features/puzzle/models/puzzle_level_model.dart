@@ -1,44 +1,35 @@
 class PuzzleLevelModel {
 
 
-  // معرف المرحلة
   final String id;
 
-
-  // رقم المرحلة داخل العالم
   final int levelNumber;
 
-
-  // اسم المرحلة
   final String title;
 
-
-  // صورة البازل الخاصة بهذه المرحلة
+  // صورة البازل
   final String image;
 
+  // وصف المرحلة
+  final String description;
 
-  // حجم شبكة البازل
-  // 3 = 3x3
-  // 4 = 4x4
-  // 5 = 5x5
+  // مستوى الصعوبة
+  final String difficulty;
+
+  // حجم الشبكة
   final int gridSize;
 
-
-  // النجوم المطلوبة لفتح المرحلة
+  // النجوم المطلوبة للفتح
   final int requiredStars;
 
+  // النجوم التي يحصل عليها عند الفوز
+  final int rewardStars;
 
-  // هل المرحلة مفتوحة
   final bool unlocked;
 
-
-  // هل تم إنهاء المرحلة
   final bool completed;
 
-
-  // عدد النجوم المكتسبة
   final int earnedStars;
-
 
 
 
@@ -54,7 +45,13 @@ class PuzzleLevelModel {
 
     this.image = "",
 
+    this.description = "",
+
+    this.difficulty = "easy",
+
     this.requiredStars = 0,
+
+    this.rewardStars = 3,
 
     this.unlocked = false,
 
@@ -68,15 +65,9 @@ class PuzzleLevelModel {
 
 
 
-
-  //==================================================
-  // JSON
-  //==================================================
-
   Map<String,dynamic> toJson(){
 
     return {
-
 
       "id": id,
 
@@ -86,16 +77,21 @@ class PuzzleLevelModel {
 
       "image": image,
 
+      "description": description,
+
+      "difficulty": difficulty,
+
       "gridSize": gridSize,
 
       "requiredStars": requiredStars,
+
+      "rewardStars": rewardStars,
 
       "unlocked": unlocked,
 
       "completed": completed,
 
       "earnedStars": earnedStars,
-
 
     };
 
@@ -105,53 +101,46 @@ class PuzzleLevelModel {
 
 
 
-
-
-  //==================================================
-  // FROM JSON
-  //==================================================
-
   factory PuzzleLevelModel.fromJson(
       Map<String,dynamic> json,
       ){
 
     return PuzzleLevelModel(
 
-
       id: json["id"] ?? "",
-
 
       levelNumber:
       json["levelNumber"] ?? 1,
 
-
       title:
       json["title"] ?? "",
-
 
       image:
       json["image"] ?? "",
 
+      description:
+      json["description"] ?? "",
+
+      difficulty:
+      json["difficulty"] ?? "easy",
 
       gridSize:
       json["gridSize"] ?? 3,
 
-
       requiredStars:
       json["requiredStars"] ?? 0,
 
+      rewardStars:
+      json["rewardStars"] ?? 3,
 
       unlocked:
       json["unlocked"] ?? false,
 
-
       completed:
       json["completed"] ?? false,
 
-
       earnedStars:
       json["earnedStars"] ?? 0,
-
 
     );
 
@@ -162,13 +151,7 @@ class PuzzleLevelModel {
 
 
 
-
-  //==================================================
-  // COPY WITH
-  //==================================================
-
   PuzzleLevelModel copyWith({
-
 
     String? id,
 
@@ -178,9 +161,15 @@ class PuzzleLevelModel {
 
     String? image,
 
+    String? description,
+
+    String? difficulty,
+
     int? gridSize,
 
     int? requiredStars,
+
+    int? rewardStars,
 
     bool? unlocked,
 
@@ -188,48 +177,45 @@ class PuzzleLevelModel {
 
     int? earnedStars,
 
-
   }){
 
 
     return PuzzleLevelModel(
 
-
-      id:
-      id ?? this.id,
-
+      id: id ?? this.id,
 
       levelNumber:
       levelNumber ?? this.levelNumber,
 
-
       title:
       title ?? this.title,
-
 
       image:
       image ?? this.image,
 
+      description:
+      description ?? this.description,
+
+      difficulty:
+      difficulty ?? this.difficulty,
 
       gridSize:
       gridSize ?? this.gridSize,
 
-
       requiredStars:
       requiredStars ?? this.requiredStars,
 
+      rewardStars:
+      rewardStars ?? this.rewardStars,
 
       unlocked:
       unlocked ?? this.unlocked,
 
-
       completed:
       completed ?? this.completed,
 
-
       earnedStars:
       earnedStars ?? this.earnedStars,
-
 
     );
 
@@ -239,47 +225,22 @@ class PuzzleLevelModel {
 
 
 
-
-
-
-  //==================================================
-  // مقارنة
-  //==================================================
-
   @override
   bool operator ==(Object other){
 
-
-    if(identical(this,other)){
-
-      return true;
-
-    }
-
-
-    return other is PuzzleLevelModel &&
+    return identical(this, other) ||
+        other is PuzzleLevelModel &&
         other.id == id;
-
 
   }
 
 
 
-
-
   @override
-  int get hashCode =>
-      id.hashCode;
+  int get hashCode => id.hashCode;
 
 
 
-
-
-
-
-  //==================================================
-  // عرض للتصحيح
-  //==================================================
 
   @override
   String toString(){
@@ -296,6 +257,8 @@ PuzzleLevelModel(
 
  grid: ${gridSize}x$gridSize,
 
+ difficulty: $difficulty,
+
  stars: $earnedStars,
 
  unlocked: $unlocked,
@@ -307,6 +270,5 @@ PuzzleLevelModel(
 """;
 
   }
-
 
 }
