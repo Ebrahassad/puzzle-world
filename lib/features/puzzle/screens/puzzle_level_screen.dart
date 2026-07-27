@@ -1,1593 +1,557 @@
-import 'package:flutter/material.dart';
-
-import '../managers/puzzle_progress_manager.dart';
-import '../models/puzzle_model.dart';
 import '../models/puzzle_level_model.dart';
 
-import '../services/puzzle_level_service.dart';
-import '../services/puzzle_level_progress_service.dart';
-import '../services/puzzle_level_unlock_service.dart';
 
-import '../widgets/game_toolbar.dart';
+class PuzzleLevelData {
 
-import 'puzzle_game_screen.dart';
 
+  static const Map<String, List<PuzzleLevelModel>> levels = {
 
 
-class PuzzleLevelScreen extends StatefulWidget {
+    //==================================================
+    // جزيرة الحيوانات
+    //==================================================
 
+    "animals": [
 
-  final PuzzleModel puzzle;
-
-
-
-  const PuzzleLevelScreen({
-
-    super.key,
-
-    required this.puzzle,
-
-  });
-
-
-
-  @override
-  State<PuzzleLevelScreen> createState() =>
-      _PuzzleLevelScreenState();
-
-
-}
-
-
-
-
-
-
-
-class _PuzzleLevelScreenState
-    extends State<PuzzleLevelScreen>
-    with SingleTickerProviderStateMixin {
-
-
-
-  List<PuzzleLevelModel> levels = [];
-
-
-  int totalStars = 0;
-
-
-  int rewards = 0;
-
-
-  bool loading = true;
-
-
-
-  late AnimationController pressController;
-
-
-
-
-
-  @override
-  void initState(){
-
-
-    super.initState();
-
-
-    loadData();
-
-
-
-    pressController = AnimationController(
-
-      vsync:this,
-
-      duration:
-
-      const Duration(milliseconds:120),
-
-    );
-
-
-  }
-
-
-
-
-
-
-
-
-
-  Future<void> loadData() async {
-
-
-
-    final data =
-
-    await PuzzleLevelService.getLevels(
-
-      widget.puzzle.id,
-
-    );
-
-
-
-
-
-
-    final prepared =
-
-    await PuzzleLevelProgressService.prepareLevels(
-
-      worldId: widget.puzzle.id,
-
-      levels:data,
-
-    );
-
-
-
-
-
-
-
-    final stars =
-
-    await PuzzleProgressManager
-
-        .getTotalStars();
-
-
-
-
-
-
-
-    if(mounted){
-
-
-
-      setState((){
-
-
-        levels = prepared;
-
-
-        totalStars = stars;
-
-
-        loading = false;
-
-
-
-      });
-
-
-
-    }
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-  Future<bool> isUnlocked(
-
-      PuzzleLevelModel level,
-
-      ) async {
-
-
-
-    return await PuzzleLevelUnlockService.checkUnlocked(
-
-      worldId:widget.puzzle.id,
-
-      level:level,
-
-    );
-
-  }
-
-
-
-
-
-
-
-
-
-  void openLevel(
-
-      PuzzleLevelModel level,
-
-      ) async {
-
-
-
-    final unlocked =
-
-    await isUnlocked(level);
-
-
-
-
-
-
-    if(!unlocked){
-
-
-      showLockedDialog(level);
-
-
-      return;
-
-    }
-
-
-
-
-
-
-    await Navigator.push(
-
-
-
-      context,
-
-
-
-      MaterialPageRoute(
-
-
-
-        builder:(_)=>
-
-
-
-            PuzzleGameScreen(
-
-
-
-              puzzle:widget.puzzle,
-
-
-
-              level:level,
-
-
-
-            ),
-
-
-
+      PuzzleLevelModel(
+        id: "level_1",
+        levelNumber: 1,
+        title: "البداية",
+        image: "assets/images/Puzzle/animals/level_1.png",
+        gridSize: 3,
+        requiredStars: 0,
+        unlocked: true,
       ),
 
+      PuzzleLevelModel(
+        id: "level_2",
+        levelNumber: 2,
+        title: "الحيوانات الجميلة",
+        image: "assets/images/Puzzle/animals/level_2.png",
+        gridSize: 4,
+        requiredStars: 3,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_3",
+        levelNumber: 3,
+        title: "مغامرة الغابة",
+        image: "assets/images/Puzzle/animals/level_3.png",
+        gridSize: 5,
+        requiredStars: 6,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_4",
+        levelNumber: 4,
+        title: "تحدي الحيوانات",
+        image: "assets/images/Puzzle/animals/level_4.png",
+        gridSize: 6,
+        requiredStars: 9,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_5",
+        levelNumber: 5,
+        title: "حيوانات المزرعة",
+        image: "assets/images/Puzzle/animals/level_5.png",
+        gridSize: 6,
+        requiredStars: 15,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_6",
+        levelNumber: 6,
+        title: "عالم البحار",
+        image: "assets/images/Puzzle/animals/level_6.png",
+        gridSize: 7,
+        requiredStars: 20,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_7",
+        levelNumber: 7,
+        title: "الحيوانات البرية",
+        image: "assets/images/Puzzle/animals/level_7.png",
+        gridSize: 7,
+        requiredStars: 30,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_8",
+        levelNumber: 8,
+        title: "أسرار الغابة",
+        image: "assets/images/Puzzle/animals/level_8.png",
+        gridSize: 8,
+        requiredStars: 40,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_9",
+        levelNumber: 9,
+        title: "أبطال الحيوانات",
+        image: "assets/images/Puzzle/animals/level_9.png",
+        gridSize: 8,
+        requiredStars: 50,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_10",
+        levelNumber: 10,
+        title: "التحدي النهائي",
+        image: "assets/images/Puzzle/animals/level_10.png",
+        gridSize: 9,
+        requiredStars: 70,
+      ),
+
+    ],
 
 
-    );
+
+    //==================================================
+    // جزيرة السيارات
+    //==================================================
+
+    "cars": [
+
+      PuzzleLevelModel(
+        id: "level_1",
+        levelNumber: 1,
+        title: "البداية",
+        image: "assets/images/Puzzle/cars/level_1.png",
+        gridSize: 3,
+        requiredStars: 0,
+        unlocked: true,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_2",
+        levelNumber: 2,
+        title: "السيارات السريعة",
+        image: "assets/images/Puzzle/cars/level_2.png",
+        gridSize: 4,
+        requiredStars: 3,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_3",
+        levelNumber: 3,
+        title: "سباق المدينة",
+        image: "assets/images/Puzzle/cars/level_3.png",
+        gridSize: 5,
+        requiredStars: 6,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_4",
+        levelNumber: 4,
+        title: "تحدي السيارات",
+        image: "assets/images/Puzzle/cars/level_4.png",
+        gridSize: 6,
+        requiredStars: 9,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_5",
+        levelNumber: 5,
+        title: "السيارات الرياضية",
+        image: "assets/images/Puzzle/cars/level_5.png",
+        gridSize: 6,
+        requiredStars: 15,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_6",
+        levelNumber: 6,
+        title: "طريق السرعة",
+        image: "assets/images/Puzzle/cars/level_6.png",
+        gridSize: 7,
+        requiredStars: 20,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_7",
+        levelNumber: 7,
+        title: "سباق الأبطال",
+        image: "assets/images/Puzzle/cars/level_7.png",
+        gridSize: 7,
+        requiredStars: 30,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_8",
+        levelNumber: 8,
+        title: "تحدي المدينة",
+        image: "assets/images/Puzzle/cars/level_8.png",
+        gridSize: 8,
+        requiredStars: 40,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_9",
+        levelNumber: 9,
+        title: "أسطورة السيارات",
+        image: "assets/images/Puzzle/cars/level_9.png",
+        gridSize: 8,
+        requiredStars: 50,
+      ),
+
+      PuzzleLevelModel(
+        id: "level_10",
+        levelNumber: 10,
+        title: "السباق النهائي",
+        image: "assets/images/Puzzle/cars/level_10.png",
+        gridSize: 9,
+        requiredStars: 70,
+      ),
+
+    ],
+
+//==================================================
+// جزيرة الفضاء
+//==================================================
+
+"space": [
+
+  PuzzleLevelModel(
+    id: "level_1",
+    levelNumber: 1,
+    title: "رحلة البداية",
+    image: "assets/images/Puzzle/space/level_1.png",
+    gridSize: 3,
+    requiredStars: 0,
+    unlocked: true,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_2",
+    levelNumber: 2,
+    title: "الكواكب",
+    image: "assets/images/Puzzle/space/level_2.png",
+    gridSize: 4,
+    requiredStars: 3,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_3",
+    levelNumber: 3,
+    title: "الصواريخ",
+    image: "assets/images/Puzzle/space/level_3.png",
+    gridSize: 5,
+    requiredStars: 6,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_4",
+    levelNumber: 4,
+    title: "أسرار الفضاء",
+    image: "assets/images/Puzzle/space/level_4.png",
+    gridSize: 6,
+    requiredStars: 9,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_5",
+    levelNumber: 5,
+    title: "المجرات",
+    image: "assets/images/Puzzle/space/level_5.png",
+    gridSize: 6,
+    requiredStars: 15,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_6",
+    levelNumber: 6,
+    title: "رحلة القمر",
+    image: "assets/images/Puzzle/space/level_6.png",
+    gridSize: 7,
+    requiredStars: 20,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_7",
+    levelNumber: 7,
+    title: "النجوم البعيدة",
+    image: "assets/images/Puzzle/space/level_7.png",
+    gridSize: 7,
+    requiredStars: 30,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_8",
+    levelNumber: 8,
+    title: "أسرار الكون",
+    image: "assets/images/Puzzle/space/level_8.png",
+    gridSize: 8,
+    requiredStars: 40,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_9",
+    levelNumber: 9,
+    title: "مغامرة الفضاء",
+    image: "assets/images/Puzzle/space/level_9.png",
+    gridSize: 8,
+    requiredStars: 50,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_10",
+    levelNumber: 10,
+    title: "نهاية الرحلة",
+    image: "assets/images/Puzzle/space/level_10.png",
+    gridSize: 9,
+    requiredStars: 70,
+  ),
+
+],
 
 
 
+//==================================================
+// جزيرة الطبيعة
+//==================================================
+
+"nature": [
+
+  PuzzleLevelModel(
+    id: "level_1",
+    levelNumber: 1,
+    title: "البداية",
+    image: "assets/images/Puzzle/nature/level_1.png",
+    gridSize: 3,
+    requiredStars: 0,
+    unlocked: true,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_2",
+    levelNumber: 2,
+    title: "الجبال والأنهار",
+    image: "assets/images/Puzzle/nature/level_2.png",
+    gridSize: 4,
+    requiredStars: 3,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_3",
+    levelNumber: 3,
+    title: "جمال الطبيعة",
+    image: "assets/images/Puzzle/nature/level_3.png",
+    gridSize: 5,
+    requiredStars: 6,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_4",
+    levelNumber: 4,
+    title: "تحدي الطبيعة",
+    image: "assets/images/Puzzle/nature/level_4.png",
+    gridSize: 6,
+    requiredStars: 9,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_5",
+    levelNumber: 5,
+    title: "الغابات الخضراء",
+    image: "assets/images/Puzzle/nature/level_5.png",
+    gridSize: 6,
+    requiredStars: 15,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_6",
+    levelNumber: 6,
+    title: "الشلالات",
+    image: "assets/images/Puzzle/nature/level_6.png",
+    gridSize: 7,
+    requiredStars: 20,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_7",
+    levelNumber: 7,
+    title: "عالم النباتات",
+    image: "assets/images/Puzzle/nature/level_7.png",
+    gridSize: 7,
+    requiredStars: 30,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_8",
+    levelNumber: 8,
+    title: "روعة الطبيعة",
+    image: "assets/images/Puzzle/nature/level_8.png",
+    gridSize: 8,
+    requiredStars: 40,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_9",
+    levelNumber: 9,
+    title: "سر الطبيعة",
+    image: "assets/images/Puzzle/nature/level_9.png",
+    gridSize: 8,
+    requiredStars: 50,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_10",
+    levelNumber: 10,
+    title: "التحدي النهائي",
+    image: "assets/images/Puzzle/nature/level_10.png",
+    gridSize: 9,
+    requiredStars: 70,
+  ),
+
+],
+
+//==================================================
+// جزيرة المعالم العالمية
+//==================================================
+
+"landmarks": [
+
+  PuzzleLevelModel(
+    id: "level_1",
+    levelNumber: 1,
+    title: "البداية",
+    image: "assets/images/Puzzle/landmarks/level_1.png",
+    gridSize: 3,
+    requiredStars: 0,
+    unlocked: true,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_2",
+    levelNumber: 2,
+    title: "معالم مشهورة",
+    image: "assets/images/Puzzle/landmarks/level_2.png",
+    gridSize: 4,
+    requiredStars: 3,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_3",
+    levelNumber: 3,
+    title: "حول العالم",
+    image: "assets/images/Puzzle/landmarks/level_3.png",
+    gridSize: 5,
+    requiredStars: 6,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_4",
+    levelNumber: 4,
+    title: "تحدي المعالم",
+    image: "assets/images/Puzzle/landmarks/level_4.png",
+    gridSize: 6,
+    requiredStars: 9,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_5",
+    levelNumber: 5,
+    title: "عجائب العالم",
+    image: "assets/images/Puzzle/landmarks/level_5.png",
+    gridSize: 6,
+    requiredStars: 15,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_6",
+    levelNumber: 6,
+    title: "مدن عالمية",
+    image: "assets/images/Puzzle/landmarks/level_6.png",
+    gridSize: 7,
+    requiredStars: 20,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_7",
+    levelNumber: 7,
+    title: "آثار قديمة",
+    image: "assets/images/Puzzle/landmarks/level_7.png",
+    gridSize: 7,
+    requiredStars: 30,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_8",
+    levelNumber: 8,
+    title: "رحلة حول العالم",
+    image: "assets/images/Puzzle/landmarks/level_8.png",
+    gridSize: 8,
+    requiredStars: 40,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_9",
+    levelNumber: 9,
+    title: "أشهر المعالم",
+    image: "assets/images/Puzzle/landmarks/level_9.png",
+    gridSize: 8,
+    requiredStars: 50,
+  ),
+
+  PuzzleLevelModel(
+    id: "level_10",
+    levelNumber: 10,
+    title: "النهائي العالمي",
+    image: "assets/images/Puzzle/landmarks/level_10.png",
+    gridSize: 9,
+    requiredStars: 70,
+  ),
+
+],
 
 
-    loadData();
+  };
 
+
+
+  //==================================================
+  // جلب مستويات جزيرة
+  //==================================================
+
+  static List<PuzzleLevelModel> getLevels(
+      String puzzleId,
+      ) {
+
+    return levels[puzzleId] ?? [];
 
   }
 
 
 
+  //==================================================
+  // جلب مستوى محدد
+  //==================================================
 
+  static PuzzleLevelModel? getLevel({
 
+    required String puzzleId,
 
+    required String levelId,
 
+  }) {
 
 
-  void showLockedDialog(
+    final worldLevels = getLevels(puzzleId);
 
-      PuzzleLevelModel level,
 
-      ){
+    try {
 
-
-
-    showDialog(
-
-
-
-      context:context,
-
-
-
-      builder:(context){
-
-
-
-        return Dialog(
-
-
-
-          backgroundColor:
-
-          Colors.transparent,
-
-
-
-          child:
-
-          Container(
-
-
-
-            padding:
-
-            const EdgeInsets.all(25),
-
-
-
-            decoration:
-
-            BoxDecoration(
-
-
-
-              color:
-
-              Colors.white,
-
-
-
-              borderRadius:
-
-              BorderRadius.circular(30),
-
-
-
-              boxShadow:[
-
-
-
-                const BoxShadow(
-
-
-
-                  color:
-
-                  Colors.black26,
-
-
-
-                  blurRadius:
-
-                  15,
-
-
-
-                  offset:
-
-                  Offset(0,8),
-
-
-
-                ),
-
-
-
-              ],
-
-
-
-            ),
-
-
-
-            child:
-
-            Column(
-
-
-
-              mainAxisSize:
-
-              MainAxisSize.min,
-
-
-
-              children:[
-
-
-
-
-
-                Image.asset(
-
-
-
-                  "assets/images/ui/lock.png",
-
-
-
-                  height:75,
-
-
-
-                  errorBuilder:
-
-                      (_,__,___){
-
-
-
-                    return const Icon(
-
-
-
-                      Icons.lock,
-
-
-
-                      size:70,
-
-
-
-                    );
-
-
-
-                  },
-
-
-
-                ),
-
-
-
-
-
-                const SizedBox(height:15),
-
-
-
-
-
-                const Text(
-
-
-
-                  "🔒 المرحلة مغلقة",
-
-
-
-                  style:
-
-                  TextStyle(
-
-
-
-                    fontSize:22,
-
-
-
-                    fontWeight:
-
-                    FontWeight.bold,
-
-
-
-                  ),
-
-
-
-                ),
-
-
-
-
-
-                const SizedBox(height:10),
-
-
-
-
-
-                Text(
-
-
-
-                  "تحتاج ⭐ ${level.requiredStars} نجوم لفتح هذه المرحلة",
-
-
-
-                  textAlign:
-
-                  TextAlign.center,
-
-
-
-                  style:
-
-                  const TextStyle(
-
-
-
-                    fontSize:17,
-
-
-
-                  ),
-
-
-
-                ),
-
-
-
-
-
-                const SizedBox(height:20),
-
-
-
-
-
-                ElevatedButton(
-
-
-
-                  onPressed:(){
-
-
-
-                    Navigator.pop(context);
-
-
-
-                  },
-
-
-
-                  style:
-
-                  ElevatedButton.styleFrom(
-
-
-
-                    backgroundColor:
-
-                    Colors.orange,
-
-
-
-                    shape:
-
-                    RoundedRectangleBorder(
-
-
-
-                      borderRadius:
-
-                      BorderRadius.circular(25),
-
-
-
-                    ),
-
-
-
-                  ),
-
-
-
-                  child:
-
-                  const Text(
-
-
-
-                    "حسناً",
-
-
-
-                    style:
-
-                    TextStyle(
-
-
-
-                      color:
-
-                      Colors.white,
-
-
-
-                    ),
-
-
-
-                  ),
-
-
-
-                ),
-
-
-
-              ],
-
-
-
-            ),
-
-
-
-          ),
-
-
-
-        );
-
-
-
-      },
-
-
-
-    );
-
-
-
-  }
-
-  @override
-  void dispose(){
-
-    pressController.dispose();
-
-    super.dispose();
-
-  }
-
-
-
-
-
-
-
-
-
-  @override
-  Widget build(BuildContext context){
-
-
-
-    if(loading){
-
-
-      return const Scaffold(
-
-
-        body:
-
-        Center(
-
-
-          child:
-
-          CircularProgressIndicator(),
-
-
-        ),
-
-
+      return worldLevels.firstWhere(
+            (level) => level.id == levelId,
       );
 
+    } catch (_) {
+
+      return null;
 
     }
-
-
-
-
-
-
-
-    return Scaffold(
-
-
-
-      body:
-
-      Stack(
-
-
-
-        children:[
-
-
-
-
-
-          Positioned.fill(
-
-
-
-            child:
-
-            Container(
-
-
-
-              decoration:
-
-              const BoxDecoration(
-
-
-
-                gradient:
-
-                LinearGradient(
-
-
-
-                  colors:[
-
-
-
-                    Color(0xff4FC3F7),
-
-
-                    Color(0xff1976D2),
-
-
-
-                  ],
-
-
-
-                  begin:
-
-                  Alignment.topCenter,
-
-
-
-                  end:
-
-                  Alignment.bottomCenter,
-
-
-
-                ),
-
-
-
-              ),
-
-
-
-            ),
-
-
-
-          ),
-
-
-
-
-
-
-
-          Column(
-
-
-
-            children:[
-
-
-
-
-
-
-              GameToolbar(
-
-
-
-                logo:
-
-                "assets/images/ui/puzzle_logo.png",
-
-
-
-                stars:
-
-                totalStars,
-
-
-
-                rewards:
-
-                rewards,
-
-
-
-                onBack:(){
-
-
-
-                  Navigator.pop(context);
-
-
-
-                },
-
-
-
-              ),
-
-
-
-
-
-
-
-
-              Padding(
-
-
-
-                padding:
-
-                const EdgeInsets.only(
-
-                  top:15,
-
-                  bottom:10,
-
-                ),
-
-
-
-                child:
-
-                Text(
-
-
-
-                  widget.puzzle.title,
-
-
-
-                  style:
-
-                  const TextStyle(
-
-
-
-                    color:
-
-                    Colors.white,
-
-
-
-                    fontSize:28,
-
-
-
-                    fontWeight:
-
-                    FontWeight.bold,
-
-
-
-                    shadows:[
-
-
-
-                      Shadow(
-
-
-
-                        color:
-
-                        Colors.black45,
-
-
-
-                        blurRadius:
-
-                        8,
-
-
-
-                      ),
-
-
-
-                    ],
-
-
-
-                  ),
-
-
-
-                ),
-
-
-
-              ),
-
-
-
-
-
-
-
-
-
-              Expanded(
-
-
-
-                child:
-
-                GridView.builder(
-
-
-
-                  padding:
-
-                  const EdgeInsets.all(20),
-
-
-
-                  gridDelegate:
-
-                  const SliverGridDelegateWithFixedCrossAxisCount(
-
-
-
-                    crossAxisCount:
-
-                    3,
-
-
-
-                    crossAxisSpacing:
-
-                    16,
-
-
-
-                    mainAxisSpacing:
-
-                    16,
-
-
-
-                  ),
-
-
-
-
-
-                  itemCount:
-
-                  levels.length,
-
-
-
-
-
-
-
-                  itemBuilder:(context,index){
-
-
-
-                    final level =
-
-                    levels[index];
-
-
-
-
-
-
-
-                    return FutureBuilder<bool>(
-
-
-
-                      future:
-
-                      isUnlocked(level),
-
-
-
-
-
-                      builder:(context,snapshot){
-
-
-
-                        final unlocked =
-
-                        snapshot.data ?? false;
-
-
-
-
-
-
-
-                        return _LevelCard(
-
-
-
-                          level:
-
-                          level,
-
-
-
-                          unlocked:
-
-                          unlocked,
-
-
-
-                          onTap:(){
-
-
-
-                            openLevel(level);
-
-
-
-                          },
-
-
-
-                        );
-
-
-
-                      },
-
-
-
-                    );
-
-
-
-                  },
-
-
-
-                ),
-
-
-
-              ),
-
-
-
-            ],
-
-
-
-          ),
-
-
-
-
-
-        ],
-
-
-
-      ),
-
-
-
-    );
-
-
-  }
-
-
-}
-
-
-
-
-
-
-
-
-class _LevelCard extends StatefulWidget {
-
-
-
-  final PuzzleLevelModel level;
-
-
-  final bool unlocked;
-
-
-  final VoidCallback onTap;
-
-
-
-
-
-  const _LevelCard({
-
-    required this.level,
-
-    required this.unlocked,
-
-    required this.onTap,
-
-  });
-
-
-
-
-
-  @override
-  State<_LevelCard> createState() =>
-      _LevelCardState();
-
-}
-
-
-
-
-
-
-
-
-class _LevelCardState extends State<_LevelCard>{
-
-
-
-  bool pressed = false;
-
-
-
-
-
-  @override
-  Widget build(BuildContext context){
-
-
-
-    return GestureDetector(
-
-
-
-      onTapDown:(_){
-
-
-
-        setState((){
-
-          pressed = true;
-
-        });
-
-
-      },
-
-
-
-      onTapUp:(_){
-
-
-
-        setState((){
-
-          pressed = false;
-
-        });
-
-
-        widget.onTap();
-
-
-
-      },
-
-
-
-      onTapCancel:(){
-
-
-
-        setState((){
-
-          pressed = false;
-
-        });
-
-
-      },
-
-
-
-
-
-      child:
-
-      AnimatedScale(
-
-
-
-        scale:
-
-        pressed ? 0.93 : 1,
-
-
-
-        duration:
-
-        const Duration(
-
-          milliseconds:120,
-
-        ),
-
-
-
-        child:
-
-        Container(
-
-
-
-          decoration:
-
-          BoxDecoration(
-
-
-
-            color:
-
-            Colors.white,
-
-
-
-            borderRadius:
-
-            BorderRadius.circular(25),
-
-
-
-            boxShadow:[
-
-
-
-              BoxShadow(
-
-
-
-                color:
-
-                Colors.black.withOpacity(.25),
-
-
-
-                blurRadius:
-
-                12,
-
-
-
-                offset:
-
-                const Offset(0,6),
-
-
-
-              ),
-
-
-
-            ],
-
-
-
-          ),
-
-
-
-
-          child:
-
-          Column(
-
-
-
-            mainAxisAlignment:
-
-            MainAxisAlignment.center,
-
-
-
-            children:[
-
-
-
-
-
-              Image.asset(
-
-
-
-                widget.unlocked
-
-                    ?
-
-                "assets/images/ui/puzzle_piece.png"
-
-                    :
-
-                "assets/images/ui/lock.png",
-
-
-
-                height:
-
-                55,
-
-
-
-                errorBuilder:
-
-                    (_,__,___){
-
-
-
-                  return Icon(
-
-
-
-                    widget.unlocked
-
-                        ?
-
-                    Icons.extension
-
-                        :
-
-                    Icons.lock,
-
-
-
-                    size:
-
-                    50,
-
-
-
-                    color:
-
-                    widget.unlocked
-
-                        ?
-
-                    Colors.orange
-
-                        :
-
-                    Colors.grey,
-
-
-
-                  );
-
-
-
-                },
-
-
-
-              ),
-
-
-
-
-
-              const SizedBox(height:8),
-
-
-
-
-
-              Text(
-
-
-
-                widget.level.title.isEmpty
-
-                    ?
-
-                "مرحلة ${widget.level.levelNumber}"
-
-                    :
-
-                widget.level.title,
-
-
-
-                textAlign:
-
-                TextAlign.center,
-
-
-
-                style:
-
-                const TextStyle(
-
-
-
-                  fontSize:16,
-
-
-
-                  fontWeight:
-
-                  FontWeight.bold,
-
-
-
-                ),
-
-
-
-              ),
-
-
-
-
-
-
-              if(widget.level.completed)
-
-
-
-                const Text(
-
-
-
-                  "✅",
-
-
-
-                  style:
-
-                  TextStyle(
-
-                    fontSize:22,
-
-                  ),
-
-
-
-                ),
-
-
-
-
-
-
-              if(widget.unlocked && widget.level.earnedStars > 0)
-
-
-
-                Text(
-
-
-
-                  "⭐ ${widget.level.earnedStars}",
-
-
-
-                  style:
-
-                  const TextStyle(
-
-
-
-                    color:
-
-                    Colors.orange,
-
-
-
-                    fontWeight:
-
-                    FontWeight.bold,
-
-
-
-                  ),
-
-
-
-                ),
-
-
-
-
-
-              if(!widget.unlocked)
-
-
-
-                Text(
-
-
-
-                  "⭐ ${widget.level.requiredStars}",
-
-
-
-                  style:
-
-                  const TextStyle(
-
-
-
-                    color:
-
-                    Colors.grey,
-
-
-
-                    fontWeight:
-
-                    FontWeight.bold,
-
-
-
-                  ),
-
-
-
-                ),
-
-
-
-            ],
-
-
-
-          ),
-
-
-
-        ),
-
-
-
-      ),
-
-
-
-    );
-
 
   }
 
