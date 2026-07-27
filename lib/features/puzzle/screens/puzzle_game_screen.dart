@@ -25,10 +25,10 @@ import '../managers/puzzle_progress_manager.dart';
 
 
 import '../services/reward_ad_service.dart';
+import '../services/puzzle_audio_service.dart';
 
 
 import 'puzzle_win_screen.dart';
-
 
 
 
@@ -62,7 +62,6 @@ class PuzzleGameScreen extends StatefulWidget {
   State<PuzzleGameScreen> createState() =>
       _PuzzleGameScreenState();
 
-
 }
 
 
@@ -91,7 +90,6 @@ class _PuzzleGameScreenState
   Timer? timer;
 
 
-
   late ConfettiController confettiController;
 
 
@@ -99,6 +97,7 @@ class _PuzzleGameScreenState
 
 
   final AudioPlayer bgPlayer = AudioPlayer();
+
 
   final AudioPlayer effectPlayer = AudioPlayer();
 
@@ -128,11 +127,12 @@ class _PuzzleGameScreenState
   bool showRewardBox = false;
 
 
+  bool rewardOpened = false;
 
 
 
 
-  // حجم لوحة اللعبة يحسب حسب الشاشة
+
 
   double boardSize = 300;
 
@@ -143,9 +143,7 @@ class _PuzzleGameScreenState
   late AssetImage puzzleImage;
 
 
-
   ui.Image? loadedImage;
-
 
 
   bool imageReady = false;
@@ -168,6 +166,7 @@ class _PuzzleGameScreenState
 
 
   @override
+
   void initState(){
 
 
@@ -185,9 +184,7 @@ class _PuzzleGameScreenState
 
 
 
-    confettiController =
-
-    ConfettiController(
+    confettiController = ConfettiController(
 
       duration:
 
@@ -205,7 +202,6 @@ class _PuzzleGameScreenState
     loadPuzzleImage();
 
 
-
   }
 
 
@@ -219,24 +215,39 @@ class _PuzzleGameScreenState
   Future<void> initAudio() async {
 
 
-
-    await bgPlayer.setReleaseMode(
-
-      ReleaseMode.loop,
-
-    );
+    try{
 
 
+      await bgPlayer.setReleaseMode(
 
-    await bgPlayer.play(
+        ReleaseMode.loop,
 
-      AssetSource(
+      );
 
-        "audio/puzzle_bgm.mp3",
 
-      ),
 
-    );
+      await bgPlayer.play(
+
+        AssetSource(
+
+          "audio/puzzle_bgm.mp3",
+
+        ),
+
+      );
+
+
+    }catch(e){
+
+
+      debugPrint(
+
+        "Audio error: $e",
+
+      );
+
+
+    }
 
 
   }
@@ -252,16 +263,31 @@ class _PuzzleGameScreenState
   Future<void> playSound(String file) async {
 
 
+    try{
 
-    await effectPlayer.play(
 
-      AssetSource(
+      await effectPlayer.play(
 
-        "audio/$file",
+        AssetSource(
 
-      ),
+          "audio/$file",
 
-    );
+        ),
+
+      );
+
+
+    }catch(e){
+
+
+      debugPrint(
+
+        "Sound error: $e",
+
+      );
+
+
+    }
 
 
   }
@@ -277,69 +303,106 @@ class _PuzzleGameScreenState
   Future<void> loadPuzzleImage() async {
 
 
-
-    final stream =
-
-    puzzleImage.resolve(
-
-      const ImageConfiguration(),
-
-    );
+    try{
 
 
+      final stream =
 
+      puzzleImage.resolve(
 
+        const ImageConfiguration(),
 
-    stream.addListener(
-
-
-
-      ImageStreamListener(
-
-            (info, _) {
-
-
-
-          loadedImage = info.image;
+      );
 
 
 
 
 
-          final screenWidth =
-
-              MediaQueryData.fromWindow(
-
-                WidgetsBinding.instance.window,
-
-              ).size.width;
+      stream.addListener(
 
 
 
+        ImageStreamListener(
+
+              (info, _) {
 
 
-          // ضبط حجم اللوحة حسب عرض الجهاز
 
-          boardSize = screenWidth * 0.82;
+            loadedImage = info.image;
 
 
 
 
 
-          imageReady = true;
+            final width =
+
+            MediaQueryData.fromView(
+
+              WidgetsBinding
+
+                  .instance
+
+                  .platformDispatcher
+
+                  .views
+
+                  .first,
+
+            ).size.width;
 
 
 
-          createGame();
+
+
+            boardSize = width * 0.82;
 
 
 
-        },
 
-      ),
 
-    );
+            imageReady = true;
 
+
+
+            createGame();
+
+
+
+          },
+
+        ),
+
+      );
+
+
+
+    }catch(e){
+
+
+      debugPrint(
+
+        "Image loading error: $e",
+
+      );
+
+
+
+      if(mounted){
+
+
+        setState((){
+
+
+          loading = false;
+
+
+        });
+
+
+      }
+
+
+    }
 
 
   }
@@ -355,46 +418,74 @@ class _PuzzleGameScreenState
   void createGame(){
 
 
+    try{
 
-    if(loadedImage == null){
 
-      return;
+      if(loadedImage == null){
+
+        return;
+
+      }
+
+
+
+
+
+
+      pieces = PuzzleGenerator.generate(
+
+        rows: widget.level.gridSize,
+
+        columns: widget.level.gridSize,
+
+
+        imageWidth:
+
+        loadedImage!.width.toDouble(),
+
+
+        imageHeight:
+
+        loadedImage!.height.toDouble(),
+
+
+        boardSize:
+
+        boardSize,
+
+      );
+
+
+
+
+
+
+
+      controller = PuzzleController(
+
+        pieces: pieces,
+
+      );
+
+
+
+
+
+      loadProgress();
+
+
+
+    }catch(e){
+
+
+      debugPrint(
+
+        "Create game error: $e",
+
+      );
+
 
     }
-
-
-
-
-
-
-    pieces = PuzzleGenerator.generate(
-  rows: widget.level.gridSize,
-  columns: widget.level.gridSize,
-
-  imageWidth: loadedImage!.width.toDouble(),
-  imageHeight: loadedImage!.height.toDouble(),
-
-  boardSize: boardSize,
-);
-
-
-
-
-
-
-
-    controller = PuzzleController(
-
-      pieces: pieces,
-
-    );
-
-
-
-
-
-    loadProgress();
-
 
 
   }
@@ -402,34 +493,63 @@ class _PuzzleGameScreenState
   Future<void> loadProgress() async {
 
 
-    hints =
-
-    await PuzzleHintManager.getHints();
+    try{
 
 
+      hints = await PuzzleHintManager.getHints();
 
 
 
-    if(mounted){
 
 
-      setState((){
+      if(mounted){
 
 
-        loading = false;
+        setState((){
 
 
-      });
+          loading = false;
+
+
+        });
+
+
+      }
+
+
+
+
+
+      startTimer();
+
+
+
+    }catch(e){
+
+
+      debugPrint(
+
+        "Load progress error: $e",
+
+      );
+
+
+      if(mounted){
+
+
+        setState((){
+
+
+          loading = false;
+
+
+        });
+
+
+      }
 
 
     }
-
-
-
-
-
-    startTimer();
-
 
 
   }
@@ -445,53 +565,64 @@ class _PuzzleGameScreenState
   void startTimer(){
 
 
-
-    timer?.cancel();
-
+    try{
 
 
-
-
-    timer = Timer.periodic(
-
-
-
-      const Duration(seconds:1),
-
-
-
-          (_){
-
-
-
-        if(!mounted || finishing){
-
-
-          return;
-
-
-        }
+      timer?.cancel();
 
 
 
 
 
-        setState((){
-
-
-          seconds++;
-
-
-        });
+      timer = Timer.periodic(
 
 
 
-      },
+        const Duration(seconds:1),
 
 
 
-    );
+            (_){
 
+
+
+          if(!mounted || finishing){
+
+            return;
+
+          }
+
+
+
+
+
+          setState((){
+
+
+            seconds++;
+
+
+          });
+
+
+
+        },
+
+      );
+
+
+
+    }catch(e){
+
+
+      debugPrint(
+
+        "Timer error: $e",
+
+      );
+
+
+    }
 
 
   }
@@ -506,15 +637,9 @@ class _PuzzleGameScreenState
 
   Future<void> movePiece(
 
-
-
       PuzzlePiece piece,
 
-
-
       DragUpdateDetails details,
-
-
 
       ) async {
 
@@ -523,9 +648,7 @@ class _PuzzleGameScreenState
     if(piece.placed || finishing){
 
 
-
       return;
-
 
 
     }
@@ -534,92 +657,110 @@ class _PuzzleGameScreenState
 
 
 
+    try{
 
 
-    setState((){
-
-
-
-      piece.position += details.delta;
+      setState((){
 
 
 
-
-
-      // حدود قسم قطع البازل
-
-      final maxX = boardSize - pieceSize;
-
-      final maxY = boardSize - pieceSize;
+        piece.position += details.delta;
 
 
 
 
 
-      if(piece.position.dx < 0){
+        final maxX =
 
-        piece.position = Offset(
+            boardSize - pieceSize;
 
-          0,
 
-          piece.position.dy,
 
-        );
+        final maxY =
 
-      }
+            boardSize - pieceSize;
 
 
 
 
 
-      if(piece.position.dy < 0){
+        if(piece.position.dx < 0){
 
-        piece.position = Offset(
+          piece.position = Offset(
 
-          piece.position.dx,
+            0,
 
-          0,
+            piece.position.dy,
 
-        );
+          );
 
-      }
-
-
-
-
-
-      if(piece.position.dx > maxX){
-
-        piece.position = Offset(
-
-          maxX,
-
-          piece.position.dy,
-
-        );
-
-      }
+        }
 
 
 
 
 
-      if(piece.position.dy > maxY){
+        if(piece.position.dy < 0){
 
-        piece.position = Offset(
+          piece.position = Offset(
 
-          piece.position.dx,
+            piece.position.dx,
 
-          maxY,
+            0,
 
-        );
+          );
 
-      }
+        }
 
 
 
-    });
 
+
+        if(piece.position.dx > maxX){
+
+          piece.position = Offset(
+
+            maxX,
+
+            piece.position.dy,
+
+          );
+
+        }
+
+
+
+
+
+        if(piece.position.dy > maxY){
+
+          piece.position = Offset(
+
+            piece.position.dx,
+
+            maxY,
+
+          );
+
+        }
+
+
+
+      });
+
+
+
+    }catch(e){
+
+
+      debugPrint(
+
+        "Move piece error: $e",
+
+      );
+
+
+    }
 
 
   }
@@ -642,90 +783,94 @@ class _PuzzleGameScreenState
 
     if(piece.placed || finishing){
 
-
-
       return;
 
-
-
     }
 
 
 
 
 
-
-    final correct =
-
-    controller.checkPiecePosition(
-
-      piece,
-
-      pieceSize,
-
-    );
+    try{
 
 
+      final correct =
 
+      controller.checkPiecePosition(
 
+        piece,
 
-
-
-    setState((){
-
-
-      moves++;
-
-
-    });
-
-
-
-
-
-
-
-    if(correct){
-
-
-
-      await playSound(
-
-        "puzzle_success.mp3",
+        pieceSize,
 
       );
 
 
 
-    }
-
-    else{
 
 
+      setState((){
 
-      await playSound(
 
-        "puzzle_fail.mp3",
+        moves++;
+
+
+      });
+
+
+
+
+
+
+
+      if(correct){
+
+
+
+        await playSound(
+
+          "puzzle_success.mp3",
+
+        );
+
+
+
+      }else{
+
+
+
+        await playSound(
+
+          "puzzle_fail.mp3",
+
+        );
+
+
+
+      }
+
+
+
+
+
+      await saveGame();
+
+
+
+      checkCompleted();
+
+
+
+    }catch(e){
+
+
+      debugPrint(
+
+        "Drop piece error: $e",
 
       );
 
 
-
     }
-
-
-
-
-
-
-
-    await saveGame();
-
-
-
-
-    checkCompleted();
-
 
 
   }
@@ -741,43 +886,58 @@ class _PuzzleGameScreenState
   Future<void> saveGame() async {
 
 
-
-    await PuzzleProgressManager.saveProgress(
-
+    try{
 
 
-      puzzleId:
-
-      widget.puzzle.id,
+      await PuzzleProgressManager.saveProgress(
 
 
 
-      levelId:
+        puzzleId:
 
-      widget.level.id,
-
-
-
-      pieces:
-
-      pieces,
+        widget.puzzle.id,
 
 
 
-      moves:
+        levelId:
 
-      moves,
-
-
-
-      seconds:
-
-      seconds,
+        widget.level.id,
 
 
 
-    );
+        pieces:
 
+        pieces,
+
+
+
+        moves:
+
+        moves,
+
+
+
+        seconds:
+
+        seconds,
+
+
+
+      );
+
+
+
+    }catch(e){
+
+
+      debugPrint(
+
+        "Save game error: $e",
+
+      );
+
+
+    }
 
 
   }
@@ -793,23 +953,38 @@ class _PuzzleGameScreenState
   void checkCompleted(){
 
 
-
-    if(
-
-    controller.isCompleted &&
-
-        !finishing
-
-    ){
+    try{
 
 
+      if(
 
-      finishGame();
+      controller.isCompleted &&
 
+          !finishing
+
+      ){
+
+
+
+        finishGame();
+
+
+
+      }
+
+
+
+    }catch(e){
+
+
+      debugPrint(
+
+        "Check complete error: $e",
+
+      );
 
 
     }
-
 
 
   }
@@ -825,38 +1000,44 @@ class _PuzzleGameScreenState
   Future<void> usePuzzleHint() async {
 
 
-
-    bool available =
-
-    await PuzzleHintManager.consumeHint();
+    try{
 
 
+      bool available =
 
-
-
-
-
-    if(!available){
-
-
-
-      final watched =
-
-      await RewardAdService.showRewardAd();
+      await PuzzleHintManager.consumeHint();
 
 
 
 
 
-      if(watched){
+
+
+      if(!available){
 
 
 
-        await PuzzleHintManager.addHints(3);
+        final watched =
+
+        await RewardAdService.showRewardAd();
 
 
 
-        available = true;
+
+
+        if(watched){
+
+
+
+          await PuzzleHintManager.addHints(3);
+
+
+
+          available = true;
+
+
+
+        }
 
 
 
@@ -864,7 +1045,17 @@ class _PuzzleGameScreenState
 
 
 
-    }
+
+
+
+
+      if(!available){
+
+
+        return;
+
+
+      }
 
 
 
@@ -872,148 +1063,100 @@ class _PuzzleGameScreenState
 
 
 
-    if(!available){
+      final piece =
 
+      PuzzleHintManager.findAvailablePiece(
 
-
-      return;
-
-
-
-    }
-
-
-
-
-
-
-
-    final piece =
-
-    PuzzleHintManager.findAvailablePiece(
-
-      pieces,
-
-    );
-
-
-
-
-
-
-
-
-    if(piece == null){
-
-
-
-      return;
-
-
-
-    }
-
-
-
-
-
-
-
-
-    setState((){
-
-
-
-      controller.applyHint(
-
-        piece,
-
-        pieceSize,
+        pieces,
 
       );
 
 
 
-      moves++;
-
-
-
-    });
 
 
 
 
 
+      if(piece == null){
 
 
+        return;
 
-    await playSound(
 
-      "puzzle_success.mp3",
-
-    );
+      }
 
 
 
 
 
 
-    await saveGame();
+
+
+      setState((){
+
+
+        controller.applyHint(
+
+          piece,
+
+          pieceSize,
+
+        );
+
+
+        moves++;
+
+
+
+      });
 
 
 
 
-    checkCompleted();
 
+
+
+
+      await playSound(
+
+        "puzzle_success.mp3",
+
+      );
+
+
+
+
+
+
+      await saveGame();
+
+
+
+      checkCompleted();
+
+
+
+    }catch(e){
+
+
+      debugPrint(
+
+        "Hint error: $e",
+
+      );
+
+
+    }
 
 
   }
 
+
   Future<void> finishGame() async {
 
 
-
-    finishing = true;
-
-
-
-    timer?.cancel();
-
-
-
-
-
-
-    await PuzzleProgressManager.completeLevel(
-
-
-
-      widget.level.id,
-
-
-
-    );
-
-
-
-
-
-
-
-    await playSound(
-
-      "puzzle_win.mp3",
-
-    );
-
-
-
-
-
-
-
-
-    if(!mounted){
+    if(finishing){
 
       return;
 
@@ -1021,31 +1164,24 @@ class _PuzzleGameScreenState
 
 
 
+    try{
+
+
+      finishing = true;
+
+
+      timer?.cancel();
 
 
 
 
-    confettiController.play();
 
 
+      await PuzzleProgressManager.completeLevel(
 
+        widget.level.id,
 
-
-
-
-    await Future.delayed(
-
-
-
-      const Duration(
-
-        milliseconds:1200,
-
-      ),
-
-
-
-    );
+      );
 
 
 
@@ -1053,23 +1189,92 @@ class _PuzzleGameScreenState
 
 
 
+      await playSound(
 
-    setState((){
+        "puzzle_win.mp3",
 
-
-
-      showRewardBox = true;
-
+      );
 
 
-    });
 
+
+
+
+
+      if(!mounted){
+
+        return;
+
+      }
+
+
+
+
+
+
+
+      confettiController.play();
+
+
+
+
+
+
+
+      await Future.delayed(
+
+        const Duration(
+
+          milliseconds:1200,
+
+        ),
+
+      );
+
+
+
+
+
+
+
+      if(!mounted){
+
+        return;
+
+      }
+
+
+
+
+
+
+
+      setState((){
+
+
+        showRewardBox = true;
+
+
+      });
+
+
+
+
+
+    }catch(e){
+
+
+      debugPrint(
+
+        "Finish game error: $e",
+
+      );
+
+
+    }
 
 
   }
-
-
-
 
 
 
@@ -1082,81 +1287,116 @@ class _PuzzleGameScreenState
   Future<void> openWinScreen() async {
 
 
-
-    await playSound(
-
-      "puzzle_reward.mp3",
-
-    );
-
-
-
-
-
-
-
-    await PuzzleProgressManager.addStars(3);
-
-
-
-
-
-
-
-    if(!mounted){
-
-
+    if(rewardOpened){
 
       return;
-
-
 
     }
 
 
 
+    try{
+
+
+      rewardOpened = true;
 
 
 
 
 
-    Navigator.pushReplacement(
+
+
+      await playSound(
+
+        "puzzle_reward.mp3",
+
+      );
 
 
 
-      context,
 
 
 
-      MaterialPageRoute(
+
+      if(!mounted){
+
+        return;
+
+      }
 
 
 
-        builder:(_)=>PuzzleWinScreen(
 
 
 
-          result:
 
-          GameResultModel(
-
-
-
-            stars:3,
+      Navigator.pushReplacement(
 
 
 
-            moves:moves,
+        context,
 
 
 
-            time:
+        MaterialPageRoute(
 
-            Duration(
+
+
+          builder:(_)=>PuzzleWinScreen(
+
+
+
+            result:
+
+            GameResultModel(
+
+
+
+              stars:3,
+
+
+
+              moves:moves,
+
+
 
               seconds:seconds,
 
+
+
             ),
+
+
+
+
+
+            difficulty:
+
+            widget.level.gridSize <= 4
+
+                ? 1
+
+                : widget.level.gridSize <= 6
+
+                ? 2
+
+                : 3,
+
+
+
+
+
+            worldId:
+
+            widget.puzzle.id,
+
+
+
+
+
+            level:
+
+            widget.level.levelNumber,
 
 
 
@@ -1168,59 +1408,48 @@ class _PuzzleGameScreenState
 
 
 
-      ),
+      );
 
 
 
-    );
 
+
+    }catch(e){
+
+
+      debugPrint(
+
+        "Open win screen error: $e",
+
+      );
+
+
+    }
 
 
   }
 
 
-
-
-
-
-
-
-
-
-
-
   @override
-
   Widget build(BuildContext context){
-
 
 
     if(loading || !imageReady){
 
 
-
       return const Scaffold(
 
 
-
-        body:
-
-        Center(
+        body: Center(
 
 
-
-          child:
-
-          CircularProgressIndicator(),
-
+          child:CircularProgressIndicator(),
 
 
         ),
 
 
-
       );
-
 
 
     }
@@ -1234,15 +1463,11 @@ class _PuzzleGameScreenState
     return Stack(
 
 
-
       children:[
 
 
 
-
-
         Scaffold(
-
 
 
           backgroundColor:
@@ -1253,36 +1478,22 @@ class _PuzzleGameScreenState
 
 
 
-
-
           body:
 
           SafeArea(
 
 
-
-            child:
-
-            Column(
-
+            child:Column(
 
 
               children:[
 
 
 
-
-
-
-
-                // شريط اللعبة
-
                 Container(
 
 
-
                   height:65,
-
 
 
                   margin:
@@ -1306,9 +1517,7 @@ class _PuzzleGameScreenState
                   BoxDecoration(
 
 
-
                     color:Colors.white,
-
 
 
                     borderRadius:
@@ -1320,12 +1529,9 @@ class _PuzzleGameScreenState
                     boxShadow:[
 
 
+                      const BoxShadow(
 
-                      BoxShadow(
-
-                        color:
-
-                        Colors.black12,
+                        color:Colors.black12,
 
                         blurRadius:8,
 
@@ -1333,16 +1539,13 @@ class _PuzzleGameScreenState
 
                     ],
 
+
                   ),
 
 
 
 
-
-
-
                   child:Row(
-
 
 
                     mainAxisAlignment:
@@ -1402,16 +1605,13 @@ class _PuzzleGameScreenState
                       GestureDetector(
 
 
-
                         onTap:
 
                         usePuzzleHint,
 
 
 
-                        child:
-
-                        Text(
+                        child:Text(
 
                           "💡 $hints",
 
@@ -1430,7 +1630,6 @@ class _PuzzleGameScreenState
                         ),
 
 
-
                       ),
 
 
@@ -1438,9 +1637,7 @@ class _PuzzleGameScreenState
                     ],
 
 
-
                   ),
-
 
 
                 ),
@@ -1451,16 +1648,12 @@ class _PuzzleGameScreenState
 
 
 
-                // قسم قطع البازل
+
 
                 Expanded(
 
 
-
-                  child:
-
-                  Container(
-
+                  child:Container(
 
 
                     margin:
@@ -1478,34 +1671,13 @@ class _PuzzleGameScreenState
                     BoxDecoration(
 
 
-
-                      color:
-
-                      Colors.white,
-
+                      color:Colors.white,
 
 
                       borderRadius:
 
                       BorderRadius.circular(25),
 
-
-
-                      boxShadow:[
-
-
-
-                        BoxShadow(
-
-                          color:
-
-                          Colors.black12,
-
-                          blurRadius:10,
-
-                        ),
-
-                      ],
 
                     ),
 
@@ -1513,10 +1685,7 @@ class _PuzzleGameScreenState
 
 
 
-                    child:
-
-                    ClipRRect(
-
+                    child:ClipRRect(
 
 
                       borderRadius:
@@ -1525,16 +1694,7 @@ class _PuzzleGameScreenState
 
 
 
-                      child:
-
-                      Stack(
-
-
-
-                        clipBehavior:
-
-                        Clip.none,
-
+                      child:Stack(
 
 
                         children:
@@ -1555,10 +1715,7 @@ class _PuzzleGameScreenState
 
 
 
-
-
                           return Positioned(
-
 
 
                             left:
@@ -1583,8 +1740,6 @@ class _PuzzleGameScreenState
 
                                   (details){
 
-
-
                                 movePiece(
 
                                   piece,
@@ -1592,8 +1747,6 @@ class _PuzzleGameScreenState
                                   details,
 
                                 );
-
-
 
                               },
 
@@ -1605,14 +1758,9 @@ class _PuzzleGameScreenState
 
                                   (_){
 
-
-
                                 dropPiece(piece);
 
-
-
                               },
-
 
 
 
@@ -1621,7 +1769,6 @@ class _PuzzleGameScreenState
                               child:
 
                               PuzzlePieceWidget(
-
 
 
                                 key:
@@ -1655,9 +1802,7 @@ class _PuzzleGameScreenState
                               ),
 
 
-
                             ),
-
 
 
                           );
@@ -1673,25 +1818,23 @@ class _PuzzleGameScreenState
                       ),
 
 
-
                     ),
 
 
-
                   ),
-
 
 
                 ),
 
 
 
-                // ==========================
-                // قسم تركيب الصورة
-                // ==========================
+
+
+
+
+
 
                 Container(
-
 
 
                   height:
@@ -1712,11 +1855,7 @@ class _PuzzleGameScreenState
                   BoxDecoration(
 
 
-
-                    color:
-
-                    Colors.white,
-
+                    color:Colors.white,
 
 
                     borderRadius:
@@ -1724,19 +1863,15 @@ class _PuzzleGameScreenState
                     BorderRadius.circular(25),
 
 
-
                     border:
 
                     Border.all(
 
-                      color:
-
-                      Colors.orange,
+                      color:Colors.orange,
 
                       width:3,
 
                     ),
-
 
 
                   ),
@@ -1745,18 +1880,10 @@ class _PuzzleGameScreenState
 
 
 
+                  child:Center(
 
 
-                  child:
-
-                  Center(
-
-
-
-                    child:
-
-                    SizedBox(
-
+                    child:SizedBox(
 
 
                       width:
@@ -1771,9 +1898,7 @@ class _PuzzleGameScreenState
 
 
 
-                      child:
-
-                      Stack(
+                      child:Stack(
 
 
 
@@ -1787,15 +1912,9 @@ class _PuzzleGameScreenState
 
                           if(!piece.placed){
 
-
-
                             return const SizedBox();
 
-
-
                           }
-
-
 
 
 
@@ -1804,12 +1923,11 @@ class _PuzzleGameScreenState
                           return Positioned(
 
 
-
                             left:
 
                             piece.column *
 
-                            pieceSize,
+                                pieceSize,
 
 
 
@@ -1817,14 +1935,13 @@ class _PuzzleGameScreenState
 
                             piece.row *
 
-                            pieceSize,
+                                pieceSize,
 
 
 
                             child:
 
                             PuzzlePieceWidget(
-
 
 
                               piece:
@@ -1848,7 +1965,6 @@ class _PuzzleGameScreenState
                             ),
 
 
-
                           );
 
 
@@ -1862,29 +1978,24 @@ class _PuzzleGameScreenState
                       ),
 
 
-
                     ),
 
 
-
                   ),
-
 
 
                 ),
 
 
 
-              ],
 
+              ],
 
 
             ),
 
 
-
           ),
-
 
 
         ),
@@ -1895,12 +2006,7 @@ class _PuzzleGameScreenState
 
 
 
-        // ==========================
-        // تأثير الفوز
-        // ==========================
-
         Align(
-
 
 
           alignment:
@@ -1912,7 +2018,6 @@ class _PuzzleGameScreenState
           child:
 
           ConfettiWidget(
-
 
 
             confettiController:
@@ -1932,15 +2037,12 @@ class _PuzzleGameScreenState
             40,
 
 
-
             gravity:
 
             0.3,
 
 
-
           ),
-
 
 
         ),
@@ -1951,17 +2053,10 @@ class _PuzzleGameScreenState
 
 
 
-        // ==========================
-        // صندوق المكافأة
-        // ==========================
-
-
         if(showRewardBox)
 
 
-
           Container(
-
 
 
             color:
@@ -1975,23 +2070,19 @@ class _PuzzleGameScreenState
             RewardBoxWidget(
 
 
-
               onRewardOpened:
 
-                  (){
 
+                  (){
 
 
                 openWinScreen();
 
 
-
               },
 
 
-
             ),
-
 
 
           ),
@@ -1999,13 +2090,10 @@ class _PuzzleGameScreenState
 
 
 
-
       ],
 
 
-
     );
-
 
 
   }
@@ -2019,34 +2107,42 @@ class _PuzzleGameScreenState
 
 
   @override
-
   void dispose(){
 
 
 
-    timer?.cancel();
+    try{
+
+
+      timer?.cancel();
 
 
 
-
-
-    confettiController.dispose();
-
+      confettiController.dispose();
 
 
 
+      bgPlayer.stop();
 
-    bgPlayer.stop();
-
-    bgPlayer.dispose();
-
+      bgPlayer.dispose();
 
 
 
+      effectPlayer.dispose();
 
-    effectPlayer.dispose();
 
 
+    }catch(e){
+
+
+      debugPrint(
+
+        "Dispose error: $e",
+
+      );
+
+
+    }
 
 
 
@@ -2055,10 +2151,6 @@ class _PuzzleGameScreenState
 
 
   }
-
-
-
-
 
 
 }
