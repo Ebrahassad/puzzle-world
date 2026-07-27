@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 
 import '../screens/wallet_screen.dart';
 
@@ -16,10 +17,14 @@ class GameToolbar extends StatefulWidget {
   final int coins;
 
 
+  final int rewards;
+
+
   final VoidCallback? onBack;
 
 
   final GlobalKey starKey;
+
 
 
 
@@ -36,6 +41,9 @@ class GameToolbar extends StatefulWidget {
 
 
     required this.coins,
+
+
+    required this.rewards,
 
 
     required this.starKey,
@@ -65,8 +73,8 @@ class GameToolbar extends StatefulWidget {
 
 
 
-
 class _GameToolbarState extends State<GameToolbar>{
+
 
 
 
@@ -98,9 +106,117 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
+  void closeGame(){
+
+
+    showDialog(
+
+      context:context,
+
+      builder:(_){
+
+
+        return AlertDialog(
+
+
+          title:
+
+          const Text(
+
+            "إغلاق اللعبة",
+
+          ),
+
+
+
+          content:
+
+          const Text(
+
+            "هل تريد الخروج من Puzzle World؟",
+
+          ),
+
+
+
+          actions:[
+
+
+
+            TextButton(
+
+
+              onPressed:(){
+
+
+                Navigator.pop(context);
+
+
+              },
+
+
+              child:
+
+              const Text(
+
+                "إلغاء",
+
+              ),
+
+            ),
+
+
+
+
+
+            ElevatedButton(
+
+
+              onPressed:(){
+
+
+                exit(0);
+
+
+              },
+
+
+              child:
+
+              const Text(
+
+                "خروج",
+
+              ),
+
+            ),
+
+
+
+          ],
+
+
+        );
+
+
+      },
+
+
+    );
+
+
+  }
+
+
+
+
+
+
+
 
 
   void showSettings(BuildContext context){
+
 
 
     showDialog(
@@ -128,9 +244,11 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
+
           content:
 
-          const Column(
+          Column(
+
 
 
             mainAxisSize:
@@ -138,11 +256,12 @@ class _GameToolbarState extends State<GameToolbar>{
             MainAxisSize.min,
 
 
+
             children:[
 
 
 
-              Text(
+              const Text(
 
                 "Puzzle World",
 
@@ -150,13 +269,63 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-              SizedBox(height:10),
+
+              const SizedBox(height:10),
 
 
 
-              Text(
+
+              const Text(
 
                 "الإصدار: 1.0.0",
+
+              ),
+
+
+
+
+              const SizedBox(height:20),
+
+
+
+
+
+
+              ElevatedButton.icon(
+
+
+
+                onPressed:(){
+
+
+                  Navigator.pop(context);
+
+
+                  closeGame();
+
+
+                },
+
+
+                icon:
+
+                const Icon(
+
+                  Icons.exit_to_app,
+
+                ),
+
+
+
+                label:
+
+                const Text(
+
+                  "إغلاق اللعبة",
+
+                ),
+
+
 
               ),
 
@@ -165,7 +334,9 @@ class _GameToolbarState extends State<GameToolbar>{
             ],
 
 
+
           ),
+
 
 
 
@@ -178,6 +349,7 @@ class _GameToolbarState extends State<GameToolbar>{
             TextButton(
 
 
+
               onPressed:(){
 
 
@@ -185,6 +357,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
               },
+
 
 
               child:
@@ -196,7 +369,9 @@ class _GameToolbarState extends State<GameToolbar>{
               ),
 
 
-            )
+
+            ),
+
 
 
           ],
@@ -226,6 +401,7 @@ class _GameToolbarState extends State<GameToolbar>{
   Widget build(BuildContext context){
 
 
+
     return SafeArea(
 
 
@@ -236,7 +412,6 @@ class _GameToolbarState extends State<GameToolbar>{
         margin:
 
         const EdgeInsets.all(12),
-
 
 
 
@@ -254,12 +429,9 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
-
         decoration:
 
         BoxDecoration(
-
 
 
           color:
@@ -275,7 +447,6 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
           border:
 
           Border.all(
@@ -287,11 +458,7 @@ class _GameToolbarState extends State<GameToolbar>{
           ),
 
 
-
         ),
-
-
-
 
 
 
@@ -312,10 +479,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
-
             GestureDetector(
-
 
 
               onTap:(){
@@ -332,8 +496,8 @@ class _GameToolbarState extends State<GameToolbar>{
               const Icon(
 
 
-
                 Icons.settings,
+
 
                 color:
 
@@ -344,7 +508,6 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
               ),
-
 
 
             ),
@@ -358,7 +521,6 @@ class _GameToolbarState extends State<GameToolbar>{
             Image.asset(
 
 
-
               widget.logo,
 
 
@@ -370,8 +532,8 @@ class _GameToolbarState extends State<GameToolbar>{
               BoxFit.contain,
 
 
-
             ),
+
 
 
 
@@ -384,8 +546,6 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
               children:[
-
-
 
 
 
@@ -407,7 +567,6 @@ class _GameToolbarState extends State<GameToolbar>{
 
                     "⭐",
 
-
                     widget.stars,
 
 
@@ -416,7 +575,6 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
                 ),
-
 
 
 
@@ -433,7 +591,6 @@ class _GameToolbarState extends State<GameToolbar>{
                 GestureDetector(
 
 
-
                   onTap:(){
 
 
@@ -443,7 +600,6 @@ class _GameToolbarState extends State<GameToolbar>{
                   },
 
 
-
                   child:
 
                   _counterBox(
@@ -451,12 +607,10 @@ class _GameToolbarState extends State<GameToolbar>{
 
                     "🪙",
 
-
                     widget.coins,
 
 
                   ),
-
 
 
                 ),
@@ -466,21 +620,18 @@ class _GameToolbarState extends State<GameToolbar>{
               ],
 
 
-
             ),
+
 
 
 
           ],
 
 
-
         ),
 
 
-
       ),
-
 
 
     );
@@ -498,12 +649,9 @@ class _GameToolbarState extends State<GameToolbar>{
 
   Widget _counterBox(
 
-
       String icon,
 
-
       int value,
-
 
       ){
 
@@ -529,12 +677,9 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
-
       decoration:
 
       BoxDecoration(
-
 
 
         color:
@@ -548,9 +693,7 @@ class _GameToolbarState extends State<GameToolbar>{
         BorderRadius.circular(18),
 
 
-
       ),
-
 
 
 
@@ -587,9 +730,7 @@ class _GameToolbarState extends State<GameToolbar>{
           FontWeight.bold,
 
 
-
         ),
-
 
 
       ),
@@ -600,7 +741,6 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
   }
-
 
 
 
