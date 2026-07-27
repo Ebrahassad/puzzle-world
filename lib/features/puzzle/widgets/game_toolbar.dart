@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 
 import '../screens/wallet_screen.dart';
 
@@ -79,7 +78,6 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
   void openWallet(BuildContext context){
 
 
@@ -106,108 +104,17 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-  void closeGame(){
+  void closeGame(BuildContext context){
 
 
-    showDialog(
+    Navigator.of(context).popUntil(
 
-      context:context,
-
-      builder:(_){
-
-
-        return AlertDialog(
-
-
-          title:
-
-          const Text(
-
-            "إغلاق اللعبة",
-
-          ),
-
-
-
-          content:
-
-          const Text(
-
-            "هل تريد الخروج من Puzzle World؟",
-
-          ),
-
-
-
-          actions:[
-
-
-
-            TextButton(
-
-
-              onPressed:(){
-
-
-                Navigator.pop(context);
-
-
-              },
-
-
-              child:
-
-              const Text(
-
-                "إلغاء",
-
-              ),
-
-            ),
-
-
-
-
-
-            ElevatedButton(
-
-
-              onPressed:(){
-
-
-                exit(0);
-
-
-              },
-
-
-              child:
-
-              const Text(
-
-                "خروج",
-
-              ),
-
-            ),
-
-
-
-          ],
-
-
-        );
-
-
-      },
-
+      (route)=>route.isFirst,
 
     );
 
 
   }
-
-
 
 
 
@@ -301,7 +208,7 @@ class _GameToolbarState extends State<GameToolbar>{
                   Navigator.pop(context);
 
 
-                  closeGame();
+                  closeGame(context);
 
 
                 },
@@ -388,13 +295,6 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
   }
-
-
-
-
-
-
-
 
 
   @override
@@ -572,6 +472,28 @@ class _GameToolbarState extends State<GameToolbar>{
 
                   ),
 
+
+
+                ),
+
+
+
+
+
+
+                const SizedBox(width:8),
+
+
+
+
+
+
+                _counterBox(
+
+
+                  "🎁",
+
+                  widget.rewards,
 
 
                 ),
