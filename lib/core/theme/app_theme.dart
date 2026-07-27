@@ -1,131 +1,376 @@
-//==================================================
-// Dialog Style
-//==================================================
+import 'package:flutter/material.dart';
 
-dialogTheme: DialogThemeData(
 
-  backgroundColor:
-  Colors.white,
+class AppTheme {
 
-  elevation:12,
 
-  shape:
-  RoundedRectangleBorder(
 
-    borderRadius:
-    BorderRadius.circular(30),
+  static ThemeData get lightTheme {
 
-  ),
 
-  titleTextStyle:
-  const TextStyle(
 
-    fontFamily:"Cairo",
+    return ThemeData(
 
-    fontSize:24,
 
-    fontWeight:
-    FontWeight.bold,
+      useMaterial3: true,
 
-    color:
-    Colors.black87,
 
-  ),
+      // الخط الأساسي لكل التطبيق
 
-  contentTextStyle:
-  const TextStyle(
+      fontFamily: "Cairo",
 
-    fontFamily:"Cairo",
 
-    fontSize:18,
 
-    color:
-    Colors.black54,
 
-  ),
 
-),
+      colorScheme: ColorScheme.fromSeed(
 
+        seedColor: Colors.blue,
 
+        brightness: Brightness.light,
 
+      ),
 
 
 
-//==================================================
-// SnackBar Style
-//==================================================
 
-snackBarTheme:
 
-SnackBarThemeData(
+      scaffoldBackgroundColor:
 
+      Colors.transparent,
 
-  behavior:
 
-  SnackBarBehavior.floating,
 
 
 
-  elevation:
 
-  10,
 
+      //==================================================
+      // AppBar Style
+      //==================================================
 
+      appBarTheme: const AppBarTheme(
 
-  backgroundColor:
 
-  Colors.blueAccent,
+        centerTitle: true,
 
 
+        elevation: 0,
 
-  shape:
 
-  RoundedRectangleBorder(
+        titleTextStyle: TextStyle(
 
 
+          fontFamily:"Cairo",
 
-    borderRadius:
 
-    BorderRadius.circular(25),
+          fontSize:24,
 
 
+          fontWeight:FontWeight.bold,
 
-  ),
 
+          color:Colors.white,
 
 
-  contentTextStyle:
+        ),
 
-  const TextStyle(
 
+      ),
 
 
-    fontFamily:"Cairo",
 
 
 
-    fontSize:17,
 
 
+      //==================================================
+      // Text Theme
+      //==================================================
 
-    fontWeight:
+      textTheme: const TextTheme(
 
-    FontWeight.bold,
 
 
+        bodyLarge: TextStyle(
 
-    color:
+          fontFamily:"Cairo",
 
-    Colors.white,
+          fontSize:18,
 
+          fontWeight:FontWeight.w400,
 
+        ),
 
-  ),
 
 
+        bodyMedium: TextStyle(
 
-  actionTextColor:
+          fontFamily:"Cairo",
 
-  Colors.yellow,
+          fontSize:16,
 
-),
+          fontWeight:FontWeight.w400,
+
+        ),
+
+
+
+        titleLarge: TextStyle(
+
+          fontFamily:"Cairo",
+
+          fontSize:24,
+
+          fontWeight:FontWeight.bold,
+
+        ),
+
+
+
+        headlineMedium: TextStyle(
+
+          fontFamily:"Cairo",
+
+          fontSize:32,
+
+          fontWeight:FontWeight.bold,
+
+        ),
+
+
+
+      ),
+
+
+
+
+
+
+
+      //==================================================
+      // Elevated Button Style
+      //==================================================
+
+      elevatedButtonTheme:
+
+      ElevatedButtonThemeData(
+
+
+        style: ElevatedButton.styleFrom(
+
+
+          textStyle: const TextStyle(
+
+
+            fontFamily:"Cairo",
+
+
+            fontSize:18,
+
+
+            fontWeight:FontWeight.bold,
+
+
+          ),
+
+
+          shape: RoundedRectangleBorder(
+
+
+            borderRadius:
+
+            BorderRadius.circular(30),
+
+
+          ),
+
+
+          elevation:8,
+
+
+        ),
+
+
+      ),
+
+
+
+
+
+
+
+      //==================================================
+      // Dialog Style
+      //==================================================
+
+      dialogTheme: DialogThemeData(
+
+
+        backgroundColor:
+
+        Colors.white,
+
+
+        elevation:12,
+
+
+        shape:
+
+        RoundedRectangleBorder(
+
+
+          borderRadius:
+
+          BorderRadius.circular(30),
+
+
+        ),
+
+
+
+        titleTextStyle:
+
+        const TextStyle(
+
+
+          fontFamily:"Cairo",
+
+
+          fontSize:24,
+
+
+          fontWeight:
+
+          FontWeight.bold,
+
+
+          color:
+
+          Colors.black87,
+
+
+        ),
+
+
+
+        contentTextStyle:
+
+        const TextStyle(
+
+
+          fontFamily:"Cairo",
+
+
+          fontSize:18,
+
+
+          color:
+
+          Colors.black54,
+
+
+        ),
+
+
+      ),
+
+
+
+
+
+
+
+      //==================================================
+      // SnackBar Style
+      //==================================================
+
+      snackBarTheme:
+
+
+      SnackBarThemeData(
+
+
+
+        behavior:
+
+        SnackBarBehavior.floating,
+
+
+
+        elevation:
+
+        10,
+
+
+
+        backgroundColor:
+
+        Colors.blueAccent,
+
+
+
+        shape:
+
+        RoundedRectangleBorder(
+
+
+
+          borderRadius:
+
+          BorderRadius.circular(25),
+
+
+
+        ),
+
+
+
+        contentTextStyle:
+
+        const TextStyle(
+
+
+
+          fontFamily:"Cairo",
+
+
+
+          fontSize:17,
+
+
+
+          fontWeight:
+
+          FontWeight.bold,
+
+
+
+          color:
+
+          Colors.white,
+
+
+
+        ),
+
+
+
+        actionTextColor:
+
+        Colors.yellow,
+
+
+      ),
+
+
+
+
+
+
+    );
+
+  }
+
+
+}
