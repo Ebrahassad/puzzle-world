@@ -2320,7 +2320,6 @@ static Future<void> resetTutorial() async {
 
 static Future<void> resetProgress() async {
 
-
   final prefs = await _prefs;
 
 
@@ -2335,6 +2334,18 @@ static Future<void> resetProgress() async {
   await prefs.remove(lastWorldKey);
 
   await prefs.remove(lastLevelKey);
+
+
+  // 🎁 حذف المكافآت المستلمة
+  await prefs.remove(claimedRewardsKey);
+
+
+  // 💾 حذف حالات المراحل
+  await prefs.remove(statesKey);
+
+
+  // 🎮 حذف حالة اللعب الحالية
+  await prefs.remove(gameStateKey);
 
 
 }
