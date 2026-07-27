@@ -12,6 +12,8 @@ class RewardManager {
 
 
 
+
+
   //==================================================
   // 🪙 العملات
   //==================================================
@@ -25,6 +27,7 @@ class RewardManager {
 
 
 
+
   static Future<void> addCoins(
 
       int amount,
@@ -32,15 +35,10 @@ class RewardManager {
       ) async {
 
 
-    await PuzzleProgressManager.addCoins(
-
-      amount,
-
-    );
+    await PuzzleProgressManager.addCoins(amount);
 
 
   }
-
 
 
 
@@ -52,14 +50,12 @@ class RewardManager {
       ) async {
 
 
-    await PuzzleProgressManager.addCoins(
-
-      -amount,
-
-    );
+    await PuzzleProgressManager.addCoins(-amount);
 
 
   }
+
+
 
 
 
@@ -80,6 +76,7 @@ class RewardManager {
 
 
 
+
   static Future<void> addGems(
 
       int amount,
@@ -87,14 +84,11 @@ class RewardManager {
       ) async {
 
 
-    await PuzzleProgressManager.addGems(
-
-      amount,
-
-    );
+    await PuzzleProgressManager.addGems(amount);
 
 
   }
+
 
 
 
@@ -106,14 +100,47 @@ class RewardManager {
       ) async {
 
 
-    await PuzzleProgressManager.addGems(
-
-      -amount,
-
-    );
+    await PuzzleProgressManager.addGems(-amount);
 
 
   }
+
+
+
+
+
+
+
+
+  //==================================================
+  // ⭐ Golden Star
+  //==================================================
+
+
+  static Future<int> getStars() async {
+
+    return PuzzleProgressManager.getStars();
+
+  }
+
+
+
+
+
+  static Future<void> addStars(
+
+      int amount,
+
+      ) async {
+
+
+    await PuzzleProgressManager.addStars(amount);
+
+
+  }
+
+
+
 
 
 
@@ -137,8 +164,6 @@ class RewardManager {
 
 
 
-    // منع تكرار المكافأة
-
     final claimed =
 
     await PuzzleProgressManager.isRewardClaimed(
@@ -146,6 +171,7 @@ class RewardManager {
       rewardKey,
 
     );
+
 
 
 
@@ -160,10 +186,12 @@ class RewardManager {
 
 
 
-
     int coins;
 
     int gems = 0;
+
+    int stars;
+
 
 
 
@@ -175,7 +203,10 @@ class RewardManager {
 
         coins = 50;
 
+        stars = 1;
+
         break;
+
 
 
 
@@ -183,7 +214,10 @@ class RewardManager {
 
         coins = 100;
 
+        stars = 2;
+
         break;
+
 
 
 
@@ -193,7 +227,10 @@ class RewardManager {
 
         gems = 1;
 
+        stars = 3;
+
         break;
+
 
 
 
@@ -203,6 +240,8 @@ class RewardManager {
 
         gems = 2;
 
+        stars = 5;
+
         break;
 
 
@@ -214,12 +253,7 @@ class RewardManager {
 
 
 
-    await addCoins(
-
-      coins,
-
-    );
-
+    await addCoins(coins);
 
 
 
@@ -227,11 +261,7 @@ class RewardManager {
 
     if(gems > 0){
 
-      await addGems(
-
-        gems,
-
-      );
+      await addGems(gems);
 
     }
 
@@ -240,8 +270,15 @@ class RewardManager {
 
 
 
+    // إضافة Golden Stars إلى الرصيد
 
-    // تسجيل استلام المكافأة
+    await addStars(stars);
+
+
+
+
+
+
 
     await PuzzleProgressManager.markRewardClaimed(
 
@@ -262,10 +299,13 @@ class RewardManager {
 
       gems: gems,
 
+      stars: stars,
+
     );
 
 
   }
+
 
 
 
@@ -291,6 +331,8 @@ class RewardManager {
 
       gems:0,
 
+      stars:1,
+
     );
 
 
@@ -307,10 +349,21 @@ class RewardManager {
 
 
 
+    await addStars(
+
+      reward.stars,
+
+    );
+
+
+
+
+
     return reward;
 
 
   }
+
 
 
 
@@ -389,9 +442,9 @@ class RewardManager {
 
         last.year != now.year ||
 
-            last.month != now.month ||
+        last.month != now.month ||
 
-            last.day != now.day;
+        last.day != now.day;
 
 
   }
@@ -431,21 +484,19 @@ class RewardManager {
 
 
 
-    await addCoins(
-
-      100,
-
-    );
+    await addCoins(100);
 
 
 
 
 
-    await addGems(
+    await addGems(1);
 
-      1,
 
-    );
+
+
+
+    await addStars(1);
 
 
   }
