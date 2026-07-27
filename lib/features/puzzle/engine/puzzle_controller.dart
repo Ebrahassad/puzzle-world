@@ -12,9 +12,15 @@ class PuzzleController {
 
 
 
+  final double boardOffsetY;
+
+
+
   PuzzleController({
 
     required this.pieces,
+
+    this.boardOffsetY = 0,
 
   });
 
@@ -25,9 +31,6 @@ class PuzzleController {
 
 
 
-
-  // تحريك قطعة
-
   void movePiece(
 
       PuzzlePiece piece,
@@ -37,7 +40,6 @@ class PuzzleController {
       ){
 
 
-
     if(piece.placed){
 
       return;
@@ -45,9 +47,7 @@ class PuzzleController {
     }
 
 
-
     piece.position = position;
-
 
 
   }
@@ -59,8 +59,6 @@ class PuzzleController {
 
 
 
-
-  // فحص مكان القطعة بعد السحب
 
   bool checkPiecePosition(
 
@@ -83,7 +81,6 @@ class PuzzleController {
 
 
 
-
     final target = Offset(
 
 
@@ -92,7 +89,7 @@ class PuzzleController {
 
 
 
-      piece.row * pieceSize,
+      (piece.row * pieceSize) + boardOffsetY,
 
 
 
@@ -106,9 +103,9 @@ class PuzzleController {
 
     final distance =
 
-        (piece.position - target)
+    (piece.position - target)
 
-            .distance;
+        .distance;
 
 
 
@@ -149,7 +146,6 @@ class PuzzleController {
 
 
 
-
     return false;
 
 
@@ -163,8 +159,6 @@ class PuzzleController {
 
 
 
-
-  // تثبيت القطعة
 
   void lockPiece(
 
@@ -184,7 +178,7 @@ class PuzzleController {
 
 
 
-      piece.row * pieceSize,
+      (piece.row * pieceSize) + boardOffsetY,
 
 
 
@@ -207,8 +201,6 @@ class PuzzleController {
 
 
 
-
-  // تثبيت قطعة بالتلميح
 
   bool applyHint(
 
@@ -252,8 +244,6 @@ class PuzzleController {
 
 
 
-  // عدد القطع المكتملة
-
   int get completedPieces {
 
 
@@ -280,8 +270,6 @@ class PuzzleController {
 
 
 
-  // القطع المتبقية
-
   int get remainingPieces {
 
 
@@ -301,8 +289,6 @@ class PuzzleController {
 
 
 
-
-  // نسبة الإنجاز
 
   double get progress {
 
@@ -331,8 +317,6 @@ class PuzzleController {
 
 
 
-
-  // هل انتهت اللعبة
 
   bool get isCompleted {
 
@@ -364,8 +348,6 @@ class PuzzleController {
 
 
 
-  // إعادة ضبط اللعبة
-
   void reset(){
 
 
@@ -373,13 +355,10 @@ class PuzzleController {
     for(final piece in pieces){
 
 
-
       piece.reset();
 
 
-
     }
-
 
 
   }
@@ -392,8 +371,6 @@ class PuzzleController {
 
 
 
-  // إنهاء كامل للتجربة
-
   void completeAll(
 
       double pieceSize,
@@ -405,7 +382,6 @@ class PuzzleController {
     for(final piece in pieces){
 
 
-
       lockPiece(
 
         piece,
@@ -415,9 +391,7 @@ class PuzzleController {
       );
 
 
-
     }
-
 
 
   }
