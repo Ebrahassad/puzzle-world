@@ -25,6 +25,7 @@ class GameToolbar extends StatefulWidget {
 
   const GameToolbar({
 
+
     super.key,
 
 
@@ -41,6 +42,7 @@ class GameToolbar extends StatefulWidget {
 
 
     this.onBack,
+
 
   });
 
@@ -98,56 +100,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-  Offset? getStarPosition(){
-
-
-
-    final RenderBox? box =
-
-    widget.starKey.currentContext
-
-        ?.findRenderObject()
-
-    as RenderBox?;
-
-
-
-
-
-    if(box == null){
-
-      return null;
-
-    }
-
-
-
-
-
-    return box.localToGlobal(
-
-      box.size.center(
-
-        Offset.zero,
-
-      ),
-
-    );
-
-
-
-  }
-
-
-
-
-
-
-
-
-
   void showSettings(BuildContext context){
-
 
 
     showDialog(
@@ -157,7 +110,6 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
       builder:(_){
-
 
 
         return AlertDialog(
@@ -181,11 +133,9 @@ class _GameToolbarState extends State<GameToolbar>{
           const Column(
 
 
-
             mainAxisSize:
 
             MainAxisSize.min,
-
 
 
             children:[
@@ -200,9 +150,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
               SizedBox(height:10),
-
 
 
 
@@ -214,23 +162,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
-
-              SizedBox(height:10),
-
-
-
-
-              Text(
-
-                "تواصل معنا",
-
-              ),
-
-
-
             ],
-
 
 
           ),
@@ -246,17 +178,13 @@ class _GameToolbarState extends State<GameToolbar>{
             TextButton(
 
 
-
               onPressed:(){
-
 
 
                 Navigator.pop(context);
 
 
-
               },
-
 
 
               child:
@@ -268,9 +196,7 @@ class _GameToolbarState extends State<GameToolbar>{
               ),
 
 
-
-            ),
-
+            )
 
 
           ],
@@ -280,12 +206,10 @@ class _GameToolbarState extends State<GameToolbar>{
         );
 
 
-
       },
 
 
     );
-
 
 
   }
@@ -299,13 +223,10 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
   @override
-
   Widget build(BuildContext context){
 
 
-
     return SafeArea(
-
 
 
       child:Container(
@@ -324,13 +245,9 @@ class _GameToolbarState extends State<GameToolbar>{
 
         const EdgeInsets.symmetric(
 
-
-
           horizontal:12,
 
           vertical:8,
-
-
 
         ),
 
@@ -351,12 +268,9 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
-
           borderRadius:
 
           BorderRadius.circular(35),
-
 
 
 
@@ -366,13 +280,9 @@ class _GameToolbarState extends State<GameToolbar>{
 
           Border.all(
 
-
-
             color:
 
             Colors.white30,
-
-
 
           ),
 
@@ -396,9 +306,8 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
-
           children:[
+
 
 
 
@@ -412,13 +321,10 @@ class _GameToolbarState extends State<GameToolbar>{
               onTap:(){
 
 
-
                 showSettings(context);
 
 
-
               },
-
 
 
               child:
@@ -429,16 +335,12 @@ class _GameToolbarState extends State<GameToolbar>{
 
                 Icons.settings,
 
-
-
                 color:
 
                 Colors.white,
 
 
-
                 size:30,
-
 
 
               ),
@@ -460,9 +362,7 @@ class _GameToolbarState extends State<GameToolbar>{
               widget.logo,
 
 
-
               height:45,
-
 
 
               fit:
@@ -489,6 +389,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
+
                 Container(
 
 
@@ -504,13 +405,10 @@ class _GameToolbarState extends State<GameToolbar>{
                   _counterBox(
 
 
-
                     "⭐",
 
 
-
                     widget.stars,
-
 
 
                   ),
@@ -525,7 +423,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-                const SizedBox(width:6),
+                const SizedBox(width:8),
 
 
 
@@ -539,9 +437,7 @@ class _GameToolbarState extends State<GameToolbar>{
                   onTap:(){
 
 
-
                     openWallet(context);
-
 
 
                   },
@@ -553,13 +449,10 @@ class _GameToolbarState extends State<GameToolbar>{
                   _counterBox(
 
 
-
                     "🪙",
 
 
-
                     widget.coins,
-
 
 
                   ),
@@ -578,7 +471,6 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
           ],
 
 
@@ -594,7 +486,6 @@ class _GameToolbarState extends State<GameToolbar>{
     );
 
 
-
   }
 
 
@@ -608,16 +499,13 @@ class _GameToolbarState extends State<GameToolbar>{
   Widget _counterBox(
 
 
-
       String icon,
+
 
       int value,
 
 
-
       ){
-
-
 
 
 
@@ -630,14 +518,14 @@ class _GameToolbarState extends State<GameToolbar>{
       const EdgeInsets.symmetric(
 
 
-
         horizontal:10,
+
 
         vertical:6,
 
 
-
       ),
+
 
 
 
@@ -655,8 +543,6 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
-
         borderRadius:
 
         BorderRadius.circular(18),
@@ -670,7 +556,9 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-      child:Text(
+      child:
+
+      Text(
 
 
 
@@ -684,13 +572,9 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
-
           color:
 
           Colors.white,
-
-
 
 
 
@@ -698,13 +582,9 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
-
           fontWeight:
 
           FontWeight.bold,
-
-
 
 
 
@@ -717,7 +597,6 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
     );
-
 
 
   }
