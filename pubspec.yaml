@@ -11,16 +11,23 @@ environment:
   sdk: ">=3.12.0 <4.0.0"
 
 
+
 dependencies:
 
   flutter:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
+
   shared_preferences: ^2.5.3
+
   audioplayers: ^6.5.0
+
   confetti: ^0.8.0
+
   google_mobile_ads: ^6.0.0
+
+
 
 
 
@@ -28,6 +35,10 @@ dev_dependencies:
 
   flutter_test:
     sdk: flutter
+
+  flutter_launcher_icons: ^0.14.1
+
+
 
 
 
@@ -40,12 +51,20 @@ flutter:
   assets:
 
     - assets/images/Puzzle/
+
     - assets/images/background/
+
     - assets/images/ui/
+
     - assets/images/world/
+
     - assets/images/rewards/
+
     - assets/icon/
+
     - assets/audio/
+
+
 
 
 
@@ -63,3 +82,20 @@ flutter:
 
         - asset: assets/fonts/Cairo-Bold.ttf
           weight: 700
+
+
+
+
+
+
+flutter_launcher_icons:
+
+  android: true
+
+  ios: true
+
+  image_path: "assets/icon/app_icon.png"
+
+  adaptive_icon_background: "#FFFFFF"
+
+  adaptive_icon_foreground: "assets/icon/app_icon.png"
