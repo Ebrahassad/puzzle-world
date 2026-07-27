@@ -33,10 +33,7 @@ class PuzzlePieceWidget extends StatefulWidget {
   State<PuzzlePieceWidget> createState() =>
       _PuzzlePieceWidgetState();
 
-
 }
-
-
 
 
 
@@ -47,19 +44,16 @@ class _PuzzlePieceWidgetState
     extends State<PuzzlePieceWidget>{
 
 
-
   ImageInfo? imageInfo;
 
 
 
   @override
-  void initState(){
+  void didChangeDependencies(){
 
-    super.initState();
+    super.didChangeDependencies();
 
-
-    loadImage();
-
+    _loadImage();
 
   }
 
@@ -67,16 +61,12 @@ class _PuzzlePieceWidgetState
 
 
 
+  void _loadImage(){
 
 
-  void loadImage(){
+    final stream = widget.image.resolve(
 
-
-    final stream =
-
-    widget.image.resolve(
-
-      const ImageConfiguration(),
+      createLocalImageConfiguration(context),
 
     );
 
@@ -91,15 +81,11 @@ class _PuzzlePieceWidgetState
 
           if(mounted){
 
-
             setState((){
-
 
               imageInfo = info;
 
-
             });
-
 
           }
 
@@ -120,7 +106,6 @@ class _PuzzlePieceWidgetState
 
 
 
-
   @override
   Widget build(BuildContext context){
 
@@ -130,7 +115,9 @@ class _PuzzlePieceWidgetState
 
 
 
-      size:Size(
+      size:
+
+      Size(
 
         widget.size,
 
@@ -140,15 +127,21 @@ class _PuzzlePieceWidgetState
 
 
 
-      painter:PuzzlePiecePainter(
+      painter:
+
+      PuzzlePiecePainter(
 
 
 
-        piece:widget.piece,
+        piece:
+
+        widget.piece,
 
 
 
-        imageInfo:imageInfo,
+        imageInfo:
+
+        imageInfo,
 
 
 
@@ -160,6 +153,7 @@ class _PuzzlePieceWidgetState
 
 
   }
+
 
 
 }
@@ -197,7 +191,13 @@ class PuzzlePiecePainter extends CustomPainter {
 
 
   @override
-  void paint(Canvas canvas,Size size){
+  void paint(
+
+      Canvas canvas,
+
+      Size size,
+
+      ){
 
 
 
@@ -208,22 +208,10 @@ class PuzzlePiecePainter extends CustomPainter {
     if(image == null){
 
 
-      final paint = Paint()
-
-        ..color = Colors.grey;
-
-
-
-      canvas.drawRect(
-
-        Offset.zero & size,
-
-        paint,
-
-      );
-
 
       return;
+
+
 
     }
 
@@ -232,8 +220,56 @@ class PuzzlePiecePainter extends CustomPainter {
 
 
 
+    final scaleX =
 
-    final paint = Paint();
+        image.width / 330;
+
+
+
+    final scaleY =
+
+        image.height / 330;
+
+
+
+
+
+
+
+    final source = Rect.fromLTWH(
+
+
+
+      piece.sourceRect.left * scaleX,
+
+
+
+      piece.sourceRect.top * scaleY,
+
+
+
+      piece.sourceRect.width * scaleX,
+
+
+
+      piece.sourceRect.height * scaleY,
+
+
+
+    );
+
+
+
+
+
+
+    final paint = Paint()
+
+      ..filterQuality = FilterQuality.high;
+
+
+
+
 
 
 
@@ -245,7 +281,7 @@ class PuzzlePiecePainter extends CustomPainter {
 
 
 
-      piece.sourceRect,
+      source,
 
 
 
@@ -271,6 +307,7 @@ class PuzzlePiecePainter extends CustomPainter {
 
 
   @override
+
   bool shouldRepaint(
 
       covariant PuzzlePiecePainter oldDelegate
@@ -278,10 +315,17 @@ class PuzzlePiecePainter extends CustomPainter {
       ){
 
 
-    return oldDelegate.imageInfo != imageInfo;
+
+    return oldDelegate.imageInfo != imageInfo ||
+
+        oldDelegate.piece.position != piece.position ||
+
+        oldDelegate.piece.placed != piece.placed;
+
 
 
   }
+
 
 
 }
