@@ -9,7 +9,7 @@ class RewardResultModel {
   final int gems;
 
 
-  // النجوم
+  // النجوم الذهبية Golden Star
   final int stars;
 
 
@@ -44,6 +44,20 @@ class RewardResultModel {
         gems > 0 ||
         stars > 0 ||
         hints > 0;
+
+  }
+
+
+
+
+
+  //==================================================
+  // هل توجد Golden Star
+  //==================================================
+
+  bool get hasGoldenStar {
+
+    return stars > 0;
 
   }
 
