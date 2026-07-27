@@ -168,7 +168,6 @@ class _IslandScreenState
 
 
 
-
 void openLevel(int level) {
 
 
@@ -182,47 +181,79 @@ void openLevel(int level) {
 
 
 
-  final levels =
-
-  PuzzleLevelData.getLevels(
-
-    widget.island.id,
-
-  );
+  try {
 
 
+    final levels =
 
-  final selectedLevel =
+    PuzzleLevelData.getLevels(
 
-  levels.firstWhere(
+      widget.island.id,
 
-    (item) =>
-
-    item.levelNumber == level,
-
-  );
+    );
 
 
 
-  Navigator.push(
+    final selectedLevel =
 
-    context,
+    levels.firstWhere(
 
-    MaterialPageRoute(
+      (item) =>
 
-      builder:(_)=>
+      item.levelNumber == level,
 
-      PuzzleGameScreen(
+    );
 
-        puzzle: widget.island,
 
-        level: selectedLevel,
+
+    Navigator.push(
+
+      context,
+
+      MaterialPageRoute(
+
+        builder:(_)=>
+
+        PuzzleGameScreen(
+
+          puzzle: widget.island,
+
+          level: selectedLevel,
+
+        ),
 
       ),
 
-    ),
+    );
 
-  );
+
+
+  } catch(e) {
+
+
+    debugPrint(
+
+      "خطأ في فتح المرحلة: $e",
+
+    );
+
+
+    ScaffoldMessenger.of(context).showSnackBar(
+
+      const SnackBar(
+
+        content: Text(
+
+          "حدث خطأ في فتح المرحلة",
+
+        ),
+
+      ),
+
+    );
+
+
+  }
 
 
 }
