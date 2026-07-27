@@ -49,20 +49,21 @@ class _PuzzlePieceWidgetState
     with SingleTickerProviderStateMixin {
 
 
-  bool pressed = false;
-
 
   ui.Image? loadedImage;
+
 
 
   ImageStream? imageStream;
 
 
 
+  bool pressed = false;
+
+
+
   late AnimationController glowController;
 
-
-  late Animation<double> glowAnimation;
 
 
 
@@ -72,38 +73,19 @@ class _PuzzlePieceWidgetState
   @override
   void initState(){
 
+
     super.initState();
 
 
-    loadImage();
+    _loadImage();
 
 
 
     glowController = AnimationController(
 
-      vsync: this,
+      vsync:this,
 
-      duration: const Duration(seconds:2),
-
-    );
-
-
-
-    glowAnimation = Tween<double>(
-
-      begin:0,
-
-      end:1,
-
-    ).animate(
-
-      CurvedAnimation(
-
-        parent: glowController,
-
-        curve: Curves.easeInOut,
-
-      ),
+      duration:const Duration(seconds:2),
 
     );
 
@@ -129,7 +111,7 @@ class _PuzzlePieceWidgetState
 
 
 
-  void loadImage(){
+  void _loadImage(){
 
 
 
@@ -140,11 +122,14 @@ class _PuzzlePieceWidgetState
     );
 
 
+
     imageStream = stream;
 
 
 
     stream.addListener(
+
+
 
       ImageStreamListener(
 
@@ -162,7 +147,9 @@ class _PuzzlePieceWidgetState
 
           setState((){
 
+
             loadedImage = info.image;
+
 
           });
 
@@ -172,11 +159,13 @@ class _PuzzlePieceWidgetState
 
       ),
 
+
+
     );
 
 
-
   }
+
 
 
 
@@ -193,6 +182,7 @@ class _PuzzlePieceWidgetState
       ){
 
 
+
     super.didUpdateWidget(oldWidget);
 
 
@@ -200,11 +190,10 @@ class _PuzzlePieceWidgetState
     if(oldWidget.image != widget.image){
 
 
-      loadImage();
+      _loadImage();
 
 
     }
-
 
 
 
@@ -223,34 +212,9 @@ class _PuzzlePieceWidgetState
     }
 
 
-  }
-
-
-
-
-
-
-
-
-  void setPressed(bool value){
-
-
-    if(widget.piece.placed){
-
-      return;
-
-    }
-
-
-
-    setState((){
-
-      pressed = value;
-
-    });
-
 
   }
+
 
 
 
@@ -265,24 +229,6 @@ class _PuzzlePieceWidgetState
 
 
     glowController.dispose();
-
-
-
-    if(imageStream != null){
-
-
-      imageStream!.addListener(
-
-        ImageStreamListener(
-
-              (_,__){},
-
-        ),
-
-      );
-
-
-    }
 
 
 
@@ -306,32 +252,70 @@ class _PuzzlePieceWidgetState
     return RepaintBoundary(
 
 
-      child: GestureDetector(
+
+      child:GestureDetector(
+
 
 
         onTapDown:(_){
 
-          setPressed(true);
+
+          if(!widget.piece.placed){
+
+
+            setState((){
+
+
+              pressed=true;
+
+
+            });
+
+
+          }
+
 
         },
+
 
 
         onTapUp:(_){
 
-          setPressed(false);
+
+
+          setState((){
+
+
+            pressed=false;
+
+
+          });
+
 
         },
+
 
 
         onTapCancel:(){
 
-          setPressed(false);
+
+
+          setState((){
+
+
+            pressed=false;
+
+
+          });
+
 
         },
 
 
 
-        child: AnimatedScale(
+
+        child:AnimatedScale(
+
 
 
           scale: pressed ? 1.05 : 1,
@@ -348,11 +332,13 @@ class _PuzzlePieceWidgetState
 
 
 
-          child: CustomPaint(
+
+
+          child:CustomPaint(
 
 
 
-            size: Size(
+            size:Size(
 
               widget.size,
 
@@ -363,19 +349,15 @@ class _PuzzlePieceWidgetState
 
 
 
-            painter: PuzzlePainter(
+            painter:PuzzlePainter(
 
 
 
-              piece: widget.piece,
+              piece:widget.piece,
 
 
 
-              image: widget.image,
-
-
-
-              cachedImage: loadedImage,
+              cachedImage:loadedImage,
 
 
 
