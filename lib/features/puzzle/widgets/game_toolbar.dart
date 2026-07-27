@@ -4,7 +4,7 @@ import '../screens/wallet_screen.dart';
 
 
 
-class GameToolbar extends StatelessWidget {
+class GameToolbar extends StatefulWidget {
 
 
   final String logo;
@@ -17,6 +17,9 @@ class GameToolbar extends StatelessWidget {
 
 
   final VoidCallback? onBack;
+
+
+  final GlobalKey? starKey;
 
 
 
@@ -36,12 +39,29 @@ class GameToolbar extends StatelessWidget {
 
     this.onBack,
 
+
+    this.starKey,
+
   });
 
 
 
 
+  @override
+  State<GameToolbar> createState() =>
+      _GameToolbarState();
 
+
+}
+
+
+
+
+
+
+
+
+class _GameToolbarState extends State<GameToolbar>{
 
 
 
@@ -64,8 +84,6 @@ class GameToolbar extends StatelessWidget {
 
 
   }
-
-
 
 
 
@@ -135,12 +153,10 @@ class GameToolbar extends StatelessWidget {
               ),
 
 
-
             ],
 
 
           ),
-
 
 
 
@@ -165,9 +181,7 @@ class GameToolbar extends StatelessWidget {
 
             )
 
-
           ],
-
 
 
         );
@@ -179,8 +193,6 @@ class GameToolbar extends StatelessWidget {
 
 
   }
-
-
 
 
 
@@ -246,7 +258,6 @@ class GameToolbar extends StatelessWidget {
 
 
 
-
         child:Row(
 
 
@@ -260,9 +271,6 @@ class GameToolbar extends StatelessWidget {
           children:[
 
 
-
-
-            // الإعدادات
 
             GestureDetector(
 
@@ -279,39 +287,27 @@ class GameToolbar extends StatelessWidget {
 
                 Icons.settings,
 
-                color:
-
-                Colors.white,
+                color:Colors.white,
 
                 size:30,
 
               ),
 
-
             ),
 
 
 
 
-
-            // اللوقو
 
             Image.asset(
 
-              logo,
-
+              widget.logo,
 
               height:45,
 
-
-              fit:
-
-              BoxFit.contain,
-
+              fit:BoxFit.contain,
 
             ),
-
-
 
 
 
@@ -323,13 +319,30 @@ class GameToolbar extends StatelessWidget {
 
 
 
-                _counterBox(
+                Container(
 
-                  "⭐",
 
-                  stars,
+
+                  key:
+
+                  widget.starKey,
+
+
+
+                  child:
+
+                  _counterBox(
+
+                    "⭐",
+
+                    widget.stars,
+
+                  ),
+
+
 
                 ),
+
 
 
 
@@ -342,6 +355,7 @@ class GameToolbar extends StatelessWidget {
                 GestureDetector(
 
 
+
                   onTap:(){
 
                     openWallet(context);
@@ -349,13 +363,17 @@ class GameToolbar extends StatelessWidget {
                   },
 
 
-                  child:_counterBox(
+
+                  child:
+
+                  _counterBox(
 
                     "🪙",
 
-                    coins,
+                    widget.coins,
 
                   ),
+
 
 
                 ),
@@ -363,6 +381,7 @@ class GameToolbar extends StatelessWidget {
 
 
               ],
+
 
 
             ),
@@ -385,13 +404,6 @@ class GameToolbar extends StatelessWidget {
 
 
   }
-
-
-
-
-
-
-
 
   Widget _counterBox(
 
@@ -438,7 +450,10 @@ class GameToolbar extends StatelessWidget {
 
 
 
-      child:Text(
+
+      child:
+
+      Text(
 
 
 
@@ -451,17 +466,21 @@ class GameToolbar extends StatelessWidget {
         const TextStyle(
 
 
+
           color:
 
           Colors.white,
 
 
+
           fontSize:16,
+
 
 
           fontWeight:
 
           FontWeight.bold,
+
 
 
         ),
