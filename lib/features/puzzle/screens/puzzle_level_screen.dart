@@ -403,7 +403,7 @@ class _PuzzleLevelScreenState
 
 
 
-                  "assets/images/Puzzle/ui/lock.png",
+                  "assets/images/ui/lock.png",
 
 
 
@@ -802,7 +802,7 @@ class _PuzzleLevelScreenState
 
                 logo:
 
-                "assets/images/Puzzle/ui/puzzle_logo.png",
+                "assets/images/ui/puzzle_logo.png",
 
 
 
@@ -1341,7 +1341,7 @@ class _LevelCardState extends State<_LevelCard>{
 
                     :
 
-                "assets/images/Puzzle/ui/lock.png",
+                "assets/images/ui/lock.png",
 
 
 
