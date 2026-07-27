@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 
-
 enum EdgeType {
 
   flat,
@@ -129,8 +128,7 @@ class PuzzlePiece {
 
 
 
-
-  // المكان الصحيح حسب حجم القطعة
+  // المكان الصحيح للقطعة داخل اللوحة
 
   Offset correctOffset(double pieceSize){
 
@@ -161,8 +159,7 @@ class PuzzlePiece {
 
 
 
-
-  // Getter للمكان الصحيح الافتراضي
+  // موقع الشبكة
 
   Offset get gridPosition {
 
@@ -187,8 +184,7 @@ class PuzzlePiece {
 
 
 
-
-  // تثبيت القطعة بالتلميح
+  // وضع القطعة مباشرة بواسطة التلميح
 
   void placeHint(double pieceSize){
 
@@ -211,8 +207,7 @@ class PuzzlePiece {
 
 
 
-
-  // إعادة القطعة للحالة الأولى
+  // إعادة القطعة
 
   void reset(){
 
@@ -235,30 +230,21 @@ class PuzzlePiece {
 
 
 
+  // هل القطعة في مكانها الصحيح
 
-  // التحقق من صحة المكان
-
-  bool isCorrect(
-
-      double pieceSize,
-
-      ){
+  bool isCorrect(double pieceSize){
 
 
 
-    final target =
-
-    correctOffset(pieceSize);
+    final target = correctOffset(pieceSize);
 
 
 
 
 
-    return
+    return (position - target).distance <=
 
-        (position - target).distance
-
-            < pieceSize / 2;
+        pieceSize * 0.35;
 
 
 
@@ -271,8 +257,132 @@ class PuzzlePiece {
 
 
 
+  // تثبيت القطعة
 
-  // حفظ البيانات
+  void place(){
+
+
+
+    placed = true;
+
+
+
+  }
+
+
+
+
+
+
+
+
+  // تحريك القطعة
+
+  void moveTo(Offset newPosition){
+
+
+
+    if(!placed){
+
+
+
+      position = newPosition;
+
+
+
+    }
+
+
+
+  }
+
+
+
+
+
+
+
+
+  // نسخ القطعة
+
+  PuzzlePiece copyWith({
+
+
+
+    Offset? position,
+
+
+
+    bool? placed,
+
+
+
+  }){
+
+
+
+    return PuzzlePiece(
+
+
+
+      id: id,
+
+
+
+      row: row,
+
+
+
+      column: column,
+
+
+
+      correctPosition: correctPosition,
+
+
+
+      sourceRect: sourceRect,
+
+
+
+      top: top,
+
+
+
+      bottom: bottom,
+
+
+
+      left: left,
+
+
+
+      right: right,
+
+
+
+      position: position ?? this.position,
+
+
+
+      placed: placed ?? this.placed,
+
+
+
+    );
+
+
+
+  }
+
+
+
+
+
+
+
+
+  // حفظ التقدم
 
   Map<String,dynamic> toJson(){
 
@@ -282,19 +392,31 @@ class PuzzlePiece {
 
 
 
-      "id":id,
+      "id": id,
 
-      "row":row,
 
-      "column":column,
 
-      "correctPosition":correctPosition,
+      "row": row,
 
-      "x":position.dx,
 
-      "y":position.dy,
 
-      "placed":placed,
+      "column": column,
+
+
+
+      "correctPosition": correctPosition,
+
+
+
+      "x": position.dx,
+
+
+
+      "y": position.dy,
+
+
+
+      "placed": placed,
 
 
 
@@ -311,8 +433,7 @@ class PuzzlePiece {
 
 
 
-
-  // استرجاع البيانات
+  // استرجاع التقدم
 
   factory PuzzlePiece.fromJson(
 
@@ -326,21 +447,15 @@ class PuzzlePiece {
 
 
 
-      id:
-
-      json["id"]?.toString() ?? "0",
+      id: json["id"]?.toString() ?? "0",
 
 
 
-      row:
-
-      json["row"] ?? 0,
+      row: json["row"] ?? 0,
 
 
 
-      column:
-
-      json["column"] ?? 0,
+      column: json["column"] ?? 0,
 
 
 
@@ -380,9 +495,7 @@ class PuzzlePiece {
 
 
 
-      position:
-
-      Offset(
+      position: Offset(
 
 
 
@@ -405,6 +518,74 @@ class PuzzlePiece {
 
 
     );
+
+
+
+  }
+
+
+
+
+
+
+
+
+  @override
+
+  bool operator ==(Object other){
+
+
+
+    return identical(this, other) ||
+
+        other is PuzzlePiece &&
+
+            other.id == id;
+
+
+
+  }
+
+
+
+
+
+
+
+
+  @override
+
+  int get hashCode => id.hashCode;
+
+
+
+
+
+
+
+  @override
+
+  String toString(){
+
+
+
+    return """
+
+PuzzlePiece(
+
+ id: $id,
+
+ row: $row,
+
+ column: $column,
+
+ position: $position,
+
+ placed: $placed
+
+)
+
+""";
 
 
 
