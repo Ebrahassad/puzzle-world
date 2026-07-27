@@ -284,7 +284,7 @@ class _PuzzleLevelScreenState
 
   }
 
- id="9r8h3k"
+
   void showLockedDialog(
 
       PuzzleLevelModel level,
@@ -929,7 +929,7 @@ class _PuzzleLevelScreenState
               ),
 
 
- id="w4h8k2"
+ 
               Expanded(
 
 
