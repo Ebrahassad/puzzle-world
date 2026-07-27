@@ -2,7 +2,7 @@ import '../models/puzzle_level_model.dart';
 
 import '../managers/puzzle_progress_manager.dart';
 
-import '../services/reward_ad_service.dart';
+import '../services/puzzle_reward_ad_service.dart';
 
 
 
@@ -52,37 +52,52 @@ class PuzzleLevelUnlockService {
   }) async {
 
 
+    try {
 
-    // أول مرحلة مفتوحة دائماً
 
-    if(level.levelNumber == 1){
+      // أول مرحلة مفتوحة دائماً
 
-      return true;
+      if(level.levelNumber == 1){
+
+        return true;
+
+      }
+
+
+
+
+
+      if(level.unlocked){
+
+        return true;
+
+      }
+
+
+
+
+
+
+
+      return await PuzzleProgressManager.isLevelUnlocked(
+
+        levelKey(
+
+          worldId: worldId,
+
+          levelId: level.id,
+
+        ),
+
+      );
+
+
+
+    } catch(_){
+
+      return false;
 
     }
-
-
-
-    if(level.unlocked){
-
-      return true;
-
-    }
-
-
-
-
-    return await PuzzleProgressManager.isLevelUnlocked(
-
-      levelKey(
-
-        worldId: worldId,
-
-        levelId: level.id,
-
-      ),
-
-    );
 
 
   }
@@ -106,41 +121,54 @@ class PuzzleLevelUnlockService {
   }) async {
 
 
-
-    final totalStars =
-
-    await PuzzleProgressManager.getTotalStars();
+    try {
 
 
+      final totalStars =
+
+      await PuzzleProgressManager.getTotalStars();
 
 
 
-    if(totalStars < level.requiredStars){
+
+
+      if(totalStars < level.requiredStars){
+
+        return false;
+
+      }
+
+
+
+
+
+
+
+      await PuzzleProgressManager.unlockLevel(
+
+        levelKey(
+
+          worldId:worldId,
+
+          levelId:level.id,
+
+        ),
+
+      );
+
+
+
+
+
+      return true;
+
+
+
+    } catch(_){
 
       return false;
 
     }
-
-
-
-
-
-
-    await PuzzleProgressManager.unlockLevel(
-
-      levelKey(
-
-        worldId: worldId,
-
-        levelId: level.id,
-
-      ),
-
-    );
-
-
-
-    return true;
 
 
   }
@@ -164,42 +192,52 @@ class PuzzleLevelUnlockService {
   }) async {
 
 
-
-    final watched =
-
-    await RewardAdService.showRewardAd();
+    try {
 
 
+      final watched =
+
+      await PuzzleRewardAdService.watchAdForUnlock(
+
+        levelId:
+
+        levelKey(
+
+          worldId:worldId,
+
+          levelId:level.id,
+
+        ),
+
+      );
 
 
 
-    if(!watched){
+
+
+
+
+      if(!watched){
+
+        return false;
+
+      }
+
+
+
+
+
+
+
+      return true;
+
+
+
+    } catch(_){
 
       return false;
 
     }
-
-
-
-
-
-
-    await PuzzleProgressManager.unlockLevel(
-
-      levelKey(
-
-        worldId: worldId,
-
-        levelId: level.id,
-
-      ),
-
-    );
-
-
-
-
-    return true;
 
 
   }
@@ -223,14 +261,19 @@ class PuzzleLevelUnlockService {
   }) async {
 
 
+    try {
 
-    await PuzzleProgressManager.unlockNextLevel(
 
-      worldId,
+      await PuzzleProgressManager.unlockNextLevel(
 
-      currentLevel,
+        worldId,
 
-    );
+        currentLevel,
+
+      );
+
+
+    } catch(_){}
 
 
   }
@@ -254,33 +297,42 @@ class PuzzleLevelUnlockService {
   }) async {
 
 
-
-    final result = <bool>[];
-
+    try {
 
 
-    for(final level in levels){
+      final result = <bool>[];
 
 
 
-      result.add(
+      for(final level in levels){
 
-        await checkUnlocked(
 
-          worldId: worldId,
+        result.add(
 
-          level: level,
+          await checkUnlocked(
 
-        ),
+            worldId:worldId,
 
-      );
+            level:level,
 
+          ),
+
+        );
+
+
+      }
+
+
+
+      return result;
+
+
+
+    } catch(_){
+
+      return [];
 
     }
-
-
-
-    return result;
 
 
   }
