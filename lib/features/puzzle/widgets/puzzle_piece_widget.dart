@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 
 import '../engine/puzzle_piece.dart';
@@ -40,6 +42,8 @@ class PuzzlePieceWidget extends StatefulWidget {
 
 
 
+
+
 class _PuzzlePieceWidgetState
     extends State<PuzzlePieceWidget>
     with SingleTickerProviderStateMixin {
@@ -51,14 +55,15 @@ class _PuzzlePieceWidgetState
   ui.Image? loadedImage;
 
 
-  late ImageStream imageStream;
+  ImageStream? imageStream;
 
 
 
-  late AnimationController _glowController;
+  late AnimationController glowController;
 
 
-  late Animation<double> _glowAnimation;
+  late Animation<double> glowAnimation;
+
 
 
 
@@ -70,21 +75,21 @@ class _PuzzlePieceWidgetState
     super.initState();
 
 
-    _loadImage();
+    loadImage();
 
 
 
-    _glowController = AnimationController(
+    glowController = AnimationController(
 
-      vsync:this,
+      vsync: this,
 
-      duration:
-      const Duration(seconds:2),
+      duration: const Duration(seconds:2),
 
     );
 
 
-    _glowAnimation = Tween<double>(
+
+    glowAnimation = Tween<double>(
 
       begin:0,
 
@@ -94,9 +99,9 @@ class _PuzzlePieceWidgetState
 
       CurvedAnimation(
 
-        parent:_glowController,
+        parent: glowController,
 
-        curve:Curves.easeInOut,
+        curve: Curves.easeInOut,
 
       ),
 
@@ -106,7 +111,7 @@ class _PuzzlePieceWidgetState
 
     if(widget.piece.placed){
 
-      _glowController.repeat(
+      glowController.repeat(
 
         reverse:true,
 
@@ -123,32 +128,44 @@ class _PuzzlePieceWidgetState
 
 
 
-  void _loadImage(){
+
+  void loadImage(){
 
 
-    imageStream = widget.image.resolve(
+
+    final stream = widget.image.resolve(
 
       const ImageConfiguration(),
 
     );
 
 
-    imageStream.addListener(
+    imageStream = stream;
+
+
+
+    stream.addListener(
 
       ImageStreamListener(
 
             (info, synchronousCall){
 
 
-          if(mounted){
 
-            setState((){
+          if(!mounted){
 
-              loadedImage = info.image;
-
-            });
+            return;
 
           }
+
+
+
+          setState((){
+
+            loadedImage = info.image;
+
+          });
+
 
 
         },
@@ -158,7 +175,9 @@ class _PuzzlePieceWidgetState
     );
 
 
+
   }
+
 
 
 
@@ -168,24 +187,33 @@ class _PuzzlePieceWidgetState
 
   @override
   void didUpdateWidget(
-      covariant PuzzlePieceWidget oldWidget){
+
+      covariant PuzzlePieceWidget oldWidget,
+
+      ){
+
 
     super.didUpdateWidget(oldWidget);
 
 
+
     if(oldWidget.image != widget.image){
 
-      _loadImage();
+
+      loadImage();
+
 
     }
 
 
 
+
     if(widget.piece.placed &&
+
         !oldWidget.piece.placed){
 
 
-      _glowController.repeat(
+      glowController.repeat(
 
         reverse:true,
 
@@ -196,6 +224,7 @@ class _PuzzlePieceWidgetState
 
 
   }
+
 
 
 
@@ -213,9 +242,10 @@ class _PuzzlePieceWidgetState
     }
 
 
+
     setState((){
 
-      pressed=value;
+      pressed = value;
 
     });
 
@@ -228,28 +258,39 @@ class _PuzzlePieceWidgetState
 
 
 
+
   @override
   void dispose(){
 
 
-    _glowController.dispose();
+
+    glowController.dispose();
 
 
-    imageStream.removeListener(
 
-      ImageStreamListener(
+    if(imageStream != null){
 
-            (_,__){},
 
-      ),
+      imageStream!.addListener(
 
-    );
+        ImageStreamListener(
+
+              (_,__){},
+
+        ),
+
+      );
+
+
+    }
+
 
 
     super.dispose();
 
-
   }
+
+
 
 
 
@@ -262,15 +303,10 @@ class _PuzzlePieceWidgetState
 
 
 
-    final placed =
-        widget.piece.placed;
-
-
-
     return RepaintBoundary(
 
 
-      child:GestureDetector(
+      child: GestureDetector(
 
 
         onTapDown:(_){
@@ -295,12 +331,11 @@ class _PuzzlePieceWidgetState
 
 
 
-        child:AnimatedScale(
+        child: AnimatedScale(
 
 
-          scale:
+          scale: pressed ? 1.05 : 1,
 
-          pressed ? 1.04 : 1,
 
 
           duration:
@@ -313,12 +348,11 @@ class _PuzzlePieceWidgetState
 
 
 
-          child:CustomPaint(
+          child: CustomPaint(
 
 
-            size:
 
-            Size(
+            size: Size(
 
               widget.size,
 
@@ -328,36 +362,37 @@ class _PuzzlePieceWidgetState
 
 
 
-            painter:
 
-            PuzzlePainter(
-
-
-              piece:
-
-              widget.piece,
+            painter: PuzzlePainter(
 
 
-              image:
 
-              widget.image,
+              piece: widget.piece,
 
 
-              cachedImage:
 
-              loadedImage,
+              image: widget.image,
+
+
+
+              cachedImage: loadedImage,
+
 
 
             ),
+
 
 
           ),
 
 
+
         ),
 
 
+
       ),
+
 
 
     );
