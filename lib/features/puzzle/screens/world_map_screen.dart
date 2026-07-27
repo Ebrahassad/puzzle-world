@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/puzzle_data.dart';
-import '../managers/puzzle_progress_manager.dart';
 import '../models/puzzle_model.dart';
-
-import '../widgets/game_toolbar.dart';
 
 import 'island_screen.dart';
 
@@ -12,22 +9,16 @@ import 'island_screen.dart';
 
 class WorldMapScreen extends StatefulWidget {
 
-
   const WorldMapScreen({
-
     super.key,
-
   });
-
 
 
   @override
   State<WorldMapScreen> createState() =>
       _WorldMapScreenState();
 
-
 }
-
 
 
 
@@ -38,25 +29,40 @@ class _WorldMapScreenState
     with SingleTickerProviderStateMixin {
 
 
-
-  int totalStars = 0;
-
-
-  int rewards = 0;
-
-
-  bool loading = true;
-
-
-
-
-
   late AnimationController floatController;
 
   late Animation<double> floatAnimation;
 
 
+  final Map<String,String> islandImages = {
 
+
+    "animals":
+    "assets/images/islands/animals_island.png",
+
+
+    "cars":
+    "assets/images/islands/cars_island.png",
+
+
+    "space":
+    "assets/images/islands/space_island.png",
+
+
+    "landmarks":
+    "assets/images/islands/world_landmarks_island.png",
+
+
+    "nature":
+    "assets/images/islands/nature_island.png",
+
+
+  };
+
+
+
+
+  String? pressedIsland;
 
 
 
@@ -67,10 +73,6 @@ class _WorldMapScreenState
     super.initState();
 
 
-    loadData();
-
-
-
     floatController = AnimationController(
 
       vsync:this,
@@ -79,19 +81,16 @@ class _WorldMapScreenState
       const Duration(seconds:3),
 
     )..repeat(
-
       reverse:true,
-
     );
-
 
 
 
     floatAnimation = Tween<double>(
 
-      begin:-6,
+      begin:-8,
 
-      end:6,
+      end:8,
 
     ).animate(
 
@@ -106,48 +105,7 @@ class _WorldMapScreenState
     );
 
 
-
   }
-
-
-
-
-
-
-
-
-
-  Future<void> loadData() async {
-
-
-    final stars =
-    await PuzzleProgressManager
-        .getTotalStars();
-
-
-
-    if(mounted){
-
-
-      setState((){
-
-
-        totalStars = stars;
-
-
-        loading = false;
-
-
-      });
-
-
-    }
-
-
-  }
-
-
-
 
 
 
@@ -157,14 +115,25 @@ class _WorldMapScreenState
   void openWorld(PuzzleModel world){
 
 
-
     Navigator.push(
 
       context,
 
-      MaterialPageRoute(
+      PageRouteBuilder(
 
-        builder:(_)=>
+        transitionDuration:
+        const Duration(milliseconds:700),
+
+
+        pageBuilder:
+            (_,animation,secondaryAnimation){
+
+
+          return FadeTransition(
+
+            opacity:animation,
+
+            child:
 
             IslandScreen(
 
@@ -172,472 +141,347 @@ class _WorldMapScreenState
 
             ),
 
+          );
+
+
+        },
+
       ),
 
     );
 
 
   }
+Widget islandButton(
+    String id,
+    double x,
+    double y,
+) {
+
+
+  final world =
+  PuzzleData.getById(id);
+
+
+  if(world == null){
+    return const SizedBox();
+  }
 
 
 
+  return Positioned(
+
+
+    left:x-70,
+
+    top:y-70,
+
+
+    width:140,
+
+    height:140,
 
 
 
+    child: AnimatedBuilder(
+
+
+      animation:floatAnimation,
+
+
+      builder:(context,child){
+
+
+        return Transform.translate(
+
+
+          offset:Offset(
+            0,
+            floatAnimation.value,
+          ),
+
+
+          child:child,
+
+
+        );
+
+
+      },
 
 
 
-  Widget islandButton(
+      child: GestureDetector(
 
 
-      String id,
+        onTapDown:(_){
 
 
-      double x,
+          setState((){
 
+            pressedIsland=id;
 
-      double y,
-
-      ){
-
-
-
-    final world =
-    PuzzleData.getById(id);
-
-
-
-
-    if(world == null){
-
-      return const SizedBox();
-
-    }
-
-
-
-
-
-
-
-    return Positioned(
-
-
-
-      left:x-45,
-
-
-      top:y-45,
-
-
-      width:90,
-
-
-      height:90,
-
-
-
-      child:
-
-      AnimatedBuilder(
-
-
-
-        animation:floatAnimation,
-
-
-
-        builder:(context,child){
-
-
-          return Transform.translate(
-
-
-            offset:Offset(
-
-              0,
-
-              floatAnimation.value,
-
-            ),
-
-
-
-            child:child,
-
-          );
-
+          });
 
 
         },
 
 
 
-        child:
-
-        GestureDetector(
+        onTapUp:(_){
 
 
-          onTap:(){
+          setState((){
 
-            openWorld(world);
+            pressedIsland=null;
 
-          },
+          });
 
 
 
-          child:
-
-          Container(
-
-            decoration:
-
-            BoxDecoration(
-
-              color:
-              Colors.transparent,
+          openWorld(world);
 
 
-              shape:
-              BoxShape.circle,
+        },
+
+
+
+        onTapCancel:(){
+
+
+          setState((){
+
+            pressedIsland=null;
+
+          });
+
+
+        },
+
+
+
+        child: AnimatedScale(
+
+
+          scale:
+
+          pressedIsland==id
+              ?1.18
+              :1.0,
+
+
+          duration:
+
+          const Duration(
+              milliseconds:180
+          ),
+
+
+
+          child: Hero(
+
+
+            tag:id,
+
+
+            child: Image.asset(
+
+
+              islandImages[id]!,
+
+
+              fit:BoxFit.contain,
 
 
             ),
 
 
           ),
-
 
 
         ),
 
 
-
       ),
 
 
+    ),
 
-    );
 
+  );
 
-  }
+}
+@override
+Widget build(BuildContext context){
 
 
+return Scaffold(
 
 
+body:Stack(
 
 
+children:[
 
 
 
-  @override
-  void dispose(){
+Positioned.fill(
 
 
-    floatController.dispose();
+child:Image.asset(
 
 
-    super.dispose();
+"assets/images/world/world_map.png",
 
 
-  }
+fit:BoxFit.cover,
 
 
+),
 
 
+),
 
 
 
 
+SafeArea(
 
-  @override
-  Widget build(BuildContext context){
 
+child:LayoutBuilder(
 
 
-    if(loading){
+builder:(context,constraints){
 
 
-      return const Scaffold(
 
+final width =
+constraints.maxWidth;
 
-        body:
 
-        Center(
+final height =
+constraints.maxHeight;
 
-          child:
 
-          CircularProgressIndicator(),
 
-        ),
+return Stack(
 
 
-      );
+children:[
 
 
-    }
 
+// جزيرة الفضاء أعلى اليسار
 
+islandButton(
 
+"space",
 
+width*0.22,
 
+height*0.14,
 
+),
 
 
-    return Scaffold(
 
 
+// الحيوانات
 
-      body:
+islandButton(
 
-      Stack(
+"animals",
 
+width*0.28,
 
+height*0.32,
 
-        children:[
+),
 
 
 
 
+// المعالم
 
+islandButton(
 
-          Positioned.fill(
+"landmarks",
 
+width*0.75,
 
+height*0.38,
 
-            child:
+),
 
-            Image.asset(
 
 
 
-              "assets/images/world/world_map.jpg",
+// السيارات أسفل
 
+islandButton(
 
+"cars",
 
-              fit:
+width*0.22,
 
-              BoxFit.cover,
+height*0.70,
 
+),
 
 
-              errorBuilder:
 
-                  (context,error,stackTrace){
 
+// الطبيعة
 
-                return Container(
+islandButton(
 
-                  color:
+"nature",
 
-                  Colors.lightBlue,
+width*0.55,
 
-                );
+height*0.78,
 
+),
 
-              },
 
 
-            ),
+],
 
 
 
-          ),
+);
 
 
 
+},
 
 
+),
 
 
+),
 
-          Positioned(
 
 
+],
 
-            top:0,
 
-            left:0,
+),
 
-            right:0,
 
+);
 
 
-            child:
+}
 
-            GameToolbar(
 
 
 
-              logo:
+@override
+void dispose(){
 
-              "assets/images/ui/puzzle_logo.png",
+floatController.dispose();
 
-
-
-              stars:
-
-              totalStars,
-
-
-
-              rewards:
-
-              rewards,
-
-
-
-            ),
-
-
-
-          ),
-
-
-
-
-
-
-
-          SafeArea(
-
-
-
-            child:
-
-            LayoutBuilder(
-
-
-
-              builder:
-
-                  (context,constraints){
-
-
-
-                final width =
-                    constraints.maxWidth;
-
-
-                final height =
-                    constraints.maxHeight;
-
-
-
-
-                return Stack(
-
-
-
-                  children:[
-
-
-
-
-                    islandButton(
-
-                      "animals",
-
-                      width*0.256,
-
-                      height*0.20,
-
-                    ),
-
-
-
-
-
-
-                    islandButton(
-
-                      "cars",
-
-                      width*0.212,
-
-                      height*0.552,
-
-                    ),
-
-
-
-
-
-
-                    islandButton(
-
-                      "space",
-
-                      width*0.732,
-
-                      height*0.252,
-
-                    ),
-
-
-
-
-
-
-                    islandButton(
-
-                      "landmarks",
-
-                      width*0.784,
-
-                      height*0.568,
-
-                    ),
-
-
-
-
-
-
-                    islandButton(
-
-                      "nature",
-
-                      width*0.380,
-
-                      height*0.793,
-
-                    ),
-
-
-
-                  ],
-
-
-
-                );
-
-
-              },
-
-
-            ),
-
-
-
-          ),
-
-
-
-
-
-        ],
-
-
-
-      ),
-
-
-
-    );
-
-
-  }
-
+super.dispose();
 
 }
