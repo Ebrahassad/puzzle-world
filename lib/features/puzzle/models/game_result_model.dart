@@ -1,5 +1,6 @@
 class GameResultModel {
 
+
   // عدد النجوم
   final int stars;
 
@@ -12,6 +13,9 @@ class GameResultModel {
   final Duration time;
 
 
+
+
+
   const GameResultModel({
 
     required this.stars,
@@ -20,7 +24,13 @@ class GameResultModel {
 
     required this.time,
 
-  });
+  })
+      : assert(stars >= 0),
+        assert(moves >= 0);
+
+
+
+
 
 
 
@@ -36,11 +46,16 @@ class GameResultModel {
 
 
 
+
+
+
+
   //==================================================
   // تقييم النتيجة
   //==================================================
 
   String get rating {
+
 
     if(stars >= 3){
 
@@ -48,11 +63,15 @@ class GameResultModel {
 
     }
 
+
+
     if(stars == 2){
 
       return "جيد جداً";
 
     }
+
+
 
     if(stars == 1){
 
@@ -60,9 +79,16 @@ class GameResultModel {
 
     }
 
+
+
     return "حاول مرة أخرى";
 
+
   }
+
+
+
+
 
 
 
@@ -72,7 +98,11 @@ class GameResultModel {
   // هل النتيجة كاملة
   //==================================================
 
-  bool get isPerfect => stars == 3;
+  bool get isPerfect => stars >= 3;
+
+
+
+
 
 
 
@@ -84,17 +114,27 @@ class GameResultModel {
 
   Map<String,dynamic> toJson(){
 
+
     return {
+
 
       "stars": stars,
 
+
       "moves": moves,
+
 
       "seconds": seconds,
 
+
     };
 
+
   }
+
+
+
+
 
 
 
@@ -110,27 +150,54 @@ class GameResultModel {
 
       ){
 
+
+
     return GameResultModel(
 
+
       stars:
-      json["stars"] ?? 0,
+
+      (json["stars"] is int)
+
+          ? json["stars"]
+
+          : 0,
+
 
 
       moves:
-      json["moves"] ?? 0,
+
+      (json["moves"] is int)
+
+          ? json["moves"]
+
+          : 0,
+
 
 
       time:
+
       Duration(
 
         seconds:
-        json["seconds"] ?? 0,
+
+        (json["seconds"] is int)
+
+            ? json["seconds"]
+
+            : 0,
 
       ),
 
+
     );
 
+
   }
+
+
+
+
 
 
 
@@ -142,30 +209,48 @@ class GameResultModel {
 
   GameResultModel copyWith({
 
+
     int? stars,
+
 
     int? moves,
 
+
     Duration? time,
+
 
   }){
 
+
+
     return GameResultModel(
 
+
       stars:
+
       stars ?? this.stars,
 
 
+
       moves:
+
       moves ?? this.moves,
 
 
+
       time:
+
       time ?? this.time,
+
 
     );
 
+
   }
+
+
+
+
 
 
 
@@ -176,8 +261,12 @@ class GameResultModel {
   //==================================================
 
   bool isBetterThan(
+
       GameResultModel other,
+
       ){
+
+
 
     if(stars > other.stars){
 
@@ -186,7 +275,11 @@ class GameResultModel {
     }
 
 
+
+
+
     if(stars == other.stars &&
+
         moves < other.moves){
 
       return true;
@@ -194,8 +287,15 @@ class GameResultModel {
     }
 
 
+
+
+
+
+
     if(stars == other.stars &&
+
         moves == other.moves &&
+
         seconds < other.seconds){
 
       return true;
@@ -203,7 +303,11 @@ class GameResultModel {
     }
 
 
+
+
+
     return false;
+
 
   }
 
@@ -211,8 +315,18 @@ class GameResultModel {
 
 
 
+
+
+
+
+  //==================================================
+  // وصف النتيجة
+  //==================================================
+
   @override
+
   String toString(){
+
 
     return """
 
@@ -224,6 +338,8 @@ GameResultModel(
 
 """;
 
+
   }
+
 
 }
