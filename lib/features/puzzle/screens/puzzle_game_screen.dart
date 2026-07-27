@@ -368,34 +368,14 @@ class _PuzzleGameScreenState
 
 
     pieces = PuzzleGenerator.generate(
+  rows: widget.level.gridSize,
+  columns: widget.level.gridSize,
 
+  imageWidth: loadedImage!.width.toDouble(),
+  imageHeight: loadedImage!.height.toDouble(),
 
-
-      rows:
-
-      widget.level.gridSize,
-
-
-
-      columns:
-
-      widget.level.gridSize,
-
-
-
-      imageWidth:
-
-      loadedImage!.width.toDouble(),
-
-
-
-      imageHeight:
-
-      loadedImage!.height.toDouble(),
-
-
-
-    );
+  boardSize: boardSize,
+);
 
 
 
