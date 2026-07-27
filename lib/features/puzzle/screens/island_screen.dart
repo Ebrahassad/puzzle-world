@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../managers/puzzle_progress_manager.dart';
 import '../models/puzzle_model.dart';
 
+import '../widgets/game_toolbar.dart';
+
 import 'puzzle_level_screen.dart';
 
 
@@ -11,6 +13,7 @@ class IslandScreen extends StatefulWidget {
 
 
   final PuzzleModel island;
+
 
 
   const IslandScreen({
@@ -27,25 +30,84 @@ class IslandScreen extends StatefulWidget {
   State<IslandScreen> createState() =>
       _IslandScreenState();
 
+
 }
 
 
 
 
 
+
 class _IslandScreenState
-    extends State<IslandScreen> {
+    extends State<IslandScreen>
+    with SingleTickerProviderStateMixin {
+
 
 
   int totalStars = 0;
 
+  int rewards = 0;
+
+
+  bool unlocked = true;
+
+
+
+  late AnimationController floatController;
+
+  late Animation<double> floatAnimation;
+
+
+
+
+
+
+
 
   @override
-  void initState() {
+  void initState(){
+
 
     super.initState();
 
-    loadStars();
+
+    loadData();
+
+
+
+    floatController = AnimationController(
+
+      vsync:this,
+
+      duration:
+      const Duration(seconds:3),
+
+    )..repeat(
+
+      reverse:true,
+
+    );
+
+
+
+    floatAnimation = Tween<double>(
+
+      begin:-8,
+
+      end:8,
+
+    ).animate(
+
+      CurvedAnimation(
+
+        parent:floatController,
+
+        curve:Curves.easeInOut,
+
+      ),
+
+    );
+
 
   }
 
@@ -54,23 +116,36 @@ class _IslandScreenState
 
 
 
-  Future<void> loadStars() async {
+
+  Future<void> loadData() async {
 
 
     final stars =
-        await PuzzleProgressManager.getTotalStars();
+    await PuzzleProgressManager
+        .getTotalStars();
 
 
 
     if(mounted){
 
-      setState(() {
+
+      setState((){
+
 
         totalStars = stars;
 
+
+
+        unlocked =
+            stars >= widget.island.requiredStars;
+
+
+
       });
 
+
     }
+
 
   }
 
@@ -83,17 +158,30 @@ class _IslandScreenState
   void openLevels(){
 
 
+    if(!unlocked){
+
+
+      showLockedDialog();
+
+
+      return;
+
+    }
+
+
+
+
     Navigator.push(
 
       context,
 
       MaterialPageRoute(
 
-        builder: (_) =>
+        builder:(_)=>
 
             PuzzleLevelScreen(
 
-              puzzle: widget.island,
+              puzzle:widget.island,
 
             ),
 
@@ -111,263 +199,109 @@ class _IslandScreenState
 
 
 
-
-  @override
-  Widget build(BuildContext context) {
-
-
-    return Scaffold(
-
-
-      body: Stack(
-
-
-        children: [
+  void showLockedDialog(){
 
 
 
-          // خلفية الجزيرة
+    showDialog(
 
-          Positioned.fill(
+      context:context,
 
-            child: Image.asset(
 
-              widget.island.image,
+      builder:(_){
 
-              fit: BoxFit.contain,
 
-              errorBuilder:
-                  (context,error,stackTrace){
+        return Dialog(
 
-                return Container(
 
-                  color:
-                  Colors.blueGrey,
-
-                );
-
-              },
-
-            ),
-
-          ),
+          backgroundColor:
+          Colors.transparent,
 
 
 
+          child:
+          Container(
 
 
-          // طبقة شفافة
 
-          Positioned.fill(
+            padding:
+            const EdgeInsets.all(25),
 
-            child: Container(
+
+
+            decoration:
+            BoxDecoration(
+
+
 
               color:
-              Colors.black26,
+              Colors.white,
+
+
+
+              borderRadius:
+              BorderRadius.circular(30),
+
+
 
             ),
 
-          ),
 
 
+            child:
+            Column(
 
 
 
+              mainAxisSize:
+              MainAxisSize.min,
 
 
-          SafeArea(
 
+              children:[
 
-            child: Column(
 
 
-              children: [
 
+                Image.asset(
 
+                  "assets/images/ui/level_lock.png",
 
+                  height:80,
 
+                  errorBuilder:
+                      (_,__,___){
 
-                // شريط الأعلى
+                    return const Icon(
 
-                Padding(
+                      Icons.lock,
 
-                  padding:
-                  const EdgeInsets.symmetric(
-                    horizontal:10,
-                  ),
+                      size:70,
 
+                    );
 
-                  child: Row(
+                  },
 
+                ),
 
-                    mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween,
 
 
-                    children: [
 
+                const SizedBox(height:15),
 
 
 
-                      IconButton(
 
-                        onPressed: (){
 
-                          Navigator.pop(context);
+                Text(
 
-                        },
+                  "🏝️ الجزيرة مقفلة",
 
 
-                        icon:
-                        const Icon(
-
-                          Icons.arrow_back,
-
-                          color:
-                          Colors.white,
-
-                          size:32,
-
-                        ),
-
-                      ),
-
-
-
-
-
-
-                      Expanded(
-
-                        child: Text(
-
-                          widget.island.title,
-
-
-                          textAlign:
-                          TextAlign.center,
-
-
-                          style:
-                          const TextStyle(
-
-                            color:
-                            Colors.white,
-
-                            fontSize:26,
-
-                            fontWeight:
-                            FontWeight.bold,
-
-                            shadows:[
-
-                              Shadow(
-
-                                color:
-                                Colors.black54,
-
-                                blurRadius:8,
-
-                              ),
-
-                            ],
-
-                          ),
-
-                        ),
-
-                      ),
-
-
-
-
-
-
-                      Row(
-
-                        children: [
-
-
-
-                          Container(
-
-                            padding:
-                            const EdgeInsets.symmetric(
-
-                              horizontal:12,
-
-                              vertical:7,
-
-                            ),
-
-
-                            decoration:
-                            BoxDecoration(
-
-                              color:
-                              Colors.black45,
-
-                              borderRadius:
-                              BorderRadius.circular(20),
-
-                            ),
-
-
-                            child: Text(
-
-                              "⭐ $totalStars",
-
-
-                              style:
-                              const TextStyle(
-
-                                color:
-                                Colors.white,
-
-                                fontSize:18,
-
-                                fontWeight:
-                                FontWeight.bold,
-
-                              ),
-
-                            ),
-
-                          ),
-
-
-
-
-                          IconButton(
-
-                            onPressed: (){
-
-                              // صفحة الإعدادات لاحقاً
-
-                            },
-
-                            icon:
-                            const Icon(
-
-                              Icons.settings,
-
-                              color:
-                              Colors.white,
-
-                            ),
-
-                          ),
-
-
-                        ],
-
-                      ),
-
-
-                    ],
-
-
-                  ),
+                  style:
+                  Theme.of(context)
+                      .textTheme
+                      .titleLarge,
 
                 ),
 
@@ -375,235 +309,643 @@ class _IslandScreenState
 
 
 
+                const SizedBox(height:10),
 
 
-                const Spacer(),
 
 
 
+                Text(
 
+                  "تحتاج ⭐ ${widget.island.requiredStars} لفتح هذه الجزيرة",
 
 
+                  textAlign:
+                  TextAlign.center,
 
-
-                // معلومات الجزيرة
-
-                Container(
-
-                  margin:
-                  const EdgeInsets.all(20),
-
-
-                  padding:
-                  const EdgeInsets.all(20),
-
-
-                  decoration:
-                  BoxDecoration(
-
-                    color:
-                    Colors.white.withOpacity(0.85),
-
-
-                    borderRadius:
-                    BorderRadius.circular(30),
-
-
-                  ),
-
-
-
-                  child: Column(
-
-
-                    children: [
-
-
-
-                      Text(
-
-                        widget.island.description,
-
-
-                        textAlign:
-                        TextAlign.center,
-
-
-                        style:
-                        const TextStyle(
-
-                          fontSize:18,
-
-                          fontWeight:
-                          FontWeight.bold,
-
-                        ),
-
-                      ),
-
-
-
-
-                      const SizedBox(height:15),
-
-
-
-
-
-
-                      Row(
-
-                        mainAxisAlignment:
-                        MainAxisAlignment.center,
-
-
-                        children: [
-
-
-
-                          const Icon(
-
-                            Icons.extension,
-
-                            color:
-                            Colors.orange,
-
-                          ),
-
-
-
-
-                          const SizedBox(width:8),
-
-
-
-
-                          Text(
-
-                            "${widget.island.totalLevels} مراحل",
-
-
-                            style:
-                            const TextStyle(
-
-                              fontSize:18,
-
-                              fontWeight:
-                              FontWeight.bold,
-
-                            ),
-
-                          ),
-
-
-                        ],
-
-                      ),
-
-
-
-                    ],
-
-
-                  ),
 
                 ),
 
 
 
 
+                const SizedBox(height:20),
 
 
 
-                // زر الدخول
-
-                Padding(
-
-                  padding:
-                  const EdgeInsets.fromLTRB(
-                    20,
-                    0,
-                    20,
-                    25,
-                  ),
 
 
-                  child: ElevatedButton(
+                ElevatedButton(
 
-                    onPressed:
-                    openLevels,
+                  onPressed:(){
 
+                    Navigator.pop(context);
 
-                    style:
-                    ElevatedButton.styleFrom(
-
-
-                      minimumSize:
-                      const Size(
-                        double.infinity,
-                        60,
-                      ),
+                  },
 
 
+                  child:
+                  const Text(
 
-                      backgroundColor:
-                      Colors.orange,
-
-
-
-                      shape:
-                      RoundedRectangleBorder(
-
-                        borderRadius:
-                        BorderRadius.circular(35),
-
-                      ),
-
-
-                    ),
-
-
-
-                    child:
-                    const Text(
-
-                      "ابدأ المغامرة 🧩",
-
-
-                      style:
-                      TextStyle(
-
-                        fontSize:23,
-
-                        fontWeight:
-                        FontWeight.bold,
-
-                        color:
-                        Colors.white,
-
-                      ),
-
-                    ),
-
+                    "حسناً",
 
                   ),
 
                 ),
+
 
 
 
               ],
 
 
+
             ),
 
+
+
           ),
+
+
+
+        );
+
+
+      },
+
+    );
+
+
+  }
+
+
+
+
+
+
+
+
+
+  @override
+  void dispose(){
+
+
+    floatController.dispose();
+
+
+    super.dispose();
+
+
+  }
+
+
+
+
+
+
+
+
+  @override
+  Widget build(BuildContext context){
+
+
+
+    return Scaffold(
+
+
+
+      body:
+
+      Stack(
+
+
+
+        children:[
+
+
+
+
+
+
+          Positioned.fill(
+
+
+
+            child:
+
+            Image.asset(
+
+
+
+              widget.island.image,
+
+
+
+              fit:
+
+              BoxFit.cover,
+
+
+
+              errorBuilder:
+
+                  (_,__,___){
+
+
+
+                return Container(
+
+                  color:
+
+                  Colors.blueGrey,
+
+                );
+
+
+              },
+
+
+            ),
+
+
+
+          ),
+
+
+
+
+
+
+
+          Positioned.fill(
+
+
+
+            child:
+
+            Container(
+
+              color:
+
+              Colors.black26,
+
+            ),
+
+
+
+          ),
+
+
+
+
+
+
+
+          Positioned(
+
+            top:0,
+
+            left:0,
+
+            right:0,
+
+
+            child:
+
+            GameToolbar(
+
+
+              logo:
+
+              "assets/images/ui/puzzle_logo.png",
+
+
+
+              stars:
+
+              totalStars,
+
+
+
+              rewards:
+
+              rewards,
+
+
+
+              onBack:(){
+
+
+                Navigator.pop(context);
+
+
+              },
+
+
+            ),
+
+
+          ),
+
+
+
+
+
+
+
+          Center(
+
+
+
+            child:
+
+            AnimatedBuilder(
+
+
+
+              animation:
+              floatAnimation,
+
+
+
+              builder:(context,child){
+
+
+
+                return Transform.translate(
+
+
+
+                  offset:
+
+                  Offset(
+
+                    0,
+
+                    floatAnimation.value,
+
+                  ),
+
+
+
+                  child:
+
+                  child,
+
+
+
+                );
+
+
+
+              },
+
+
+
+              child:
+
+              unlocked
+
+                  ?
+
+              const SizedBox()
+
+                  :
+
+              Image.asset(
+
+
+
+                "assets/images/ui/level_lock.png",
+
+
+
+                height:120,
+
+
+
+                errorBuilder:
+
+                    (_,__,___){
+
+
+
+                  return const Icon(
+
+                    Icons.lock,
+
+                    color:Colors.white,
+
+                    size:90,
+
+                  );
+
+
+
+                },
+
+
+
+              ),
+
+
+
+            ),
+
+
+
+          ),
+
+
+
+
+
+
+
+
+          Align(
+
+
+
+            alignment:
+
+            Alignment.bottomCenter,
+
+
+
+            child:
+
+            Container(
+
+
+
+              margin:
+
+              const EdgeInsets.all(20),
+
+
+
+              padding:
+
+              const EdgeInsets.all(22),
+
+
+
+              decoration:
+
+              BoxDecoration(
+
+
+
+                color:
+
+                Colors.white.withOpacity(.9),
+
+
+
+                borderRadius:
+
+                BorderRadius.circular(30),
+
+
+
+              ),
+
+
+
+              child:
+
+              Column(
+
+
+
+                mainAxisSize:
+
+                MainAxisSize.min,
+
+
+
+                children:[
+
+
+
+                  Text(
+
+
+
+                    widget.island.title,
+
+
+
+                    style:
+
+                    Theme.of(context)
+                        .textTheme
+                        .titleLarge,
+
+
+
+                  ),
+
+
+
+
+                  const SizedBox(height:8),
+
+
+
+
+
+                  Text(
+
+
+
+                    widget.island.description,
+
+
+
+                    textAlign:
+
+                    TextAlign.center,
+
+
+
+                  ),
+
+
+
+
+                  const SizedBox(height:15),
+
+
+
+
+
+                  Text(
+
+
+
+                    "🧩 ${widget.island.totalLevels} مراحل",
+
+
+
+                    style:
+
+                    const TextStyle(
+
+                      fontSize:18,
+
+                      fontWeight:
+
+                      FontWeight.bold,
+
+                    ),
+
+
+
+                  ),
+
+
+
+
+
+                  const SizedBox(height:15),
+
+
+
+
+
+                  SizedBox(
+
+
+
+                    width:
+
+                    double.infinity,
+
+
+
+                    height:
+
+                    58,
+
+
+
+                    child:
+
+                    ElevatedButton(
+
+
+
+                      onPressed:
+
+                      openLevels,
+
+
+
+                      style:
+
+                      ElevatedButton.styleFrom(
+
+
+
+                        backgroundColor:
+
+                        Colors.orange,
+
+
+
+                        shape:
+
+                        RoundedRectangleBorder(
+
+
+
+                          borderRadius:
+
+                          BorderRadius.circular(30),
+
+
+
+                        ),
+
+
+
+                      ),
+
+
+
+                      child:
+
+                      const Text(
+
+
+
+                        "ابدأ المغامرة 🧩",
+
+
+
+                        style:
+
+                        TextStyle(
+
+
+
+                          color:
+
+                          Colors.white,
+
+
+
+                          fontSize:22,
+
+
+
+                          fontWeight:
+
+                          FontWeight.bold,
+
+
+
+                        ),
+
+
+
+                      ),
+
+
+
+                    ),
+
+
+
+                  ),
+
+
+
+                ],
+
+
+
+              ),
+
+
+
+            ),
+
+
+
+          ),
+
+
 
 
         ],
 
 
+
       ),
+
 
 
     );
