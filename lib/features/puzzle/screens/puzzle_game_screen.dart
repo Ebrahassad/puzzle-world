@@ -11,6 +11,7 @@ import '../engine/puzzle_generator.dart';
 import '../engine/puzzle_piece.dart';
 
 import '../widgets/puzzle_piece_widget.dart';
+import '../widgets/reward_box_widget.dart';
 
 import '../managers/puzzle_hint_manager.dart';
 import '../managers/puzzle_progress_manager.dart';
@@ -79,6 +80,11 @@ class _PuzzleGameScreenState
   bool loading = true;
 
   bool finishing = false;
+
+
+  // ظهور صندوق المكافأة
+
+  bool showRewardBox = false;
 
 
 
@@ -170,14 +176,7 @@ class _PuzzleGameScreenState
 
   }
 
-
-
-
-
-
-
   Future<void> loadHints() async {
-
 
 
     hints = await PuzzleHintManager.getHints();
@@ -459,20 +458,15 @@ class _PuzzleGameScreenState
 
   }
 
-
-
-
-
-
-
   Future<void> finishGame() async {
 
 
 
-    finishing=true;
+    finishing = true;
 
 
     timer?.cancel();
+
 
 
 
@@ -484,7 +478,45 @@ class _PuzzleGameScreenState
 
 
 
+
+
+    if(!mounted){
+
+      return;
+
+    }
+
+
+
+
+
+    // إظهار صندوق المكافأة قبل شاشة الفوز
+
+    setState((){
+
+      showRewardBox = true;
+
+    });
+
+
+
+  }
+
+
+
+
+
+
+
+  Future<void> openWinScreen() async {
+
+
+
+    // حفظ النجمة بعد فتح الصندوق
+
     await PuzzleProgressManager.addStars(3);
+
+
 
 
 
@@ -496,19 +528,30 @@ class _PuzzleGameScreenState
 
 
 
+
+
+
+
     Navigator.pushReplacement(
+
 
       context,
 
+
       MaterialPageRoute(
+
 
         builder:(_)=>PuzzleWinScreen(
 
+
           result: GameResultModel(
+
 
             stars:3,
 
+
             moves:moves,
+
 
             time:Duration(
 
@@ -516,11 +559,15 @@ class _PuzzleGameScreenState
 
             ),
 
+
           ),
+
 
         ),
 
+
       ),
+
 
     );
 
@@ -534,21 +581,19 @@ class _PuzzleGameScreenState
 
 
   @override
+
   void dispose(){
+
 
 
     timer?.cancel();
 
 
+
     super.dispose();
 
+
   }
-
-
-
-
-
-
 
   @override
   Widget build(BuildContext context){
@@ -575,212 +620,300 @@ class _PuzzleGameScreenState
 
 
 
-    return Scaffold(
+    return Stack(
+
+
+      children:[
 
 
 
-      appBar:AppBar(
-
-        title:Text(widget.level.title),
-
-        centerTitle:true,
-
-      ),
+        Scaffold(
 
 
 
+          appBar:AppBar(
 
-      body:Column(
+            title:Text(widget.level.title),
 
-        children:[
+            centerTitle:true,
 
-
-
-          const SizedBox(height:15),
-
+          ),
 
 
-          Row(
 
-            mainAxisAlignment:
 
-            MainAxisAlignment.spaceEvenly,
+          body:Column(
 
             children:[
 
 
-              Text(
-                "🧩 $moves",
-                style:const TextStyle(
-                  fontSize:18,
-                ),
-              ),
+
+              const SizedBox(height:15),
 
 
-              Text(
-                "⏱ $seconds",
-                style:const TextStyle(
-                  fontSize:18,
-                ),
-              ),
+
+              Row(
+
+                mainAxisAlignment:
+                MainAxisAlignment.spaceEvenly,
+
+                children:[
 
 
-              TextButton(
-                onPressed:usePuzzleHint,
-                child:Text(
-                  "💡 $hints",
-                  style:const TextStyle(
-                    fontSize:18,
+
+                  Text(
+
+                    "🧩 $moves",
+
+                    style:const TextStyle(
+
+                      fontSize:18,
+
+                    ),
+
                   ),
-                ),
+
+
+
+
+                  Text(
+
+                    "⏱ $seconds",
+
+                    style:const TextStyle(
+
+                      fontSize:18,
+
+                    ),
+
+                  ),
+
+
+
+
+                  TextButton(
+
+
+                    onPressed:usePuzzleHint,
+
+
+                    child:Text(
+
+                      "💡 $hints",
+
+                      style:const TextStyle(
+
+                        fontSize:18,
+
+                      ),
+
+                    ),
+
+                  ),
+
+
+
+                ],
+
               ),
 
 
-            ],
-
-          ),
 
 
 
-
-
-          const SizedBox(height:20),
+              const SizedBox(height:20),
 
 
 
 
 
-          SizedBox(
+              SizedBox(
 
-            width:boardSize,
+                width:boardSize,
 
-            height:boardSize,
-
-            child:Stack(
+                height:boardSize,
 
 
-              children:pieces.map((piece){
+                child:Stack(
 
 
 
-                return Positioned(
+                  children:pieces.map((piece){
 
 
 
-                  left:piece.position.dx,
-
-                  top:piece.position.dy,
+                    return Positioned(
 
 
 
-                  child:GestureDetector(
+                      left:piece.position.dx,
+
+                      top:piece.position.dy,
 
 
 
-                    onPanUpdate:(details){
-
-                      movePiece(
-
-                        piece,
-
-                        details,
-
-                      );
-
-                    },
+                      child:GestureDetector(
 
 
 
-                    onPanEnd:(_){
-
-                      dropPiece(piece);
-
-                    },
+                        onPanUpdate:(details){
 
 
+                          movePiece(
 
-                    child:PuzzlePieceWidget(
+                            piece,
+
+                            details,
+
+                          );
 
 
-
-                      key:ValueKey(piece.id),
-
-
-
-                      piece:piece,
+                        },
 
 
 
-                      image:AssetImage(
 
-                        widget.level.image,
+                        onPanEnd:(_){
+
+
+                          dropPiece(piece);
+
+
+                        },
+
+
+
+
+                        child:PuzzlePieceWidget(
+
+
+
+                          key:ValueKey(piece.id),
+
+
+
+                          piece:piece,
+
+
+
+                          image:AssetImage(
+
+                            widget.level.image,
+
+                          ),
+
+
+
+                          size:pieceSize,
+
+
+                        ),
+
 
                       ),
 
 
-
-                      size:pieceSize,
-
-
-                    ),
-
-
-                  ),
-
-
-                );
+                    );
 
 
 
-              }).toList(),
+                  }).toList(),
 
 
-            ),
+
+                ),
+
+
+
+              ),
+
+
+
+
+
+              const SizedBox(height:20),
+
+
+
+
+
+              ElevatedButton.icon(
+
+
+
+                onPressed:saveGame,
+
+
+
+                icon:const Icon(
+
+                  Icons.save,
+
+                ),
+
+
+
+                label:const Text(
+
+                  "حفظ اللعبة",
+
+                ),
+
+
+
+              ),
+
+
+
+            ],
+
+
 
           ),
 
 
 
-
-
-
-          const SizedBox(height:20),
+        ),
 
 
 
 
 
-          ElevatedButton.icon(
+
+        // صندوق المكافأة فوق اللعبة
+
+        if(showRewardBox)
 
 
+          Container(
 
-            onPressed:saveGame,
-
-
-
-            icon:const Icon(Icons.save),
+            color:Colors.black54,
 
 
+            child:RewardBoxWidget(
 
-            label:const Text(
 
-              "حفظ اللعبة",
+              onRewardOpened:(){
+
+
+                openWinScreen();
+
+
+              },
+
 
             ),
-
 
 
           ),
 
 
 
-        ],
-
-      ),
-
+      ],
 
 
     );
+
 
   }
 
