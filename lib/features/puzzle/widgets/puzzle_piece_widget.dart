@@ -1,13 +1,8 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
-
 import '../engine/puzzle_piece.dart';
-import '../engine/puzzle_painter.dart';
 
 
-
-class PuzzlePieceWidget extends StatefulWidget {
+class PuzzlePieceWidget extends StatelessWidget {
 
 
   final PuzzlePiece piece;
@@ -32,9 +27,37 @@ class PuzzlePieceWidget extends StatefulWidget {
 
 
 
+
+
+
   @override
-  State<PuzzlePieceWidget> createState() =>
-      _PuzzlePieceWidgetState();
+  Widget build(BuildContext context){
+
+
+    return CustomPaint(
+
+
+      size:Size(
+        size,
+        size,
+      ),
+
+
+      painter:PuzzlePiecePainter(
+
+        piece:piece,
+
+        image:image,
+
+      ),
+
+
+    );
+
+
+  }
+
+
 
 }
 
@@ -44,23 +67,30 @@ class PuzzlePieceWidget extends StatefulWidget {
 
 
 
-class _PuzzlePieceWidgetState
-    extends State<PuzzlePieceWidget>
-    with SingleTickerProviderStateMixin {
+
+class PuzzlePiecePainter extends CustomPainter {
 
 
 
-  ui.Image? loadedImage;
+  final PuzzlePiece piece;
+
+  final ImageProvider image;
 
 
-  ImageStream? imageStream;
+
+  ImageStream? stream;
+
+  ImageInfo? imageInfo;
 
 
-  bool pressed = false;
 
+  PuzzlePiecePainter({
 
-  late AnimationController glowController;
+    required this.piece,
 
+    required this.image,
+
+  });
 
 
 
@@ -68,92 +98,72 @@ class _PuzzlePieceWidgetState
 
 
   @override
-  void initState(){
-
-    super.initState();
-
-
-    _loadImage();
+  void paint(Canvas canvas,Size size){
 
 
 
-    glowController = AnimationController(
+    final paint = Paint();
 
-      vsync:this,
 
-      duration:const Duration(seconds:2),
+
+    final imageRect = Rect.fromLTWH(
+
+      0,
+
+      0,
+
+      size.width,
+
+      size.height,
 
     );
 
 
 
-    if(widget.piece.placed){
+    final src = piece.sourceRect;
 
-      glowController.repeat(
 
-        reverse:true,
+
+    final img = imageInfo?.image;
+
+
+
+    if(img != null){
+
+
+      canvas.drawImageRect(
+
+        img,
+
+        src,
+
+        imageRect,
+
+        paint,
 
       );
+
+
+    }else{
+
+
+      paint.color = Colors.grey;
+
+
+      canvas.drawRect(
+
+        imageRect,
+
+        paint,
+
+      );
+
 
     }
 
 
-  }
-
-
-
-
-
-
-
-
-
-  void _loadImage(){
-
-
-    final stream = widget.image.resolve(
-
-      const ImageConfiguration(),
-
-    );
-
-
-    imageStream = stream;
-
-
-
-    stream.addListener(
-
-      ImageStreamListener(
-
-            (info, synchronousCall){
-
-
-          if(!mounted){
-
-            return;
-
-          }
-
-
-
-          setState((){
-
-            loadedImage = info.image;
-
-          });
-
-
-        },
-
-      ),
-
-    );
-
 
   }
-
-
 
 
 
@@ -162,197 +172,17 @@ class _PuzzlePieceWidgetState
 
 
   @override
-  void didUpdateWidget(
+  bool shouldRepaint(
 
-      covariant PuzzlePieceWidget oldWidget,
+      covariant PuzzlePiecePainter oldDelegate
 
       ){
 
-
-    super.didUpdateWidget(oldWidget);
-
-
-
-    if(oldWidget.image != widget.image){
-
-      _loadImage();
-
-    }
-
-
-
-
-    if(widget.piece.placed &&
-
-        !oldWidget.piece.placed){
-
-
-      glowController.repeat(
-
-        reverse:true,
-
-      );
-
-
-    }
-
+    return true;
 
   }
 
 
-
-
-
-
-
-
-
-  @override
-  void dispose(){
-
-
-    glowController.dispose();
-
-
-    super.dispose();
-
-  }
-
-
-
-
-
-
-
-
-
-  @override
-  Widget build(BuildContext context){
-
-
-    return RepaintBoundary(
-
-
-      child:GestureDetector(
-
-
-        onTapDown:(_){
-
-
-          if(!widget.piece.placed){
-
-
-            setState((){
-
-              pressed = true;
-
-            });
-
-
-          }
-
-
-        },
-
-
-
-        onTapUp:(_){
-
-
-          if(mounted){
-
-            setState((){
-
-              pressed=false;
-
-            });
-
-          }
-
-
-        },
-
-
-
-        onTapCancel:(){
-
-
-          if(mounted){
-
-            setState((){
-
-              pressed=false;
-
-            });
-
-          }
-
-
-        },
-
-
-
-        child:AnimatedScale(
-
-
-          scale: pressed ? 1.05 : 1,
-
-
-          duration:
-
-          const Duration(
-
-            milliseconds:120,
-
-          ),
-
-
-
-
-          child:CustomPaint(
-
-
-            size:Size(
-
-              widget.size,
-
-              widget.size,
-
-            ),
-
-
-
-            painter:PuzzlePainter(
-
-
-              piece:widget.piece,
-
-
-              image:widget.image,
-
-
-              cachedImage:loadedImage,
-
-
-            ),
-
-
-
-          ),
-
-
-
-        ),
-
-
-
-      ),
-
-
-    );
-
-
-  }
 
 
 }
