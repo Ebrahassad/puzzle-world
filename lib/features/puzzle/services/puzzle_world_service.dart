@@ -11,7 +11,7 @@ import '../managers/puzzle_progress_manager.dart';
 import '../managers/reward_manager.dart';
 
 import '../screens/puzzle_home_screen.dart';
-import '../screens/puzzle_level_screen.dart';
+
 import '../screens/wallet_screen.dart';
 
 import '../services/puzzle_navigation_service.dart';
@@ -186,34 +186,17 @@ class PuzzleWorldService {
 
   static Future<void> openWorld(
 
-      BuildContext context,
+    BuildContext context,
 
-      PuzzleModel world,
+    PuzzleModel world,
 
-      ) async {
-
-
-    await Navigator.push(
-
-      context,
-
-      MaterialPageRoute(
-
-        builder:(_)=>
-
-            PuzzleLevelScreen(
-
-              puzzle: world,
-
-            ),
-
-      ),
-
-    );
+    ) async {
 
 
-  }
+  Navigator.pop(context);
 
+
+}
 
 
 
