@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../managers/puzzle_progress_manager.dart';
 import '../models/puzzle_model.dart';
 import '../models/puzzle_level_model.dart';
@@ -6,6 +7,8 @@ import '../models/puzzle_level_model.dart';
 import '../services/puzzle_level_service.dart';
 import '../services/puzzle_level_progress_service.dart';
 import '../services/puzzle_level_unlock_service.dart';
+
+import '../widgets/game_toolbar.dart';
 
 import 'puzzle_game_screen.dart';
 
@@ -42,7 +45,8 @@ class PuzzleLevelScreen extends StatefulWidget {
 
 
 class _PuzzleLevelScreenState
-    extends State<PuzzleLevelScreen> {
+    extends State<PuzzleLevelScreen>
+    with SingleTickerProviderStateMixin {
 
 
 
@@ -52,9 +56,14 @@ class _PuzzleLevelScreenState
   int totalStars = 0;
 
 
+  int rewards = 0;
+
+
   bool loading = true;
 
 
+
+  late AnimationController pressController;
 
 
 
@@ -63,11 +72,28 @@ class _PuzzleLevelScreenState
   @override
   void initState(){
 
+
     super.initState();
+
 
     loadData();
 
+
+
+    pressController = AnimationController(
+
+      vsync:this,
+
+      duration:
+
+      const Duration(milliseconds:120),
+
+    );
+
+
   }
+
+
 
 
 
@@ -98,7 +124,7 @@ class _PuzzleLevelScreenState
 
       worldId: widget.puzzle.id,
 
-      levels: data,
+      levels:data,
 
     );
 
@@ -106,8 +132,15 @@ class _PuzzleLevelScreenState
 
 
 
-final stars =
-    await PuzzleProgressManager.getTotalStars();
+
+
+    final stars =
+
+    await PuzzleProgressManager
+
+        .getTotalStars();
+
+
 
 
 
@@ -133,10 +166,14 @@ final stars =
       });
 
 
+
     }
 
 
+
   }
+
+
 
 
 
@@ -154,14 +191,15 @@ final stars =
 
     return await PuzzleLevelUnlockService.checkUnlocked(
 
-      worldId: widget.puzzle.id,
+      worldId:widget.puzzle.id,
 
-      level: level,
+      level:level,
 
     );
 
-
   }
+
+
 
 
 
@@ -189,12 +227,10 @@ final stars =
     if(!unlocked){
 
 
-
       showLockedDialog(level);
 
 
       return;
-
 
     }
 
@@ -203,22 +239,41 @@ final stars =
 
 
 
-
     await Navigator.push(
+
+
 
       context,
 
+
+
       MaterialPageRoute(
 
-        builder: (_) => PuzzleGameScreen(
 
-          puzzle: widget.puzzle,
 
-          level: level,
+        builder:(_)=>
 
-        ),
+
+
+            PuzzleGameScreen(
+
+
+
+              puzzle:widget.puzzle,
+
+
+
+              level:level,
+
+
+
+            ),
+
+
 
       ),
+
+
 
     );
 
@@ -237,6 +292,8 @@ final stars =
 
 
 
+
+
   void showLockedDialog(
 
       PuzzleLevelModel level,
@@ -248,111 +305,359 @@ final stars =
     showDialog(
 
 
-      context: context,
 
-
-      builder: (context){
-
-
-
-        return AlertDialog(
+      context:context,
 
 
 
-          shape:
-
-          RoundedRectangleBorder(
-
-
-            borderRadius:
-
-            BorderRadius.circular(25),
-
-          ),
+      builder:(context){
 
 
 
+        return Dialog(
 
 
 
-          title:
+          backgroundColor:
 
-          const Text(
-
-            "🔒 المرحلة مغلقة",
-
-            textAlign:
-
-            TextAlign.center,
-
-          ),
+          Colors.transparent,
 
 
 
+          child:
+
+          Container(
 
 
 
-          content:
+            padding:
 
-          Text(
-
-            "تحتاج ⭐ ${level.requiredStars} نجوم لفتح هذه المرحلة",
-
-            textAlign:
-
-            TextAlign.center,
-
-          ),
+            const EdgeInsets.all(25),
 
 
 
+            decoration:
+
+            BoxDecoration(
 
 
 
-          actions:[
+              color:
+
+              Colors.white,
 
 
 
-            Center(
+              borderRadius:
 
-              child:
-
-              ElevatedButton(
-
-                onPressed: (){
-
-                  Navigator.pop(context);
-
-                },
+              BorderRadius.circular(30),
 
 
-                child:
 
-                const Text(
+              boxShadow:[
 
-                  "حسناً",
+
+
+                const BoxShadow(
+
+
+
+                  color:
+
+                  Colors.black26,
+
+
+
+                  blurRadius:
+
+                  15,
+
+
+
+                  offset:
+
+                  Offset(0,8),
+
+
 
                 ),
 
-              ),
-
-            )
 
 
+              ],
 
-          ],
+
+
+            ),
+
+
+
+            child:
+
+            Column(
+
+
+
+              mainAxisSize:
+
+              MainAxisSize.min,
+
+
+
+              children:[
+
+
+
+
+
+                Image.asset(
+
+
+
+                  "assets/images/ui/lock.png",
+
+
+
+                  height:75,
+
+
+
+                  errorBuilder:
+
+                      (_,__,___){
+
+
+
+                    return const Icon(
+
+
+
+                      Icons.lock,
+
+
+
+                      size:70,
+
+
+
+                    );
+
+
+
+                  },
+
+
+
+                ),
+
+
+
+
+
+                const SizedBox(height:15),
+
+
+
+
+
+                const Text(
+
+
+
+                  "🔒 المرحلة مغلقة",
+
+
+
+                  style:
+
+                  TextStyle(
+
+
+
+                    fontSize:22,
+
+
+
+                    fontWeight:
+
+                    FontWeight.bold,
+
+
+
+                  ),
+
+
+
+                ),
+
+
+
+
+
+                const SizedBox(height:10),
+
+
+
+
+
+                Text(
+
+
+
+                  "تحتاج ⭐ ${level.requiredStars} نجوم لفتح هذه المرحلة",
+
+
+
+                  textAlign:
+
+                  TextAlign.center,
+
+
+
+                  style:
+
+                  const TextStyle(
+
+
+
+                    fontSize:17,
+
+
+
+                  ),
+
+
+
+                ),
+
+
+
+
+
+                const SizedBox(height:20),
+
+
+
+
+
+                ElevatedButton(
+
+
+
+                  onPressed:(){
+
+
+
+                    Navigator.pop(context);
+
+
+
+                  },
+
+
+
+                  style:
+
+                  ElevatedButton.styleFrom(
+
+
+
+                    backgroundColor:
+
+                    Colors.orange,
+
+
+
+                    shape:
+
+                    RoundedRectangleBorder(
+
+
+
+                      borderRadius:
+
+                      BorderRadius.circular(25),
+
+
+
+                    ),
+
+
+
+                  ),
+
+
+
+                  child:
+
+                  const Text(
+
+
+
+                    "حسناً",
+
+
+
+                    style:
+
+                    TextStyle(
+
+
+
+                      color:
+
+                      Colors.white,
+
+
+
+                    ),
+
+
+
+                  ),
+
+
+
+                ),
+
+
+
+              ],
+
+
+
+            ),
+
+
+
+          ),
+
 
 
         );
 
 
+
       },
+
 
 
     );
 
 
+
   }
+
+  @override
+  void dispose(){
+
+    pressController.dispose();
+
+    super.dispose();
+
+  }
+
+
 
 
 
@@ -370,15 +675,19 @@ final stars =
 
       return const Scaffold(
 
+
         body:
 
         Center(
+
 
           child:
 
           CircularProgressIndicator(),
 
+
         ),
+
 
       );
 
@@ -397,110 +706,62 @@ final stars =
 
       body:
 
-      Container(
+      Stack(
 
 
 
-        decoration:
+        children:[
 
-        const BoxDecoration(
 
 
 
-          gradient:
 
-          LinearGradient(
+          Positioned.fill(
 
 
 
-            colors:[
+            child:
 
+            Container(
 
-              Color(0xffFFD166),
 
 
-              Color(0xffFF9F1C),
+              decoration:
 
+              const BoxDecoration(
 
-            ],
 
 
+                gradient:
 
-            begin:
+                LinearGradient(
 
-            Alignment.topCenter,
 
 
+                  colors:[
 
-            end:
 
-            Alignment.bottomCenter,
 
+                    Color(0xff4FC3F7),
 
 
-          ),
+                    Color(0xff1976D2),
 
 
 
-        ),
+                  ],
 
 
 
+                  begin:
 
+                  Alignment.topCenter,
 
 
-        child:
 
-        SafeArea(
+                  end:
 
-
-
-          child:
-
-          Column(
-
-
-
-            children:[
-
-
-
-              const SizedBox(height:25),
-
-
-
-
-
-
-              Text(
-
-
-
-                widget.puzzle.title,
-
-
-
-                style:
-
-                const TextStyle(
-
-
-
-                  color:
-
-                  Colors.white,
-
-
-
-                  fontSize:
-
-                  32,
-
-
-
-                  fontWeight:
-
-                  FontWeight.bold,
+                  Alignment.bottomCenter,
 
 
 
@@ -512,53 +773,83 @@ final stars =
 
 
 
+            ),
 
 
 
-              const SizedBox(height:10),
+          ),
 
 
 
 
 
 
-              Container(
+
+          Column(
+
+
+
+            children:[
+
+
+
+
+
+
+              GameToolbar(
+
+
+
+                logo:
+
+                "assets/images/ui/puzzle_logo.png",
+
+
+
+                stars:
+
+                totalStars,
+
+
+
+                rewards:
+
+                rewards,
+
+
+
+                onBack:(){
+
+
+
+                  Navigator.pop(context);
+
+
+
+                },
+
+
+
+              ),
+
+
+
+
+
+
+
+
+              Padding(
 
 
 
                 padding:
 
-                const EdgeInsets.symmetric(
+                const EdgeInsets.only(
 
+                  top:15,
 
-
-                  horizontal:20,
-
-                  vertical:8,
-
-
-
-                ),
-
-
-
-                decoration:
-
-                BoxDecoration(
-
-
-
-                  color:
-
-                  Colors.white24,
-
-
-
-                  borderRadius:
-
-                  BorderRadius.circular(25),
-
-
+                  bottom:10,
 
                 ),
 
@@ -570,7 +861,7 @@ final stars =
 
 
 
-                  "⭐ $totalStars",
+                  widget.puzzle.title,
 
 
 
@@ -586,9 +877,41 @@ final stars =
 
 
 
-                    fontSize:
+                    fontSize:28,
 
-                    22,
+
+
+                    fontWeight:
+
+                    FontWeight.bold,
+
+
+
+                    shadows:[
+
+
+
+                      Shadow(
+
+
+
+                        color:
+
+                        Colors.black45,
+
+
+
+                        blurRadius:
+
+                        8,
+
+
+
+                      ),
+
+
+
+                    ],
 
 
 
@@ -604,10 +927,6 @@ final stars =
 
 
 
-
-
-
-              const SizedBox(height:30),
 
 
 
@@ -630,9 +949,6 @@ final stars =
 
 
 
-
-
-
                   gridDelegate:
 
                   const SliverGridDelegateWithFixedCrossAxisCount(
@@ -647,13 +963,13 @@ final stars =
 
                     crossAxisSpacing:
 
-                    15,
+                    16,
 
 
 
                     mainAxisSpacing:
 
-                    15,
+                    16,
 
 
 
@@ -663,11 +979,9 @@ final stars =
 
 
 
-
                   itemCount:
 
                   levels.length,
-
 
 
 
@@ -688,6 +1002,7 @@ final stars =
 
 
 
+
                     return FutureBuilder<bool>(
 
 
@@ -695,6 +1010,7 @@ final stars =
                       future:
 
                       isUnlocked(level),
+
 
 
 
@@ -713,307 +1029,36 @@ final stars =
 
 
 
-                        return GestureDetector(
+                        return _LevelCard(
 
 
 
-                          onTap: (){
+                          level:
+
+                          level,
+
+
+
+                          unlocked:
+
+                          unlocked,
+
+
+
+                          onTap:(){
+
 
 
                             openLevel(level);
+
 
 
                           },
 
 
 
-
-
-
-                          child:
-
-                          Container(
-
-
-
-                            decoration:
-
-                            BoxDecoration(
-
-
-
-                              color:
-
-                              Colors.white,
-
-
-
-                              borderRadius:
-
-                              BorderRadius.circular(25),
-
-
-
-
-
-                              boxShadow:[
-
-
-
-                                const BoxShadow(
-
-
-
-                                  color:
-
-                                  Colors.black26,
-
-
-
-                                  blurRadius:
-
-                                  10,
-
-
-
-                                  offset:
-
-                                  Offset(0,6),
-
-                                ),
-
-                              ],
-
-                            ),
-
-
-
-
-
-
-                            child:
-
-                            Column(
-
-
-
-                              mainAxisAlignment:
-
-                              MainAxisAlignment.center,
-
-
-
-                              children:[
-
-
-
-                                Icon(
-
-
-
-                                  unlocked
-
-                                  ?
-
-                                  Icons.extension
-
-                                  :
-
-                                  Icons.lock,
-
-
-
-                                  size:
-
-                                  45,
-
-
-
-                                  color:
-
-                                  unlocked
-
-                                  ?
-
-                                  Colors.orange
-
-                                  :
-
-                                  Colors.grey,
-
-
-
-                                ),
-
-
-
-
-
-
-                                const SizedBox(height:10),
-
-
-
-
-
-
-                                Text(
-
-
-
-                                  level.title.isEmpty
-
-                                  ?
-
-                                  "مرحلة ${level.levelNumber}"
-
-                                  :
-
-                                  level.title,
-
-
-
-                                  textAlign:
-
-                                  TextAlign.center,
-
-
-
-                                  style:
-
-                                  const TextStyle(
-
-
-
-                                    fontSize:
-
-                                    17,
-
-
-
-                                    fontWeight:
-
-                                    FontWeight.bold,
-
-
-
-                                  ),
-
-
-
-                                ),
-
-
-
-
-
-
-
-                                if(level.earnedStars > 0)
-
-
-
-                                  Text(
-
-
-
-                                    "⭐ ${level.earnedStars}",
-
-
-
-                                    style:
-
-                                    const TextStyle(
-
-
-
-                                      color:
-
-                                      Colors.orange,
-
-
-
-                                      fontWeight:
-
-                                      FontWeight.bold,
-
-
-
-                                    ),
-
-
-
-                                  ),
-
-
-
-
-
-
-                                if(!unlocked)
-
-
-
-                                  Text(
-
-
-
-                                    "🔒 ${level.requiredStars}",
-
-
-
-                                  ),
-
-
-
-
-
-
-                                if(level.completed)
-
-
-
-                                  const Text(
-
-
-
-                                    "✅",
-
-
-
-                                    style:
-
-                                    TextStyle(
-
-
-
-                                      fontSize:
-
-                                      20,
-
-
-
-                                    ),
-
-
-
-                                  ),
-
-
-
-                              ],
-
-
-
-                            ),
-
-
-
-                          ),
-
-
-
                         );
+
 
 
                       },
@@ -1021,6 +1066,7 @@ final stars =
 
 
                     );
+
 
 
                   },
@@ -1032,6 +1078,495 @@ final stars =
 
 
               ),
+
+
+
+            ],
+
+
+
+          ),
+
+
+
+
+
+        ],
+
+
+
+      ),
+
+
+
+    );
+
+
+  }
+
+
+}
+
+
+
+
+
+
+
+
+class _LevelCard extends StatefulWidget {
+
+
+
+  final PuzzleLevelModel level;
+
+
+  final bool unlocked;
+
+
+  final VoidCallback onTap;
+
+
+
+
+
+  const _LevelCard({
+
+    required this.level,
+
+    required this.unlocked,
+
+    required this.onTap,
+
+  });
+
+
+
+
+
+  @override
+  State<_LevelCard> createState() =>
+      _LevelCardState();
+
+}
+
+
+
+
+
+
+
+
+class _LevelCardState extends State<_LevelCard>{
+
+
+
+  bool pressed = false;
+
+
+
+
+
+  @override
+  Widget build(BuildContext context){
+
+
+
+    return GestureDetector(
+
+
+
+      onTapDown:(_){
+
+
+
+        setState((){
+
+          pressed = true;
+
+        });
+
+
+      },
+
+
+
+      onTapUp:(_){
+
+
+
+        setState((){
+
+          pressed = false;
+
+        });
+
+
+        widget.onTap();
+
+
+
+      },
+
+
+
+      onTapCancel:(){
+
+
+
+        setState((){
+
+          pressed = false;
+
+        });
+
+
+      },
+
+
+
+
+
+      child:
+
+      AnimatedScale(
+
+
+
+        scale:
+
+        pressed ? 0.93 : 1,
+
+
+
+        duration:
+
+        const Duration(
+
+          milliseconds:120,
+
+        ),
+
+
+
+        child:
+
+        Container(
+
+
+
+          decoration:
+
+          BoxDecoration(
+
+
+
+            color:
+
+            Colors.white,
+
+
+
+            borderRadius:
+
+            BorderRadius.circular(25),
+
+
+
+            boxShadow:[
+
+
+
+              BoxShadow(
+
+
+
+                color:
+
+                Colors.black.withOpacity(.25),
+
+
+
+                blurRadius:
+
+                12,
+
+
+
+                offset:
+
+                const Offset(0,6),
+
+
+
+              ),
+
+
+
+            ],
+
+
+
+          ),
+
+
+
+
+          child:
+
+          Column(
+
+
+
+            mainAxisAlignment:
+
+            MainAxisAlignment.center,
+
+
+
+            children:[
+
+
+
+
+
+              Image.asset(
+
+
+
+                widget.unlocked
+
+                    ?
+
+                "assets/images/ui/puzzle_piece.png"
+
+                    :
+
+                "assets/images/ui/lock.png",
+
+
+
+                height:
+
+                55,
+
+
+
+                errorBuilder:
+
+                    (_,__,___){
+
+
+
+                  return Icon(
+
+
+
+                    widget.unlocked
+
+                        ?
+
+                    Icons.extension
+
+                        :
+
+                    Icons.lock,
+
+
+
+                    size:
+
+                    50,
+
+
+
+                    color:
+
+                    widget.unlocked
+
+                        ?
+
+                    Colors.orange
+
+                        :
+
+                    Colors.grey,
+
+
+
+                  );
+
+
+
+                },
+
+
+
+              ),
+
+
+
+
+
+              const SizedBox(height:8),
+
+
+
+
+
+              Text(
+
+
+
+                widget.level.title.isEmpty
+
+                    ?
+
+                "مرحلة ${widget.level.levelNumber}"
+
+                    :
+
+                widget.level.title,
+
+
+
+                textAlign:
+
+                TextAlign.center,
+
+
+
+                style:
+
+                const TextStyle(
+
+
+
+                  fontSize:16,
+
+
+
+                  fontWeight:
+
+                  FontWeight.bold,
+
+
+
+                ),
+
+
+
+              ),
+
+
+
+
+
+
+              if(widget.level.completed)
+
+
+
+                const Text(
+
+
+
+                  "✅",
+
+
+
+                  style:
+
+                  TextStyle(
+
+                    fontSize:22,
+
+                  ),
+
+
+
+                ),
+
+
+
+
+
+
+              if(widget.unlocked && widget.level.earnedStars > 0)
+
+
+
+                Text(
+
+
+
+                  "⭐ ${widget.level.earnedStars}",
+
+
+
+                  style:
+
+                  const TextStyle(
+
+
+
+                    color:
+
+                    Colors.orange,
+
+
+
+                    fontWeight:
+
+                    FontWeight.bold,
+
+
+
+                  ),
+
+
+
+                ),
+
+
+
+
+
+              if(!widget.unlocked)
+
+
+
+                Text(
+
+
+
+                  "⭐ ${widget.level.requiredStars}",
+
+
+
+                  style:
+
+                  const TextStyle(
+
+
+
+                    color:
+
+                    Colors.grey,
+
+
+
+                    fontWeight:
+
+                    FontWeight.bold,
+
+
+
+                  ),
+
+
+
+                ),
 
 
 
