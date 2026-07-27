@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+
 import '../engine/puzzle_piece.dart';
 
 
-class PuzzlePieceWidget extends StatelessWidget {
+
+class PuzzlePieceWidget extends StatefulWidget {
 
 
   final PuzzlePiece piece;
@@ -27,30 +29,84 @@ class PuzzlePieceWidget extends StatelessWidget {
 
 
 
+  @override
+  State<PuzzlePieceWidget> createState() =>
+      _PuzzlePieceWidgetState();
+
+
+}
+
+
+
+
+
+
+
+
+class _PuzzlePieceWidgetState
+    extends State<PuzzlePieceWidget>{
+
+
+
+  ImageInfo? imageInfo;
 
 
 
   @override
-  Widget build(BuildContext context){
+  void initState(){
+
+    super.initState();
 
 
-    return CustomPaint(
+    loadImage();
 
 
-      size:Size(
-        size,
-        size,
+  }
+
+
+
+
+
+
+
+  void loadImage(){
+
+
+    final stream =
+
+    widget.image.resolve(
+
+      const ImageConfiguration(),
+
+    );
+
+
+
+    stream.addListener(
+
+      ImageStreamListener(
+
+            (info,_){
+
+
+          if(mounted){
+
+
+            setState((){
+
+
+              imageInfo = info;
+
+
+            });
+
+
+          }
+
+
+        },
+
       ),
-
-
-      painter:PuzzlePiecePainter(
-
-        piece:piece,
-
-        image:image,
-
-      ),
-
 
     );
 
@@ -59,7 +115,55 @@ class PuzzlePieceWidget extends StatelessWidget {
 
 
 
+
+
+
+
+
+
+  @override
+  Widget build(BuildContext context){
+
+
+
+    return CustomPaint(
+
+
+
+      size:Size(
+
+        widget.size,
+
+        widget.size,
+
+      ),
+
+
+
+      painter:PuzzlePiecePainter(
+
+
+
+        piece:widget.piece,
+
+
+
+        imageInfo:imageInfo,
+
+
+
+      ),
+
+
+
+    );
+
+
+  }
+
+
 }
+
 
 
 
@@ -74,13 +178,7 @@ class PuzzlePiecePainter extends CustomPainter {
 
   final PuzzlePiece piece;
 
-  final ImageProvider image;
-
-
-
-  ImageStream? stream;
-
-  ImageInfo? imageInfo;
+  final ImageInfo? imageInfo;
 
 
 
@@ -88,9 +186,10 @@ class PuzzlePiecePainter extends CustomPainter {
 
     required this.piece,
 
-    required this.image,
+    required this.imageInfo,
 
   });
+
 
 
 
@@ -102,68 +201,68 @@ class PuzzlePiecePainter extends CustomPainter {
 
 
 
-    final paint = Paint();
+    final image = imageInfo?.image;
 
 
 
-    final imageRect = Rect.fromLTWH(
-
-      0,
-
-      0,
-
-      size.width,
-
-      size.height,
-
-    );
+    if(image == null){
 
 
+      final paint = Paint()
 
-    final src = piece.sourceRect;
+        ..color = Colors.grey;
 
-
-
-    final img = imageInfo?.image;
-
-
-
-    if(img != null){
-
-
-      canvas.drawImageRect(
-
-        img,
-
-        src,
-
-        imageRect,
-
-        paint,
-
-      );
-
-
-    }else{
-
-
-      paint.color = Colors.grey;
 
 
       canvas.drawRect(
 
-        imageRect,
+        Offset.zero & size,
 
         paint,
 
       );
 
+
+      return;
 
     }
 
 
 
+
+
+
+
+    final paint = Paint();
+
+
+
+    canvas.drawImageRect(
+
+
+
+      image,
+
+
+
+      piece.sourceRect,
+
+
+
+      Offset.zero & size,
+
+
+
+      paint,
+
+
+
+    );
+
+
+
   }
+
 
 
 
@@ -178,11 +277,11 @@ class PuzzlePiecePainter extends CustomPainter {
 
       ){
 
-    return true;
+
+    return oldDelegate.imageInfo != imageInfo;
+
 
   }
-
-
 
 
 }
