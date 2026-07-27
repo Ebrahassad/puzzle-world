@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../screens/puzzle_game_screen.dart';
-import '../screens/puzzle_level_screen.dart';
 
 import '../models/puzzle_model.dart';
 import '../models/puzzle_level_model.dart';
@@ -14,6 +13,7 @@ class PuzzleNavigationGuardService {
 
 
   const PuzzleNavigationGuardService._();
+
 
 
 
@@ -48,9 +48,8 @@ class PuzzleNavigationGuardService {
 
 
 
-
   //==================================================
-  // 🧩 فتح المرحلة
+  // 🧩 فتح مرحلة البازل
   //==================================================
 
   static Future<void> openLevel({
@@ -65,9 +64,7 @@ class PuzzleNavigationGuardService {
 
 
 
-    final allowed =
-
-    await canOpenLevel(
+    final allowed = await canOpenLevel(
 
       worldId: puzzle.id,
 
@@ -81,12 +78,9 @@ class PuzzleNavigationGuardService {
 
     if(!allowed){
 
-
       return;
 
-
     }
-
 
 
 
@@ -122,54 +116,14 @@ class PuzzleNavigationGuardService {
 
 
   //==================================================
-  // 🔙 العودة للمراحل
-  //==================================================
-
-  static void backToLevels({
-
-    required BuildContext context,
-
-    required PuzzleModel puzzle,
-
-  }) {
-
-
-
-    Navigator.pushReplacement(
-
-      context,
-
-      MaterialPageRoute(
-
-        builder: (_) => PuzzleLevelScreen(
-
-          puzzle: puzzle,
-
-        ),
-
-      ),
-
-    );
-
-
-  }
-
-
-
-
-
-
-
-
-  //==================================================
-  // ❌ إغلاق البازل
+  // ❌ إغلاق البازل والعودة
   //==================================================
 
   static void closePuzzle(
 
-    BuildContext context,
+      BuildContext context,
 
-  ) {
+      ) {
 
 
     Navigator.pop(
@@ -180,8 +134,6 @@ class PuzzleNavigationGuardService {
 
 
   }
-
-
 
 
 
