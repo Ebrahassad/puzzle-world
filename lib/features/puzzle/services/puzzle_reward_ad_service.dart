@@ -7,8 +7,8 @@ import '../managers/puzzle_progress_manager.dart';
 class PuzzleRewardAdService {
 
 
-
   const PuzzleRewardAdService._();
+
 
 
 
@@ -19,33 +19,47 @@ class PuzzleRewardAdService {
 
   static Future<bool> watchAdForHint() async {
 
-
-    final watched =
-
-    await RewardAdService.showRewardAd();
+    try {
 
 
+      final watched =
 
-    if(!watched){
+      await RewardAdService.showRewardAd();
+
+
+
+      if(!watched){
+
+        return false;
+
+      }
+
+
+
+
+      await PuzzleProgressManager.addHints(
+
+        1,
+
+      );
+
+
+
+
+      return true;
+
+
+
+    } catch(_){
+
 
       return false;
 
+
     }
 
-
-
-    await PuzzleProgressManager.addHints(
-
-      1,
-
-    );
-
-
-
-    return true;
-
-
   }
+
 
 
 
@@ -64,33 +78,49 @@ class PuzzleRewardAdService {
   }) async {
 
 
-
-    final watched =
-
-    await RewardAdService.showRewardAd();
+    try {
 
 
+      final watched =
 
-    if(!watched){
+      await RewardAdService.showRewardAd();
+
+
+
+
+      if(!watched){
+
+        return false;
+
+      }
+
+
+
+
+      await PuzzleProgressManager.unlockLevel(
+
+        levelId,
+
+      );
+
+
+
+
+      return true;
+
+
+
+    } catch(_){
+
 
       return false;
 
+
     }
 
-
-
-    await PuzzleProgressManager.unlockLevel(
-
-      levelId,
-
-    );
-
-
-
-    return true;
-
-
   }
+
+
 
 
 
@@ -105,31 +135,45 @@ class PuzzleRewardAdService {
   static Future<bool> watchAdForExtraStars() async {
 
 
-
-    final watched =
-
-    await RewardAdService.showRewardAd();
+    try {
 
 
+      final watched =
 
-    if(!watched){
+      await RewardAdService.showRewardAd();
+
+
+
+
+      if(!watched){
+
+        return false;
+
+      }
+
+
+
+
+      await PuzzleProgressManager.addStars(
+
+        1,
+
+      );
+
+
+
+
+      return true;
+
+
+
+    } catch(_){
+
 
       return false;
 
+
     }
-
-
-
-    await PuzzleProgressManager.addStars(
-
-      1,
-
-    );
-
-
-
-    return true;
-
 
   }
 
@@ -139,17 +183,93 @@ class PuzzleRewardAdService {
 
 
 
+
+
   //==================================================
-  // 🎁 مضاعفة المكافأة
+  // 🎁 مضاعفة المكافأة بعد الفوز
   //==================================================
 
   static Future<bool> watchAdForDoubleReward() async {
 
 
-    return await RewardAdService.showDoubleRewardAd();
+    try {
+
+
+      final result =
+
+      await RewardAdService.showDoubleRewardAd();
+
+
+
+      return result;
+
+
+
+    } catch(_){
+
+
+      return false;
+
+
+    }
 
 
   }
+
+
+
+
+
+
+  //==================================================
+  // 🪙 مكافأة إعلان عامة
+  //==================================================
+
+  static Future<bool> watchAdForCoins() async {
+
+
+    try {
+
+
+      final watched =
+
+      await RewardAdService.showRewardAd();
+
+
+
+      if(!watched){
+
+        return false;
+
+      }
+
+
+
+
+      await PuzzleProgressManager.addCoins(
+
+        100,
+
+      );
+
+
+
+
+      return true;
+
+
+
+    } catch(_){
+
+
+      return false;
+
+
+    }
+
+
+  }
+
 
 
 
