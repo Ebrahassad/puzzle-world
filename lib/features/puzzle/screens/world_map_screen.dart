@@ -12,16 +12,23 @@ import 'island_screen.dart';
 
 class WorldMapScreen extends StatefulWidget {
 
+
   const WorldMapScreen({
+
     super.key,
+
   });
+
 
 
   @override
   State<WorldMapScreen> createState() =>
       _WorldMapScreenState();
 
+
 }
+
+
 
 
 
@@ -31,88 +38,115 @@ class _WorldMapScreenState
     with SingleTickerProviderStateMixin {
 
 
+
   int totalStars = 0;
+
+
+  int rewards = 0;
 
 
   bool loading = true;
 
 
 
-  late AnimationController _floatController;
 
-  late Animation<double> _floatAnimation;
+
+  late AnimationController floatController;
+
+  late Animation<double> floatAnimation;
+
+
 
 
 
 
 
   @override
-  void initState() {
+  void initState(){
 
     super.initState();
 
 
-    loadStars();
+    loadData();
 
 
 
-    _floatController = AnimationController(
+    floatController = AnimationController(
 
-      vsync: this,
+      vsync:this,
 
-      duration: const Duration(seconds: 3),
+      duration:
+      const Duration(seconds:3),
 
     )..repeat(
-      reverse: true,
+
+      reverse:true,
+
     );
 
 
 
-    _floatAnimation = Tween<double>(
 
-      begin: -5,
+    floatAnimation = Tween<double>(
 
-      end: 5,
+      begin:-6,
+
+      end:6,
 
     ).animate(
 
       CurvedAnimation(
 
-        parent: _floatController,
+        parent:floatController,
 
-        curve: Curves.easeInOut,
+        curve:Curves.easeInOut,
 
       ),
 
     );
 
+
+
   }
 
 
 
 
 
-  Future<void> loadStars() async {
+
+
+
+
+  Future<void> loadData() async {
 
 
     final stars =
-    await PuzzleProgressManager.getTotalStars();
+    await PuzzleProgressManager
+        .getTotalStars();
 
 
 
     if(mounted){
 
+
       setState((){
+
 
         totalStars = stars;
 
+
         loading = false;
+
 
       });
 
+
     }
 
+
   }
+
+
 
 
 
@@ -123,23 +157,25 @@ class _WorldMapScreenState
   void openWorld(PuzzleModel world){
 
 
+
     Navigator.push(
 
       context,
 
       MaterialPageRoute(
 
-        builder: (_) =>
+        builder:(_)=>
 
             IslandScreen(
 
-              island: world,
+              island:world,
 
             ),
 
       ),
 
     );
+
 
   }
 
@@ -149,19 +185,26 @@ class _WorldMapScreenState
 
 
 
+
+
   Widget islandButton(
+
 
       String id,
 
+
       double x,
+
 
       double y,
 
       ){
 
 
+
     final world =
     PuzzleData.getById(id);
+
 
 
 
@@ -174,72 +217,112 @@ class _WorldMapScreenState
 
 
 
+
+
+
     return Positioned(
 
-      left: x - 40,
-
-      top: y - 40,
-
-      width: 80,
-
-      height: 80,
 
 
-
-      child: AnimatedBuilder(
-
-        animation: _floatAnimation,
+      left:x-45,
 
 
-        builder: (context, child){
+      top:y-45,
+
+
+      width:90,
+
+
+      height:90,
+
+
+
+      child:
+
+      AnimatedBuilder(
+
+
+
+        animation:floatAnimation,
+
+
+
+        builder:(context,child){
 
 
           return Transform.translate(
 
-            offset: Offset(
+
+            offset:Offset(
 
               0,
 
-              _floatAnimation.value,
+              floatAnimation.value,
 
             ),
 
 
-            child: child,
+
+            child:child,
 
           );
+
 
 
         },
 
 
 
-        child: GestureDetector(
+        child:
 
-          onTap: (){
+        GestureDetector(
 
+
+          onTap:(){
 
             openWorld(world);
-
 
           },
 
 
-          child: Container(
 
-            color: Colors.transparent,
+          child:
+
+          Container(
+
+            decoration:
+
+            BoxDecoration(
+
+              color:
+              Colors.transparent,
+
+
+              shape:
+              BoxShape.circle,
+
+
+            ),
+
 
           ),
+
 
 
         ),
 
 
+
       ),
+
+
 
     );
 
+
   }
+
+
 
 
 
@@ -250,11 +333,16 @@ class _WorldMapScreenState
   @override
   void dispose(){
 
-    _floatController.dispose();
+
+    floatController.dispose();
+
 
     super.dispose();
 
+
   }
+
+
 
 
 
@@ -269,17 +357,27 @@ class _WorldMapScreenState
 
     if(loading){
 
+
       return const Scaffold(
 
-        body: Center(
 
-          child: CircularProgressIndicator(),
+        body:
+
+        Center(
+
+          child:
+
+          CircularProgressIndicator(),
 
         ),
 
+
       );
 
+
     }
+
+
 
 
 
@@ -290,21 +388,36 @@ class _WorldMapScreenState
 
 
 
-      body: Stack(
+      body:
 
-        children: [
+      Stack(
+
+
+
+        children:[
+
+
 
 
 
 
           Positioned.fill(
 
-            child: Image.asset(
-
-              "assets/images/World/world_map.jpg",
 
 
-              fit: BoxFit.cover,
+            child:
+
+            Image.asset(
+
+
+
+              "assets/images/world/world_map.jpg",
+
+
+
+              fit:
+
+              BoxFit.cover,
 
 
 
@@ -315,14 +428,19 @@ class _WorldMapScreenState
 
                 return Container(
 
-                  color: Colors.lightBlue,
+                  color:
+
+                  Colors.lightBlue,
 
                 );
+
 
               },
 
 
             ),
+
+
 
           ),
 
@@ -332,29 +450,46 @@ class _WorldMapScreenState
 
 
 
+
           Positioned(
 
-            top: 0,
-
-            left: 0,
-
-            right: 0,
 
 
-            child: GameToolbar(
+            top:0,
+
+            left:0,
+
+            right:0,
+
+
+
+            child:
+
+            GameToolbar(
+
+
 
               logo:
 
-              "assets/images/UI/puzzle_logo.png",
+              "assets/images/ui/puzzle_logo.png",
 
 
-              stars: totalStars,
+
+              stars:
+
+              totalStars,
 
 
-              rewards: 0,
+
+              rewards:
+
+              rewards,
+
 
 
             ),
+
+
 
           ),
 
@@ -367,7 +502,11 @@ class _WorldMapScreenState
           SafeArea(
 
 
-            child: LayoutBuilder(
+
+            child:
+
+            LayoutBuilder(
+
 
 
               builder:
@@ -380,17 +519,17 @@ class _WorldMapScreenState
                     constraints.maxWidth;
 
 
-
                 final height =
                     constraints.maxHeight;
 
 
 
 
-
                 return Stack(
 
-                  children: [
+
+
+                  children:[
 
 
 
@@ -399,11 +538,12 @@ class _WorldMapScreenState
 
                       "animals",
 
-                      width * 0.256,
+                      width*0.256,
 
-                      height * 0.20,
+                      height*0.20,
 
                     ),
+
 
 
 
@@ -413,11 +553,12 @@ class _WorldMapScreenState
 
                       "cars",
 
-                      width * 0.212,
+                      width*0.212,
 
-                      height * 0.552,
+                      height*0.552,
 
                     ),
+
 
 
 
@@ -427,11 +568,12 @@ class _WorldMapScreenState
 
                       "space",
 
-                      width * 0.732,
+                      width*0.732,
 
-                      height * 0.252,
+                      height*0.252,
 
                     ),
+
 
 
 
@@ -441,11 +583,12 @@ class _WorldMapScreenState
 
                       "landmarks",
 
-                      width * 0.784,
+                      width*0.784,
 
-                      height * 0.568,
+                      height*0.568,
 
                     ),
+
 
 
 
@@ -455,9 +598,9 @@ class _WorldMapScreenState
 
                       "nature",
 
-                      width * 0.380,
+                      width*0.380,
 
-                      height * 0.793,
+                      height*0.793,
 
                     ),
 
@@ -465,23 +608,36 @@ class _WorldMapScreenState
 
                   ],
 
+
+
                 );
+
 
               },
 
 
             ),
 
+
+
           ),
+
+
 
 
 
         ],
 
+
+
       ),
+
+
 
     );
 
+
   }
+
 
 }
