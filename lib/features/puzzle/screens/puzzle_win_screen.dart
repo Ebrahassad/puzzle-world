@@ -21,15 +21,21 @@ class PuzzleWinScreen extends StatefulWidget {
 
   final GameResultModel result;
 
+
   final int difficulty;
+
 
   final String? worldId;
 
+
   final int? level;
+
 
   final VoidCallback? onNextLevel;
 
+
   final VoidCallback? onBackToWorld;
+
 
   final VoidCallback? onBackToHome;
 
@@ -57,9 +63,13 @@ class PuzzleWinScreen extends StatefulWidget {
 
 
 
+
+
+
   @override
   State<PuzzleWinScreen> createState() =>
       _PuzzleWinScreenState();
+
 
 
 }
@@ -69,24 +79,39 @@ class PuzzleWinScreen extends StatefulWidget {
 
 
 
-class _PuzzleWinScreenState extends State<PuzzleWinScreen>
+
+
+class _PuzzleWinScreenState
+
+    extends State<PuzzleWinScreen>
+
     with SingleTickerProviderStateMixin {
+
 
 
   RewardResultModel? reward;
 
 
+
   bool loading = true;
 
+
   bool adUsed = false;
+
 
   bool saved = false;
 
 
 
+
+
   late AnimationController animationController;
 
+
   late Animation<double> scaleAnimation;
+
+
+
 
 
 
@@ -98,14 +123,19 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
+
     animationController = AnimationController(
 
-      vsync: this,
+      vsync:this,
 
-      duration: const Duration(seconds:1),
+      duration:
+
+      const Duration(seconds:1),
 
     )
       ..repeat(reverse:true);
+
+
 
 
 
@@ -114,7 +144,7 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
       begin:1,
 
-      end:1.12,
+      end:1.08,
 
     ).animate(
 
@@ -130,12 +160,20 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
+
+
     initialize();
 
 
   }
 
- 
+
+
+
+
+
+
+
   Future<void> initialize() async {
 
 
@@ -156,9 +194,6 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-  //==================================================
-  // حفظ إكمال المرحلة
-  //==================================================
 
   Future<void> saveCompletion() async {
 
@@ -175,6 +210,7 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
     if(widget.worldId == null ||
+
         widget.level == null){
 
       return;
@@ -186,17 +222,14 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-    await PuzzleWorldService.completeLevel(
 
+    await PuzzleWorldService.completeLevel(
 
       worldId: widget.worldId!,
 
-
       level: widget.level!,
 
-
       stars: widget.result.stars,
-
 
     );
 
@@ -208,18 +241,13 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
     await PuzzleStatisticsService.addCompletedPuzzle(
 
-
       stars: widget.result.stars,
-
 
       moves: widget.result.moves,
 
-
       seconds: widget.result.seconds,
 
-
     );
-
 
 
 
@@ -229,15 +257,11 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
     await PuzzleSaveService.saveLastPlayed(
 
-
       worldId: widget.worldId!,
-
 
       levelId: "level_${widget.level}",
 
-
     );
-
 
 
 
@@ -247,15 +271,11 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
     await PuzzleAchievementService.checkPuzzleAchievements(
 
-
       worldId: widget.worldId,
-
 
       level: widget.level,
 
-
       result: widget.result,
-
 
     );
 
@@ -265,24 +285,17 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-
     await PuzzleEventService.levelCompleted(
-
 
       worldId: widget.worldId,
 
-
       level: widget.level,
-
 
       stars: widget.result.stars,
 
-
       moves: widget.result.moves,
 
-
       seconds: widget.result.seconds,
-
 
     );
 
@@ -294,19 +307,8 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
     saved = true;
 
 
-
   }
 
-
-
-
-
-
-
-
-  //==================================================
-  // تحميل مكافأة المستوى
-  //==================================================
 
   Future<void> loadReward() async {
 
@@ -319,10 +321,12 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
       rewardKey:
+
       "${widget.worldId}_level_${widget.level}",
 
 
     );
+
 
 
 
@@ -339,6 +343,7 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
+
     setState((){
 
 
@@ -346,7 +351,6 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
       loading = false;
-
 
 
     });
@@ -362,9 +366,6 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-  //==================================================
-  // مضاعفة المكافأة بالإعلان
-  //==================================================
 
   Future<void> doubleReward() async {
 
@@ -380,9 +381,14 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-    final watched = await PuzzleRewardAdService
+
+
+    final watched =
+
+    await PuzzleRewardAdService
 
         .watchAdForDoubleReward();
+
 
 
 
@@ -394,6 +400,7 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
       return;
 
     }
+
 
 
 
@@ -438,7 +445,6 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
       adUsed = true;
 
 
-
     });
 
 
@@ -452,9 +458,6 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-  //==================================================
-  // المرحلة التالية
-  //==================================================
 
   Future<void> nextLevel() async {
 
@@ -478,6 +481,7 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
     if(widget.worldId != null &&
+
         widget.level != null){
 
 
@@ -503,7 +507,16 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
   }
 
+
+
+
+
+
+
+
+
   @override
+
   Widget build(BuildContext context){
 
 
@@ -512,7 +525,11 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-      body: Stack(
+      backgroundColor:Colors.transparent,
+
+
+
+      body:Stack(
 
 
 
@@ -522,25 +539,55 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-          // خلفية شاشة الفوز
+          // الخلفية الأصلية مع شفافية
 
           Positioned.fill(
 
 
-            child: Image.asset(
+
+            child:Image.asset(
+
 
 
               "assets/images/background/win_background.png",
 
 
-              fit: BoxFit.cover,
+
+              fit:BoxFit.cover,
+
 
 
             ),
 
 
+
           ),
 
+
+
+
+
+
+
+          // طبقة شفافة لتحسين وضوح النص
+
+          Positioned.fill(
+
+
+
+            child:Container(
+
+
+
+              color:Colors.black.withOpacity(0.25),
+
+
+
+            ),
+
+
+
+          ),
 
 
 
@@ -552,7 +599,7 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-            child: loading
+            child:loading
 
 
 
@@ -563,7 +610,9 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
             const Center(
 
 
+
               child:CircularProgressIndicator(),
+
 
 
             )
@@ -580,60 +629,55 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-              mainAxisAlignment:
-
-              MainAxisAlignment.spaceBetween,
-
-
-
               children:[
 
 
 
 
 
-                // الجزء العلوي
-
-                Column(
 
 
-
-                  children:[
-
-
-
-                    const SizedBox(height:20),
+                const SizedBox(height:70),
 
 
 
 
 
 
-                    ScaleTransition(
+
+                // رسالة الفوز بدون لوقو
+
+                ScaleTransition(
 
 
 
-                      scale:scaleAnimation,
+                  scale:scaleAnimation,
 
 
 
-                      child:Image.asset(
+                  child:const Text(
 
 
 
-                        "assets/images/ui/puzzle_logo.png",
+                    "أحسنت! أكملت المرحلة",
 
 
 
-                        width:90,
+                    textAlign:TextAlign.center,
 
 
 
-                        height:90,
+                    style:TextStyle(
 
 
 
-                      ),
+                      fontSize:30,
+
+
+                      fontWeight:FontWeight.bold,
+
+
+                      color:Colors.black,
 
 
 
@@ -641,87 +685,7 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-
-
-
-                    const SizedBox(height:10),
-
-
-
-
-
-
-                    const Text(
-
-
-
-                      "🎉 أحسنت! 🎉",
-
-
-
-                      style:TextStyle(
-
-
-
-                        fontSize:34,
-
-
-
-                        fontWeight:FontWeight.bold,
-
-
-
-                        color:Colors.white,
-
-
-
-                      ),
-
-
-
-                    ),
-
-
-
-
-
-
-                    const SizedBox(height:5),
-
-
-
-
-
-
-                    const Text(
-
-
-
-                      "أكملت المرحلة بنجاح",
-
-
-
-                      style:TextStyle(
-
-
-
-                        fontSize:20,
-
-
-
-                        color:Colors.white,
-
-
-
-                      ),
-
-
-
-                    ),
-
-
-
-                  ],
+                  ),
 
 
 
@@ -733,11 +697,15 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
+                const SizedBox(height:25),
 
 
 
 
-                // معلومات الفوز
+
+
+
+                // النجوم
 
                 resultCard(),
 
@@ -747,9 +715,105 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-                // الأزرار
+                const SizedBox(height:15),
 
-                Column(
+
+
+
+
+
+
+                // المعلومات على الخلفية
+
+                Text(
+
+
+
+                  "الحركات: ${widget.result.moves}",
+
+
+
+                  style:const TextStyle(
+
+
+
+                    fontSize:19,
+
+
+                    fontWeight:FontWeight.bold,
+
+
+                    color:Colors.black,
+
+
+
+                  ),
+
+
+
+                ),
+
+
+
+
+
+
+                const SizedBox(height:8),
+
+
+
+
+
+
+                Text(
+
+
+
+                  "الوقت: ${widget.result.seconds} ثانية",
+
+
+
+                  style:const TextStyle(
+
+
+
+                    fontSize:19,
+
+
+                    fontWeight:FontWeight.bold,
+
+
+                    color:Colors.black,
+
+
+
+                  ),
+
+
+
+                ),
+
+
+
+
+
+
+
+                const Spacer(),
+
+
+
+
+
+
+
+                Row(
+
+
+
+                  mainAxisAlignment:
+
+                  MainAxisAlignment.center,
 
 
 
@@ -757,42 +821,13 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-
-
                     actionButton(
 
 
-                      "➡️ المرحلة التالية",
+                      "العودة للجزيرة",
 
 
                       Colors.green,
-
-
-                      nextLevel,
-
-
-                    ),
-
-
-
-
-
-
-                    const SizedBox(height:10),
-
-
-
-
-
-
-
-                    actionButton(
-
-
-                      "🌍 العودة للعالم",
-
-
-                      Colors.blue,
 
 
                       backWorld,
@@ -806,7 +841,7 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-                    const SizedBox(height:10),
+                    const SizedBox(width:10),
 
 
 
@@ -817,10 +852,10 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
                     actionButton(
 
 
-                      "🏠 الرئيسية",
+                      "العودة للعالم",
 
 
-                      Colors.purple,
+                      Colors.blue,
 
 
                       backHome,
@@ -830,22 +865,19 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-
-
-
-
-                    const SizedBox(height:15),
-
-
-
-
-
                   ],
 
 
 
                 ),
 
+
+
+
+
+
+
+                const SizedBox(height:30),
 
 
 
@@ -876,124 +908,114 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
   }
 
-//==================================================
-// بطاقة النتيجة
-//==================================================
 
-Widget resultCard(){
+  Widget resultCard(){
 
 
-  return Container(
+    return Container(
 
 
-    margin: const EdgeInsets.symmetric(
-      horizontal:25,
-    ),
 
+      margin:
 
-    padding: const EdgeInsets.all(18),
+      const EdgeInsets.symmetric(
 
+        horizontal:40,
 
+      ),
 
-    decoration: BoxDecoration(
 
 
-      color:Colors.white.withOpacity(.90),
+      padding:
 
+      const EdgeInsets.all(15),
 
-      borderRadius:BorderRadius.circular(25),
 
 
 
-      boxShadow:[
 
 
-        BoxShadow(
+      decoration:
 
+      BoxDecoration(
 
-          color:Colors.black.withOpacity(.20),
 
 
-          blurRadius:15,
+        color:
 
+        Colors.white.withOpacity(.85),
 
-          offset:const Offset(0,8),
 
 
-        ),
+        borderRadius:
 
+        BorderRadius.circular(22),
 
-      ],
 
 
-    ),
+        boxShadow:[
 
 
 
+          BoxShadow(
 
 
-    child:Column(
 
+            color:
 
-      children:[
+            Colors.black26,
 
 
 
+            blurRadius:12,
 
-        if(reward != null)
 
 
-          Column(
+            offset:
 
+            const Offset(0,6),
 
-            children:[
 
 
+          ),
 
-              Image.asset(
 
 
-                "assets/images/rewards/Star_gold.png",
+        ],
 
 
-                width:65,
 
+      ),
 
-                height:65,
 
 
-              ),
 
 
 
+      child:Column(
 
 
-              Text(
 
+        children:[
 
-                "+${widget.result.stars} Golden Star",
 
 
-                style:const TextStyle(
 
 
-                  fontSize:22,
+          Image.asset(
 
 
-                  fontWeight:FontWeight.bold,
 
+            "assets/images/rewards/Star_gold.png",
 
-                ),
 
 
-              ),
+            width:55,
 
 
 
-              const SizedBox(height:12),
+            height:55,
 
-
-            ],
 
 
           ),
@@ -1003,89 +1025,65 @@ Widget resultCard(){
 
 
 
-        Text(
+
+          const SizedBox(height:5),
 
 
-          "🧩 الحركات: ${widget.result.moves}",
 
 
-          style:const TextStyle(
 
 
-            fontSize:18,
+
+          Text(
 
 
-            fontWeight:FontWeight.bold,
+
+            "+${widget.result.stars} Golden Star",
+
+
+
+            style:
+
+            const TextStyle(
+
+
+
+              color:
+
+              Colors.black,
+
+
+
+              fontSize:20,
+
+
+
+              fontWeight:
+
+              FontWeight.bold,
+
+
+
+            ),
+
 
 
           ),
 
 
-        ),
 
 
 
-
-
-        const SizedBox(height:8),
-
+        ],
 
 
 
-
-        Text(
-
-
-          "⏱ الوقت: ${widget.result.seconds} ثانية",
-
-
-          style:const TextStyle(
-
-
-            fontSize:18,
-
-
-          ),
-
-
-        ),
+      ),
 
 
 
-      ],
+    );
 
-
-    ),
-
-
-  );
-
-
-}
-
-
-
-
-
-
-
-
-
-//==================================================
-// العودة للعالم
-//==================================================
-
-Future<void> backWorld() async {
-
-
-
-  if(widget.onBackToWorld != null){
-
-
-    widget.onBackToWorld!();
-
-
-    return;
 
 
   }
@@ -1093,34 +1091,33 @@ Future<void> backWorld() async {
 
 
 
-  Navigator.pop(context);
-
-
-}
 
 
 
 
 
+  Future<void> backWorld() async {
+
+
+
+    if(widget.onBackToWorld != null){
+
+
+      widget.onBackToWorld!();
+
+
+      return;
+
+
+    }
 
 
 
 
-//==================================================
-// العودة للرئيسية
-//==================================================
-
-Future<void> backHome() async {
 
 
+    Navigator.pop(context);
 
-  if(widget.onBackToHome != null){
-
-
-    widget.onBackToHome!();
-
-
-    return;
 
 
   }
@@ -1128,68 +1125,94 @@ Future<void> backHome() async {
 
 
 
-  Navigator.popUntil(
-
-
-    context,
-
-
-    (route)=>route.isFirst,
-
-
-  );
-
-
-}
 
 
 
 
 
+  Future<void> backHome() async {
+
+
+
+    if(widget.onBackToHome != null){
+
+
+      widget.onBackToHome!();
+
+
+      return;
+
+
+    }
 
 
 
 
-//==================================================
-// زر موحد
-//==================================================
 
-Widget actionButton(
 
-    String text,
-
-    Color color,
-
-    VoidCallback onTap,
-
-    ){
+    Navigator.popUntil(
 
 
 
-  return Padding(
+      context,
 
 
-    padding:const EdgeInsets.symmetric(
 
-      horizontal:35,
+      (route)=>route.isFirst,
 
-    ),
+
+
+    );
+
+
+
+  }
 
 
 
 
-    child:SizedBox(
-
-
-      width:double.infinity,
-
-
-      height:52,
 
 
 
 
-      child:ElevatedButton(
+
+  Widget actionButton(
+
+
+
+      String text,
+
+
+
+      Color color,
+
+
+
+      VoidCallback onTap,
+
+
+
+      ){
+
+
+
+
+
+    return SizedBox(
+
+
+
+      width:145,
+
+
+
+      height:45,
+
+
+
+      child:
+
+      ElevatedButton(
 
 
 
@@ -1197,7 +1220,9 @@ Widget actionButton(
 
 
 
-        style:ElevatedButton.styleFrom(
+        style:
+
+        ElevatedButton.styleFrom(
 
 
 
@@ -1209,17 +1234,25 @@ Widget actionButton(
 
 
 
-          elevation:8,
+          elevation:6,
 
 
 
-          shape:RoundedRectangleBorder(
+          padding:
+
+          EdgeInsets.zero,
+
+
+
+          shape:
+
+          RoundedRectangleBorder(
 
 
 
             borderRadius:
 
-            BorderRadius.circular(30),
+            BorderRadius.circular(22),
 
 
 
@@ -1232,7 +1265,9 @@ Widget actionButton(
 
 
 
-        child:Text(
+        child:
+
+        Text(
 
 
 
@@ -1240,14 +1275,26 @@ Widget actionButton(
 
 
 
-          style:const TextStyle(
+          textAlign:
+
+          TextAlign.center,
 
 
 
-            fontSize:19,
+          style:
+
+          const TextStyle(
 
 
-            fontWeight:FontWeight.bold,
+
+            fontSize:15,
+
+
+
+            fontWeight:
+
+            FontWeight.bold,
+
 
 
           ),
@@ -1261,11 +1308,37 @@ Widget actionButton(
       ),
 
 
-    ),
+
+    );
 
 
-  );
+
+  }
 
 
-}
+
+
+
+
+
+
+
+  @override
+
+  void dispose(){
+
+
+
+    animationController.dispose();
+
+
+
+    super.dispose();
+
+
+
+  }
+
+
+
 }
