@@ -7,8 +7,7 @@ class RewardBoxWidget extends StatefulWidget {
 
   final VoidCallback onRewardOpened;
 
-
-  final GlobalKey starTarget;
+  final VoidCallback? onStarReady;
 
 
 
@@ -18,9 +17,12 @@ class RewardBoxWidget extends StatefulWidget {
 
     required this.onRewardOpened,
 
-    required this.starTarget,
+    this.onStarReady,
 
   });
+
+
+
 
 
 
@@ -37,6 +39,8 @@ class RewardBoxWidget extends StatefulWidget {
 
 
 
+
+
 class _RewardBoxWidgetState
     extends State<RewardBoxWidget>
     with TickerProviderStateMixin {
@@ -45,9 +49,9 @@ class _RewardBoxWidgetState
 
   late AnimationController boxController;
 
-  late AnimationController starController;
-
   late AnimationController pulseController;
+
+  late AnimationController starController;
 
 
 
@@ -55,8 +59,7 @@ class _RewardBoxWidgetState
 
   late Animation<double> boxRotate;
 
-
-  late Animation<double> pulseAnimation;
+  late Animation<double> pulseScale;
 
 
 
@@ -64,17 +67,14 @@ class _RewardBoxWidgetState
 
   late Animation<double> starOpacity;
 
+  late Animation<Offset> starMove;
+
+
 
 
   bool opened = false;
 
   bool showStar = false;
-
-  bool movingStar = false;
-
-
-
-  Offset starPosition = Offset.zero;
 
 
 
@@ -120,13 +120,13 @@ class _RewardBoxWidgetState
 
         parent:boxController,
 
-        curve:
-
-        Curves.elasticOut,
+        curve:Curves.elasticOut,
 
       ),
 
     );
+
+
 
 
 
@@ -144,9 +144,7 @@ class _RewardBoxWidgetState
 
         parent:boxController,
 
-        curve:
-
-        Curves.easeInOut,
+        curve:Curves.easeInOut,
 
       ),
 
@@ -178,7 +176,9 @@ class _RewardBoxWidgetState
 
 
 
-    pulseAnimation = Tween<double>(
+
+
+    pulseScale = Tween<double>(
 
       begin:0.95,
 
@@ -190,9 +190,7 @@ class _RewardBoxWidgetState
 
         parent:pulseController,
 
-        curve:
-
-        Curves.easeInOut,
+        curve:Curves.easeInOut,
 
       ),
 
@@ -212,9 +210,10 @@ class _RewardBoxWidgetState
 
       duration:
 
-      const Duration(milliseconds:1200),
+      const Duration(milliseconds:1500),
 
     );
+
 
 
 
@@ -233,13 +232,13 @@ class _RewardBoxWidgetState
 
         parent:starController,
 
-        curve:
-
-        Curves.elasticOut,
+        curve:Curves.elasticOut,
 
       ),
 
     );
+
+
 
 
 
@@ -257,9 +256,33 @@ class _RewardBoxWidgetState
 
         parent:starController,
 
-        curve:
+        curve:Curves.easeIn,
 
-        Curves.easeIn,
+      ),
+
+    );
+
+
+
+
+
+
+
+    starMove = Tween<Offset>(
+
+      begin:Offset.zero,
+
+      end:
+
+      const Offset(0,-2.5),
+
+    ).animate(
+
+      CurvedAnimation(
+
+        parent:starController,
+
+        curve:Curves.easeOut,
 
       ),
 
@@ -305,11 +328,20 @@ class _RewardBoxWidgetState
 
 
 
+
+
     setState((){
+
+
 
       showStar=true;
 
+
+
     });
+
+
+
 
 
 
@@ -321,54 +353,13 @@ class _RewardBoxWidgetState
 
 
 
-    await Future.delayed(
-
-      const Duration(milliseconds:300),
-
-    );
 
 
+    if(widget.onStarReady != null){
 
 
+      widget.onStarReady!();
 
-    moveStarToToolbar();
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-  void moveStarToToolbar(){
-
-
-
-    final RenderBox? target =
-
-    widget.starTarget.currentContext
-
-        ?.findRenderObject()
-
-    as RenderBox?;
-
-
-
-
-
-    if(target == null){
-
-
-
-      widget.onRewardOpened();
-
-
-      return;
 
     }
 
@@ -378,15 +369,9 @@ class _RewardBoxWidgetState
 
 
 
-    final position =
+    await Future.delayed(
 
-    target.localToGlobal(
-
-      target.size.center(
-
-        Offset.zero,
-
-      ),
+      const Duration(milliseconds:800),
 
     );
 
@@ -395,39 +380,7 @@ class _RewardBoxWidgetState
 
 
 
-    setState((){
-
-
-
-      movingStar=true;
-
-
-      starPosition=position;
-
-
-
-    });
-
-
-
-
-
-
-    Future.delayed(
-
-      const Duration(milliseconds:900),
-
-      (){
-
-
-
-        widget.onRewardOpened();
-
-
-
-      },
-
-    );
+    widget.onRewardOpened();
 
 
 
@@ -450,33 +403,23 @@ class _RewardBoxWidgetState
 
 
 
-      child:
-
-      GestureDetector(
+      child:GestureDetector(
 
 
 
-        onTap:
-
-        openBox,
+        onTap:openBox,
 
 
 
-        child:
-
-        Stack(
+        child:Stack(
 
 
 
-          clipBehavior:
-
-          Clip.none,
+          alignment:Alignment.center,
 
 
 
-          alignment:
-
-          Alignment.center,
+          clipBehavior:Clip.none,
 
 
 
@@ -495,13 +438,9 @@ class _RewardBoxWidgetState
 
               Listenable.merge([
 
-
-
                 boxController,
 
                 pulseController,
-
-
 
               ]),
 
@@ -531,13 +470,11 @@ class _RewardBoxWidgetState
 
                     boxScale.value *
 
-                    pulseAnimation.value,
+                    pulseScale.value,
 
 
 
-                    child:
-
-                    child,
+                    child:child,
 
 
 
@@ -550,8 +487,6 @@ class _RewardBoxWidgetState
 
 
               },
-
-
 
 
 
@@ -571,12 +506,6 @@ class _RewardBoxWidgetState
 
 
 
-                fit:
-
-                BoxFit.contain,
-
-
-
               ),
 
 
@@ -589,108 +518,65 @@ class _RewardBoxWidgetState
 
 
 
-            if(showStar && !movingStar)
+            if(showStar)
 
 
 
-              FadeTransition(
+              SlideTransition(
 
 
 
-                opacity:
+                position:
 
-                starOpacity,
+                starMove,
 
 
 
                 child:
 
-                ScaleTransition(
+                FadeTransition(
 
 
 
-                  scale:
+                  opacity:
 
-                  starScale,
+                  starOpacity,
 
 
 
                   child:
 
-                  Image.asset(
+                  ScaleTransition(
 
 
 
-                    "assets/images/rewards/Star_gold.png",
+                    scale:
+
+                    starScale,
 
 
 
-                    width:120,
+                    child:
 
-                    height:120,
+                    Image.asset(
+
+
+
+                      "assets/images/rewards/Star_gold.png",
+
+
+
+                      width:120,
+
+                      height:120,
+
+
+
+                    ),
 
 
 
                   ),
-
-
-
-                ),
-
-
-
-              ),
-
-
-
-
-
-
-            if(movingStar)
-
-
-
-              AnimatedPositioned(
-
-
-
-                duration:
-
-                const Duration(milliseconds:900),
-
-
-
-                curve:
-
-                Curves.easeInOutCubic,
-
-
-
-                left:
-
-                starPosition.dx - 40,
-
-
-
-                top:
-
-                starPosition.dy - 40,
-
-
-
-                child:
-
-                Image.asset(
-
-
-
-                  "assets/images/rewards/Star_gold.png",
-
-
-
-                  width:80,
-
-                  height:80,
 
 
 
@@ -732,22 +618,17 @@ class _RewardBoxWidgetState
   void dispose(){
 
 
-
     boxController.dispose();
-
-
-    starController.dispose();
-
 
     pulseController.dispose();
 
+    starController.dispose();
 
 
     super.dispose();
 
 
   }
-
 
 
 }
