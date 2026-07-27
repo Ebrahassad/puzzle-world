@@ -88,7 +88,6 @@ class _PuzzleLevelScreenState
     super.initState();
 
 
-
     pressController = AnimationController(
 
       vsync:this,
@@ -98,7 +97,6 @@ class _PuzzleLevelScreenState
       const Duration(milliseconds:120),
 
     );
-
 
 
     loadData();
@@ -656,6 +654,7 @@ class _PuzzleLevelScreenState
 
 
   @override
+
   void dispose(){
 
 
@@ -667,7 +666,16 @@ class _PuzzleLevelScreenState
 
   }
 
+
+
+
+
+
+
+
+
   @override
+
   Widget build(BuildContext context){
 
 
@@ -695,11 +703,6 @@ class _PuzzleLevelScreenState
 
 
     }
-
-
-
-
-
 
 
     return Scaffold(
@@ -1115,6 +1118,14 @@ class _PuzzleLevelScreenState
 
   }
 
+} // نهاية PuzzleLevelScreen
+
+
+
+
+
+
+
 class _LevelCard extends StatefulWidget {
 
 
@@ -1151,13 +1162,6 @@ class _LevelCard extends StatefulWidget {
 
 
 }
-
-
-
-
-
-
-
 
 
 class _LevelCardState extends State<_LevelCard>{
