@@ -5,7 +5,7 @@ import '../models/puzzle_level_model.dart';
 import '../models/game_result_model.dart';
 
 import '../screens/puzzle_home_screen.dart';
-import '../screens/puzzle_level_screen.dart';
+import '../screens/island_screen.dart';
 import '../screens/puzzle_game_screen.dart';
 import '../screens/puzzle_win_screen.dart';
 import '../screens/wallet_screen.dart';
@@ -21,6 +21,7 @@ class PuzzleNavigationService {
 
 
   const PuzzleNavigationService._();
+
 
 
 
@@ -57,8 +58,10 @@ class PuzzleNavigationService {
 
 
 
+
+
   //==================================================
-  // 🌍 فتح العالم
+  // 🌍 فتح الجزيرة
   //==================================================
 
   static Future<void> openWorld(
@@ -78,9 +81,9 @@ class PuzzleNavigationService {
 
         builder: (_) =>
 
-            PuzzleLevelScreen(
+            IslandScreen(
 
-              puzzle: puzzle,
+              island: puzzle,
 
             ),
 
@@ -90,6 +93,9 @@ class PuzzleNavigationService {
 
 
   }
+
+
+
 
 
 
@@ -164,6 +170,9 @@ class PuzzleNavigationService {
 
 
 
+
+
+
   //==================================================
   // 🎉 الفوز
   //==================================================
@@ -210,6 +219,9 @@ class PuzzleNavigationService {
 
 
   }
+
+
+
 
 
 
@@ -337,6 +349,9 @@ class PuzzleNavigationService {
 
 
 
+
+
+
   //==================================================
   // 🔄 إعادة المرحلة
   //==================================================
@@ -379,6 +394,9 @@ class PuzzleNavigationService {
 
 
 
+
+
+
   //==================================================
   // 💰 المحفظة
   //==================================================
@@ -411,6 +429,9 @@ class PuzzleNavigationService {
 
 
 
+
+
+
   //==================================================
   // 🔙 رجوع
   //==================================================
@@ -434,6 +455,9 @@ class PuzzleNavigationService {
 
 
   }
+
+
+
 
 
 
