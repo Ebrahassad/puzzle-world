@@ -38,6 +38,7 @@ class IslandScreen extends StatefulWidget {
 
 
 
+
 class _IslandScreenState
     extends State<IslandScreen>
     with SingleTickerProviderStateMixin {
@@ -103,9 +104,9 @@ class _IslandScreenState
 
     floatAnimation = Tween<double>(
 
-      begin:-8,
+      begin:-10,
 
-      end:8,
+      end:10,
 
     ).animate(
 
@@ -168,18 +169,7 @@ class _IslandScreenState
 
 
 
-  String levelImage(int level){
-
-
-    return
-
-    "assets/images/Puzzle/${widget.island.id}/level_$level.png";
-
-
-  }
-
-
-  void openLevel(int level){
+  void openLevel(){
 
 
     if(!unlocked){
@@ -269,9 +259,9 @@ class _IslandScreenState
 
                 Image.asset(
 
-                  "assets/images/ui/level_lock.png",
+                  "assets/images/ui/lock.png",
 
-                  height:80,
+                  height:70,
 
 
                   errorBuilder:
@@ -281,7 +271,7 @@ class _IslandScreenState
 
                       Icons.lock,
 
-                      size:70,
+                      size:65,
 
                     );
 
@@ -296,15 +286,21 @@ class _IslandScreenState
 
 
 
-                Text(
+                const Text(
 
-                  "🔒 المستوى مقفل",
+                  "🔒 الجزيرة مغلقة",
 
                   style:
 
-                  Theme.of(context)
-                      .textTheme
-                      .titleLarge,
+                  TextStyle(
+
+                    fontSize:22,
+
+                    fontWeight:
+
+                    FontWeight.bold,
+
+                  ),
 
                 ),
 
@@ -316,12 +312,21 @@ class _IslandScreenState
 
 
 
-                const Text(
+                Text(
 
-                  "اكمل المراحل السابقة لفتح المستوى",
+                  "تحتاج ⭐ ${widget.island.requiredStars} لفتح الجزيرة",
 
                   textAlign:
+
                   TextAlign.center,
+
+                  style:
+
+                  const TextStyle(
+
+                    fontSize:16,
+
+                  ),
 
                 ),
 
@@ -378,12 +383,12 @@ class _IslandScreenState
 
 
 
-
-  Widget levelCard(int level){
+  Widget levelButton(int level){
 
 
 
     bool open =
+
     level == 1;
 
 
@@ -391,41 +396,43 @@ class _IslandScreenState
     return GestureDetector(
 
 
-      onTap:(){
 
+      onTap:(){
 
         if(open){
 
-          openLevel(level);
+          openLevel();
 
         }
+
         else{
 
           showLockedDialog();
 
         }
 
-
       },
 
 
 
-      child:Container(
+      child:AnimatedContainer(
 
 
-        margin:
 
-        const EdgeInsets.symmetric(
+        duration:
 
-          horizontal:20,
+        const Duration(
 
-          vertical:8,
+          milliseconds:180,
 
         ),
 
 
 
-        height:95,
+        width:75,
+
+
+        height:75,
 
 
 
@@ -433,12 +440,14 @@ class _IslandScreenState
 
 
           color:
-          Colors.white.withOpacity(.85),
+
+          Colors.white.withOpacity(.90),
 
 
 
           borderRadius:
-          BorderRadius.circular(25),
+
+          BorderRadius.circular(22),
 
 
 
@@ -447,12 +456,15 @@ class _IslandScreenState
 
             const BoxShadow(
 
-              blurRadius:8,
-
               color:Colors.black26,
 
-            ),
+              blurRadius:8,
 
+              offset:
+
+              Offset(0,4),
+
+            ),
 
           ],
 
@@ -461,131 +473,57 @@ class _IslandScreenState
 
 
 
-        child:Stack(
+        child:Center(
 
 
 
-          alignment:
-          Alignment.center,
+          child:open
 
 
 
-          children:[
+              ? Text(
 
+            "$level",
 
+            style:
 
-            Row(
+            const TextStyle(
 
+              fontSize:24,
 
-              children:[
+              fontWeight:
 
-
-
-                const SizedBox(width:15),
-
-
-
-
-                Image.asset(
-
-
-                  levelImage(level),
-
-
-                  width:70,
-
-
-                  height:70,
-
-
-                  fit:
-                  BoxFit.contain,
-
-
-                ),
-
-
-
-
-                const SizedBox(width:20),
-
-
-
-
-                Text(
-
-
-                  "المستوى $level",
-
-
-                  style:
-
-                  const TextStyle(
-
-                    fontSize:22,
-
-                    fontWeight:
-                    FontWeight.bold,
-
-                  ),
-
-
-                ),
-
-
-
-              ],
-
+              FontWeight.bold,
 
             ),
 
+          )
 
+              :
 
+          Image.asset(
 
+            "assets/images/ui/lock.png",
 
+            width:35,
 
-            if(!open)
+            height:35,
 
+            errorBuilder:
 
-              Positioned(
+                (_,__,___){
 
+              return const Icon(
 
-                right:20,
+                Icons.lock,
 
+                size:35,
 
-                child:Image.asset(
+              );
 
+            },
 
-                  "assets/images/ui/level_lock.png",
-
-
-                  width:38,
-
-
-                  height:38,
-
-
-                  errorBuilder:
-                      (_,__,___){
-
-                    return const Icon(
-
-                      Icons.lock,
-
-                      size:38,
-
-                    );
-
-                  },
-
-                ),
-
-
-              ),
-
-
-
-          ],
+          ),
 
 
 
@@ -594,6 +532,7 @@ class _IslandScreenState
 
 
       ),
+
 
 
     );
@@ -605,78 +544,51 @@ class _IslandScreenState
   Widget build(BuildContext context){
 
 
-
     return Scaffold(
 
 
-
       body:Stack(
-
 
 
         children:[
 
 
 
-
-
+          // الخلفية
 
           Positioned.fill(
 
-
-
-            child:
-
-            Container(
-
-
+            child:Container(
 
               decoration:
 
               const BoxDecoration(
 
-
-
                 gradient:
 
                 LinearGradient(
 
-
-
                   colors:[
-
 
                     Color(0xff8ED6FF),
 
                     Color(0xffDDF6FF),
 
-
                   ],
-
-
 
                   begin:
 
                   Alignment.topCenter,
 
-
-
                   end:
 
                   Alignment.bottomCenter,
 
-
                 ),
-
-
 
               ),
 
-
-
             ),
-
-
 
           ),
 
@@ -685,52 +597,41 @@ class _IslandScreenState
 
 
 
+          // الجزيرة العائمة الشفافة بالخلف
 
           Align(
-
-
 
             alignment:
 
             Alignment.topCenter,
 
 
-
             child:
 
             Padding(
-
-
 
               padding:
 
               const EdgeInsets.only(
 
-                top:80,
+                top:90,
 
               ),
-
 
 
               child:
 
               AnimatedBuilder(
 
-
-
                 animation:
 
                 floatAnimation,
 
 
-
                 builder:(context,child){
 
 
-
                   return Transform.translate(
-
-
 
                     offset:
 
@@ -743,79 +644,51 @@ class _IslandScreenState
                     ),
 
 
-
                     child:
 
                     child,
 
-
                   );
-
 
 
                 },
 
 
-
                 child:
 
-                Hero(
+                Opacity(
 
-
-
-                  tag:
-
-                  widget.island.id,
-
+                  opacity:0.55,
 
 
                   child:
 
                   Image.asset(
 
+                    widget.island.image,
 
-
-                    "assets/images/islands/${widget.island.id}_island.png",
-
-
-
-                    height:260,
-
-
+                    height:320,
 
                     fit:
 
                     BoxFit.contain,
 
 
-
                     errorBuilder:
 
                         (_,__,___){
-
-
 
                       return const SizedBox();
 
                     },
 
-
-
                   ),
-
-
 
                 ),
 
-
-
               ),
 
-
-
             ),
-
-
 
           ),
 
@@ -825,10 +698,9 @@ class _IslandScreenState
 
 
 
+          // الشريط العلوي
 
           Positioned(
-
-
 
             top:0,
 
@@ -837,17 +709,13 @@ class _IslandScreenState
             right:0,
 
 
-
             child:
 
             GameToolbar(
 
-
-
               logo:
 
               "assets/images/ui/puzzle_logo.png",
-
 
 
               stars:
@@ -855,11 +723,9 @@ class _IslandScreenState
               totalStars,
 
 
-
               coins:
 
               coins,
-
 
 
               rewards:
@@ -867,28 +733,20 @@ class _IslandScreenState
               rewards,
 
 
-
               starKey:
 
               starKey,
 
 
-
               onBack:(){
 
-
-
                 Navigator.pop(context);
-
-
 
               },
 
 
             ),
 
-
-
           ),
 
 
@@ -897,73 +755,101 @@ class _IslandScreenState
 
 
 
+          // اسم الجزيرة مع حركة الطفو
+
           Positioned(
 
-
-
-            top:310,
-
-
+            top:330,
 
             left:20,
 
             right:20,
 
 
-
             child:
 
-            Text(
+            AnimatedBuilder(
+
+              animation:
+
+              floatAnimation,
 
 
-
-              widget.island.title,
-
+              builder:(context,child){
 
 
-              textAlign:
+                return Transform.translate(
 
-              TextAlign.center,
+                  offset:
 
+                  Offset(
 
+                    0,
 
-              style:
-
-              const TextStyle(
-
-
-
-                fontSize:28,
-
-                fontWeight:
-                FontWeight.bold,
-
-                color:
-                Colors.white,
-
-                shadows:[
-
-
-
-                  Shadow(
-
-                    blurRadius:5,
-
-                    color:Colors.black54,
+                    floatAnimation.value,
 
                   ),
 
 
-                ],
+                  child:
 
+                  child,
+
+                );
+
+
+              },
+
+
+              child:
+
+              Text(
+
+                widget.island.title,
+
+
+                textAlign:
+
+                TextAlign.center,
+
+
+                style:
+
+                const TextStyle(
+
+                  fontSize:30,
+
+                  fontWeight:
+
+                  FontWeight.bold,
+
+                  color:
+
+                  Colors.white,
+
+                  shadows:[
+
+                    Shadow(
+
+                      color:
+
+                      Colors.black54,
+
+                      blurRadius:8,
+
+                      offset:
+
+                      Offset(0,3),
+
+                    ),
+
+                  ],
+
+                ),
 
               ),
 
-
-
             ),
-
-
 
           ),
 
@@ -973,28 +859,46 @@ class _IslandScreenState
 
 
 
+          // أزرار المراحل
+
           Positioned.fill(
 
-
-
-            top:360,
-
+            top:410,
 
 
             child:
 
-            ListView.builder(
-
+            GridView.builder(
 
 
               padding:
 
-              const EdgeInsets.only(
+              const EdgeInsets.symmetric(
 
-                bottom:30,
+                horizontal:25,
+
+                vertical:15,
 
               ),
 
+
+              gridDelegate:
+
+              const SliverGridDelegateWithFixedCrossAxisCount(
+
+
+                crossAxisCount:5,
+
+
+                crossAxisSpacing:12,
+
+
+                mainAxisSpacing:12,
+
+
+                childAspectRatio:1,
+
+              ),
 
 
               itemCount:
@@ -1002,47 +906,35 @@ class _IslandScreenState
               widget.island.totalLevels,
 
 
-
-              itemBuilder:
-
-                  (context,index){
+              itemBuilder:(context,index){
 
 
-
-                return levelCard(
+                return levelButton(
 
                   index+1,
 
                 );
 
 
-
               },
-
 
 
             ),
 
-
-
           ),
-
 
 
 
         ],
 
 
-
       ),
-
 
 
     );
 
 
   }
-
 
 
 
