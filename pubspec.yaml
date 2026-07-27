@@ -43,27 +43,17 @@ dev_dependencies:
 
 
 flutter:
-
   uses-material-design: true
 
-
-
   assets:
-
     - assets/images/Puzzle/
-
     - assets/images/background/
-
     - assets/images/ui/
-
     - assets/images/world/
-
+    - assets/images/islands/
     - assets/images/rewards/
-
     - assets/icon/
-
     - assets/audio/
-
 
 
 
