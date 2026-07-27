@@ -53,13 +53,10 @@ class _PuzzlePieceWidgetState
   ui.Image? loadedImage;
 
 
-
   ImageStream? imageStream;
 
 
-
   bool pressed = false;
-
 
 
   late AnimationController glowController;
@@ -72,7 +69,6 @@ class _PuzzlePieceWidgetState
 
   @override
   void initState(){
-
 
     super.initState();
 
@@ -111,8 +107,8 @@ class _PuzzlePieceWidgetState
 
 
 
-  void _loadImage(){
 
+  void _loadImage(){
 
 
     final stream = widget.image.resolve(
@@ -122,19 +118,15 @@ class _PuzzlePieceWidgetState
     );
 
 
-
     imageStream = stream;
 
 
 
     stream.addListener(
 
-
-
       ImageStreamListener(
 
             (info, synchronousCall){
-
 
 
           if(!mounted){
@@ -147,19 +139,14 @@ class _PuzzlePieceWidgetState
 
           setState((){
 
-
             loadedImage = info.image;
 
-
           });
-
 
 
         },
 
       ),
-
-
 
     );
 
@@ -182,18 +169,16 @@ class _PuzzlePieceWidgetState
       ){
 
 
-
     super.didUpdateWidget(oldWidget);
 
 
 
     if(oldWidget.image != widget.image){
 
-
       _loadImage();
 
-
     }
+
 
 
 
@@ -212,7 +197,6 @@ class _PuzzlePieceWidgetState
     }
 
 
-
   }
 
 
@@ -227,9 +211,7 @@ class _PuzzlePieceWidgetState
   void dispose(){
 
 
-
     glowController.dispose();
-
 
 
     super.dispose();
@@ -248,13 +230,10 @@ class _PuzzlePieceWidgetState
   Widget build(BuildContext context){
 
 
-
     return RepaintBoundary(
 
 
-
       child:GestureDetector(
-
 
 
         onTapDown:(_){
@@ -265,9 +244,7 @@ class _PuzzlePieceWidgetState
 
             setState((){
 
-
-              pressed=true;
-
+              pressed = true;
 
             });
 
@@ -282,14 +259,15 @@ class _PuzzlePieceWidgetState
         onTapUp:(_){
 
 
+          if(mounted){
 
-          setState((){
+            setState((){
 
+              pressed=false;
 
-            pressed=false;
+            });
 
-
-          });
+          }
 
 
         },
@@ -299,27 +277,25 @@ class _PuzzlePieceWidgetState
         onTapCancel:(){
 
 
+          if(mounted){
 
-          setState((){
+            setState((){
 
+              pressed=false;
 
-            pressed=false;
+            });
 
-
-          });
+          }
 
 
         },
 
 
 
-
         child:AnimatedScale(
 
 
-
           scale: pressed ? 1.05 : 1,
-
 
 
           duration:
@@ -333,9 +309,7 @@ class _PuzzlePieceWidgetState
 
 
 
-
           child:CustomPaint(
-
 
 
             size:Size(
@@ -348,17 +322,16 @@ class _PuzzlePieceWidgetState
 
 
 
-
             painter:PuzzlePainter(
-
 
 
               piece:widget.piece,
 
 
+              image:widget.image,
+
 
               cachedImage:loadedImage,
-
 
 
             ),
@@ -374,7 +347,6 @@ class _PuzzlePieceWidgetState
 
 
       ),
-
 
 
     );
