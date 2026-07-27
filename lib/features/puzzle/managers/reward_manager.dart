@@ -21,9 +21,18 @@ class RewardManager {
 
   static Future<int> getCoins() async {
 
-    return PuzzleProgressManager.getCoins();
+    try {
+
+      return await PuzzleProgressManager.getCoins();
+
+    } catch (_) {
+
+      return 0;
+
+    }
 
   }
+
 
 
 
@@ -35,10 +44,14 @@ class RewardManager {
       ) async {
 
 
-    await PuzzleProgressManager.addCoins(amount);
+    try {
 
+      await PuzzleProgressManager.addCoins(amount);
+
+    } catch (_) {}
 
   }
+
 
 
 
@@ -50,8 +63,11 @@ class RewardManager {
       ) async {
 
 
-    await PuzzleProgressManager.addCoins(-amount);
+    try {
 
+      await PuzzleProgressManager.addCoins(-amount);
+
+    } catch (_) {}
 
   }
 
@@ -69,7 +85,17 @@ class RewardManager {
 
   static Future<int> getGems() async {
 
-    return PuzzleProgressManager.getGems();
+
+    try {
+
+      return await PuzzleProgressManager.getGems();
+
+    } catch (_) {
+
+      return 0;
+
+    }
+
 
   }
 
@@ -84,8 +110,11 @@ class RewardManager {
       ) async {
 
 
-    await PuzzleProgressManager.addGems(amount);
+    try {
 
+      await PuzzleProgressManager.addGems(amount);
+
+    } catch (_) {}
 
   }
 
@@ -100,8 +129,11 @@ class RewardManager {
       ) async {
 
 
-    await PuzzleProgressManager.addGems(-amount);
+    try {
 
+      await PuzzleProgressManager.addGems(-amount);
+
+    } catch (_) {}
 
   }
 
@@ -119,7 +151,17 @@ class RewardManager {
 
   static Future<int> getStars() async {
 
-    return PuzzleProgressManager.getStars();
+
+    try {
+
+      return await PuzzleProgressManager.getStars();
+
+    } catch (_) {
+
+      return 0;
+
+    }
+
 
   }
 
@@ -134,17 +176,13 @@ class RewardManager {
       ) async {
 
 
-    await PuzzleProgressManager.addStars(amount);
+    try {
 
+      await PuzzleProgressManager.addStars(amount);
+
+    } catch (_) {}
 
   }
-
-
-
-
-
-
-
 
 
   //==================================================
@@ -163,145 +201,156 @@ class RewardManager {
   }) async {
 
 
-
-    final claimed =
-
-    await PuzzleProgressManager.isRewardClaimed(
-
-      rewardKey,
-
-    );
+    try {
 
 
+      final claimed =
+
+      await PuzzleProgressManager.isRewardClaimed(
+
+        rewardKey,
+
+      );
 
 
-    if(claimed){
+
+
+
+      if(claimed){
+
+        return null;
+
+      }
+
+
+
+
+
+
+      int coins;
+
+      int gems = 0;
+
+      int stars;
+
+
+
+
+
+      switch(difficulty){
+
+
+        case 1:
+
+          coins = 50;
+
+          stars = 1;
+
+          break;
+
+
+
+
+        case 2:
+
+          coins = 100;
+
+          stars = 2;
+
+          break;
+
+
+
+
+        case 3:
+
+          coins = 150;
+
+          gems = 1;
+
+          stars = 3;
+
+          break;
+
+
+
+
+        default:
+
+          coins = 200;
+
+          gems = 2;
+
+          stars = 5;
+
+          break;
+
+
+      }
+
+
+
+
+
+
+
+      await addCoins(coins);
+
+
+
+
+
+      if(gems > 0){
+
+        await addGems(gems);
+
+      }
+
+
+
+
+
+
+      await addStars(stars);
+
+
+
+
+
+
+
+      await PuzzleProgressManager.markRewardClaimed(
+
+        rewardKey,
+
+      );
+
+
+
+
+
+
+
+
+      return RewardResultModel(
+
+        coins: coins,
+
+        gems: gems,
+
+        stars: stars,
+
+      );
+
+
+
+    } catch (_) {
+
 
       return null;
 
-    }
-
-
-
-
-
-
-    int coins;
-
-    int gems = 0;
-
-    int stars;
-
-
-
-
-
-    switch(difficulty){
-
-
-      case 1:
-
-        coins = 50;
-
-        stars = 1;
-
-        break;
-
-
-
-
-      case 2:
-
-        coins = 100;
-
-        stars = 2;
-
-        break;
-
-
-
-
-      case 3:
-
-        coins = 150;
-
-        gems = 1;
-
-        stars = 3;
-
-        break;
-
-
-
-
-      default:
-
-        coins = 200;
-
-        gems = 2;
-
-        stars = 5;
-
-        break;
-
 
     }
-
-
-
-
-
-
-
-    await addCoins(coins);
-
-
-
-
-
-    if(gems > 0){
-
-      await addGems(gems);
-
-    }
-
-
-
-
-
-
-    // إضافة Golden Stars إلى الرصيد
-
-    await addStars(stars);
-
-
-
-
-
-
-
-    await PuzzleProgressManager.markRewardClaimed(
-
-      rewardKey,
-
-    );
-
-
-
-
-
-
-
-
-    return RewardResultModel(
-
-      coins: coins,
-
-      gems: gems,
-
-      stars: stars,
-
-    );
 
 
   }
@@ -315,62 +364,177 @@ class RewardManager {
 
 
   //==================================================
-  // 🎬 مكافأة الإعلان
+  // 🎬 مكافأة مشاهدة الإعلان
+  //==================================================
+
+
+  static Future<RewardResultModel?>
+
+  rewardedAdBonus() async {
+
+
+    try {
+
+
+      const reward = RewardResultModel(
+
+        coins:100,
+
+        gems:0,
+
+        stars:1,
+
+      );
+
+
+
+
+
+
+      await addCoins(
+
+        reward.coins,
+
+      );
+
+
+
+
+
+
+      await addStars(
+
+        reward.stars,
+
+      );
+
+
+
+
+
+
+      if(reward.gems > 0){
+
+        await addGems(
+
+          reward.gems,
+
+        );
+
+      }
+
+
+
+
+
+
+
+      return reward;
+
+
+
+    } catch (_) {
+
+
+      return null;
+
+
+    }
+
+
+  }
+
+
+
+
+
+
+
+
+
+  //==================================================
+  // ⭐ مضاعفة مكافأة الفوز بعد الإعلان
   //==================================================
 
 
   static Future<RewardResultModel>
 
-  rewardedAdBonus() async {
+  doubleReward(
+
+      RewardResultModel reward,
+
+      ) async {
 
 
-
-    const reward = RewardResultModel(
-
-      coins:100,
-
-      gems:0,
-
-      stars:1,
-
-    );
+    try {
 
 
+      final doubled = RewardResultModel(
 
+        coins: reward.coins * 2,
 
+        gems: reward.gems * 2,
 
-    await addCoins(
+        stars: reward.stars * 2,
 
-      reward.coins,
-
-    );
+      );
 
 
 
 
 
-    await addStars(
 
-      reward.stars,
+      await addCoins(
 
-    );
+        reward.coins,
 
-
-
+      );
 
 
-    return reward;
+
+
+
+      await addStars(
+
+        reward.stars,
+
+      );
+
+
+
+
+
+
+      if(reward.gems > 0){
+
+        await addGems(
+
+          reward.gems,
+
+        );
+
+      }
+
+
+
+
+
+
+
+      return doubled;
+
+
+
+    } catch (_) {
+
+
+      return reward;
+
+
+    }
 
 
   }
-
-
-
-
-
-
-
-
 
   //==================================================
   // 🎁 المكافأة اليومية
@@ -382,71 +546,83 @@ class RewardManager {
   canClaimDailyReward() async {
 
 
-
-    final prefs =
-
-    await SharedPreferences.getInstance();
+    try {
 
 
+      final prefs =
 
-
-
-    const key =
-
-    "puzzle_daily_reward";
+      await SharedPreferences.getInstance();
 
 
 
 
 
-    final saved =
+      const key =
 
-    prefs.getString(key);
-
-
+      "puzzle_daily_reward";
 
 
 
 
-    if(saved == null){
+
+      final saved =
+
+      prefs.getString(key);
+
+
+
+
+
+
+      if(saved == null){
+
+        return true;
+
+      }
+
+
+
+
+
+
+
+      final last =
+
+      DateTime.parse(saved);
+
+
+
+
+
+
+      final now =
+
+      DateTime.now();
+
+
+
+
+
+
+      return
+
+          last.year != now.year ||
+
+          last.month != now.month ||
+
+          last.day != now.day;
+
+
+
+    } catch (_) {
+
 
       return true;
+
 
     }
 
 
-
-
-
-
-
-    final last =
-
-    DateTime.parse(saved);
-
-
-
-
-
-
-    final now =
-
-    DateTime.now();
-
-
-
-
-
-
-    return
-
-        last.year != now.year ||
-
-        last.month != now.month ||
-
-        last.day != now.day;
-
-
   }
 
 
@@ -456,52 +632,166 @@ class RewardManager {
 
 
 
-  static Future<void>
+  static Future<RewardResultModel?>
 
   claimDailyReward() async {
 
 
-
-    final prefs =
-
-    await SharedPreferences.getInstance();
+    try {
 
 
+      final canClaim =
 
-
-
-    await prefs.setString(
-
-      "puzzle_daily_reward",
-
-      DateTime.now()
-
-          .toIso8601String(),
-
-    );
+      await canClaimDailyReward();
 
 
 
 
 
-    await addCoins(100);
+      if(!canClaim){
+
+        return null;
+
+      }
 
 
 
 
 
-    await addGems(1);
+
+      final prefs =
+
+      await SharedPreferences.getInstance();
 
 
 
 
 
-    await addStars(1);
+
+      await prefs.setString(
+
+        "puzzle_daily_reward",
+
+        DateTime.now()
+
+            .toIso8601String(),
+
+      );
+
+
+
+
+
+
+
+
+      const reward = RewardResultModel(
+
+        coins:100,
+
+        gems:1,
+
+        stars:1,
+
+      );
+
+
+
+
+
+
+
+
+      await addCoins(
+
+        reward.coins,
+
+      );
+
+
+
+
+
+
+
+      await addGems(
+
+        reward.gems,
+
+      );
+
+
+
+
+
+
+
+      await addStars(
+
+        reward.stars,
+
+      );
+
+
+
+
+
+
+
+      return reward;
+
+
+
+    } catch (_) {
+
+
+      return null;
+
+
+    }
 
 
   }
 
 
+
+
+
+
+
+
+
+  //==================================================
+  // 🧹 تنظيف مكافأة يومية
+  //==================================================
+
+
+  static Future<void>
+
+  resetDailyReward() async {
+
+
+    try {
+
+
+      final prefs =
+
+      await SharedPreferences.getInstance();
+
+
+
+
+      await prefs.remove(
+
+        "puzzle_daily_reward",
+
+      );
+
+
+
+    } catch (_) {}
+
+  }
 
 
 
