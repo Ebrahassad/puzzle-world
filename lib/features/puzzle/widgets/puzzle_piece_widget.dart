@@ -29,9 +29,14 @@ class PuzzlePieceWidget extends StatefulWidget {
 
 
 
+
+
+
   @override
   State<PuzzlePieceWidget> createState() =>
       _PuzzlePieceWidgetState();
+
+
 
 }
 
@@ -40,20 +45,31 @@ class PuzzlePieceWidget extends StatefulWidget {
 
 
 
+
+
+
 class _PuzzlePieceWidgetState
+
     extends State<PuzzlePieceWidget>{
+
 
 
   ImageInfo? imageInfo;
 
 
 
+
+
+
   @override
   void didChangeDependencies(){
 
+
     super.didChangeDependencies();
 
-    _loadImage();
+
+    loadImage();
+
 
   }
 
@@ -61,10 +77,16 @@ class _PuzzlePieceWidgetState
 
 
 
-  void _loadImage(){
 
 
-    final stream = widget.image.resolve(
+
+  void loadImage(){
+
+
+
+    final stream =
+
+    widget.image.resolve(
 
       createLocalImageConfiguration(context),
 
@@ -72,32 +94,51 @@ class _PuzzlePieceWidgetState
 
 
 
+
+
+
     stream.addListener(
+
+
 
       ImageStreamListener(
 
             (info,_){
 
 
+
           if(mounted){
+
+
 
             setState((){
 
+
+
               imageInfo = info;
+
+
 
             });
 
+
+
           }
+
 
 
         },
 
       ),
 
+
+
     );
 
 
+
   }
+
 
 
 
@@ -127,6 +168,8 @@ class _PuzzlePieceWidgetState
 
 
 
+
+
       painter:
 
       PuzzlePiecePainter(
@@ -150,6 +193,7 @@ class _PuzzlePieceWidgetState
 
 
     );
+
 
 
   }
@@ -176,6 +220,9 @@ class PuzzlePiecePainter extends CustomPainter {
 
 
 
+
+
+
   PuzzlePiecePainter({
 
     required this.piece,
@@ -190,7 +237,10 @@ class PuzzlePiecePainter extends CustomPainter {
 
 
 
+
+
   @override
+
   void paint(
 
       Canvas canvas,
@@ -220,53 +270,10 @@ class PuzzlePiecePainter extends CustomPainter {
 
 
 
-    final scaleX =
-
-        image.width / 330;
-
-
-
-    final scaleY =
-
-        image.height / 330;
-
-
-
-
-
-
-
-    final source = Rect.fromLTWH(
-
-
-
-      piece.sourceRect.left * scaleX,
-
-
-
-      piece.sourceRect.top * scaleY,
-
-
-
-      piece.sourceRect.width * scaleX,
-
-
-
-      piece.sourceRect.height * scaleY,
-
-
-
-    );
-
-
-
-
-
 
     final paint = Paint()
 
       ..filterQuality = FilterQuality.high;
-
 
 
 
@@ -281,7 +288,7 @@ class PuzzlePiecePainter extends CustomPainter {
 
 
 
-      source,
+      piece.sourceRect,
 
 
 
@@ -297,7 +304,40 @@ class PuzzlePiecePainter extends CustomPainter {
 
 
 
+
+
+
+
+    // إطار خفيف للقطعة
+
+    canvas.drawRect(
+
+
+
+      Offset.zero & size,
+
+
+
+      Paint()
+
+        ..style = PaintingStyle.stroke
+
+        ..strokeWidth = piece.placed ? 3 : 1
+
+        ..color = piece.placed
+
+            ? Colors.greenAccent
+
+            : Colors.white,
+
+
+
+    );
+
+
+
   }
+
 
 
 
@@ -318,9 +358,7 @@ class PuzzlePiecePainter extends CustomPainter {
 
     return oldDelegate.imageInfo != imageInfo ||
 
-        oldDelegate.piece.position != piece.position ||
-
-        oldDelegate.piece.placed != piece.placed;
+        oldDelegate.piece != piece;
 
 
 
