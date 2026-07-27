@@ -18,6 +18,8 @@ class PuzzleGenerator {
 
     required double imageHeight,
 
+    required double boardSize,
+
   }) {
 
 
@@ -35,7 +37,14 @@ class PuzzleGenerator {
 
 
 
+    final double screenPieceSize =
+        boardSize / columns;
+
+
+
+
     final random = Random();
+
 
 
 
@@ -78,7 +87,11 @@ class PuzzleGenerator {
 
 
 
+
+
     int index = 0;
+
+
 
 
 
@@ -92,19 +105,26 @@ class PuzzleGenerator {
 
 
 
+        // قص الصورة حسب الحجم الحقيقي
+
         final sourceRect = Rect.fromLTWH(
+
 
 
           column * pieceWidth,
 
 
+
           row * pieceHeight,
+
 
 
           pieceWidth,
 
 
+
           pieceHeight,
+
 
 
         );
@@ -124,6 +144,7 @@ class PuzzleGenerator {
           verticalEdges[row - 1][column],
 
         );
+
 
 
 
@@ -170,6 +191,7 @@ class PuzzleGenerator {
 
 
 
+
         pieces.add(
 
 
@@ -178,59 +200,81 @@ class PuzzleGenerator {
 
 
 
-            id: "piece_$index",
+            id:
+
+            "piece_$index",
 
 
 
-            row: row,
+            row:
+
+            row,
 
 
 
-            column: column,
+            column:
+
+            column,
 
 
 
-            correctPosition: index,
+            correctPosition:
+
+            index,
 
 
 
-            sourceRect: sourceRect,
+            sourceRect:
+
+            sourceRect,
 
 
 
-            top: top,
+            top:
+
+            top,
 
 
 
-            bottom: bottom,
+            bottom:
+
+            bottom,
 
 
 
-            left: left,
+            left:
+
+            left,
 
 
 
-            right: right,
+            right:
+
+            right,
 
 
 
 
 
-            // البداية تكون خارج الترتيب
 
-            // لكن داخل اللوحة
+
+            // مكان البداية داخل قسم القطع
 
             position: Offset(
 
-              random.nextDouble() *
-
-                  (imageWidth - pieceWidth),
-
 
 
               random.nextDouble() *
 
-                  (imageHeight - pieceHeight),
+                  (boardSize - screenPieceSize),
+
+
+
+
+
+              random.nextDouble() *
+
+                  (boardSize - screenPieceSize),
 
 
 
@@ -278,6 +322,7 @@ class PuzzleGenerator {
 
 
 
+
   static EdgeType _randomEdge(
 
       Random random,
@@ -293,7 +338,9 @@ class PuzzleGenerator {
         : EdgeType.blank;
 
 
+
   }
+
 
 
 
