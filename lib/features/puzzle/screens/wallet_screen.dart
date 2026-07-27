@@ -1,218 +1,151 @@
 import 'package:flutter/material.dart';
-
-import '../data/puzzle_data.dart';
-import '../data/puzzle_level_data.dart';
-import '../managers/puzzle_progress_manager.dart';
-import '../models/puzzle_model.dart';
-
-import 'puzzle_level_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
+class WalletScreen extends StatefulWidget {
 
-class WorldMapScreen extends StatefulWidget {
-
-  const WorldMapScreen({
+  const WalletScreen({
     super.key,
   });
 
 
   @override
-  State<WorldMapScreen> createState() =>
-      _WorldMapScreenState();
+  State<WalletScreen> createState() =>
+      _WalletScreenState();
 
 }
 
 
 
-class _WorldMapScreenState
-    extends State<WorldMapScreen> {
+class _WalletScreenState extends State<WalletScreen> {
 
 
-  int totalStars = 0;
+  int stars = 0;
+
+  int coins = 0;
+
+  int gems = 0;
+
 
   bool loading = true;
 
 
 
   @override
-  void initState() {
+  void initState(){
 
     super.initState();
 
-    loadStars();
-
-  }
-
-
-
-  Future<void> loadStars() async {
-
-    final stars =
-        await PuzzleProgressManager.getTotalStars();
-
-
-    if (mounted) {
-
-      setState(() {
-
-        totalStars = stars;
-
-        loading = false;
-
-      });
-
-    }
+    loadWallet();
 
   }
 
 
 
 
-  void openWorld(
-      PuzzleModel world,
-      ) {
+  Future<void> loadWallet() async {
 
 
-    if (totalStars < world.requiredStars) {
-
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-
-        SnackBar(
-
-          content: Text(
-            "تحتاج ${world.requiredStars} نجمة لفتح ${world.title}",
-          ),
-
-        ),
-
-      );
-
-      return;
-
-    }
+    final prefs =
+    await SharedPreferences.getInstance();
 
 
-
-    final levels =
-        PuzzleLevelData.getLevels(
-          world.id,
-        );
+    setState(() {
 
 
-    if (levels.isEmpty) {
+      stars =
+          prefs.getInt("wallet_stars") ?? 0;
 
-      return;
 
-    }
+      coins =
+          prefs.getInt("wallet_coins") ?? 0;
+
+
+      gems =
+          prefs.getInt("wallet_gems") ?? 0;
+
+
+      loading = false;
+
+
+    });
+
+
+  }
 
 
 
-    Navigator.push(
 
-      context,
 
-      MaterialPageRoute(
+  Future<void> saveWallet() async {
 
-        builder: (_) => PuzzleLevelScreen(
-          puzzle: world,
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+    await prefs.setInt(
+        "wallet_stars",
+        stars
+    );
+
+
+    await prefs.setInt(
+        "wallet_coins",
+        coins
+    );
+
+
+    await prefs.setInt(
+        "wallet_gems",
+        gems
+    );
+
+
+  }
+
+
+
+
+
+  // مكافأة الإعلان
+  Future<void> rewardFromAd() async {
+
+
+    setState(() {
+
+
+      stars += 1;
+
+      coins += 50;
+
+      gems += 1;
+
+
+    });
+
+
+    await saveWallet();
+
+
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+
+      const SnackBar(
+
+        content:
+        Text(
+          "🎁 حصلت على مكافأة الإعلان",
         ),
 
       ),
 
     );
 
-  }
-
-
-
-
-
-  Widget islandButton(
-      String id,
-      double x,
-      double y,
-      ) {
-
-
-    final world =
-    PuzzleData.getById(id);
-
-
-    if (world == null) {
-
-      return const SizedBox();
-
-    }
-
-
-
-    final locked =
-        totalStars < world.requiredStars;
-
-
-
-    return Positioned(
-
-      left: x - 55,
-
-      top: y - 55,
-
-      width: 110,
-
-      height: 110,
-
-      child: GestureDetector(
-
-        onTap: () {
-
-          openWorld(world);
-
-        },
-
-
-        child: Stack(
-
-          alignment: Alignment.center,
-
-          children: [
-
-
-            if (locked)
-
-              Container(
-
-                decoration: BoxDecoration(
-
-                  color: Colors.black38,
-
-                  borderRadius:
-                  BorderRadius.circular(60),
-
-                ),
-
-                child: const Icon(
-
-                  Icons.lock,
-
-                  color: Colors.white,
-
-                  size: 45,
-
-                ),
-
-              ),
-
-
-          ],
-
-        ),
-
-      ),
-
-    );
 
   }
+
 
 
 
@@ -223,17 +156,21 @@ class _WorldMapScreenState
   Widget build(BuildContext context) {
 
 
-    if (loading) {
+    if(loading){
+
 
       return const Scaffold(
 
-        body: Center(
+        body:
+        Center(
 
-          child: CircularProgressIndicator(),
+          child:
+          CircularProgressIndicator(),
 
         ),
 
       );
+
 
     }
 
@@ -241,209 +178,281 @@ class _WorldMapScreenState
 
     return Scaffold(
 
-      body: Stack(
 
-        children: [
+      appBar: AppBar(
+
+        title:
+        const Text(
+          "💰 المحفظة",
+        ),
+
+        centerTitle:true,
+
+      ),
 
 
 
-          Positioned.fill(
 
-            child: Image.asset(
+      body:
 
-              "assets/images/world/world_map.jpg",
 
-              fit: BoxFit.cover,
+      Padding(
+
+
+        padding:
+        const EdgeInsets.all(20),
+
+
+
+        child:
+
+
+        Column(
+
+
+          children:[
+
+
+
+
+            walletCard(
+
+              "⭐ النجوم الذهبية",
+
+              stars.toString(),
+
+              Colors.amber,
 
             ),
 
-          ),
 
 
 
 
-          SafeArea(
+            walletCard(
 
-            child: Column(
+              "🪙 العملات",
 
-              children: [
+              coins.toString(),
 
+              Colors.orange,
 
-                const SizedBox(height:20),
-
-
-
-                Row(
-
-                  mainAxisAlignment:
-                  MainAxisAlignment.center,
-
-                  children: [
-
-
-                    const Text(
-
-                      "🌍 Puzzle World",
-
-                      style: TextStyle(
-
-                        color: Colors.white,
-
-                        fontSize: 32,
-
-                        fontWeight:
-                        FontWeight.bold,
-
-                        shadows: [
-
-                          Shadow(
-
-                            color: Colors.black45,
-
-                            blurRadius: 8,
-
-                          ),
-
-                        ],
-
-                      ),
-
-                    ),
+            ),
 
 
 
-                    const SizedBox(width:20),
+
+
+            walletCard(
+
+              "💎 الجواهر",
+
+              gems.toString(),
+
+              Colors.blue,
+
+            ),
 
 
 
-                    Container(
 
-                      padding:
-                      const EdgeInsets.symmetric(
 
-                        horizontal:15,
 
-                        vertical:8,
+            const SizedBox(height:30),
 
-                      ),
 
-                      decoration: BoxDecoration(
 
-                        color: Colors.black26,
 
-                        borderRadius:
-                        BorderRadius.circular(20),
 
-                      ),
+            SizedBox(
 
-                      child: Text(
 
-                        "⭐ $totalStars",
+              width:double.infinity,
 
-                        style: const TextStyle(
 
-                          color: Colors.white,
+              height:55,
 
-                          fontSize:20,
 
-                          fontWeight:
-                          FontWeight.bold,
 
-                        ),
+              child:
 
-                      ),
 
-                    ),
+              ElevatedButton.icon(
 
-                  ],
 
+                onPressed:
+                rewardFromAd,
+
+
+                icon:
+                const Icon(
+                    Icons.play_circle
                 ),
 
 
+                label:
+                const Text(
 
-                Expanded(
+                  "شاهد إعلان واحصل على مكافأة",
 
-                  child: LayoutBuilder(
-
-                    builder:
-                        (context,constraints) {
-
-
-                      return Stack(
-
-                        children: [
-
-
-
-                          // جزيرة الحيوانات
-                          islandButton(
-                            "animals",
-                            256,
-                            200,
-                          ),
-
-
-
-                          // جزيرة السيارات
-                          islandButton(
-                            "cars",
-                            212,
-                            552,
-                          ),
-
-
-
-                          // جزيرة الفضاء
-                          islandButton(
-                            "space",
-                            732,
-                            252,
-                          ),
-
-
-
-                          // جزيرة المعالم
-                          islandButton(
-                            "landmarks",
-                            784,
-                            568,
-                          ),
-
-
-
-                          // جزيرة الطبيعة
-                          islandButton(
-                            "nature",
-                            380,
-                            793,
-                          ),
-
-
-
-                        ],
-
-                      );
-
-                    },
-
+                  style:
+                  TextStyle(
+                    fontSize:18,
                   ),
 
                 ),
 
 
-              ],
+              ),
+
+
+            ),
+
+
+
+
+
+          ],
+
+
+        ),
+
+
+      ),
+
+
+    );
+
+  }
+
+
+
+
+
+
+
+
+  Widget walletCard(
+
+      String title,
+
+      String value,
+
+      Color color,
+
+      ){
+
+
+
+    return Container(
+
+
+      margin:
+      const EdgeInsets.only(
+          bottom:15
+      ),
+
+
+
+      padding:
+      const EdgeInsets.all(20),
+
+
+
+      decoration:
+
+      BoxDecoration(
+
+        color:
+        color.withOpacity(.15),
+
+
+        borderRadius:
+        BorderRadius.circular(20),
+
+
+
+        border:
+
+        Border.all(
+
+          color:color,
+
+          width:2,
+
+        ),
+
+
+      ),
+
+
+
+
+      child:
+
+
+      Row(
+
+
+        mainAxisAlignment:
+        MainAxisAlignment.spaceBetween,
+
+
+        children:[
+
+
+
+          Text(
+
+            title,
+
+            style:
+            const TextStyle(
+
+              fontSize:20,
+
+              fontWeight:
+              FontWeight.bold,
 
             ),
 
           ),
 
 
+
+
+          Text(
+
+            value,
+
+            style:
+
+            TextStyle(
+
+              fontSize:26,
+
+              color:color,
+
+              fontWeight:
+              FontWeight.bold,
+
+            ),
+
+          ),
+
+
+
         ],
+
 
       ),
 
+
     );
 
+
   }
+
+
 
 }
