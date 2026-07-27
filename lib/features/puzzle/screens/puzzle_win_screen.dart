@@ -12,12 +12,12 @@ import '../services/puzzle_audio_service.dart';
 import '../services/puzzle_event_service.dart';
 import '../services/puzzle_statistics_service.dart';
 import '../services/puzzle_achievement_service.dart';
-
 import '../services/puzzle_save_service.dart';
 
 
 
 class PuzzleWinScreen extends StatefulWidget {
+
 
   final GameResultModel result;
 
@@ -32,6 +32,7 @@ class PuzzleWinScreen extends StatefulWidget {
   final VoidCallback? onBackToWorld;
 
   final VoidCallback? onBackToHome;
+
 
 
   const PuzzleWinScreen({
@@ -55,11 +56,15 @@ class PuzzleWinScreen extends StatefulWidget {
   });
 
 
+
   @override
   State<PuzzleWinScreen> createState() =>
       _PuzzleWinScreenState();
 
+
 }
+
+
 
 
 
@@ -78,59 +83,59 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
   bool saved = false;
 
 
+
   late AnimationController animationController;
 
   late Animation<double> scaleAnimation;
 
 
 
-
   @override
   void initState(){
 
+
     super.initState();
+
 
 
     animationController = AnimationController(
 
       vsync: this,
 
-      duration: const Duration(seconds: 1),
+      duration: const Duration(seconds:1),
 
     )
-      ..repeat(reverse: true);
+      ..repeat(reverse:true);
+
 
 
 
     scaleAnimation = Tween<double>(
 
-      begin: 1,
+      begin:1,
 
-      end: 1.15,
+      end:1.12,
 
     ).animate(
 
       CurvedAnimation(
 
-        parent: animationController,
+        parent:animationController,
 
-        curve: Curves.easeInOut,
+        curve:Curves.easeInOut,
 
       ),
 
     );
 
 
+
     initialize();
+
 
   }
 
-
-
-
-
-
-
+ id="pws2"
   Future<void> initialize() async {
 
 
@@ -158,11 +163,14 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
   Future<void> saveCompletion() async {
 
 
+
     if(saved){
 
       return;
 
     }
+
+
 
 
 
@@ -176,15 +184,22 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
+
+
     await PuzzleWorldService.completeLevel(
+
 
       worldId: widget.worldId!,
 
+
       level: widget.level!,
+
 
       stars: widget.result.stars,
 
+
     );
+
 
 
 
@@ -193,13 +208,19 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
     await PuzzleStatisticsService.addCompletedPuzzle(
 
+
       stars: widget.result.stars,
+
 
       moves: widget.result.moves,
 
+
       seconds: widget.result.seconds,
 
+
     );
+
+
 
 
 
@@ -208,11 +229,16 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
     await PuzzleSaveService.saveLastPlayed(
 
+
       worldId: widget.worldId!,
+
 
       levelId: "level_${widget.level}",
 
+
     );
+
+
 
 
 
@@ -221,13 +247,19 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
     await PuzzleAchievementService.checkPuzzleAchievements(
 
+
       worldId: widget.worldId,
+
 
       level: widget.level,
 
+
       result: widget.result,
 
+
     );
+
+
 
 
 
@@ -236,15 +268,21 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
     await PuzzleEventService.levelCompleted(
 
+
       worldId: widget.worldId,
+
 
       level: widget.level,
 
+
       stars: widget.result.stars,
+
 
       moves: widget.result.moves,
 
+
       seconds: widget.result.seconds,
+
 
     );
 
@@ -253,11 +291,8 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
-    
-
-
-
     saved = true;
+
 
 
   }
@@ -268,18 +303,30 @@ class _PuzzleWinScreenState extends State<PuzzleWinScreen>
 
 
 
+
   //==================================================
-  // تحميل المكافأة
+  // تحميل مكافأة المستوى
   //==================================================
 
   Future<void> loadReward() async {
 
 
-    final result =
-await RewardManager.completePuzzle(
-  difficulty: widget.difficulty,
-  rewardKey: "${widget.worldId}_level_${widget.level}",
-);
+
+    final result = await RewardManager.completePuzzle(
+
+
+      difficulty: widget.difficulty,
+
+
+      rewardKey:
+      "${widget.worldId}_level_${widget.level}",
+
+
+    );
+
+
+
+
 
     if(!mounted){
 
@@ -289,16 +336,25 @@ await RewardManager.completePuzzle(
 
 
 
+
+
+
     setState((){
+
 
       reward = result;
 
+
       loading = false;
+
+
 
     });
 
 
+
   }
+
 
 
 
@@ -313,6 +369,7 @@ await RewardManager.completePuzzle(
   Future<void> doubleReward() async {
 
 
+
     if(adUsed || reward == null){
 
       return;
@@ -321,8 +378,14 @@ await RewardManager.completePuzzle(
 
 
 
+
+
     final watched = await PuzzleRewardAdService
+
         .watchAdForDoubleReward();
+
+
+
 
 
 
@@ -335,21 +398,21 @@ await RewardManager.completePuzzle(
 
 
 
+
+
     await PuzzleEventService.rewardDoubled(
 
-      
-
-      
 
       coins: reward!.coins,
 
+
       gems: reward!.gems,
+
 
     );
 
 
 
-    
 
 
 
@@ -363,16 +426,31 @@ await RewardManager.completePuzzle(
 
 
 
+
+
+
     setState((){
+
 
       reward = reward!.multiply(2);
 
+
       adUsed = true;
+
+
 
     });
 
 
+
   }
+
+
+
+
+
+
+
 
   //==================================================
   // المرحلة التالية
@@ -381,13 +459,21 @@ await RewardManager.completePuzzle(
   Future<void> nextLevel() async {
 
 
+
     if(widget.onNextLevel != null){
+
 
       widget.onNextLevel!();
 
+
       return;
 
+
     }
+
+
+
+
 
 
 
@@ -395,663 +481,541 @@ await RewardManager.completePuzzle(
         widget.level != null){
 
 
+
       await PuzzleNavigationService.openNextLevel(
+
 
         context,
 
+
         worldId: widget.worldId!,
+
 
         currentLevel: widget.level!,
 
+
       );
 
-    }
-
-
-  }
-
-
-
-
-
-
-  //==================================================
-  // العودة للعالم
-  //==================================================
-
-  Future<void> backWorld() async {
-
-
-    if(widget.onBackToWorld != null){
-
-      widget.onBackToWorld!();
-
-      return;
 
     }
 
 
-    Navigator.pop(context);
-
 
   }
-
-
-
-
-
-
-  //==================================================
-  // العودة للرئيسية
-  //==================================================
-
-  Future<void> backHome() async {
-
-
-    if(widget.onBackToHome != null){
-
-      widget.onBackToHome!();
-
-      return;
-
-    }
-
-
-    Navigator.popUntil(
-
-      context,
-
-      (route)=>route.isFirst,
-
-    );
-
-
-  }
-
-
-
-
-
-
-
-  @override
-  void dispose(){
-
-    animationController.dispose();
-
-    super.dispose();
-
-  }
-
-
-
-
-
 
   @override
   Widget build(BuildContext context){
 
 
+
     return Scaffold(
 
-      body: Container(
-
-        width: double.infinity,
-
-        height: double.infinity,
 
 
-        decoration: const BoxDecoration(
-
-  image: DecorationImage(
-
-    image: AssetImage(
-      "assets/images/background/home_background.png",
-    ),
-
-    fit: BoxFit.cover,
-
-  ),
-
-),
+      body: Stack(
 
 
-        child: SafeArea(
 
-          child: loading
-
-              ?
-
-          const Center(
-
-            child: CircularProgressIndicator(),
-
-          )
+        children:[
 
 
-              :
 
-          SingleChildScrollView(
 
-            child: Column(
+
+          // خلفية شاشة الفوز
+
+          Positioned.fill(
+
+
+            child: Image.asset(
+
+
+              "assets/images/background/win_background.png",
+
+
+              fit: BoxFit.cover,
+
+
+            ),
+
+
+          ),
+
+
+
+
+
+
+
+
+          SafeArea(
+
+
+
+            child: loading
+
+
+
+                ?
+
+
+
+            const Center(
+
+
+              child:CircularProgressIndicator(),
+
+
+            )
+
+
+
+
+
+                :
+
+
+
+            Column(
+
+
+
+              mainAxisAlignment:
+
+              MainAxisAlignment.spaceBetween,
+
+
 
               children:[
 
 
-                const SizedBox(height:30),
-
-Image.asset(
-  "assets/images/ui/puzzle_logo.png",
-  width:70,
-  height:70,
-),
-
-const SizedBox(height:10),
-
-const Text(
-  "Puzzle World",
-  style: TextStyle(
-    color:Colors.white,
-    fontSize:28,
-    fontWeight:FontWeight.bold,
-  ),
-),
-
-                ScaleTransition(
-
-  scale: scaleAnimation,
-
-  child: Image.asset(
-    "assets/images/ui/puzzle_logo.png",
-    width:120,
-    height:120,
-  ),
-
-),
-
-
-                const SizedBox(height:15),
 
 
 
-                const Text(
+                // الجزء العلوي
 
-                  "🎉 أحسنت! 🎉",
+                Column(
 
-                  style: TextStyle(
 
-                    fontSize:36,
 
-                    fontWeight:FontWeight.bold,
+                  children:[
 
-                    color:Colors.white,
 
-                  ),
+
+                    const SizedBox(height:20),
+
+
+
+
+
+
+                    ScaleTransition(
+
+
+
+                      scale:scaleAnimation,
+
+
+
+                      child:Image.asset(
+
+
+
+                        "assets/images/ui/puzzle_logo.png",
+
+
+
+                        width:90,
+
+
+
+                        height:90,
+
+
+
+                      ),
+
+
+
+                    ),
+
+
+
+
+
+
+                    const SizedBox(height:10),
+
+
+
+
+
+
+                    const Text(
+
+
+
+                      "🎉 أحسنت! 🎉",
+
+
+
+                      style:TextStyle(
+
+
+
+                        fontSize:34,
+
+
+
+                        fontWeight:FontWeight.bold,
+
+
+
+                        color:Colors.white,
+
+
+
+                      ),
+
+
+
+                    ),
+
+
+
+
+
+
+                    const SizedBox(height:5),
+
+
+
+
+
+
+                    const Text(
+
+
+
+                      "أكملت المرحلة بنجاح",
+
+
+
+                      style:TextStyle(
+
+
+
+                        fontSize:20,
+
+
+
+                        color:Colors.white,
+
+
+
+                      ),
+
+
+
+                    ),
+
+
+
+                  ],
+
+
 
                 ),
 
 
 
-                const SizedBox(height:10),
 
 
 
-                const Text(
-
-                  "أكملت المرحلة بنجاح",
-
-                  style: TextStyle(
-
-                    fontSize:22,
-
-                    color:Colors.white,
-
-                  ),
-
-                ),
 
 
 
-                const SizedBox(height:25),
 
 
+                // معلومات الفوز
 
                 resultCard(),
 
 
 
-                const SizedBox(height:20),
 
 
 
-                if(reward != null)
 
-                  rewardCard(),
+                // الأزرار
 
-
-
-                const SizedBox(height:25),
+                Column(
 
 
 
-                if(reward != null && !adUsed)
-
-                  actionButton(
-
-                    "🎬 مضاعفة المكافأة",
-
-                    Colors.orange,
-
-                    doubleReward,
-
-                  ),
+                  children:[
 
 
 
-                const SizedBox(height:15),
+
+
+                    actionButton(
+
+
+                      "➡️ المرحلة التالية",
+
+
+                      Colors.green,
+
+
+                      nextLevel,
+
+
+                    ),
 
 
 
-                actionButton(
 
-                  "➡️ المرحلة التالية",
 
-                  Colors.green,
 
-                  nextLevel,
+                    const SizedBox(height:10),
+
+
+
+
+
+
+
+                    actionButton(
+
+
+                      "🌍 العودة للعالم",
+
+
+                      Colors.blue,
+
+
+                      backWorld,
+
+
+                    ),
+
+
+
+
+
+
+
+                    const SizedBox(height:10),
+
+
+
+
+
+
+
+                    actionButton(
+
+
+                      "🏠 الرئيسية",
+
+
+                      Colors.purple,
+
+
+                      backHome,
+
+
+                    ),
+
+
+
+
+
+
+
+                    const SizedBox(height:15),
+
+
+
+
+
+                  ],
+
+
 
                 ),
 
 
 
-                const SizedBox(height:15),
-
-
-
-                actionButton(
- "العودة للعالم 🌍",
- Colors.blue,
- backWorld,
-),
-
-
-                const SizedBox(height:15),
-
-
-
-                actionButton(
-
-                  "🏠 الرئيسية",
-
-                  Colors.purple,
-
-                  backHome,
-
-                ),
-
-
-
-                const SizedBox(height:40),
 
 
               ],
 
+
+
             ),
 
+
+
           ),
+
+
+
+        ],
+
+
+
+      ),
+
+
+
+    );
+
+
+
+  }
+
+//==================================================
+// بطاقة النتيجة
+//==================================================
+
+Widget resultCard(){
+
+
+  return Container(
+
+
+    margin: const EdgeInsets.symmetric(
+      horizontal:25,
+    ),
+
+
+    padding: const EdgeInsets.all(18),
+
+
+
+    decoration: BoxDecoration(
+
+
+      color:Colors.white.withOpacity(.90),
+
+
+      borderRadius:BorderRadius.circular(25),
+
+
+
+      boxShadow:[
+
+
+        BoxShadow(
+
+
+          color:Colors.black.withOpacity(.20),
+
+
+          blurRadius:15,
+
+
+          offset:const Offset(0,8),
+
 
         ),
 
-      ),
 
-    );
+      ],
 
 
-  }
+    ),
 
-  //==================================================
-  // بطاقة النتيجة
-  //==================================================
 
-  Widget resultCard(){
 
-    return Container(
 
-      margin: const EdgeInsets.symmetric(
-        horizontal:25,
-      ),
 
-      padding: const EdgeInsets.all(20),
+    child:Column(
 
 
-      decoration: BoxDecoration(
+      children:[
 
-        color: Colors.white,
 
-        borderRadius: BorderRadius.circular(25),
 
-        boxShadow:[
 
-          BoxShadow(
-
-            color: Colors.black.withOpacity(.15),
-
-            blurRadius:15,
-
-            offset: const Offset(0,8),
-
-          ),
-
-        ],
-
-      ),
-
-
-      child: Column(
-
-        children:[
-
-
-          Text(
-
-            "⭐ النجوم: ${widget.result.stars}",
-
-            style: const TextStyle(
-
-              fontSize:24,
-
-              fontWeight:FontWeight.bold,
-
-            ),
-
-          ),
-
-
-
-          const SizedBox(height:12),
-
-
-
-          Text(
-
-            "🧩 الحركات: ${widget.result.moves}",
-
-            style: const TextStyle(
-
-              fontSize:18,
-
-            ),
-
-          ),
-
-
-
-          const SizedBox(height:8),
-
-
-
-          Text(
-
-            "⏱ الوقت: ${widget.result.seconds} ثانية",
-
-            style: const TextStyle(
-
-              fontSize:18,
-
-            ),
-
-          ),
-
-
-        ],
-
-      ),
-
-    );
-
-
-  }
-
-
-
-
-
-
-
-  //==================================================
-  // بطاقة المكافأة
-  //==================================================
-
-  Widget rewardCard(){
-
-    return Container(
-
-      margin: const EdgeInsets.symmetric(
-        horizontal:25,
-      ),
-
-
-      padding: const EdgeInsets.all(20),
-
-
-      decoration: BoxDecoration(
-
-        color:Colors.white,
-
-        borderRadius:BorderRadius.circular(25),
-
-
-        boxShadow:[
-
-          BoxShadow(
-
-            color:Colors.black.withOpacity(.15),
-
-            blurRadius:15,
-
-            offset:const Offset(0,8),
-
-          ),
-
-        ],
-
-      ),
-
-
-
-      child:Row(
-
-        mainAxisAlignment:
-        MainAxisAlignment.spaceAround,
-
-
-        children:[
-
+        if(reward != null)
 
 
           Column(
 
+
             children:[
 
 
-              const Text(
 
-                "🪙",
+              Image.asset(
 
-                style:TextStyle(
 
-                  fontSize:40,
+                "assets/images/rewards/Star_gold.png",
 
-                ),
+
+                width:65,
+
+
+                height:65,
+
 
               ),
+
+
 
 
 
               Text(
 
-                "${reward!.coins}",
+
+                "+${widget.result.stars} Golden Star",
+
 
                 style:const TextStyle(
 
-                  fontSize:24,
+
+                  fontSize:22,
+
 
                   fontWeight:FontWeight.bold,
 
+
                 ),
+
 
               ),
 
+
+
+              const SizedBox(height:12),
 
 
             ],
 
-          ),
-
-
-
-
-
-
-          Column(
-
-            children:[
-
-
-              const Text(
-
-                "💎",
-
-                style:TextStyle(
-
-                  fontSize:40,
-
-                ),
-
-              ),
-
-
-
-              Text(
-
-                "${reward!.gems}",
-
-                style:const TextStyle(
-
-                  fontSize:24,
-
-                  fontWeight:FontWeight.bold,
-
-                ),
-
-              ),
-
-
-
-            ],
 
           ),
 
 
 
-        ],
-
-      ),
-
-    );
-
-
-  }
 
 
 
+        Text(
 
 
+          "🧩 الحركات: ${widget.result.moves}",
 
 
-
-  //==================================================
-  // زر موحد
-  //==================================================
-
-  Widget actionButton(
-
-      String text,
-
-      Color color,
-
-      VoidCallback onTap,
-
-      ){
+          style:const TextStyle(
 
 
-    return Padding(
-
-      padding:const EdgeInsets.symmetric(
-
-        horizontal:35,
-
-      ),
+            fontSize:18,
 
 
-
-      child:SizedBox(
-
-        width:double.infinity,
-
-        height:55,
-
-
-
-        child:ElevatedButton(
-
-
-          onPressed:onTap,
-
-
-
-          style:ElevatedButton.styleFrom(
-
-
-            backgroundColor:color,
-
-
-            foregroundColor:Colors.white,
-
-
-            elevation:8,
-
-
-            shadowColor:Colors.black38,
-
-
-            shape:RoundedRectangleBorder(
-
-
-              borderRadius:
-              BorderRadius.circular(30),
-
-
-            ),
-
-
-          ),
-
-
-
-          child:Text(
-
-
-            text,
-
-
-            style:const TextStyle(
-
-              fontSize:20,
-
-              fontWeight:FontWeight.bold,
-
-            ),
+            fontWeight:FontWeight.bold,
 
 
           ),
@@ -1059,12 +1023,248 @@ const Text(
 
         ),
 
-      ),
 
-    );
+
+
+
+        const SizedBox(height:8),
+
+
+
+
+
+        Text(
+
+
+          "⏱ الوقت: ${widget.result.seconds} ثانية",
+
+
+          style:const TextStyle(
+
+
+            fontSize:18,
+
+
+          ),
+
+
+        ),
+
+
+
+      ],
+
+
+    ),
+
+
+  );
+
+
+}
+
+
+
+
+
+
+
+
+
+//==================================================
+// العودة للعالم
+//==================================================
+
+Future<void> backWorld() async {
+
+
+
+  if(widget.onBackToWorld != null){
+
+
+    widget.onBackToWorld!();
+
+
+    return;
 
 
   }
+
+
+
+
+  Navigator.pop(context);
+
+
+}
+
+
+
+
+
+
+
+
+
+//==================================================
+// العودة للرئيسية
+//==================================================
+
+Future<void> backHome() async {
+
+
+
+  if(widget.onBackToHome != null){
+
+
+    widget.onBackToHome!();
+
+
+    return;
+
+
+  }
+
+
+
+
+  Navigator.popUntil(
+
+
+    context,
+
+
+    (route)=>route.isFirst,
+
+
+  );
+
+
+}
+
+
+
+
+
+
+
+
+
+//==================================================
+// زر موحد
+//==================================================
+
+Widget actionButton(
+
+    String text,
+
+    Color color,
+
+    VoidCallback onTap,
+
+    ){
+
+
+
+  return Padding(
+
+
+    padding:const EdgeInsets.symmetric(
+
+      horizontal:35,
+
+    ),
+
+
+
+
+    child:SizedBox(
+
+
+      width:double.infinity,
+
+
+      height:52,
+
+
+
+
+      child:ElevatedButton(
+
+
+
+        onPressed:onTap,
+
+
+
+        style:ElevatedButton.styleFrom(
+
+
+
+          backgroundColor:color,
+
+
+
+          foregroundColor:Colors.white,
+
+
+
+          elevation:8,
+
+
+
+          shape:RoundedRectangleBorder(
+
+
+
+            borderRadius:
+
+            BorderRadius.circular(30),
+
+
+
+          ),
+
+
+
+        ),
+
+
+
+
+        child:Text(
+
+
+
+          text,
+
+
+
+          style:const TextStyle(
+
+
+
+            fontSize:19,
+
+
+            fontWeight:FontWeight.bold,
+
+
+          ),
+
+
+
+        ),
+
+
+
+      ),
+
+
+    ),
+
+
+  );
 
 
 }
