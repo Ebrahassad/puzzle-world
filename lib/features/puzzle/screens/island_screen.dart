@@ -5,7 +5,7 @@ import '../models/puzzle_model.dart';
 
 import '../widgets/game_toolbar.dart';
 
-import 'puzzle_level_screen.dart';
+import 'puzzle_game_screen.dart';
 
 
 
@@ -167,43 +167,37 @@ class _IslandScreenState
 
 
 
+void openLevel(int level){
+
+  if(!unlocked){
+
+    showLockedDialog();
+
+    return;
+  }
 
 
-  void openLevel(){
+  Navigator.push(
 
+    context,
 
-    if(!unlocked){
+    MaterialPageRoute(
 
+      builder:(_)=>
 
-      showLockedDialog();
+      PuzzleGameScreen(
 
+        puzzle: widget.island,
 
-      return;
-
-    }
-
-
-
-    Navigator.push(
-
-      context,
-
-      MaterialPageRoute(
-
-        builder:(_)=>
-
-        PuzzleLevelScreen(
-
-          puzzle:widget.island,
-
-        ),
+        levelNumber: level,
 
       ),
 
-    );
+    ),
 
+  );
 
-  }
+}
 
   void showLockedDialog(){
 
@@ -401,8 +395,7 @@ class _IslandScreenState
 
         if(open){
 
-          openLevel();
-
+          openLevel(level);
         }
 
         else{
