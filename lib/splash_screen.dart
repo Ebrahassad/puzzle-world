@@ -8,19 +8,14 @@ import 'features/puzzle/screens/world_map_screen.dart';
 
 class SplashScreen extends StatefulWidget {
 
-
   const SplashScreen({
-
     super.key,
-
   });
-
 
 
   @override
   State<SplashScreen> createState() =>
       _SplashScreenState();
-
 
 }
 
@@ -33,23 +28,14 @@ class _SplashScreenState
     with TickerProviderStateMixin {
 
 
-
-  late AnimationController scaleController;
-
+  late AnimationController logoController;
   late AnimationController fadeController;
-
-  late AnimationController rotateController;
-
-
+  late AnimationController floatController;
 
 
   late Animation<double> scaleAnimation;
-
   late Animation<double> fadeAnimation;
-
-  late Animation<double> rotateAnimation;
-
-
+  late Animation<double> floatAnimation;
 
 
 
@@ -62,126 +48,105 @@ class _SplashScreenState
 
 
 
+    logoController = AnimationController(
 
-    scaleController =
-        AnimationController(
+      vsync:this,
 
-          vsync:this,
+      duration:
+      const Duration(seconds:2),
 
-          duration:
-          const Duration(
-              milliseconds:1200
-          ),
-
-        );
+    );
 
 
 
+    fadeController = AnimationController(
 
-    fadeController =
-        AnimationController(
+      vsync:this,
 
-          vsync:this,
+      duration:
+      const Duration(milliseconds:1200),
 
-          duration:
-          const Duration(
-              milliseconds:1000
-          ),
-
-        );
+    );
 
 
 
+    floatController = AnimationController(
 
-    rotateController =
-        AnimationController(
+      vsync:this,
 
-          vsync:this,
+      duration:
+      const Duration(seconds:3),
 
-          duration:
-          const Duration(
-              seconds:6
-          ),
-
-        );
+    );
 
 
 
 
 
 
+    scaleAnimation = Tween<double>(
 
-    scaleAnimation =
-        Tween<double>(
+      begin:0.85,
 
-          begin:0.95,
+      end:1.08,
 
-          end:1.05,
+    ).animate(
 
-        ).animate(
+      CurvedAnimation(
 
-          CurvedAnimation(
+        parent:logoController,
 
-            parent:
-            scaleController,
+        curve:Curves.elasticOut,
 
-            curve:
-            Curves.easeInOut,
+      ),
 
-          ),
-
-        );
-
-
-
-
-
-    fadeAnimation =
-        Tween<double>(
-
-          begin:0,
-
-          end:1,
-
-        ).animate(
-
-          CurvedAnimation(
-
-            parent:
-            fadeController,
-
-            curve:
-            Curves.easeIn,
-
-          ),
-
-        );
+    );
 
 
 
 
 
 
-    rotateAnimation =
-        Tween<double>(
+    fadeAnimation = Tween<double>(
 
-          begin:-0.03,
+      begin:0,
 
-          end:0.03,
+      end:1,
 
-        ).animate(
+    ).animate(
 
-          CurvedAnimation(
+      CurvedAnimation(
 
-            parent:
-            rotateController,
+        parent:fadeController,
 
-            curve:
-            Curves.easeInOut,
+        curve:Curves.easeIn,
 
-          ),
+      ),
 
-        );
+    );
+
+
+
+
+
+
+    floatAnimation = Tween<double>(
+
+      begin:-10,
+
+      end:10,
+
+    ).animate(
+
+      CurvedAnimation(
+
+        parent:floatController,
+
+        curve:Curves.easeInOut,
+
+      ),
+
+    );
 
 
 
@@ -190,9 +155,18 @@ class _SplashScreenState
 
     fadeController.forward();
 
-    scaleController.repeat(reverse:true);
+    logoController.repeat(
 
-    rotateController.repeat(reverse:true);
+      reverse:true,
+
+    );
+
+    floatController.repeat(
+
+      reverse:true,
+
+    );
+
 
 
 
@@ -206,7 +180,6 @@ class _SplashScreenState
 
 
         if(!mounted)return;
-
 
 
         Navigator.pushReplacement(
@@ -228,8 +201,9 @@ class _SplashScreenState
     );
 
 
-
   }
+
+
 
 
 
@@ -240,15 +214,19 @@ class _SplashScreenState
   @override
   void dispose(){
 
-    scaleController.dispose();
+
+    logoController.dispose();
 
     fadeController.dispose();
 
-    rotateController.dispose();
+    floatController.dispose();
+
 
     super.dispose();
 
+
   }
+
 
 
 
@@ -260,70 +238,65 @@ class _SplashScreenState
   Widget buildLogo(){
 
 
-    return FadeTransition(
+    return AnimatedBuilder(
 
-      opacity:
-      fadeAnimation,
+      animation:Listenable.merge([
+
+        logoController,
+
+        floatController,
+
+      ]),
+
+
+      builder:(context,child){
+
+
+        return Transform.translate(
+
+          offset:
+
+          Offset(
+
+            0,
+
+            floatAnimation.value,
+
+          ),
+
+
+          child:
+
+          Transform.scale(
+
+            scale:
+
+            scaleAnimation.value,
+
+
+            child:child,
+
+
+          ),
+
+
+        );
+
+
+      },
 
 
       child:
-      AnimatedBuilder(
 
+      Image.asset(
 
-        animation:
-        rotateAnimation,
+        "assets/images/ui/puzzle_logo.png",
 
+        width:220,
 
-        builder:(context,child){
+        height:220,
 
-
-          return Transform.rotate(
-
-            angle:
-            rotateAnimation.value,
-
-
-            child:
-            ScaleTransition(
-
-              scale:
-              scaleAnimation,
-
-
-              child:
-              child,
-
-            ),
-
-          );
-
-
-        },
-
-
-
-        child:
-        Image.asset(
-
-
-
-          "assets/images/ui/puzzle_logo.png",
-
-
-
-          width:230,
-
-          height:230,
-
-
-
-          fit:
-          BoxFit.contain,
-
-
-
-        ),
-
+        fit:BoxFit.contain,
 
       ),
 
@@ -332,6 +305,7 @@ class _SplashScreenState
 
 
   }
+
 
 
 
@@ -350,11 +324,13 @@ class _SplashScreenState
 
 
       body:
+
       Stack(
 
 
 
         fit:
+
         StackFit.expand,
 
 
@@ -364,11 +340,13 @@ class _SplashScreenState
 
 
 
+
           Image.asset(
 
             "assets/images/background/home_background.png",
 
             fit:
+
             BoxFit.cover,
 
           ),
@@ -376,24 +354,16 @@ class _SplashScreenState
 
 
 
+
+
           Container(
 
             color:
-            Colors.black.withOpacity(0.15),
+
+            Colors.black.withOpacity(.18),
 
           ),
 
-
-
-
-
-
-          Center(
-
-            child:
-            buildLogo(),
-
-          ),
 
 
 
@@ -402,7 +372,10 @@ class _SplashScreenState
 
           Positioned(
 
-            bottom:120,
+            top:
+
+            MediaQuery.of(context).size.height * .22,
+
 
             left:0,
 
@@ -410,94 +383,139 @@ class _SplashScreenState
 
 
             child:
-            Center(
+
+            FadeTransition(
+
+              opacity:
+
+              fadeAnimation,
+
 
               child:
+
+              Center(
+
+                child:
+
+                buildLogo(),
+
+              ),
+
+            ),
+
+
+          ),
+
+
+
+
+
+
+
+          Positioned(
+
+            top:
+
+            MediaQuery.of(context).size.height * .55,
+
+
+            left:0,
+
+            right:0,
+
+
+            child:
+
+            Center(
+
+
+
+              child:
+
               Text(
 
                 "Puzzle World",
 
 
+
                 style:
-                Theme.of(context)
-                    .textTheme
-                    .displayLarge
-                    ?.copyWith(
+
+                const TextStyle(
+
+
+                  fontFamily:"Cairo",
+
+
+                  fontSize:42,
+
+
+                  fontWeight:
+
+                  FontWeight.w900,
 
 
                   color:
-                  Colors.white,
+
+                  Color(0xff2196F3),
+
 
 
                   shadows:[
 
 
-                    const Shadow(
+                    Shadow(
 
                       color:
-                      Colors.black54,
 
-                      blurRadius:
-                      8,
+                      Colors.black,
+
+
+                      blurRadius:0,
+
 
                       offset:
-                      Offset(0,3),
+
+                      Offset(2,2),
+
+                    ),
+
+
+
+                    Shadow(
+
+                      color:
+
+                      Colors.black87,
+
+
+                      blurRadius:8,
+
+
+                      offset:
+
+                      Offset(0,4),
 
                     ),
 
 
                   ],
 
+
                 ),
+
+
 
               ),
 
+
+
             ),
+
+
 
           ),
 
 
-
-
-
-
-          const Positioned(
-
-            bottom:80,
-
-            left:0,
-
-            right:0,
-
-
-            child:
-            Center(
-
-              child:
-              Text(
-
-                "Let's Play & Learn",
-
-
-                style:
-                TextStyle(
-
-                  color:
-                  Colors.white70,
-
-                  fontSize:
-                  18,
-
-                  fontWeight:
-                  FontWeight.w600,
-
-                ),
-
-              ),
-
-            ),
-
-          ),
 
 
 
@@ -510,7 +528,6 @@ class _SplashScreenState
 
 
     );
-
 
   }
 
