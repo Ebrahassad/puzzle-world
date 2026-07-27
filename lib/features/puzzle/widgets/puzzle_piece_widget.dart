@@ -1,7 +1,8 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 
 import '../engine/puzzle_piece.dart';
-
 
 
 class PuzzlePieceWidget extends StatefulWidget {
@@ -29,13 +30,9 @@ class PuzzlePieceWidget extends StatefulWidget {
 
 
 
-
-
-
   @override
   State<PuzzlePieceWidget> createState() =>
       _PuzzlePieceWidgetState();
-
 
 
 }
@@ -46,18 +43,12 @@ class PuzzlePieceWidget extends StatefulWidget {
 
 
 
-
-
 class _PuzzlePieceWidgetState
-
     extends State<PuzzlePieceWidget>{
 
 
 
-  ImageInfo? imageInfo;
-
-
-
+  ui.Image? image;
 
 
 
@@ -78,15 +69,10 @@ class _PuzzlePieceWidgetState
 
 
 
-
-
   void loadImage(){
 
 
-
-    final stream =
-
-    widget.image.resolve(
+    final stream = widget.image.resolve(
 
       createLocalImageConfiguration(context),
 
@@ -94,52 +80,37 @@ class _PuzzlePieceWidgetState
 
 
 
-
-
-
     stream.addListener(
-
-
 
       ImageStreamListener(
 
-            (info,_){
+            (info,_) {
 
 
 
           if(mounted){
 
 
-
             setState((){
 
 
-
-              imageInfo = info;
-
+              image = info.image;
 
 
             });
 
 
-
           }
-
 
 
         },
 
       ),
 
-
-
     );
 
 
-
   }
-
-
 
 
 
@@ -151,14 +122,11 @@ class _PuzzlePieceWidgetState
   Widget build(BuildContext context){
 
 
-
     return CustomPaint(
 
 
 
-      size:
-
-      Size(
+      size: Size(
 
         widget.size,
 
@@ -168,24 +136,13 @@ class _PuzzlePieceWidgetState
 
 
 
+      painter: PuzzlePainter(
 
 
-      painter:
-
-      PuzzlePiecePainter(
+        piece: widget.piece,
 
 
-
-        piece:
-
-        widget.piece,
-
-
-
-        imageInfo:
-
-        imageInfo,
-
+        cachedImage: image,
 
 
       ),
@@ -193,7 +150,6 @@ class _PuzzlePieceWidgetState
 
 
     );
-
 
 
   }
@@ -209,25 +165,21 @@ class _PuzzlePieceWidgetState
 
 
 
-
-class PuzzlePiecePainter extends CustomPainter {
+class PuzzlePainter extends CustomPainter {
 
 
 
   final PuzzlePiece piece;
 
-  final ImageInfo? imageInfo;
+  final ui.Image? cachedImage;
 
 
 
-
-
-
-  PuzzlePiecePainter({
+  PuzzlePainter({
 
     required this.piece,
 
-    required this.imageInfo,
+    required this.cachedImage,
 
   });
 
@@ -237,10 +189,7 @@ class PuzzlePiecePainter extends CustomPainter {
 
 
 
-
-
   @override
-
   void paint(
 
       Canvas canvas,
@@ -251,15 +200,91 @@ class PuzzlePiecePainter extends CustomPainter {
 
 
 
-    final image = imageInfo?.image;
+    final path = createPiecePath(size);
 
 
 
-    if(image == null){
+
+    // الظل
+
+    canvas.drawPath(
+
+      path,
+
+      Paint()
+
+        ..color = Colors.black26
+
+        ..maskFilter = const MaskFilter.blur(
+
+          BlurStyle.normal,
+
+          4,
+
+        ),
+
+    );
 
 
 
-      return;
+
+
+
+    if(cachedImage != null){
+
+
+
+      canvas.save();
+
+
+
+      canvas.clipPath(path);
+
+
+
+      final source = Rect.fromLTWH(
+
+
+
+        piece.sourceRect.left,
+
+        piece.sourceRect.top,
+
+        piece.sourceRect.width,
+
+        piece.sourceRect.height,
+
+
+
+      );
+
+
+
+
+
+
+      canvas.drawImageRect(
+
+
+
+        cachedImage!,
+
+        source,
+
+        Offset.zero & size,
+
+        Paint()
+
+          ..filterQuality = FilterQuality.high,
+
+
+
+      );
+
+
+
+
+      canvas.restore();
 
 
 
@@ -271,62 +296,22 @@ class PuzzlePiecePainter extends CustomPainter {
 
 
 
-    final paint = Paint()
 
-      ..filterQuality = FilterQuality.high;
+    // حدود القطعة
 
+    canvas.drawPath(
 
-
-
-
-
-    canvas.drawImageRect(
-
-
-
-      image,
-
-
-
-      piece.sourceRect,
-
-
-
-      Offset.zero & size,
-
-
-
-      paint,
-
-
-
-    );
-
-
-
-
-
-
-
-    // إطار خفيف للقطعة
-
-    canvas.drawRect(
-
-
-
-      Offset.zero & size,
-
-
+      path,
 
       Paint()
 
         ..style = PaintingStyle.stroke
 
-        ..strokeWidth = piece.placed ? 3 : 1
+        ..strokeWidth = piece.placed ? 3 : 1.5
 
         ..color = piece.placed
 
-            ? Colors.greenAccent
+            ? Colors.green
 
             : Colors.white,
 
@@ -345,20 +330,292 @@ class PuzzlePiecePainter extends CustomPainter {
 
 
 
+  Path createPiecePath(Size size){
 
-  @override
 
-  bool shouldRepaint(
 
-      covariant PuzzlePiecePainter oldDelegate
+    final path = Path();
+
+
+
+    final w = size.width;
+
+    final h = size.height;
+
+    final tab = w * .22;
+
+
+
+
+
+    path.moveTo(0,0);
+
+
+
+    path.lineTo(
+
+      w/2-tab,
+
+      0,
+
+    );
+
+
+
+    drawEdge(
+
+      path,
+
+      piece.top,
+
+      true,
+
+      w/2,
+
+      0,
+
+      tab,
+
+    );
+
+
+
+    path.lineTo(
+
+      w,
+
+      0,
+
+    );
+
+
+
+    path.lineTo(
+
+      w,
+
+      h/2-tab,
+
+    );
+
+
+
+    drawEdge(
+
+      path,
+
+      piece.right,
+
+      false,
+
+      w,
+
+      h/2,
+
+      tab,
+
+    );
+
+
+
+    path.lineTo(
+
+      w,
+
+      h,
+
+    );
+
+
+
+    path.lineTo(
+
+      w/2+tab,
+
+      h,
+
+    );
+
+
+
+    drawEdge(
+
+      path,
+
+      piece.bottom,
+
+      true,
+
+      w/2,
+
+      h,
+
+      tab,
+
+    );
+
+
+
+    path.lineTo(
+
+      0,
+
+      h,
+
+    );
+
+
+
+    path.lineTo(
+
+      0,
+
+      h/2+tab,
+
+    );
+
+
+
+    drawEdge(
+
+      path,
+
+      piece.left,
+
+      false,
+
+      0,
+
+      h/2,
+
+      tab,
+
+    );
+
+
+
+    path.close();
+
+
+
+    return path;
+
+
+  }
+
+
+
+
+
+
+
+
+  void drawEdge(
+
+      Path path,
+
+      EdgeType type,
+
+      bool horizontal,
+
+      double x,
+
+      double y,
+
+      double tab,
 
       ){
 
 
 
-    return oldDelegate.imageInfo != imageInfo ||
+    if(type == EdgeType.flat){
 
-        oldDelegate.piece != piece;
+      return;
+
+    }
+
+
+
+
+    final sign =
+
+    type == EdgeType.tab ? -1 : 1;
+
+
+
+
+
+    if(horizontal){
+
+
+
+      path.cubicTo(
+
+        x-tab,
+
+        y+(tab*sign),
+
+        x+tab,
+
+        y+(tab*sign),
+
+        x+tab,
+
+        y,
+
+      );
+
+
+
+    }else{
+
+
+
+      path.cubicTo(
+
+        x+(tab*sign),
+
+        y-tab,
+
+        x+(tab*sign),
+
+        y+tab,
+
+        x,
+
+        y+tab,
+
+      );
+
+
+
+    }
+
+
+
+  }
+
+
+
+
+
+
+
+
+  @override
+  bool shouldRepaint(
+
+      covariant PuzzlePainter oldDelegate
+
+      ){
+
+
+
+    return oldDelegate.cachedImage != cachedImage ||
+
+        oldDelegate.piece.position != piece.position ||
+
+        oldDelegate.piece.placed != piece.placed;
 
 
 
