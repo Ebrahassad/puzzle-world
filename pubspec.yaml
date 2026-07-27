@@ -43,7 +43,7 @@ flutter:
     - assets/images/background/
     - assets/images/ui/
     - assets/images/world/
-    - assets/images/Reward/
+    - assets/images/rewards/
     - assets/icon/
     - assets/audio/
 
@@ -56,11 +56,10 @@ flutter:
       fonts:
 
         - asset: assets/fonts/Cairo-Regular.ttf
+          weight: 400
 
         - asset: assets/fonts/Cairo-SemiBold.ttf
-
           weight: 600
 
         - asset: assets/fonts/Cairo-Bold.ttf
-
           weight: 700
