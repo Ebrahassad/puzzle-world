@@ -2,43 +2,111 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 
+
 class WalletScreen extends StatefulWidget {
 
+
   const WalletScreen({
+
     super.key,
+
   });
+
 
 
   @override
   State<WalletScreen> createState() =>
       _WalletScreenState();
 
+
 }
 
 
 
-class _WalletScreenState extends State<WalletScreen> {
+
+
+
+class _WalletScreenState
+    extends State<WalletScreen>
+    with SingleTickerProviderStateMixin {
+
 
 
   int stars = 0;
 
   int coins = 0;
 
-  int gems = 0;
+  int achievements = 0;
+
 
 
   bool loading = true;
 
 
 
+  late AnimationController starController;
+
+  late Animation<double> starAnimation;
+
+
+
+
+
+
+
   @override
   void initState(){
 
+
     super.initState();
+
 
     loadWallet();
 
+
+
+    starController = AnimationController(
+
+      vsync:this,
+
+      duration:
+
+      const Duration(seconds:2),
+
+    )..repeat(
+
+      reverse:true,
+
+    );
+
+
+
+    starAnimation = Tween<double>(
+
+      begin:0.9,
+
+      end:1.1,
+
+    ).animate(
+
+      CurvedAnimation(
+
+        parent:starController,
+
+        curve:Curves.easeInOut,
+
+      ),
+
+    );
+
+
+
   }
+
+
+
+
+
 
 
 
@@ -50,19 +118,23 @@ class _WalletScreenState extends State<WalletScreen> {
     await SharedPreferences.getInstance();
 
 
-    setState(() {
+
+    setState((){
 
 
       stars =
-          prefs.getInt("wallet_stars") ?? 0;
+      prefs.getInt("wallet_stars") ?? 0;
+
 
 
       coins =
-          prefs.getInt("wallet_coins") ?? 0;
+      prefs.getInt("wallet_coins") ?? 0;
 
 
-      gems =
-          prefs.getInt("wallet_gems") ?? 0;
+
+      achievements =
+      prefs.getInt("wallet_achievements") ?? 0;
+
 
 
       loading = false;
@@ -71,7 +143,12 @@ class _WalletScreenState extends State<WalletScreen> {
     });
 
 
+
   }
+
+
+
+
 
 
 
@@ -84,22 +161,35 @@ class _WalletScreenState extends State<WalletScreen> {
     await SharedPreferences.getInstance();
 
 
+
     await prefs.setInt(
-        "wallet_stars",
-        stars
+
+      "wallet_stars",
+
+      stars,
+
     );
 
 
+
     await prefs.setInt(
-        "wallet_coins",
-        coins
+
+      "wallet_coins",
+
+      coins,
+
     );
 
 
+
     await prefs.setInt(
-        "wallet_gems",
-        gems
+
+      "wallet_achievements",
+
+      achievements,
+
     );
+
 
 
   }
@@ -108,21 +198,24 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
-  // مكافأة الإعلان
+
+
+
+
   Future<void> rewardFromAd() async {
 
 
-    setState(() {
+    setState((){
 
 
-      stars += 1;
+      stars += 5;
 
-      coins += 50;
 
-      gems += 1;
+      coins += 10;
 
 
     });
+
 
 
     await saveWallet();
@@ -132,16 +225,24 @@ class _WalletScreenState extends State<WalletScreen> {
     ScaffoldMessenger.of(context)
         .showSnackBar(
 
+
       const SnackBar(
 
+
         content:
+
         Text(
-          "🎁 حصلت على مكافأة الإعلان",
+
+          "🎁 حصلت على +10 رصيد و +5 نجوم",
+
         ),
+
 
       ),
 
+
     );
+
 
 
   }
@@ -152,8 +253,31 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
+
+
   @override
-  Widget build(BuildContext context) {
+  void dispose(){
+
+
+    starController.dispose();
+
+
+    super.dispose();
+
+
+  }
+
+
+
+
+
+
+
+
+
+  @override
+  Widget build(BuildContext context){
+
 
 
     if(loading){
@@ -161,13 +285,17 @@ class _WalletScreenState extends State<WalletScreen> {
 
       return const Scaffold(
 
+
         body:
+
         Center(
 
           child:
+
           CircularProgressIndicator(),
 
         ),
+
 
       );
 
@@ -176,38 +304,55 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
+
+
+
     return Scaffold(
 
 
-      appBar: AppBar(
+
+      appBar:
+
+      AppBar(
+
+
 
         title:
+
         const Text(
-          "💰 المحفظة",
+
+          "👜 المحفظة",
+
         ),
 
+
+
         centerTitle:true,
+
 
       ),
 
 
 
 
+
+
       body:
 
+      SingleChildScrollView(
 
-      Padding(
 
 
         padding:
+
         const EdgeInsets.all(20),
 
 
 
         child:
 
-
         Column(
+
 
 
           children:[
@@ -215,11 +360,82 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
+
+
+
+
+            // النجمة الذهبية
+
+            ScaleTransition(
+
+
+
+              scale:
+
+              starAnimation,
+
+
+
+              child:
+
+              Image.asset(
+
+
+
+                "assets/images/rewards/Star_gold.png",
+
+
+
+                height:100,
+
+
+
+                errorBuilder:
+
+                    (_,__,___){
+
+
+                  return const Icon(
+
+                    Icons.star,
+
+                    size:90,
+
+                    color:
+
+                    Colors.amber,
+
+                  );
+
+
+                },
+
+
+              ),
+
+
+
+            ),
+
+
+
+
+
+
+
+
+            const SizedBox(height:20),
+
+
+
+
+
+
             walletCard(
 
-              "⭐ النجوم الذهبية",
+              "⭐ النجوم",
 
-              stars.toString(),
+              stars,
 
               Colors.amber,
 
@@ -229,11 +445,12 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
+
             walletCard(
 
-              "🪙 العملات",
+              "🪙 الرصيد",
 
-              coins.toString(),
+              coins,
 
               Colors.orange,
 
@@ -243,11 +460,12 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
+
             walletCard(
 
-              "💎 الجواهر",
+              "🏆 الإنجازات",
 
-              gems.toString(),
+              achievements,
 
               Colors.blue,
 
@@ -258,72 +476,234 @@ class _WalletScreenState extends State<WalletScreen> {
 
 
 
-            const SizedBox(height:30),
+
+
+
+            const SizedBox(height:25),
 
 
 
 
 
-            SizedBox(
+
+            Container(
 
 
-              width:double.infinity,
+
+              padding:
+
+              const EdgeInsets.all(20),
 
 
-              height:55,
+
+              decoration:
+
+              BoxDecoration(
+
+
+
+                color:
+
+                Colors.amber.withOpacity(.15),
+
+
+
+                borderRadius:
+
+                BorderRadius.circular(25),
+
+
+
+              ),
 
 
 
               child:
 
-
-              ElevatedButton.icon(
-
-
-                onPressed:
-                rewardFromAd,
+              Column(
 
 
-                icon:
-                const Icon(
-                    Icons.play_circle
-                ),
+
+                children:[
 
 
-                label:
-                const Text(
 
-                  "شاهد إعلان واحصل على مكافأة",
+                  const Text(
 
-                  style:
-                  TextStyle(
-                    fontSize:18,
+
+
+                    "🎁 صندوق المكافأة الذهبية",
+
+                    style:
+
+                    TextStyle(
+
+                      fontSize:22,
+
+                      fontWeight:
+
+                      FontWeight.bold,
+
+                    ),
+
                   ),
 
-                ),
+
+
+
+                  const SizedBox(height:15),
+
+
+
+
+
+                  const Text(
+
+
+
+                    "شاهد إعلان واحصل على مكافأة",
+
+                    style:
+
+                    TextStyle(
+
+                      fontSize:17,
+
+                    ),
+
+                  ),
+
+
+
+
+                  const SizedBox(height:20),
+
+
+
+
+
+
+                  SizedBox(
+
+
+
+                    width:
+
+                    double.infinity,
+
+
+
+                    height:55,
+
+
+
+                    child:
+
+                    ElevatedButton.icon(
+
+
+
+                      onPressed:
+
+                      rewardFromAd,
+
+
+
+                      icon:
+
+                      const Icon(
+
+                        Icons.play_circle,
+
+                      ),
+
+
+
+                      label:
+
+                      const Text(
+
+                        "شاهد إعلان",
+
+                        style:
+
+                        TextStyle(
+
+                          fontSize:18,
+
+                        ),
+
+                      ),
+
+
+
+                    ),
+
+
+
+                  ),
+
+
+
+
+                  const SizedBox(height:15),
+
+
+
+
+
+                  const Text(
+
+
+
+                    "+10 🪙 رصيد   +5 ⭐ نجوم",
+
+                    style:
+
+                    TextStyle(
+
+                      fontSize:18,
+
+                      fontWeight:
+
+                      FontWeight.bold,
+
+                    ),
+
+                  ),
+
+
+
+                ],
+
 
 
               ),
+
 
 
             ),
 
 
 
-
-
           ],
+
 
 
         ),
 
 
+
       ),
+
 
 
     );
 
+
+
   }
+
 
 
 
@@ -336,7 +716,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
       String title,
 
-      String value,
+      int value,
 
       Color color,
 
@@ -347,15 +727,20 @@ class _WalletScreenState extends State<WalletScreen> {
     return Container(
 
 
+
       margin:
+
       const EdgeInsets.only(
-          bottom:15
+
+        bottom:15,
+
       ),
 
 
 
       padding:
-      const EdgeInsets.all(20),
+
+      const EdgeInsets.all(18),
 
 
 
@@ -363,12 +748,17 @@ class _WalletScreenState extends State<WalletScreen> {
 
       BoxDecoration(
 
+
+
         color:
+
         color.withOpacity(.15),
 
 
+
         borderRadius:
-        BorderRadius.circular(20),
+
+        BorderRadius.circular(22),
 
 
 
@@ -383,6 +773,7 @@ class _WalletScreenState extends State<WalletScreen> {
         ),
 
 
+
       ),
 
 
@@ -390,12 +781,14 @@ class _WalletScreenState extends State<WalletScreen> {
 
       child:
 
-
       Row(
 
 
+
         mainAxisAlignment:
+
         MainAxisAlignment.spaceBetween,
+
 
 
         children:[
@@ -407,11 +800,13 @@ class _WalletScreenState extends State<WalletScreen> {
             title,
 
             style:
+
             const TextStyle(
 
               fontSize:20,
 
               fontWeight:
+
               FontWeight.bold,
 
             ),
@@ -423,17 +818,18 @@ class _WalletScreenState extends State<WalletScreen> {
 
           Text(
 
-            value,
+            value.toString(),
 
             style:
 
             TextStyle(
 
-              fontSize:26,
-
               color:color,
 
+              fontSize:26,
+
               fontWeight:
+
               FontWeight.bold,
 
             ),
@@ -445,7 +841,9 @@ class _WalletScreenState extends State<WalletScreen> {
         ],
 
 
+
       ),
+
 
 
     );
