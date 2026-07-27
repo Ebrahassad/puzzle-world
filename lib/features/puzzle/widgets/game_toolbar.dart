@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../screens/wallet_screen.dart';
+
 
 
 class GameToolbar extends StatelessWidget {
@@ -7,9 +9,12 @@ class GameToolbar extends StatelessWidget {
 
   final String logo;
 
+
   final int stars;
 
-  final int rewards;
+
+  final int coins;
+
 
   final VoidCallback? onBack;
 
@@ -19,11 +24,15 @@ class GameToolbar extends StatelessWidget {
 
     super.key,
 
+
     required this.logo,
+
 
     required this.stars,
 
-    required this.rewards,
+
+    required this.coins,
+
 
     this.onBack,
 
@@ -36,470 +45,140 @@ class GameToolbar extends StatelessWidget {
 
 
 
-  void showExitDialog(BuildContext context){
+  void openWallet(BuildContext context){
 
+
+    Navigator.push(
+
+      context,
+
+      MaterialPageRoute(
+
+        builder:(_)=>
+
+        const WalletScreen(),
+
+      ),
+
+    );
+
+
+  }
+
+
+
+
+
+
+
+
+  void showSettings(BuildContext context){
 
 
     showDialog(
 
-      context: context,
+      context:context,
 
-      builder: (context){
 
+      builder:(_){
 
 
-        return Dialog(
+        return AlertDialog(
 
 
+          title:
 
-          backgroundColor:
+          const Text(
 
-          Colors.transparent,
+            "⚙️ الإعدادات",
 
+          ),
 
 
-          child: Container(
 
+          content:
 
+          const Column(
 
-            padding:
+            mainAxisSize:
 
-            const EdgeInsets.all(20),
+            MainAxisSize.min,
 
 
+            children:[
 
-            decoration:
 
-            BoxDecoration(
+              Text(
 
+                "Puzzle World",
 
+              ),
 
-              color:
 
-              Colors.white,
+              SizedBox(height:10),
 
 
+              Text(
 
-              borderRadius:
+                "الإصدار: 1.0.0",
 
-              BorderRadius.circular(28),
+              ),
 
 
+              SizedBox(height:10),
 
-              boxShadow:[
 
+              Text(
 
+                "تواصل معنا",
 
-                BoxShadow(
+              ),
 
-                  color:
 
-                  Colors.black26,
 
-                  blurRadius:15,
-
-                ),
-
-              ],
-
-
-
-            ),
-
-
-
-
-
-            child: Column(
-
-
-
-              mainAxisSize:
-
-              MainAxisSize.min,
-
-
-
-              children:[
-
-
-
-                const Text(
-
-
-
-                  "🌍 ماذا تريد أن تفعل؟",
-
-
-
-                  style:
-
-                  TextStyle(
-
-
-
-                    fontSize:22,
-
-                    fontWeight:
-
-                    FontWeight.bold,
-
-                  ),
-
-                ),
-
-
-
-
-                const SizedBox(height:20),
-
-
-
-
-
-
-
-                _dialogButton(
-
-
-
-                  context,
-
-                  icon:
-
-                  Icons.map,
-
-                  text:
-
-                  "العودة إلى الخريطة",
-
-
-
-                  onTap:(){
-
-
-
-                    Navigator.pop(context);
-
-
-
-                    // هنا نربط الإعلان لاحقاً
-
-
-
-                    if(onBack != null){
-
-                      onBack!();
-
-                    }
-
-
-
-                  },
-
-                ),
-
-
-
-
-
-
-                const SizedBox(height:12),
-
-
-
-
-
-                _dialogButton(
-
-
-
-                  context,
-
-                  icon:
-
-                  Icons.exit_to_app,
-
-                  text:
-
-                  "إغلاق اللعبة",
-
-
-
-                  onTap:(){
-
-
-
-                    Navigator.pop(context);
-
-
-
-                    // هنا نربط إعلان الخروج لاحقاً
-
-
-
-                    Navigator.popUntil(
-
-                      context,
-
-                      (route)=>route.isFirst,
-
-                    );
-
-
-
-                  },
-
-                ),
-
-
-
-
-
-                const SizedBox(height:12),
-
-
-
-
-
-                TextButton(
-
-
-
-                  onPressed:(){
-
-
-
-                    Navigator.pop(context);
-
-
-
-                  },
-
-
-
-                  child:
-
-                  const Text(
-
-                    "إلغاء",
-
-                    style:
-
-                    TextStyle(
-
-                      fontSize:18,
-
-                    ),
-
-                  ),
-
-
-
-                ),
-
-
-
-
-              ],
-
-
-
-            ),
-
+            ],
 
 
           ),
 
 
 
-        );
 
+          actions:[
+
+
+            TextButton(
+
+              onPressed:(){
+
+                Navigator.pop(context);
+
+              },
+
+              child:
+
+              const Text(
+
+                "حسناً",
+
+              ),
+
+            )
+
+
+          ],
+
+
+
+        );
 
 
       },
 
     );
 
-  }
-
-
-
-
-
-
-
-
-  Widget _dialogButton(
-
-      BuildContext context,{
-
-        required IconData icon,
-
-        required String text,
-
-        required VoidCallback onTap,
-
-      }){
-
-
-
-    return InkWell(
-
-
-
-      onTap:onTap,
-
-
-
-      child: Container(
-
-
-
-        width:
-
-        double.infinity,
-
-
-
-        padding:
-
-        const EdgeInsets.symmetric(
-
-          vertical:14,
-
-        ),
-
-
-
-        decoration:
-
-        BoxDecoration(
-
-
-
-          color:
-
-          Colors.blueAccent,
-
-
-
-          borderRadius:
-
-          BorderRadius.circular(20),
-
-
-
-          boxShadow:[
-
-
-
-            BoxShadow(
-
-              color:
-
-              Colors.black26,
-
-              blurRadius:8,
-
-              offset:
-
-              const Offset(0,4),
-
-            ),
-
-          ],
-
-
-
-        ),
-
-
-
-        child:Row(
-
-
-
-          mainAxisAlignment:
-
-          MainAxisAlignment.center,
-
-
-
-          children:[
-
-
-
-            Icon(
-
-              icon,
-
-              color:
-
-              Colors.white,
-
-            ),
-
-
-
-            const SizedBox(width:10),
-
-
-
-
-            Text(
-
-
-
-              text,
-
-
-
-              style:
-
-              const TextStyle(
-
-
-
-                color:
-
-                Colors.white,
-
-
-
-                fontSize:18,
-
-
-
-                fontWeight:
-
-                FontWeight.bold,
-
-
-
-              ),
-
-            ),
-
-
-
-          ],
-
-
-
-        ),
-
-
-
-      ),
-
-
-
-    );
-
 
   }
-
 
 
 
@@ -512,13 +191,11 @@ class GameToolbar extends StatelessWidget {
   Widget build(BuildContext context){
 
 
-
     return SafeArea(
 
 
 
-      child: Container(
-
+      child:Container(
 
 
         margin:
@@ -527,17 +204,15 @@ class GameToolbar extends StatelessWidget {
 
 
 
-
         padding:
 
         const EdgeInsets.symmetric(
 
-          horizontal:14,
+          horizontal:12,
 
           vertical:8,
 
         ),
-
 
 
 
@@ -546,18 +221,14 @@ class GameToolbar extends StatelessWidget {
         BoxDecoration(
 
 
-
           color:
 
           Colors.black38,
 
 
-
           borderRadius:
 
-          BorderRadius.circular(32),
-
-
+          BorderRadius.circular(35),
 
 
           border:
@@ -568,14 +239,10 @@ class GameToolbar extends StatelessWidget {
 
             Colors.white30,
 
-            width:1,
-
           ),
 
 
-
         ),
-
 
 
 
@@ -595,57 +262,33 @@ class GameToolbar extends StatelessWidget {
 
 
 
+            // الإعدادات
 
-            // زر الرجوع
-
-            onBack != null
-
-                ? GestureDetector(
-
-
+            GestureDetector(
 
               onTap:(){
 
-                showExitDialog(context);
+                showSettings(context);
 
               },
-
 
 
               child:
 
               const Icon(
 
-
-
-                Icons.arrow_back_ios_new,
-
-
+                Icons.settings,
 
                 color:
 
                 Colors.white,
 
-
-
-                size:28,
-
-
+                size:30,
 
               ),
 
 
-
-            )
-
-                :
-
-            const SizedBox(
-
-              width:28,
-
             ),
-
 
 
 
@@ -655,20 +298,15 @@ class GameToolbar extends StatelessWidget {
 
             Image.asset(
 
-
-
               logo,
-
 
 
               height:45,
 
 
-
               fit:
 
               BoxFit.contain,
-
 
 
             ),
@@ -678,9 +316,7 @@ class GameToolbar extends StatelessWidget {
 
 
 
-
             Row(
-
 
 
               children:[
@@ -697,23 +333,36 @@ class GameToolbar extends StatelessWidget {
 
 
 
-                const SizedBox(width:8),
+
+                const SizedBox(width:6),
 
 
 
 
-                _counterBox(
+                GestureDetector(
 
-                  "🎁",
 
-                  rewards,
+                  onTap:(){
+
+                    openWallet(context);
+
+                  },
+
+
+                  child:_counterBox(
+
+                    "🪙",
+
+                    coins,
+
+                  ),
+
 
                 ),
 
 
 
               ],
-
 
 
             ),
@@ -736,6 +385,7 @@ class GameToolbar extends StatelessWidget {
 
 
   }
+
 
 
 
@@ -756,7 +406,6 @@ class GameToolbar extends StatelessWidget {
     return Container(
 
 
-
       padding:
 
       const EdgeInsets.symmetric(
@@ -774,17 +423,14 @@ class GameToolbar extends StatelessWidget {
       BoxDecoration(
 
 
-
         color:
 
         Colors.white24,
 
 
-
         borderRadius:
 
         BorderRadius.circular(18),
-
 
 
       ),
@@ -805,20 +451,726 @@ class GameToolbar extends StatelessWidget {
         const TextStyle(
 
 
-
           color:
 
           Colors.white,
 
 
-
-          fontSize:17,
-
+          fontSize:16,
 
 
           fontWeight:
 
           FontWeight.bold,
+
+
+        ),
+
+
+
+      ),
+
+
+
+    );
+
+
+  }
+
+
+
+}
+
+
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+
+
+class WalletScreen extends StatefulWidget {
+
+
+  const WalletScreen({
+
+    super.key,
+
+  });
+
+
+
+  @override
+  State<WalletScreen> createState() =>
+      _WalletScreenState();
+
+
+}
+
+
+
+
+
+
+class _WalletScreenState
+    extends State<WalletScreen>
+    with SingleTickerProviderStateMixin {
+
+
+
+  int stars = 0;
+
+  int coins = 0;
+
+  int achievements = 0;
+
+
+
+  bool loading = true;
+
+
+
+  late AnimationController starController;
+
+  late Animation<double> starAnimation;
+
+
+
+
+
+
+
+  @override
+  void initState(){
+
+
+    super.initState();
+
+
+    loadWallet();
+
+
+
+    starController = AnimationController(
+
+      vsync:this,
+
+      duration:
+
+      const Duration(seconds:2),
+
+    )..repeat(
+
+      reverse:true,
+
+    );
+
+
+
+    starAnimation = Tween<double>(
+
+      begin:0.9,
+
+      end:1.1,
+
+    ).animate(
+
+      CurvedAnimation(
+
+        parent:starController,
+
+        curve:Curves.easeInOut,
+
+      ),
+
+    );
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  Future<void> loadWallet() async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+
+    setState((){
+
+
+      stars =
+      prefs.getInt("wallet_stars") ?? 0;
+
+
+
+      coins =
+      prefs.getInt("wallet_coins") ?? 0;
+
+
+
+      achievements =
+      prefs.getInt("wallet_achievements") ?? 0;
+
+
+
+      loading = false;
+
+
+    });
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  Future<void> saveWallet() async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+
+    await prefs.setInt(
+
+      "wallet_stars",
+
+      stars,
+
+    );
+
+
+
+    await prefs.setInt(
+
+      "wallet_coins",
+
+      coins,
+
+    );
+
+
+
+    await prefs.setInt(
+
+      "wallet_achievements",
+
+      achievements,
+
+    );
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  Future<void> rewardFromAd() async {
+
+
+    setState((){
+
+
+      stars += 5;
+
+
+      coins += 10;
+
+
+    });
+
+
+
+    await saveWallet();
+
+
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+
+
+      const SnackBar(
+
+
+        content:
+
+        Text(
+
+          "🎁 حصلت على +10 رصيد و +5 نجوم",
+
+        ),
+
+
+      ),
+
+
+    );
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  @override
+  void dispose(){
+
+
+    starController.dispose();
+
+
+    super.dispose();
+
+
+  }
+
+
+
+
+
+
+
+
+
+  @override
+  Widget build(BuildContext context){
+
+
+
+    if(loading){
+
+
+      return const Scaffold(
+
+
+        body:
+
+        Center(
+
+          child:
+
+          CircularProgressIndicator(),
+
+        ),
+
+
+      );
+
+
+    }
+
+
+
+
+
+
+    return Scaffold(
+
+
+
+      appBar:
+
+      AppBar(
+
+
+
+        title:
+
+        const Text(
+
+          "👜 المحفظة",
+
+        ),
+
+
+
+        centerTitle:true,
+
+
+      ),
+
+
+
+
+
+
+      body:
+
+      SingleChildScrollView(
+
+
+
+        padding:
+
+        const EdgeInsets.all(20),
+
+
+
+        child:
+
+        Column(
+
+
+
+          children:[
+
+
+
+
+
+
+
+
+            // النجمة الذهبية
+
+            ScaleTransition(
+
+
+
+              scale:
+
+              starAnimation,
+
+
+
+              child:
+
+              Image.asset(
+
+
+
+                "assets/images/rewards/Star_gold.png",
+
+
+
+                height:100,
+
+
+
+                errorBuilder:
+
+                    (_,__,___){
+
+
+                  return const Icon(
+
+                    Icons.star,
+
+                    size:90,
+
+                    color:
+
+                    Colors.amber,
+
+                  );
+
+
+                },
+
+
+              ),
+
+
+
+            ),
+
+
+
+
+
+
+
+
+            const SizedBox(height:20),
+
+
+
+
+
+
+            walletCard(
+
+              "⭐ النجوم",
+
+              stars,
+
+              Colors.amber,
+
+            ),
+
+
+
+
+
+
+            walletCard(
+
+              "🪙 الرصيد",
+
+              coins,
+
+              Colors.orange,
+
+            ),
+
+
+
+
+
+
+            walletCard(
+
+              "🏆 الإنجازات",
+
+              achievements,
+
+              Colors.blue,
+
+            ),
+
+
+
+
+
+
+
+
+
+            const SizedBox(height:25),
+
+
+
+
+
+
+            Container(
+
+
+
+              padding:
+
+              const EdgeInsets.all(20),
+
+
+
+              decoration:
+
+              BoxDecoration(
+
+
+
+                color:
+
+                Colors.amber.withOpacity(.15),
+
+
+
+                borderRadius:
+
+                BorderRadius.circular(25),
+
+
+
+              ),
+
+
+
+              child:
+
+              Column(
+
+
+
+                children:[
+
+
+
+                  const Text(
+
+
+
+                    "🎁 صندوق المكافأة الذهبية",
+
+                    style:
+
+                    TextStyle(
+
+                      fontSize:22,
+
+                      fontWeight:
+
+                      FontWeight.bold,
+
+                    ),
+
+                  ),
+
+
+
+
+                  const SizedBox(height:15),
+
+
+
+
+
+                  const Text(
+
+
+
+                    "شاهد إعلان واحصل على مكافأة",
+
+                    style:
+
+                    TextStyle(
+
+                      fontSize:17,
+
+                    ),
+
+                  ),
+
+
+
+
+                  const SizedBox(height:20),
+
+
+
+
+
+
+                  SizedBox(
+
+
+
+                    width:
+
+                    double.infinity,
+
+
+
+                    height:55,
+
+
+
+                    child:
+
+                    ElevatedButton.icon(
+
+
+
+                      onPressed:
+
+                      rewardFromAd,
+
+
+
+                      icon:
+
+                      const Icon(
+
+                        Icons.play_circle,
+
+                      ),
+
+
+
+                      label:
+
+                      const Text(
+
+                        "شاهد إعلان",
+
+                        style:
+
+                        TextStyle(
+
+                          fontSize:18,
+
+                        ),
+
+                      ),
+
+
+
+                    ),
+
+
+
+                  ),
+
+
+
+
+                  const SizedBox(height:15),
+
+
+
+
+
+                  const Text(
+
+
+
+                    "+10 🪙 رصيد   +5 ⭐ نجوم",
+
+                    style:
+
+                    TextStyle(
+
+                      fontSize:18,
+
+                      fontWeight:
+
+                      FontWeight.bold,
+
+                    ),
+
+                  ),
+
+
+
+                ],
+
+
+
+              ),
+
+
+
+            ),
+
+
+
+          ],
 
 
 
@@ -831,6 +1183,1012 @@ class GameToolbar extends StatelessWidget {
 
 
     );
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  Widget walletCard(
+
+      String title,
+
+      int value,
+
+      Color color,
+
+      ){
+
+
+
+    return Container(
+
+
+
+      margin:
+
+      const EdgeInsets.only(
+
+        bottom:15,
+
+      ),
+
+
+
+      padding:
+
+      const EdgeInsets.all(18),
+
+
+
+      decoration:
+
+      BoxDecoration(
+
+
+
+        color:
+
+        color.withOpacity(.15),
+
+
+
+        borderRadius:
+
+        BorderRadius.circular(22),
+
+
+
+        border:
+
+        Border.all(
+
+          color:color,
+
+          width:2,
+
+        ),
+
+
+
+      ),
+
+
+
+
+      child:
+
+      Row(
+
+
+
+        mainAxisAlignment:
+
+        MainAxisAlignment.spaceBetween,
+
+
+
+        children:[
+
+
+
+          Text(
+
+            title,
+
+            style:
+
+            const TextStyle(
+
+              fontSize:20,
+
+              fontWeight:
+
+              FontWeight.bold,
+
+            ),
+
+          ),
+
+
+
+
+          Text(
+
+            value.toString(),
+
+            style:
+
+            TextStyle(
+
+              color:color,
+
+              fontSize:26,
+
+              fontWeight:
+
+              FontWeight.bold,
+
+            ),
+
+          ),
+
+
+
+        ],
+
+
+
+      ),
+
+
+
+    );
+
+
+  }
+
+
+
+}
+
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+
+
+class WalletScreen extends StatefulWidget {
+
+
+  const WalletScreen({
+
+    super.key,
+
+  });
+
+
+
+  @override
+  State<WalletScreen> createState() =>
+      _WalletScreenState();
+
+
+}
+
+
+
+
+
+
+class _WalletScreenState
+    extends State<WalletScreen>
+    with SingleTickerProviderStateMixin {
+
+
+
+  int stars = 0;
+
+  int coins = 0;
+
+  int achievements = 0;
+
+
+
+  bool loading = true;
+
+
+
+  late AnimationController starController;
+
+  late Animation<double> starAnimation;
+
+
+
+
+
+
+
+  @override
+  void initState(){
+
+
+    super.initState();
+
+
+    loadWallet();
+
+
+
+    starController = AnimationController(
+
+      vsync:this,
+
+      duration:
+
+      const Duration(seconds:2),
+
+    )..repeat(
+
+      reverse:true,
+
+    );
+
+
+
+    starAnimation = Tween<double>(
+
+      begin:0.9,
+
+      end:1.1,
+
+    ).animate(
+
+      CurvedAnimation(
+
+        parent:starController,
+
+        curve:Curves.easeInOut,
+
+      ),
+
+    );
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  Future<void> loadWallet() async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+
+    setState((){
+
+
+      stars =
+      prefs.getInt("wallet_stars") ?? 0;
+
+
+
+      coins =
+      prefs.getInt("wallet_coins") ?? 0;
+
+
+
+      achievements =
+      prefs.getInt("wallet_achievements") ?? 0;
+
+
+
+      loading = false;
+
+
+    });
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  Future<void> saveWallet() async {
+
+
+    final prefs =
+    await SharedPreferences.getInstance();
+
+
+
+    await prefs.setInt(
+
+      "wallet_stars",
+
+      stars,
+
+    );
+
+
+
+    await prefs.setInt(
+
+      "wallet_coins",
+
+      coins,
+
+    );
+
+
+
+    await prefs.setInt(
+
+      "wallet_achievements",
+
+      achievements,
+
+    );
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  Future<void> rewardFromAd() async {
+
+
+    setState((){
+
+
+      stars += 5;
+
+
+      coins += 10;
+
+
+    });
+
+
+
+    await saveWallet();
+
+
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+
+
+      const SnackBar(
+
+
+        content:
+
+        Text(
+
+          "🎁 حصلت على +10 رصيد و +5 نجوم",
+
+        ),
+
+
+      ),
+
+
+    );
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  @override
+  void dispose(){
+
+
+    starController.dispose();
+
+
+    super.dispose();
+
+
+  }
+
+
+
+
+
+
+
+
+
+  @override
+  Widget build(BuildContext context){
+
+
+
+    if(loading){
+
+
+      return const Scaffold(
+
+
+        body:
+
+        Center(
+
+          child:
+
+          CircularProgressIndicator(),
+
+        ),
+
+
+      );
+
+
+    }
+
+
+
+
+
+
+    return Scaffold(
+
+
+
+      appBar:
+
+      AppBar(
+
+
+
+        title:
+
+        const Text(
+
+          "👜 المحفظة",
+
+        ),
+
+
+
+        centerTitle:true,
+
+
+      ),
+
+
+
+
+
+
+      body:
+
+      SingleChildScrollView(
+
+
+
+        padding:
+
+        const EdgeInsets.all(20),
+
+
+
+        child:
+
+        Column(
+
+
+
+          children:[
+
+
+
+
+
+
+
+
+            // النجمة الذهبية
+
+            ScaleTransition(
+
+
+
+              scale:
+
+              starAnimation,
+
+
+
+              child:
+
+              Image.asset(
+
+
+
+                "assets/images/rewards/Star_gold.png",
+
+
+
+                height:100,
+
+
+
+                errorBuilder:
+
+                    (_,__,___){
+
+
+                  return const Icon(
+
+                    Icons.star,
+
+                    size:90,
+
+                    color:
+
+                    Colors.amber,
+
+                  );
+
+
+                },
+
+
+              ),
+
+
+
+            ),
+
+
+
+
+
+
+
+
+            const SizedBox(height:20),
+
+
+
+
+
+
+            walletCard(
+
+              "⭐ النجوم",
+
+              stars,
+
+              Colors.amber,
+
+            ),
+
+
+
+
+
+
+            walletCard(
+
+              "🪙 الرصيد",
+
+              coins,
+
+              Colors.orange,
+
+            ),
+
+
+
+
+
+
+            walletCard(
+
+              "🏆 الإنجازات",
+
+              achievements,
+
+              Colors.blue,
+
+            ),
+
+
+
+
+
+
+
+
+
+            const SizedBox(height:25),
+
+
+
+
+
+
+            Container(
+
+
+
+              padding:
+
+              const EdgeInsets.all(20),
+
+
+
+              decoration:
+
+              BoxDecoration(
+
+
+
+                color:
+
+                Colors.amber.withOpacity(.15),
+
+
+
+                borderRadius:
+
+                BorderRadius.circular(25),
+
+
+
+              ),
+
+
+
+              child:
+
+              Column(
+
+
+
+                children:[
+
+
+
+                  const Text(
+
+
+
+                    "🎁 صندوق المكافأة الذهبية",
+
+                    style:
+
+                    TextStyle(
+
+                      fontSize:22,
+
+                      fontWeight:
+
+                      FontWeight.bold,
+
+                    ),
+
+                  ),
+
+
+
+
+                  const SizedBox(height:15),
+
+
+
+
+
+                  const Text(
+
+
+
+                    "شاهد إعلان واحصل على مكافأة",
+
+                    style:
+
+                    TextStyle(
+
+                      fontSize:17,
+
+                    ),
+
+                  ),
+
+
+
+
+                  const SizedBox(height:20),
+
+
+
+
+
+
+                  SizedBox(
+
+
+
+                    width:
+
+                    double.infinity,
+
+
+
+                    height:55,
+
+
+
+                    child:
+
+                    ElevatedButton.icon(
+
+
+
+                      onPressed:
+
+                      rewardFromAd,
+
+
+
+                      icon:
+
+                      const Icon(
+
+                        Icons.play_circle,
+
+                      ),
+
+
+
+                      label:
+
+                      const Text(
+
+                        "شاهد إعلان",
+
+                        style:
+
+                        TextStyle(
+
+                          fontSize:18,
+
+                        ),
+
+                      ),
+
+
+
+                    ),
+
+
+
+                  ),
+
+
+
+
+                  const SizedBox(height:15),
+
+
+
+
+
+                  const Text(
+
+
+
+                    "+10 🪙 رصيد   +5 ⭐ نجوم",
+
+                    style:
+
+                    TextStyle(
+
+                      fontSize:18,
+
+                      fontWeight:
+
+                      FontWeight.bold,
+
+                    ),
+
+                  ),
+
+
+
+                ],
+
+
+
+              ),
+
+
+
+            ),
+
+
+
+          ],
+
+
+
+        ),
+
+
+
+      ),
+
+
+
+    );
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  Widget walletCard(
+
+      String title,
+
+      int value,
+
+      Color color,
+
+      ){
+
+
+
+    return Container(
+
+
+
+      margin:
+
+      const EdgeInsets.only(
+
+        bottom:15,
+
+      ),
+
+
+
+      padding:
+
+      const EdgeInsets.all(18),
+
+
+
+      decoration:
+
+      BoxDecoration(
+
+
+
+        color:
+
+        color.withOpacity(.15),
+
+
+
+        borderRadius:
+
+        BorderRadius.circular(22),
+
+
+
+        border:
+
+        Border.all(
+
+          color:color,
+
+          width:2,
+
+        ),
+
+
+
+      ),
+
+
+
+
+      child:
+
+      Row(
+
+
+
+        mainAxisAlignment:
+
+        MainAxisAlignment.spaceBetween,
+
+
+
+        children:[
+
+
+
+          Text(
+
+            title,
+
+            style:
+
+            const TextStyle(
+
+              fontSize:20,
+
+              fontWeight:
+
+              FontWeight.bold,
+
+            ),
+
+          ),
+
+
+
+
+          Text(
+
+            value.toString(),
+
+            style:
+
+            TextStyle(
+
+              color:color,
+
+              fontSize:26,
+
+              fontWeight:
+
+              FontWeight.bold,
+
+            ),
+
+          ),
+
+
+
+        ],
+
+
+
+      ),
+
+
+
+    );
+
 
   }
 
