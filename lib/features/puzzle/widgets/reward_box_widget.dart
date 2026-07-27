@@ -27,24 +27,40 @@ class RewardBoxWidget extends StatefulWidget {
 
 
 
+
+
 class _RewardBoxWidgetState
     extends State<RewardBoxWidget>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
 
 
 
-  late AnimationController controller;
+  late AnimationController boxController;
+
+  late AnimationController starController;
 
 
-  late Animation<double> scaleAnimation;
 
-  late Animation<double> rotateAnimation;
+  late Animation<double> boxScale;
+
+  late Animation<double> boxRotate;
+
+
+
+  late Animation<double> starScale;
+
+  late Animation<double> starOpacity;
+
+  late Animation<Offset> starMove;
+
 
 
   bool opened = false;
 
-
   bool showStar = false;
+
+
+
 
 
 
@@ -55,29 +71,34 @@ class _RewardBoxWidgetState
     super.initState();
 
 
-    controller = AnimationController(
 
-      vsync: this,
 
-      duration: const Duration(milliseconds:900),
+    boxController = AnimationController(
+
+      vsync:this,
+
+      duration:
+
+      const Duration(milliseconds:800),
 
     );
 
 
 
-    scaleAnimation = Tween<double>(
 
-      begin: 1,
+    boxScale = Tween<double>(
 
-      end: 1.12,
+      begin:1,
+
+      end:1.15,
 
     ).animate(
 
       CurvedAnimation(
 
-        parent: controller,
+        parent:boxController,
 
-        curve: Curves.easeInOut,
+        curve:Curves.elasticOut,
 
       ),
 
@@ -85,19 +106,103 @@ class _RewardBoxWidgetState
 
 
 
-    rotateAnimation = Tween<double>(
 
-      begin: -0.05,
+    boxRotate = Tween<double>(
 
-      end: 0.05,
+      begin:-0.08,
+
+      end:0.08,
 
     ).animate(
 
       CurvedAnimation(
 
-        parent: controller,
+        parent:boxController,
 
-        curve: Curves.elasticInOut,
+        curve:Curves.easeInOut,
+
+      ),
+
+    );
+
+
+
+
+
+
+
+    starController = AnimationController(
+
+      vsync:this,
+
+      duration:
+
+      const Duration(milliseconds:1500),
+
+    );
+
+
+
+
+
+    starScale = Tween<double>(
+
+      begin:0.2,
+
+      end:1,
+
+    ).animate(
+
+      CurvedAnimation(
+
+        parent:starController,
+
+        curve:Curves.elasticOut,
+
+      ),
+
+    );
+
+
+
+
+
+    starOpacity = Tween<double>(
+
+      begin:0,
+
+      end:1,
+
+    ).animate(
+
+      CurvedAnimation(
+
+        parent:starController,
+
+        curve:Curves.easeIn,
+
+      ),
+
+    );
+
+
+
+
+
+
+    starMove = Tween<Offset>(
+
+      begin:Offset.zero,
+
+      end:const Offset(0,-2.5),
+
+    ).animate(
+
+      CurvedAnimation(
+
+        parent:starController,
+
+        curve:Curves.easeOut,
 
       ),
 
@@ -105,6 +210,10 @@ class _RewardBoxWidgetState
 
 
   }
+
+
+
+
 
 
 
@@ -121,27 +230,41 @@ class _RewardBoxWidgetState
     }
 
 
+
+
     opened=true;
 
 
 
-    await controller.forward();
+
+    await boxController.forward();
+
 
 
 
     setState((){
 
+
       showStar=true;
+
 
     });
 
 
 
+
+    await starController.forward();
+
+
+
+
+
     await Future.delayed(
 
-      const Duration(milliseconds:1200),
+      const Duration(milliseconds:500),
 
     );
+
 
 
 
@@ -150,6 +273,8 @@ class _RewardBoxWidgetState
 
 
   }
+
+
 
 
 
@@ -173,58 +298,84 @@ class _RewardBoxWidgetState
 
         child:Stack(
 
+
           alignment:Alignment.center,
+
+
+
+          clipBehavior:Clip.none,
+
 
 
           children:[
 
 
 
+
+
+
             AnimatedBuilder(
 
 
-              animation:controller,
+
+              animation:boxController,
+
 
 
               builder:(context,child){
 
 
+
                 return Transform.rotate(
 
 
-                  angle:rotateAnimation.value,
+
+                  angle:boxRotate.value,
+
 
 
                   child:Transform.scale(
 
 
-                    scale:scaleAnimation.value,
+
+                    scale:boxScale.value,
+
 
 
                     child:child,
 
 
+
                   ),
+
 
 
                 );
 
 
+
               },
+
 
 
               child:Image.asset(
 
 
+
                 "assets/images/rewards/reward_box.png",
+
 
 
                 width:170,
 
+
+
                 height:170,
 
 
+
               ),
+
 
 
             ),
@@ -233,68 +384,68 @@ class _RewardBoxWidgetState
 
 
 
+
+
+
             if(showStar)
 
 
-              TweenAnimationBuilder<double>(
+
+              SlideTransition(
 
 
-                tween:Tween(
 
-                  begin:0.3,
-
-                  end:1,
-
-                ),
+                position:starMove,
 
 
-                duration:
 
-                const Duration(milliseconds:700),
-
-
-                builder:(context,value,child){
+                child:FadeTransition(
 
 
-                  return Transform.scale(
+
+                  opacity:starOpacity,
 
 
-                    scale:value,
+
+                  child:ScaleTransition(
 
 
-                    child:Opacity(
+
+                    scale:starScale,
 
 
-                      opacity:value,
+
+                    child:Image.asset(
 
 
-                      child:child,
+
+                      "assets/images/rewards/Star_gold.png",
+
+
+
+                      width:120,
+
+
+
+                      height:120,
+
 
 
                     ),
 
 
-                  );
 
+                  ),
 
-                },
-
-
-                child:Image.asset(
-
-
-                  "assets/images/rewards/Star_gold.png",
-
-
-                  width:120,
-
-                  height:120,
 
 
                 ),
 
 
+
               ),
+
+
 
 
 
@@ -317,11 +468,17 @@ class _RewardBoxWidgetState
 
 
 
+
+
+
   @override
   void dispose(){
 
 
-    controller.dispose();
+    boxController.dispose();
+
+
+    starController.dispose();
 
 
     super.dispose();
