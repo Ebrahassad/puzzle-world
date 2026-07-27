@@ -1,5 +1,6 @@
 class PuzzleLevelModel {
 
+
   // معرف المرحلة
   final String id;
 
@@ -12,13 +13,14 @@ class PuzzleLevelModel {
   final String title;
 
 
-  // صورة المرحلة (مستقبلاً)
+  // صورة البازل الخاصة بهذه المرحلة
   final String image;
 
 
   // حجم شبكة البازل
   // 3 = 3x3
   // 4 = 4x4
+  // 5 = 5x5
   final int gridSize;
 
 
@@ -34,8 +36,9 @@ class PuzzleLevelModel {
   final bool completed;
 
 
-  // عدد النجوم التي حصل عليها اللاعب
+  // عدد النجوم المكتسبة
   final int earnedStars;
+
 
 
 
@@ -65,6 +68,7 @@ class PuzzleLevelModel {
 
 
 
+
   //==================================================
   // JSON
   //==================================================
@@ -76,27 +80,19 @@ class PuzzleLevelModel {
 
       "id": id,
 
-
       "levelNumber": levelNumber,
-
 
       "title": title,
 
-
       "image": image,
-
 
       "gridSize": gridSize,
 
-
       "requiredStars": requiredStars,
-
 
       "unlocked": unlocked,
 
-
       "completed": completed,
-
 
       "earnedStars": earnedStars,
 
@@ -109,14 +105,14 @@ class PuzzleLevelModel {
 
 
 
+
+
   //==================================================
   // FROM JSON
   //==================================================
 
   factory PuzzleLevelModel.fromJson(
-
       Map<String,dynamic> json,
-
       ){
 
     return PuzzleLevelModel(
@@ -165,11 +161,14 @@ class PuzzleLevelModel {
 
 
 
+
+
   //==================================================
-  // COPY
+  // COPY WITH
   //==================================================
 
   PuzzleLevelModel copyWith({
+
 
     String? id,
 
@@ -188,6 +187,7 @@ class PuzzleLevelModel {
     bool? completed,
 
     int? earnedStars,
+
 
   }){
 
@@ -239,6 +239,9 @@ class PuzzleLevelModel {
 
 
 
+
+
+
   //==================================================
   // مقارنة
   //==================================================
@@ -255,7 +258,6 @@ class PuzzleLevelModel {
 
 
     return other is PuzzleLevelModel &&
-
         other.id == id;
 
 
@@ -266,11 +268,18 @@ class PuzzleLevelModel {
 
 
   @override
-  int get hashCode => id.hashCode;
+  int get hashCode =>
+      id.hashCode;
 
 
 
 
+
+
+
+  //==================================================
+  // عرض للتصحيح
+  //==================================================
 
   @override
   String toString(){
@@ -278,11 +287,21 @@ class PuzzleLevelModel {
     return """
 
 PuzzleLevelModel(
+
  id: $id,
+
  level: $levelNumber,
- grid: $gridSize,
+
+ image: $image,
+
+ grid: ${gridSize}x$gridSize,
+
+ stars: $earnedStars,
+
  unlocked: $unlocked,
+
  completed: $completed
+
 )
 
 """;
