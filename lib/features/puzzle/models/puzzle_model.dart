@@ -1,80 +1,79 @@
-class PuzzleLevelModel {
+class PuzzleModel {
 
-
-  // معرف المستوى
   final String id;
 
-
-  // رقم المستوى
-  final int levelNumber;
-
-
-  // اسم المستوى
+  // اسم الجزيرة / اللعبة
   final String title;
 
+  // صورة الجزيرة
+  final String image;
 
-  // حجم شبكة البازل
-  final int gridSize;
+  // وصف اللعبة
+  final String description;
 
+  // عدد المراحل
+  final int totalLevels;
 
-  // النجوم المطلوبة لفتح المستوى
+  // النجوم المطلوبة للفتح
   final int requiredStars;
 
-
-  // هل المستوى مفتوح
-  final bool unlocked;
-
+  // ترتيب الظهور
+  final int order;
 
 
-  const PuzzleLevelModel({
+  const PuzzleModel({
 
     required this.id,
 
-    required this.levelNumber,
-
     required this.title,
 
-    required this.gridSize,
+    required this.image,
+
+    required this.description,
+
+    required this.totalLevels,
 
     required this.requiredStars,
 
-    this.unlocked = false,
+    required this.order,
 
   });
 
 
 
-  // نسخة معدلة
-
-  PuzzleLevelModel copyWith({
+  PuzzleModel copyWith({
 
     String? id,
 
-    int? levelNumber,
-
     String? title,
 
-    int? gridSize,
+    String? image,
+
+    String? description,
+
+    int? totalLevels,
 
     int? requiredStars,
 
-    bool? unlocked,
+    int? order,
 
   }) {
 
-    return PuzzleLevelModel(
+    return PuzzleModel(
 
       id: id ?? this.id,
 
-      levelNumber: levelNumber ?? this.levelNumber,
-
       title: title ?? this.title,
 
-      gridSize: gridSize ?? this.gridSize,
+      image: image ?? this.image,
+
+      description: description ?? this.description,
+
+      totalLevels: totalLevels ?? this.totalLevels,
 
       requiredStars: requiredStars ?? this.requiredStars,
 
-      unlocked: unlocked ?? this.unlocked,
+      order: order ?? this.order,
 
     );
 
@@ -82,23 +81,23 @@ class PuzzleLevelModel {
 
 
 
-  // تحويل إلى JSON
-
   Map<String, dynamic> toJson() {
 
     return {
 
       "id": id,
 
-      "levelNumber": levelNumber,
-
       "title": title,
 
-      "gridSize": gridSize,
+      "image": image,
+
+      "description": description,
+
+      "totalLevels": totalLevels,
 
       "requiredStars": requiredStars,
 
-      "unlocked": unlocked,
+      "order": order,
 
     };
 
@@ -106,25 +105,25 @@ class PuzzleLevelModel {
 
 
 
-  // قراءة من JSON
-
-  factory PuzzleLevelModel.fromJson(
+  factory PuzzleModel.fromJson(
       Map<String, dynamic> json,
       ) {
 
-    return PuzzleLevelModel(
+    return PuzzleModel(
 
       id: json["id"] ?? "",
 
-      levelNumber: json["levelNumber"] ?? 0,
-
       title: json["title"] ?? "",
 
-      gridSize: json["gridSize"] ?? 3,
+      image: json["image"] ?? "",
+
+      description: json["description"] ?? "",
+
+      totalLevels: json["totalLevels"] ?? 0,
 
       requiredStars: json["requiredStars"] ?? 0,
 
-      unlocked: json["unlocked"] ?? false,
+      order: json["order"] ?? 0,
 
     );
 
@@ -135,13 +134,10 @@ class PuzzleLevelModel {
   @override
   bool operator ==(Object other) {
 
-    if (identical(this, other)) {
+    return identical(this, other) ||
 
-      return true;
+        other is PuzzleModel &&
 
-    }
-
-    return other is PuzzleLevelModel &&
         other.id == id;
 
   }
@@ -157,13 +153,21 @@ class PuzzleLevelModel {
   String toString() {
 
     return """
-PuzzleLevelModel(
+
+PuzzleModel(
+
  id: $id,
- level: $levelNumber,
+
  title: $title,
- grid: $gridSize,
- unlocked: $unlocked
+
+ levels: $totalLevels,
+
+ requiredStars: $requiredStars,
+
+ order: $order
+
 )
+
 """;
 
   }
