@@ -54,10 +54,19 @@ class _PuzzleLevelScreenState
   List<PuzzleLevelModel> levels = [];
 
 
+
   int totalStars = 0;
 
 
+  int coins = 0;
+
+
   int rewards = 0;
+
+
+
+  final GlobalKey starKey = GlobalKey();
+
 
 
   bool loading = true;
@@ -79,6 +88,7 @@ class _PuzzleLevelScreenState
     super.initState();
 
 
+
     pressController = AnimationController(
 
       vsync:this,
@@ -88,6 +98,7 @@ class _PuzzleLevelScreenState
       const Duration(milliseconds:120),
 
     );
+
 
 
     loadData();
@@ -283,7 +294,6 @@ class _PuzzleLevelScreenState
 
 
   }
-
 
   void showLockedDialog(
 
@@ -657,14 +667,6 @@ class _PuzzleLevelScreenState
 
   }
 
-
-
-
-
-
-
-
-
   @override
   Widget build(BuildContext context){
 
@@ -812,9 +814,21 @@ class _PuzzleLevelScreenState
 
 
 
+                coins:
+
+                coins,
+
+
+
                 rewards:
 
                 rewards,
+
+
+
+                starKey:
+
+                starKey,
 
 
 
@@ -929,7 +943,9 @@ class _PuzzleLevelScreenState
               ),
 
 
- 
+
+
+
               Expanded(
 
 
@@ -1098,17 +1114,6 @@ class _PuzzleLevelScreenState
 
 
   }
-
-
-}
-
-
-
-
-
-
-
-
 
 class _LevelCard extends StatefulWidget {
 
