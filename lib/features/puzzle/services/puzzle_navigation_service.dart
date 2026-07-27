@@ -34,23 +34,24 @@ class PuzzleNavigationService {
       BuildContext context,
       ) async {
 
+    try {
 
-    await Navigator.pushAndRemoveUntil(
+      await Navigator.pushAndRemoveUntil(
 
-      context,
+        context,
 
-      MaterialPageRoute(
+        MaterialPageRoute(
 
-        builder: (_) =>
+          builder: (_) =>
+          const PuzzleHomeScreen(),
 
-        const PuzzleHomeScreen(),
+        ),
 
-      ),
+            (route)=>false,
 
-          (route) => false,
+      );
 
-    );
-
+    } catch (_) {}
 
   }
 
@@ -73,24 +74,27 @@ class PuzzleNavigationService {
       }) async {
 
 
-    await Navigator.push(
+    try {
 
-      context,
+      await Navigator.push(
 
-      MaterialPageRoute(
+        context,
 
-        builder: (_) =>
+        MaterialPageRoute(
 
-            IslandScreen(
+          builder: (_) =>
 
-              island: puzzle,
+              IslandScreen(
 
-            ),
+                island:puzzle,
 
-      ),
+              ),
 
-    );
+        ),
 
+      );
+
+    } catch (_) {}
 
   }
 
@@ -116,53 +120,71 @@ class PuzzleNavigationService {
       }) async {
 
 
-
-    final unlocked =
-
-    await PuzzleLevelUnlockService.checkUnlocked(
-
-      worldId: puzzle.id,
-
-      level: level,
-
-    );
+    try {
 
 
+      bool unlocked = false;
+
+
+      try {
+
+
+        unlocked =
+        await PuzzleLevelUnlockService.checkUnlocked(
+
+          worldId:puzzle.id,
+
+          level:level,
+
+        );
+
+
+      } catch(_){
+
+        return;
+
+      }
 
 
 
-    if(!unlocked){
-
-      return;
-
-    }
 
 
 
+      if(!unlocked){
+
+        return;
+
+      }
 
 
 
 
-    await Navigator.push(
 
-      context,
 
-      MaterialPageRoute(
 
-        builder: (_) =>
+      await Navigator.push(
 
-            PuzzleGameScreen(
+        context,
 
-              puzzle: puzzle,
+        MaterialPageRoute(
 
-              level: level,
+          builder: (_) =>
 
-            ),
+              PuzzleGameScreen(
 
-      ),
+                puzzle:puzzle,
 
-    );
+                level:level,
 
+              ),
+
+        ),
+
+      );
+
+
+
+    } catch (_) {}
 
   }
 
@@ -192,31 +214,35 @@ class PuzzleNavigationService {
       }) async {
 
 
+    try {
 
-    await Navigator.pushReplacement(
 
-      context,
+      await Navigator.pushReplacement(
 
-      MaterialPageRoute(
+        context,
 
-        builder: (_) =>
+        MaterialPageRoute(
 
-            PuzzleWinScreen(
+          builder: (_) =>
 
-              result: result,
+              PuzzleWinScreen(
 
-              difficulty: difficulty,
+                result:result,
 
-              worldId: worldId,
+                difficulty:difficulty,
 
-              level: level,
+                worldId:worldId,
 
-            ),
+                level:level,
 
-      ),
+              ),
 
-    );
+        ),
 
+      );
+
+
+    } catch (_) {}
 
   }
 
@@ -242,106 +268,111 @@ class PuzzleNavigationService {
       }) async {
 
 
-
-    PuzzleModel? world =
-
-    PuzzleData.getById(
-
-      worldId,
-
-    );
+    try {
 
 
+      final world =
 
+      PuzzleData.getById(
 
+        worldId,
 
-    if(world == null){
-
-      return;
-
-    }
+      );
 
 
 
 
 
+      if(world == null){
 
+        return;
 
-    final levels =
-
-    PuzzleLevelData.getLevels(
-
-      worldId,
-
-    );
+      }
 
 
 
 
 
-    PuzzleLevelModel? nextLevel;
+
+
+      final levels =
+
+      PuzzleLevelData.getLevels(
+
+        worldId,
+
+      );
 
 
 
 
 
-    for(final level in levels){
+
+
+      PuzzleLevelModel? next;
 
 
 
-      if(level.levelNumber == currentLevel + 1){
 
 
-        nextLevel = level;
+      for(final item in levels){
 
 
-        break;
+        if(item.levelNumber == currentLevel + 1){
+
+          next = item;
+
+          break;
+
+        }
+
+      }
+
+
+
+
+
+
+
+      if(next == null){
+
+
+        await openWorld(
+
+          context,
+
+          puzzle:world,
+
+        );
+
+
+        return;
 
 
       }
 
 
-    }
 
 
 
 
 
 
-
-    if(nextLevel == null){
-
-
-      await openWorld(
+      await openGame(
 
         context,
 
-        puzzle: world,
+        puzzle:world,
+
+        level:next,
 
       );
 
 
-      return;
-
-
-    }
 
 
 
-
-
-
-
-    await openGame(
-
-      context,
-
-      puzzle: world,
-
-      level: nextLevel,
-
-    );
-
+    } catch (_) {}
 
   }
 
@@ -367,26 +398,31 @@ class PuzzleNavigationService {
       }) async {
 
 
-    await Navigator.pushReplacement(
+    try {
 
-      context,
 
-      MaterialPageRoute(
+      await Navigator.pushReplacement(
 
-        builder: (_) =>
+        context,
 
-            PuzzleGameScreen(
+        MaterialPageRoute(
 
-              puzzle: puzzle,
+          builder: (_) =>
 
-              level: level,
+              PuzzleGameScreen(
 
-            ),
+                puzzle:puzzle,
 
-      ),
+                level:level,
 
-    );
+              ),
 
+        ),
+
+      );
+
+
+    } catch (_) {}
 
   }
 
@@ -408,20 +444,25 @@ class PuzzleNavigationService {
       ) async {
 
 
-    await Navigator.push(
+    try {
 
-      context,
 
-      MaterialPageRoute(
+      await Navigator.push(
 
-        builder: (_) =>
+        context,
 
-        const WalletScreen(),
+        MaterialPageRoute(
 
-      ),
+          builder: (_) =>
 
-    );
+          const WalletScreen(),
 
+        ),
+
+      );
+
+
+    } catch (_) {}
 
   }
 
@@ -445,14 +486,19 @@ class PuzzleNavigationService {
       }) {
 
 
-    Navigator.pop(
+    try {
 
-      context,
 
-      result,
+      Navigator.pop(
 
-    );
+        context,
 
+        result,
+
+      );
+
+
+    } catch (_) {}
 
   }
 
@@ -474,16 +520,22 @@ class PuzzleNavigationService {
       ) {
 
 
-    Navigator.popUntil(
+    try {
 
-      context,
 
-          (route) => route.isFirst,
+      Navigator.popUntil(
 
-    );
+        context,
 
+            (route)=>route.isFirst,
+
+      );
+
+
+    } catch (_) {}
 
   }
+
 
 
 }
