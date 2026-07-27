@@ -30,15 +30,11 @@ class PuzzlePieceWidget extends StatefulWidget {
 
 
 
-
-
   @override
   State<PuzzlePieceWidget> createState() =>
       _PuzzlePieceWidgetState();
 
 }
-
-
 
 
 
@@ -52,13 +48,17 @@ class _PuzzlePieceWidgetState
   bool pressed = false;
 
 
+  ui.Image? loadedImage;
+
+
+  late ImageStream imageStream;
+
+
 
   late AnimationController _glowController;
 
 
   late Animation<double> _glowAnimation;
-
-
 
 
 
@@ -70,15 +70,18 @@ class _PuzzlePieceWidgetState
     super.initState();
 
 
+    _loadImage();
+
+
 
     _glowController = AnimationController(
 
-      vsync: this,
+      vsync:this,
 
-      duration: const Duration(seconds:2),
+      duration:
+      const Duration(seconds:2),
 
     );
-
 
 
     _glowAnimation = Tween<double>(
@@ -93,7 +96,7 @@ class _PuzzlePieceWidgetState
 
         parent:_glowController,
 
-        curve: Curves.easeInOut,
+        curve:Curves.easeInOut,
 
       ),
 
@@ -111,8 +114,51 @@ class _PuzzlePieceWidgetState
 
     }
 
+
   }
 
+
+
+
+
+
+
+  void _loadImage(){
+
+
+    imageStream = widget.image.resolve(
+
+      const ImageConfiguration(),
+
+    );
+
+
+    imageStream.addListener(
+
+      ImageStreamListener(
+
+            (info, synchronousCall){
+
+
+          if(mounted){
+
+            setState((){
+
+              loadedImage = info.image;
+
+            });
+
+          }
+
+
+        },
+
+      ),
+
+    );
+
+
+  }
 
 
 
@@ -122,11 +168,16 @@ class _PuzzlePieceWidgetState
 
   @override
   void didUpdateWidget(
-      covariant PuzzlePieceWidget oldWidget,
-      ){
-
+      covariant PuzzlePieceWidget oldWidget){
 
     super.didUpdateWidget(oldWidget);
+
+
+    if(oldWidget.image != widget.image){
+
+      _loadImage();
+
+    }
 
 
 
@@ -140,7 +191,9 @@ class _PuzzlePieceWidgetState
 
       );
 
+
     }
+
 
   }
 
@@ -153,13 +206,11 @@ class _PuzzlePieceWidgetState
   void setPressed(bool value){
 
 
-
     if(widget.piece.placed){
 
       return;
 
     }
-
 
 
     setState((){
@@ -177,7 +228,6 @@ class _PuzzlePieceWidgetState
 
 
 
-
   @override
   void dispose(){
 
@@ -185,10 +235,21 @@ class _PuzzlePieceWidgetState
     _glowController.dispose();
 
 
+    imageStream.removeListener(
+
+      ImageStreamListener(
+
+            (_,__){},
+
+      ),
+
+    );
+
+
     super.dispose();
 
-  }
 
+  }
 
 
 
@@ -200,18 +261,16 @@ class _PuzzlePieceWidgetState
   Widget build(BuildContext context){
 
 
+
     final placed =
         widget.piece.placed;
-
-
 
 
 
     return RepaintBoundary(
 
 
-      child: GestureDetector(
-
+      child:GestureDetector(
 
 
         onTapDown:(_){
@@ -221,13 +280,11 @@ class _PuzzlePieceWidgetState
         },
 
 
-
         onTapUp:(_){
 
           setPressed(false);
 
         },
-
 
 
         onTapCancel:(){
@@ -238,15 +295,12 @@ class _PuzzlePieceWidgetState
 
 
 
-
-        child: AnimatedScale(
-
+        child:AnimatedScale(
 
 
           scale:
 
           pressed ? 1.04 : 1,
-
 
 
           duration:
@@ -259,330 +313,51 @@ class _PuzzlePieceWidgetState
 
 
 
-
-          child: AnimatedContainer(
-
+          child:CustomPaint(
 
 
-            duration:
+            size:
 
-            const Duration(
+            Size(
 
-              milliseconds:300,
+              widget.size,
 
-            ),
-
-
-
-            clipBehavior:
-
-            Clip.antiAlias,
-
-
-
-            decoration:BoxDecoration(
-
-
-
-              borderRadius:
-
-              BorderRadius.circular(12),
-
-
-
-
-              boxShadow:[
-
-
-
-                BoxShadow(
-
-
-
-                  color:
-
-                  Colors.black.withOpacity(
-
-
-
-                    placed
-
-                        ?0.12
-
-                        :pressed
-
-                        ?0.35
-
-                        :0.18,
-
-                  ),
-
-
-
-
-                  blurRadius:
-
-                  placed
-
-                      ?10
-
-                      :pressed
-
-                      ?18
-
-                      :8,
-
-
-
-
-                  offset:
-
-                  Offset(
-
-                    0,
-
-                    pressed ?8:4,
-
-                  ),
-
-
-                ),
-
-
-              ],
-
+              widget.size,
 
             ),
 
 
 
+            painter:
 
-            child:Stack(
+            PuzzlePainter(
 
 
+              piece:
 
-              children:[
+              widget.piece,
 
 
+              image:
 
+              widget.image,
 
-                CustomPaint(
 
+              cachedImage:
 
-
-                  size:
-
-                  Size(
-
-                    widget.size,
-
-                    widget.size,
-
-                  ),
-
-
-
-
-                  painter:
-
-                  PuzzlePainter(
-
-
-
-                    piece:
-
-                    widget.piece,
-
-
-
-                    image:
-
-                    widget.image,
-
-
-                  ),
-
-
-
-
-                ),
-
-
-
-
-
-
-
-                // لمعة القطعة بعد التركيب
-
-                if(placed)
-
-                  AnimatedBuilder(
-
-
-
-                    animation:
-
-                    _glowAnimation,
-
-
-
-                    builder:
-
-                        (context,child){
-
-
-
-                      return Positioned.fill(
-
-
-
-                        child: Container(
-
-
-
-                          decoration:
-
-                          BoxDecoration(
-
-
-
-                            borderRadius:
-
-                            BorderRadius.circular(12),
-
-
-
-                            gradient:
-
-                            LinearGradient(
-
-
-
-                              begin:
-
-                              Alignment.topLeft,
-
-
-
-                              end:
-
-                              Alignment.bottomRight,
-
-
-
-                              colors:[
-
-
-
-                                Colors.white.withOpacity(
-
-                                  0.35 *
-
-                                      _glowAnimation.value,
-
-                                ),
-
-
-
-                                Colors.transparent,
-
-
-
-                              ],
-
-
-
-                            ),
-
-
-
-                          ),
-
-
-
-                        ),
-
-
-
-                      );
-
-
-
-                    },
-
-
-                  ),
-
-
-
-
-
-                // طبقة نجاح خفيفة
-
-                if(placed)
-
-                  Positioned.fill(
-
-
-
-                    child: Container(
-
-
-
-                      decoration:
-
-                      BoxDecoration(
-
-
-
-                        color:
-
-                        Colors.white.withOpacity(
-
-                          0.08,
-
-                        ),
-
-
-
-                        borderRadius:
-
-                        BorderRadius.circular(12),
-
-
-
-                      ),
-
-
-
-                    ),
-
-
-
-                  ),
-
-
-
-
-              ],
-
+              loadedImage,
 
 
             ),
-
 
 
           ),
 
 
-
         ),
 
 
-
       ),
-
 
 
     );
