@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 
+
 class RewardBoxWidget extends StatefulWidget {
 
 
   final VoidCallback onRewardOpened;
+
 
 
   const RewardBoxWidget({
@@ -20,6 +22,7 @@ class RewardBoxWidget extends StatefulWidget {
   @override
   State<RewardBoxWidget> createState() =>
       _RewardBoxWidgetState();
+
 
 }
 
@@ -39,11 +42,17 @@ class _RewardBoxWidgetState
 
   late AnimationController starController;
 
+  late AnimationController pulseController;
+
 
 
   late Animation<double> boxScale;
 
   late Animation<double> boxRotate;
+
+
+
+  late Animation<double> pulseAnimation;
 
 
 
@@ -64,6 +73,8 @@ class _RewardBoxWidgetState
 
 
 
+
+
   @override
   void initState(){
 
@@ -72,6 +83,9 @@ class _RewardBoxWidgetState
 
 
 
+
+
+    // حركة فتح الصندوق
 
     boxController = AnimationController(
 
@@ -98,11 +112,14 @@ class _RewardBoxWidgetState
 
         parent:boxController,
 
-        curve:Curves.elasticOut,
+        curve:
+
+        Curves.elasticOut,
 
       ),
 
     );
+
 
 
 
@@ -119,7 +136,9 @@ class _RewardBoxWidgetState
 
         parent:boxController,
 
-        curve:Curves.easeInOut,
+        curve:
+
+        Curves.easeInOut,
 
       ),
 
@@ -130,6 +149,57 @@ class _RewardBoxWidgetState
 
 
 
+
+
+
+    // نبض الصندوق قبل الضغط
+
+    pulseController = AnimationController(
+
+      vsync:this,
+
+      duration:
+
+      const Duration(seconds:1),
+
+    )..repeat(
+
+      reverse:true,
+
+    );
+
+
+
+
+    pulseAnimation = Tween<double>(
+
+      begin:0.95,
+
+      end:1.08,
+
+    ).animate(
+
+      CurvedAnimation(
+
+        parent:pulseController,
+
+        curve:
+
+        Curves.easeInOut,
+
+      ),
+
+    );
+
+
+
+
+
+
+
+
+
+    // حركة النجمة الذهبية
 
     starController = AnimationController(
 
@@ -157,11 +227,14 @@ class _RewardBoxWidgetState
 
         parent:starController,
 
-        curve:Curves.elasticOut,
+        curve:
+
+        Curves.elasticOut,
 
       ),
 
     );
+
 
 
 
@@ -179,11 +252,14 @@ class _RewardBoxWidgetState
 
         parent:starController,
 
-        curve:Curves.easeIn,
+        curve:
+
+        Curves.easeIn,
 
       ),
 
     );
+
 
 
 
@@ -192,9 +268,14 @@ class _RewardBoxWidgetState
 
     starMove = Tween<Offset>(
 
-      begin:Offset.zero,
+      begin:
 
-      end:const Offset(0,-2.5),
+      Offset.zero,
+
+
+      end:
+
+      const Offset(0,-2.8),
 
     ).animate(
 
@@ -202,11 +283,14 @@ class _RewardBoxWidgetState
 
         parent:starController,
 
-        curve:Curves.easeOut,
+        curve:
+
+        Curves.easeOut,
 
       ),
 
     );
+
 
 
   }
@@ -231,13 +315,18 @@ class _RewardBoxWidgetState
 
 
 
-
     opened=true;
+
+
+
+    pulseController.stop();
+
 
 
 
 
     await boxController.forward();
+
 
 
 
@@ -253,7 +342,10 @@ class _RewardBoxWidgetState
 
 
 
+
+
     await starController.forward();
+
 
 
 
@@ -264,6 +356,7 @@ class _RewardBoxWidgetState
       const Duration(milliseconds:500),
 
     );
+
 
 
 
@@ -286,24 +379,38 @@ class _RewardBoxWidgetState
   Widget build(BuildContext context){
 
 
+
     return Center(
 
 
-      child:GestureDetector(
 
+      child:
 
-        onTap:openBox,
-
-
-
-        child:Stack(
-
-
-          alignment:Alignment.center,
+      GestureDetector(
 
 
 
-          clipBehavior:Clip.none,
+        onTap:
+
+        openBox,
+
+
+
+        child:
+
+        Stack(
+
+
+
+          alignment:
+
+          Alignment.center,
+
+
+
+          clipBehavior:
+
+          Clip.none,
 
 
 
@@ -318,7 +425,15 @@ class _RewardBoxWidgetState
 
 
 
-              animation:boxController,
+              animation:
+
+              Listenable.merge([
+
+                boxController,
+
+                pulseController,
+
+              ]),
 
 
 
@@ -330,19 +445,29 @@ class _RewardBoxWidgetState
 
 
 
-                  angle:boxRotate.value,
+                  angle:
+
+                  boxRotate.value,
 
 
 
-                  child:Transform.scale(
+                  child:
+
+                  Transform.scale(
 
 
 
-                    scale:boxScale.value,
+                    scale:
+
+                    boxScale.value *
+
+                    pulseAnimation.value,
 
 
 
-                    child:child,
+                    child:
+
+                    child,
 
 
 
@@ -358,7 +483,11 @@ class _RewardBoxWidgetState
 
 
 
-              child:Image.asset(
+
+
+              child:
+
+              Image.asset(
 
 
 
@@ -368,9 +497,13 @@ class _RewardBoxWidgetState
 
                 width:170,
 
-
-
                 height:170,
+
+
+
+                fit:
+
+                BoxFit.contain,
 
 
 
@@ -386,7 +519,6 @@ class _RewardBoxWidgetState
 
 
 
-
             if(showStar)
 
 
@@ -395,27 +527,39 @@ class _RewardBoxWidgetState
 
 
 
-                position:starMove,
+                position:
+
+                starMove,
 
 
 
-                child:FadeTransition(
+                child:
+
+                FadeTransition(
 
 
 
-                  opacity:starOpacity,
+                  opacity:
+
+                  starOpacity,
 
 
 
-                  child:ScaleTransition(
+                  child:
+
+                  ScaleTransition(
 
 
 
-                    scale:starScale,
+                    scale:
+
+                    starScale,
 
 
 
-                    child:Image.asset(
+                    child:
+
+                    Image.asset(
 
 
 
@@ -425,9 +569,13 @@ class _RewardBoxWidgetState
 
                       width:120,
 
-
-
                       height:120,
+
+
+
+                      fit:
+
+                      BoxFit.contain,
 
 
 
@@ -448,17 +596,20 @@ class _RewardBoxWidgetState
 
 
 
-
           ],
+
 
 
         ),
 
 
+
       ),
 
 
+
     );
+
 
 
   }
@@ -475,16 +626,22 @@ class _RewardBoxWidgetState
   void dispose(){
 
 
+
     boxController.dispose();
 
 
     starController.dispose();
 
 
+    pulseController.dispose();
+
+
+
     super.dispose();
 
 
   }
+
 
 
 }
