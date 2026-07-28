@@ -1,345 +1,71 @@
 class GameResultModel {
-
-
-  // عدد النجوم
   final int stars;
-
-
-  // عدد الحركات
   final int moves;
-
-
-  // وقت إنهاء المرحلة
   final Duration time;
 
-
-
-
-
   const GameResultModel({
-
     required this.stars,
-
     required this.moves,
-
     required this.time,
-
-  })
-      : assert(stars >= 0),
-        assert(moves >= 0);
-
-
-
-
-
-
-
-
-
-  //==================================================
-  // الوقت بالثواني
-  //==================================================
+  });
 
   int get seconds => time.inSeconds;
 
-
-
-
-
-
-
-
-
-  //==================================================
-  // تقييم النتيجة
-  //==================================================
-
-  String get rating {
-
-
-    if(stars >= 3){
-
-      return "ممتاز";
-
-    }
-
-
-
-    if(stars == 2){
-
-      return "جيد جداً";
-
-    }
-
-
-
-    if(stars == 1){
-
-      return "جيد";
-
-    }
-
-
-
-    return "حاول مرة أخرى";
-
-
-  }
-
-
-
-
-
-
-
-
-
-  //==================================================
-  // هل النتيجة كاملة
-  //==================================================
-
   bool get isPerfect => stars >= 3;
 
-
-
-
-
-
-
-
-
-  //==================================================
-  // JSON
-  //==================================================
-
-  Map<String,dynamic> toJson(){
-
-
-    return {
-
-
-      "stars": stars,
-
-
-      "moves": moves,
-
-
-      "seconds": seconds,
-
-
-    };
-
-
+  String get rating {
+    if (stars >= 3) return "ممتاز";
+    if (stars == 2) return "جيد جداً";
+    if (stars == 1) return "جيد";
+    return "حاول مرة أخرى";
   }
 
-
-
-
-
-
-
-
-
-  //==================================================
-  // FROM JSON
-  //==================================================
+  Map<String, dynamic> toJson() {
+    return {
+      "stars": stars,
+      "moves": moves,
+      "seconds": seconds,
+    };
+  }
 
   factory GameResultModel.fromJson(
-
-      Map<String,dynamic> json,
-
-      ){
-
-
-
+    Map<String, dynamic> json,
+  ) {
     return GameResultModel(
-
-
-      stars:
-
-      (json["stars"] is int)
-
-          ? json["stars"]
-
-          : 0,
-
-
-
-      moves:
-
-      (json["moves"] is int)
-
-          ? json["moves"]
-
-          : 0,
-
-
-
-      time:
-
-      Duration(
-
-        seconds:
-
-        (json["seconds"] is int)
-
-            ? json["seconds"]
-
-            : 0,
-
+      stars: json["stars"] ?? 0,
+      moves: json["moves"] ?? 0,
+      time: Duration(
+        seconds: json["seconds"] ?? 0,
       ),
-
-
     );
-
-
   }
-
-
-
-
-
-
-
-
-
-  //==================================================
-  // COPY
-  //==================================================
 
   GameResultModel copyWith({
-
-
     int? stars,
-
-
     int? moves,
-
-
     Duration? time,
-
-
-  }){
-
-
-
+  }) {
     return GameResultModel(
-
-
-      stars:
-
-      stars ?? this.stars,
-
-
-
-      moves:
-
-      moves ?? this.moves,
-
-
-
-      time:
-
-      time ?? this.time,
-
-
+      stars: stars ?? this.stars,
+      moves: moves ?? this.moves,
+      time: time ?? this.time,
     );
-
-
   }
 
-
-
-
-
-
-
-
-
-  //==================================================
-  // مقارنة النتائج
-  //==================================================
-
-  bool isBetterThan(
-
-      GameResultModel other,
-
-      ){
-
-
-
-    if(stars > other.stars){
-
-      return true;
-
+  bool isBetterThan(GameResultModel other) {
+    if (stars != other.stars) {
+      return stars > other.stars;
     }
 
-
-
-
-
-    if(stars == other.stars &&
-
-        moves < other.moves){
-
-      return true;
-
+    if (moves != other.moves) {
+      return moves < other.moves;
     }
 
-
-
-
-
-
-
-    if(stars == other.stars &&
-
-        moves == other.moves &&
-
-        seconds < other.seconds){
-
-      return true;
-
-    }
-
-
-
-
-
-    return false;
-
-
+    return seconds < other.seconds;
   }
-
-
-
-
-
-
-
-
-
-  //==================================================
-  // وصف النتيجة
-  //==================================================
 
   @override
-
-  String toString(){
-
-
-    return """
-
-GameResultModel(
- stars: $stars,
- moves: $moves,
- seconds: $seconds
-)
-
-""";
-
-
+  String toString() {
+    return "GameResultModel(stars: $stars, moves: $moves, seconds: $seconds)";
   }
-
-
 }
