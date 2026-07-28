@@ -2365,4 +2365,219 @@ static Future<void> resetAll() async {
 
 }
   
+static const String unlockedIslandsKey =
+    "puzzle_unlocked_islands";
+
+
+static const String islandAdsKey =
+    "puzzle_island_ads";
+
+
+
+static Future<void> unlockIsland(
+    String islandId,
+    ) async {
+
+
+  final prefs = await _prefs;
+
+
+  final islands =
+      prefs.getStringList(
+        unlockedIslandsKey,
+      ) ?? [];
+
+
+
+  if(!islands.contains(islandId)){
+
+
+    islands.add(islandId);
+
+
+    await prefs.setStringList(
+      unlockedIslandsKey,
+      islands,
+    );
+
+
+  }
+
+}
+
+static Future<bool> isIslandUnlocked(
+    String islandId,
+    ) async {
+
+
+  final prefs = await _prefs;
+
+
+  final islands =
+      prefs.getStringList(
+        unlockedIslandsKey,
+      ) ?? [];
+
+
+
+  // جزيرة الحيوانات مفتوحة دائماً
+
+  if(islandId == "animals"){
+
+    return true;
+
+  }
+
+
+
+  return islands.contains(islandId);
+
+
+}
+
+
+static Future<int> getIslandAds(
+    String islandId,
+    ) async {
+
+
+  final prefs = await _prefs;
+
+
+  final data =
+      jsonDecode(
+        prefs.getString(islandAdsKey) ?? "{}",
+      );
+
+
+  return data[islandId] ?? 0;
+
+
+}
+
+
+
+static Future<int> addIslandAd(
+    String islandId,
+    ) async {
+
+
+  final prefs = await _prefs;
+
+
+  final data =
+      jsonDecode(
+        prefs.getString(islandAdsKey) ?? "{}",
+      );
+
+
+
+  int count =
+      data[islandId] ?? 0;
+
+
+
+  count++;
+
+
+  data[islandId] = count;
+
+
+
+  await prefs.setString(
+    islandAdsKey,
+    jsonEncode(data),
+  );
+
+
+  return count;
+
+
+}
+//==================================================
+// 🏝️ نظام متطلبات فتح الجزر
+//==================================================
+
+
+static int getIslandRequiredAds(
+    String islandId,
+    ) {
+
+  switch(islandId){
+
+    case "cars":
+      return 5;
+
+
+    case "space":
+      return 6;
+
+
+    case "landmarks":
+      return 7;
+
+
+    case "nature":
+      return 8;
+
+
+    default:
+      return 5;
+
+  }
+
+}
+
+
+
+//==================================================
+// 📺 إضافة مشاهدة إعلان وفتح الجزيرة تلقائياً
+//==================================================
+
+
+static Future<bool> watchIslandAd(
+    String islandId,
+    ) async {
+
+
+  final current =
+      await addIslandAd(islandId);
+
+
+
+  final required =
+      getIslandRequiredAds(islandId);
+
+
+
+  if(current >= required){
+
+
+    await unlockIsland(
+      islandId,
+    );
+
+
+    return true;
+
+
+  }
+
+
+  return false;
+
+
+}
+static Future<void> unlockIslandByAds(
+    String islandId,
+    ) async {
+
+
+  await unlockIsland(
+    islandId,
+  );
+
+
+}
+
 }
