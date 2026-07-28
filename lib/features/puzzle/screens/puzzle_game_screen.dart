@@ -20,15 +20,16 @@ import '../widgets/puzzle_piece_widget.dart';
 import '../widgets/reward_box_widget.dart';
 import '../widgets/game_toolbar.dart';
 
+
 import '../managers/puzzle_hint_manager.dart';
 import '../managers/puzzle_progress_manager.dart';
-import '../managers/reward_manager.dart';
 
 
 import '../services/reward_ad_service.dart';
 
 
 import 'puzzle_win_screen.dart';
+
 
 
 
@@ -107,9 +108,11 @@ class _PuzzleGameScreenState
 
 
 
-  //==================================================
+
+
+  //===============================
   // حالة اللعبة
-  //==================================================
+  //===============================
 
 
   int moves = 0;
@@ -119,9 +122,6 @@ class _PuzzleGameScreenState
 
 
   int hints = 0;
-
-
-  
 
 
 
@@ -145,10 +145,7 @@ class _PuzzleGameScreenState
 
 
 
- 
-
-
-
+  // حجم اللوحة
 
 
   double boardSize = 300;
@@ -167,7 +164,12 @@ class _PuzzleGameScreenState
 
 
 
-final GlobalKey starKey = GlobalKey();
+
+
+  final GlobalKey starKey = GlobalKey();
+
+
+
 
 
   double get pieceSize =>
@@ -183,11 +185,12 @@ final GlobalKey starKey = GlobalKey();
 
 
   @override
-
   void initState(){
 
 
     super.initState();
+
+
 
 
 
@@ -235,6 +238,11 @@ final GlobalKey starKey = GlobalKey();
 
 
 
+  //===============================
+  // تشغيل الصوت
+  //===============================
+
+
   Future<void> initAudio() async {
 
 
@@ -274,6 +282,14 @@ final GlobalKey starKey = GlobalKey();
 
 
   }
+
+
+
+
+
+
+
+
 
   Future<void> playSound(String file) async {
 
@@ -315,9 +331,9 @@ final GlobalKey starKey = GlobalKey();
 
 
 
-  //==================================================
-  // تحميل صورة البازل
-  //==================================================
+  //===============================
+  // تحميل صورة المرحلة
+  //===============================
 
 
   Future<void> loadPuzzleImage() async {
@@ -343,7 +359,7 @@ final GlobalKey starKey = GlobalKey();
 
         ImageStreamListener(
 
-              (info, _) {
+              (info,_){
 
 
 
@@ -426,17 +442,9 @@ final GlobalKey starKey = GlobalKey();
 
   }
 
-
-
-
-
-
-
-
-
-  //==================================================
+  //===============================
   // إنشاء لعبة جديدة
-  //==================================================
+  //===============================
 
 
   void createGame(){
@@ -458,9 +466,11 @@ final GlobalKey starKey = GlobalKey();
 
       pieces = PuzzleGenerator.generate(
 
+
         rows:
 
         widget.level.gridSize,
+
 
 
         columns:
@@ -495,9 +505,11 @@ final GlobalKey starKey = GlobalKey();
 
       controller = PuzzleController(
 
+
         pieces:
 
         pieces,
+
 
       );
 
@@ -532,9 +544,9 @@ final GlobalKey starKey = GlobalKey();
 
 
 
-  //==================================================
-  // تحميل التقدم السابق
-  //==================================================
+  //===============================
+  // تحميل التقدم
+  //===============================
 
 
   Future<void> loadProgress() async {
@@ -552,9 +564,11 @@ final GlobalKey starKey = GlobalKey();
 
 
 
+
       final saved =
 
       await PuzzleProgressManager.loadProgress();
+
 
 
 
@@ -579,11 +593,9 @@ final GlobalKey starKey = GlobalKey();
 
 
 
-        // لاحقاً يمكن إعادة ترتيب القطع
-
-        // من البيانات المحفوظة
-
       }
+
+
 
 
 
@@ -622,6 +634,7 @@ final GlobalKey starKey = GlobalKey();
       );
 
 
+
       if(mounted){
 
 
@@ -650,9 +663,9 @@ final GlobalKey starKey = GlobalKey();
 
 
 
-  //==================================================
+  //===============================
   // المؤقت
-  //==================================================
+  //===============================
 
 
   void startTimer(){
@@ -712,9 +725,9 @@ final GlobalKey starKey = GlobalKey();
 
 
 
-  //==================================================
-  // تحريك القطعة
-  //==================================================
+  //===============================
+  // تحريك قطعة
+  //===============================
 
 
   Future<void> movePiece(
@@ -729,135 +742,135 @@ final GlobalKey starKey = GlobalKey();
 
     if(piece.placed || finishing){
 
-
       return;
 
-
     }
 
 
 
 
 
-    try{
 
 
-      setState((){
+    setState((){
 
 
 
-        piece.position += details.delta;
+      piece.position += details.delta;
 
 
 
 
 
-        final maxX =
+      final maxX =
 
-        boardSize - pieceSize;
+      boardSize - pieceSize;
 
 
 
-        final maxY =
+      final maxY =
 
-        boardSize - pieceSize;
+      boardSize - pieceSize;
 
 
 
 
 
-        if(piece.position.dx < 0){
 
 
-          piece.position = Offset(
+      if(piece.position.dx < 0){
 
-            0,
 
-            piece.position.dy,
+        piece.position = Offset(
 
-          );
+          0,
 
+          piece.position.dy,
 
-        }
+        );
 
 
+      }
 
 
 
-        if(piece.position.dy < 0){
 
 
-          piece.position = Offset(
 
-            piece.position.dx,
+      if(piece.position.dy < 0){
 
-            0,
 
-          );
+        piece.position = Offset(
 
+          piece.position.dx,
 
-        }
+          0,
 
+        );
 
 
+      }
 
 
-        if(piece.position.dx > maxX){
 
 
-          piece.position = Offset(
 
-            maxX,
 
-            piece.position.dy,
 
-          );
+      if(piece.position.dx > maxX){
 
 
-        }
+        piece.position = Offset(
 
+          maxX,
 
+          piece.position.dy,
 
+        );
 
 
-        if(piece.position.dy > maxY){
+      }
 
 
-          piece.position = Offset(
 
-            piece.position.dx,
 
-            maxY,
 
-          );
 
 
-        }
+      if(piece.position.dy > maxY){
 
 
+        piece.position = Offset(
 
-      });
+          piece.position.dx,
 
+          maxY,
 
+        );
 
-    }catch(e){
 
+      }
 
-      debugPrint(
 
-        "Move piece error: $e",
 
-      );
 
+    });
 
-    }
 
 
   }
 
-  //==================================================
-  // إسقاط القطعة وفحص مكانها
-  //==================================================
+
+
+
+
+
+
+
+
+  //===============================
+  // إسقاط القطعة
+  //===============================
 
 
   Future<void> dropPiece(
@@ -865,6 +878,7 @@ final GlobalKey starKey = GlobalKey();
       PuzzlePiece piece,
 
       ) async {
+
 
 
     if(piece.placed || finishing){
@@ -877,6 +891,8 @@ final GlobalKey starKey = GlobalKey();
 
 
 
+
+
     try{
 
 
@@ -884,11 +900,16 @@ final GlobalKey starKey = GlobalKey();
 
       controller.checkPiecePosition(
 
+
         piece,
+
 
         pieceSize,
 
+
       );
+
+
 
 
 
@@ -911,7 +932,6 @@ final GlobalKey starKey = GlobalKey();
       if(correct){
 
 
-
         await playSound(
 
           "puzzle_success.mp3",
@@ -919,9 +939,9 @@ final GlobalKey starKey = GlobalKey();
         );
 
 
+      }
 
-      }else{
-
+      else{
 
 
         await playSound(
@@ -931,8 +951,9 @@ final GlobalKey starKey = GlobalKey();
         );
 
 
-
       }
+
+
 
 
 
@@ -943,6 +964,8 @@ final GlobalKey starKey = GlobalKey();
 
 
       checkCompleted();
+
+
 
 
 
@@ -969,9 +992,9 @@ final GlobalKey starKey = GlobalKey();
 
 
 
-  //==================================================
-  // حفظ تقدم اللعبة
-  //==================================================
+  //===============================
+  // حفظ اللعبة
+  //===============================
 
 
   Future<void> saveGame() async {
@@ -1034,16 +1057,9 @@ final GlobalKey starKey = GlobalKey();
   }
 
 
-
-
-
-
-
-
-
-  //==================================================
+  //===============================
   // فحص اكتمال البازل
-  //==================================================
+  //===============================
 
 
   void checkCompleted(){
@@ -1052,13 +1068,7 @@ final GlobalKey starKey = GlobalKey();
     try{
 
 
-      if(
-
-      controller.isCompleted &&
-
-          !finishing
-
-      ){
+      if(controller.isCompleted && !finishing){
 
 
         finishGame();
@@ -1091,9 +1101,9 @@ final GlobalKey starKey = GlobalKey();
 
 
 
-  //==================================================
-  // استخدام المساعدة
-  //==================================================
+  //===============================
+  // استخدام التلميح
+  //===============================
 
 
   Future<void> usePuzzleHint() async {
@@ -1114,10 +1124,10 @@ final GlobalKey starKey = GlobalKey();
       if(!available){
 
 
-
         final watched =
 
         await RewardAdService.showRewardAd();
+
 
 
 
@@ -1132,7 +1142,6 @@ final GlobalKey starKey = GlobalKey();
 
 
           available = true;
-
 
 
         }
@@ -1175,7 +1184,6 @@ final GlobalKey starKey = GlobalKey();
 
 
 
-
       if(piece == null){
 
 
@@ -1194,6 +1202,7 @@ final GlobalKey starKey = GlobalKey();
       setState((){
 
 
+
         controller.applyHint(
 
           piece,
@@ -1201,6 +1210,7 @@ final GlobalKey starKey = GlobalKey();
           pieceSize,
 
         );
+
 
 
         moves++;
@@ -1215,13 +1225,11 @@ final GlobalKey starKey = GlobalKey();
 
 
 
-
       await playSound(
 
         "puzzle_success.mp3",
 
       );
-
 
 
 
@@ -1258,9 +1266,9 @@ final GlobalKey starKey = GlobalKey();
 
 
 
-  //==================================================
+  //===============================
   // إنهاء المرحلة
-  //==================================================
+  //===============================
 
 
   Future<void> finishGame() async {
@@ -1274,10 +1282,14 @@ final GlobalKey starKey = GlobalKey();
 
 
 
+
+
+
     try{
 
 
       finishing = true;
+
 
 
       timer?.cancel();
@@ -1288,22 +1300,53 @@ final GlobalKey starKey = GlobalKey();
 
 
 
-      // حفظ إكمال المرحلة
-await PuzzleProgressManager.completeLevel(
-  widget.level.id,
-);
 
-// فتح المرحلة التالية
-await PuzzleProgressManager.unlockNextLevel(
-  widget.puzzle.id,
-  widget.level.levelNumber + 1,
-);
+      // حفظ الإنجاز
 
-await PuzzleProgressManager.clearProgress();
+      await PuzzleProgressManager.completeLevel(
 
-await playSound(
-  "puzzle_win.mp3",
-);
+        widget.level.id,
+
+      );
+
+
+
+
+
+
+
+      // فتح المرحلة التالية
+
+      await PuzzleProgressManager.unlockNextLevel(
+
+        widget.puzzle.id,
+
+        widget.level.levelNumber + 1,
+
+      );
+
+
+
+
+
+
+
+      await PuzzleProgressManager.clearProgress();
+
+
+
+
+
+
+
+      await playSound(
+
+        "puzzle_win.mp3",
+
+      );
+
+
+
 
 
 
@@ -1321,7 +1364,9 @@ await playSound(
 
 
 
+
       confettiController.play();
+
 
 
 
@@ -1357,6 +1402,7 @@ await playSound(
 
 
 
+
       setState((){
 
 
@@ -1364,6 +1410,7 @@ await playSound(
 
 
       });
+
 
 
 
@@ -1384,9 +1431,17 @@ await playSound(
 
   }
 
-  //==================================================
+
+
+
+
+
+
+
+
+  //===============================
   // فتح شاشة الفوز
-  //==================================================
+  //===============================
 
 
   Future<void> openWinScreen() async {
@@ -1400,10 +1455,16 @@ await playSound(
 
 
 
+
+
+
+
     try{
 
 
       rewardOpened = true;
+
+
 
 
 
@@ -1421,34 +1482,66 @@ await playSound(
 
 
 
+      await bgPlayer.stop();
 
-await bgPlayer.stop();
+
+
+
+
 
 
       Navigator.pushReplacement(
 
 
+
         context,
+
 
 
         MaterialPageRoute(
 
 
-          builder:(_)=>PuzzleWinScreen(
+
+          builder: (_)=> PuzzleWinScreen(
 
 
 
             result: GameResultModel(
-  stars: 0,
-  moves: moves,
-  time: Duration(
-    seconds: seconds,
-  ),
-),
+
+
+
+              stars:
+
+              widget.level.rewardStars,
+
+
+
+              moves:
+
+              moves,
+
+
+
+              time:
+
+              Duration(
+
+                seconds: seconds,
+
+              ),
+
+
+
+            ),
+
+
+
 
 
 
             difficulty:
+
+
 
             widget.level.gridSize <= 4
 
@@ -1464,7 +1557,11 @@ await bgPlayer.stop();
 
 
 
+
+
             worldId:
+
+
 
             widget.puzzle.id,
 
@@ -1472,9 +1569,15 @@ await bgPlayer.stop();
 
 
 
+
+
             level:
 
+
+
             widget.level.levelNumber,
+
+
 
 
 
@@ -1508,14 +1611,6 @@ await bgPlayer.stop();
 
   }
 
-
-
-
-
-
-
-
-
   @override
   Widget build(BuildContext context){
 
@@ -1526,14 +1621,13 @@ await bgPlayer.stop();
       return const Scaffold(
 
 
-        body:
-
-        Center(
+        body: Center(
 
 
           child:
 
           CircularProgressIndicator(),
+
 
         ),
 
@@ -1580,24 +1674,20 @@ await bgPlayer.stop();
               children:[
 
 
-GameToolbar(
-  logo: "assets/images/logo.png",
-  starKey: starKey,
-),
 
 
 
-
-                      
-
-                      ),
+                GameToolbar(
 
 
+                  logo:
 
-                    ],
+                  "assets/images/logo.png",
 
 
-                  ),
+                  starKey:
+
+                  starKey,
 
 
                 ),
@@ -1607,6 +1697,16 @@ GameToolbar(
 
 
 
+
+                const SizedBox(height:10),
+
+
+
+
+
+
+
+                // منطقة القطع العشوائية
 
                 Expanded(
 
@@ -1623,6 +1723,8 @@ GameToolbar(
                       horizontal:10,
 
                     ),
+
+
 
 
 
@@ -1665,8 +1767,6 @@ GameToolbar(
 
                         children:
 
-
-
                         pieces.map((piece){
 
 
@@ -1676,6 +1776,7 @@ GameToolbar(
                             return const SizedBox();
 
                           }
+
 
 
 
@@ -1693,6 +1794,8 @@ GameToolbar(
                             top:
 
                             piece.position.dy,
+
+
 
 
 
@@ -1723,6 +1826,8 @@ GameToolbar(
 
 
 
+
+
                               onPanEnd:
 
                               (_){
@@ -1734,6 +1839,8 @@ GameToolbar(
 
 
                               },
+
+
 
 
 
@@ -1766,6 +1873,7 @@ GameToolbar(
                               ),
 
 
+
                             ),
 
 
@@ -1798,6 +1906,9 @@ GameToolbar(
 
 
 
+
+                // لوحة البازل
+
                 Container(
 
 
@@ -1813,6 +1924,8 @@ GameToolbar(
 
 
 
+
+
                   decoration:
 
                   BoxDecoration(
@@ -1823,9 +1936,12 @@ GameToolbar(
                     Colors.white,
 
 
+
                     borderRadius:
 
                     BorderRadius.circular(25),
+
+
 
 
                     border:
@@ -1836,7 +1952,9 @@ GameToolbar(
 
                       Colors.orange,
 
-                      width:3,
+                      width:
+
+                      3,
 
                     ),
 
@@ -1847,9 +1965,12 @@ GameToolbar(
 
 
 
+
+
                   child:
 
                   Center(
+
 
 
                     child:
@@ -1866,6 +1987,8 @@ GameToolbar(
                       height:
 
                       boardSize,
+
+
 
 
 
@@ -1896,6 +2019,7 @@ GameToolbar(
                           return Positioned(
 
 
+
                             left:
 
                             piece.column *
@@ -1909,6 +2033,8 @@ GameToolbar(
                             piece.row *
 
                                 pieceSize,
+
+
 
 
 
@@ -1939,6 +2065,7 @@ GameToolbar(
                             ),
 
 
+
                           );
 
 
@@ -1963,6 +2090,7 @@ GameToolbar(
 
 
 
+
               ],
 
 
@@ -1980,6 +2108,8 @@ GameToolbar(
 
 
 
+        // تأثير الفوز
+
         Align(
 
 
@@ -1989,9 +2119,12 @@ GameToolbar(
 
 
 
+
+
           child:
 
           ConfettiWidget(
+
 
 
             confettiController:
@@ -2011,6 +2144,7 @@ GameToolbar(
             40,
 
 
+
             gravity:
 
             0.3,
@@ -2027,6 +2161,8 @@ GameToolbar(
 
 
 
+        // صندوق المكافأة
+
         if(showRewardBox)
 
 
@@ -2035,7 +2171,11 @@ GameToolbar(
 
 
             color:
-Colors.black.withOpacity(0.35),
+
+            Colors.black.withOpacity(0.35),
+
+
+
 
 
             child:
@@ -2047,6 +2187,7 @@ Colors.black.withOpacity(0.35),
               starTargetKey:
 
               starKey,
+
 
 
 
@@ -2064,18 +2205,18 @@ Colors.black.withOpacity(0.35),
 
 
 
+
+
+
               onRewardOpened:
 
               (){
 
 
-
                 if(starAnimationFinished){
 
 
-
                   openWinScreen();
-
 
 
                 }
@@ -2085,7 +2226,9 @@ Colors.black.withOpacity(0.35),
               },
 
 
+
             ),
+
 
 
           ),
@@ -2116,7 +2259,11 @@ Colors.black.withOpacity(0.35),
 
 
 
+
+
     confettiController.dispose();
+
+
 
 
 
@@ -2126,7 +2273,10 @@ Colors.black.withOpacity(0.35),
 
 
 
+
+
     effectPlayer.dispose();
+
 
 
 
@@ -2135,5 +2285,7 @@ Colors.black.withOpacity(0.35),
 
 
   }
+
+
 
 }
