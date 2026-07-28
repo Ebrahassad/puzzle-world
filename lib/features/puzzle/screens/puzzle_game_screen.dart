@@ -1363,24 +1363,17 @@ final reward = await RewardManager.completePuzzle(
 
             result:
 
-            GameResultModel(
+GameResultModel(
 
+  stars:
 
+  reward?.stars ?? 3,
 
-              stars:3,
+  moves:moves,
 
+  seconds:seconds,
 
-
-              moves:moves,
-
-
-
-              seconds:seconds,
-
-
-
-            ),
-
+),
 
 
 
