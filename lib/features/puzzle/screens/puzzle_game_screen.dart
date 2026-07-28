@@ -22,6 +22,7 @@ import '../widgets/reward_box_widget.dart';
 
 import '../managers/puzzle_hint_manager.dart';
 import '../managers/puzzle_progress_manager.dart';
+import '../managers/reward_manager.dart';
 
 import '../services/reward_ad_service.dart';
 import '../services/puzzle_audio_service.dart';
@@ -129,7 +130,7 @@ class _PuzzleGameScreenState
   bool rewardOpened = false;
 
 
-
+bool starAnimationFinished = false;
 
 
 
@@ -1328,34 +1329,46 @@ class _PuzzleGameScreenState
 
 
 
-      Navigator.pushReplacement(
+      final reward = await RewardManager.completePuzzle(
+
+  difficulty:
+
+  widget.level.gridSize <= 4
+      ? 1
+      : widget.level.gridSize <= 6
+      ? 2
+      : 3,
+
+
+  rewardKey:
+
+  "${widget.puzzle.id}_${widget.level.id}",
+
+);
 
 
 
-        context,
+Navigator.pushReplacement(
 
+  context,
 
+  MaterialPageRoute(
 
-        MaterialPageRoute(
+    builder:(_)=>PuzzleWinScreen(
 
+      result:
 
+      GameResultModel(
 
-          builder:(_)=>PuzzleWinScreen(
+        stars:
 
+        reward?.stars ?? 3,
 
+        moves:moves,
 
-            result:
+        seconds:seconds,
 
-GameResultModel(
-
-  stars: 3,
-
-  moves: moves,
-
-  seconds: seconds,
-
-),
-
+      ),
 
 
             difficulty:
@@ -2043,39 +2056,36 @@ GameResultModel(
 
         if(showRewardBox)
 
+  Container(
 
-          Container(
-
-
-            color:
-
-            Colors.black54,
+    color:
+    Colors.black54,
 
 
+    child:
 
-            child:
+    RewardBoxWidget(
 
-            RewardBoxWidget(
+  onStarReady: (){
 
+    starAnimationFinished = true;
 
-              onRewardOpened:
-
-
-                  (){
-
-
-                openWinScreen();
+  },
 
 
-              },
+  onRewardOpened: (){
 
+    if(starAnimationFinished){
 
-            ),
+      openWinScreen();
 
+    }
 
-          ),
+  },
 
+),
 
+  ),
 
 
       ],
