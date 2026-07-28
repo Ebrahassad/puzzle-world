@@ -132,7 +132,7 @@ class _PuzzleGameScreenState
 
 bool starAnimationFinished = false;
 
-
+final GlobalKey starKey = GlobalKey();
 
   double boardSize = 300;
 
@@ -1555,87 +1555,108 @@ Navigator.pushReplacement(
 
 
 
-                    children:[
+   children:[
+
+
+  Text(
+    "🧩 $moves",
+    style:
+    const TextStyle(
+      fontSize:18,
+      fontWeight:FontWeight.bold,
+    ),
+  ),
 
 
 
-                      Text(
-
-                        "🧩 $moves",
-
-                        style:
-
-                        const TextStyle(
-
-                          fontSize:18,
-
-                          fontWeight:
-
-                          FontWeight.bold,
-
-                        ),
-
-                      ),
+  Text(
+    "⏱ $seconds",
+    style:
+    const TextStyle(
+      fontSize:18,
+      fontWeight:FontWeight.bold,
+    ),
+  ),
 
 
 
+  Container(
+
+    key: starKey,
+
+    child: Row(
+
+      children:[
+
+        Image.asset(
+
+          "assets/images/rewards/Star_gold.png",
+
+          width:28,
+
+          height:28,
+
+        ),
 
 
-                      Text(
-
-                        "⏱ $seconds",
-
-                        style:
-
-                        const TextStyle(
-
-                          fontSize:18,
-
-                          fontWeight:
-
-                          FontWeight.bold,
-
-                        ),
-
-                      ),
+        const SizedBox(width:4),
 
 
+        const Text(
 
+          "0",
 
+          style:
 
-                      GestureDetector(
+          TextStyle(
 
+            fontSize:18,
 
-                        onTap:
+            fontWeight:
 
-                        usePuzzleHint,
+            FontWeight.bold,
 
+          ),
 
+        ),
 
-                        child:Text(
+      ],
 
-                          "💡 $hints",
+    ),
 
-                          style:
-
-                          const TextStyle(
-
-                            fontSize:18,
-
-                            fontWeight:
-
-                            FontWeight.bold,
-
-                          ),
-
-                        ),
-
-
-                      ),
+  ),
 
 
 
-                    ],
+
+  GestureDetector(
+
+    onTap: usePuzzleHint,
+
+    child:
+
+    Text(
+
+      "💡 $hints",
+
+      style:
+
+      const TextStyle(
+
+        fontSize:18,
+
+        fontWeight:
+
+        FontWeight.bold,
+
+      ),
+
+    ),
+
+  ),
+
+
+],
 
 
                   ),
@@ -2064,7 +2085,10 @@ Navigator.pushReplacement(
 
     child:
 
-    RewardBoxWidget(
+ RewardBoxWidget(
+
+  starTargetKey: starKey,
+
 
   onStarReady: (){
 
