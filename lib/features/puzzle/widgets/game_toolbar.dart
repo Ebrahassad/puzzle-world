@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../screens/wallet_screen.dart';
-import '../managers/puzzle_progress_manager.dart';
 import '../managers/reward_manager.dart';
 
 
@@ -50,7 +49,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
   int coins = 0;
 
-  int rewards = 0;
+  int gems = 0;
 
 
 
@@ -71,17 +70,17 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
     final totalStars =
-    await PuzzleProgressManager.getTotalStars();
+    await RewardManager.getStars();
 
 
 
     final totalCoins =
-    await PuzzleProgressManager.getCoins();
+    await RewardManager.getCoins();
 
 
 
-    final totalRewards =
-    await RewardManager.getRewards();
+    final totalGems =
+    await RewardManager.getGems();
 
 
 
@@ -96,7 +95,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
       coins = totalCoins;
 
-      rewards = totalRewards;
+      gems = totalGems;
 
 
     });
@@ -363,8 +362,6 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-                // ⭐ النجوم
-
                 Container(
 
                   key:widget.starKey,
@@ -396,8 +393,6 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-                // 🎁 المكافآت
-
                 _imageCounterBox(
 
                   image:
@@ -405,7 +400,7 @@ class _GameToolbarState extends State<GameToolbar>{
                   "assets/images/rewards/reward_box.png",
 
 
-                  value:rewards,
+                  value:gems,
 
                 ),
 
@@ -420,8 +415,6 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
-                // 🪙 العملات
 
                 GestureDetector(
 
