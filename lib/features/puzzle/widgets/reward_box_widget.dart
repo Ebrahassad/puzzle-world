@@ -68,7 +68,7 @@ class _RewardBoxWidgetState
 
   late Animation<double> starOpacity;
 
-
+late Animation<Offset> starMove;
 
 
 
