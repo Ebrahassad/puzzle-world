@@ -2,684 +2,225 @@ import 'package:flutter/material.dart';
 
 import '../screens/wallet_screen.dart';
 import '../managers/reward_manager.dart';
-
-
+import '../models/reward_result_model.dart';
 
 class GameToolbar extends StatefulWidget {
-
-
   final String logo;
-
   final VoidCallback? onBack;
-
   final GlobalKey starKey;
 
-
-
   const GameToolbar({
-
     super.key,
-
     required this.logo,
-
     required this.starKey,
-
     this.onBack,
-
   });
 
-
-
   @override
-  State<GameToolbar> createState() =>
-      _GameToolbarState();
-
+  State<GameToolbar> createState() => _GameToolbarState();
 }
 
-
-
-
-
-
-class _GameToolbarState extends State<GameToolbar>{
-
-
-
-  int stars = 0;
-
-  int coins = 0;
-
-  int gems = 0;
-
-
+class _GameToolbarState extends State<GameToolbar> {
+  RewardResultModel reward = const RewardResultModel();
 
   @override
-  void initState(){
-
+  void initState() {
     super.initState();
-
     loadToolbarData();
-
   }
-
-
-
-
 
   Future<void> loadToolbarData() async {
+    final data = await RewardManager.getReward();
 
+    if (!mounted) return;
 
-    final totalStars =
-    await RewardManager.getStars();
-
-
-
-    final totalCoins =
-    await RewardManager.getCoins();
-
-
-
-    final totalGems =
-    await RewardManager.getGems();
-
-
-
-    if(!mounted) return;
-
-
-
-    setState((){
-
-
-      stars = totalStars;
-
-      coins = totalCoins;
-
-      gems = totalGems;
-
-
+    setState(() {
+      reward = data;
     });
-
-
   }
 
-
-
-
-
-
-
-  void openWallet(BuildContext context){
-
-
+  void openWallet(BuildContext context) {
     Navigator.push(
-
       context,
-
       MaterialPageRoute(
-
-        builder: (_) =>
-        const WalletScreen(),
-
+        builder: (_) => const WalletScreen(),
       ),
-
-    ).then((_){
-
+    ).then((_) {
       loadToolbarData();
-
     });
-
-
   }
 
-
-
-
-
-
-  void showSettings(BuildContext context){
-
-
+  void showSettings(BuildContext context) {
     showDialog(
-
       context: context,
-
-      builder:(_){
-
-
+      builder: (_) {
         return AlertDialog(
-
-
-          title: const Text(
-            "⚙️ الإعدادات",
-          ),
-
-
-
+          title: const Text("⚙️ الإعدادات"),
           content: const Column(
-
-            mainAxisSize:
-            MainAxisSize.min,
-
-            children:[
-
-
+            mainAxisSize: MainAxisSize.min,
+            children: [
               Text(
-
                 "Puzzle World",
-
                 style: TextStyle(
-
-                  fontWeight:
-                  FontWeight.bold,
-
+                  fontWeight: FontWeight.bold,
                 ),
-
               ),
-
-
-
-              SizedBox(height:10),
-
-
-
-              Text(
-
-                "الإصدار: 1.0.0",
-
-              ),
-
-
+              SizedBox(height: 10),
+              Text("الإصدار: 1.0.0"),
             ],
-
           ),
-
-
-
-          actions:[
-
-
+          actions: [
             TextButton(
-
-              onPressed:(){
-
+              onPressed: () {
                 Navigator.pop(context);
-
               },
-
-
-              child: const Text(
-
-                "حسناً",
-
-              ),
-
+              child: const Text("حسناً"),
             ),
-
-
           ],
-
-
         );
-
-
       },
-
     );
-
-
   }
-
-
-
-
-
-
-
 
   @override
-  Widget build(BuildContext context){
-
-
+  Widget build(BuildContext context) {
     return SafeArea(
-
-
       child: Container(
-
-
-        margin:
-        const EdgeInsets.all(12),
-
-
-
-        padding:
-        const EdgeInsets.symmetric(
-
-          horizontal:12,
-
-          vertical:8,
-
+        margin: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 8,
         ),
-
-
-
-
         decoration: BoxDecoration(
-
-
-          color:
-          Colors.black.withOpacity(0.35),
-
-
-
-          borderRadius:
-          BorderRadius.circular(35),
-
-
-
+          color: Colors.black.withOpacity(0.35),
+          borderRadius: BorderRadius.circular(35),
           border: Border.all(
-
-            color:
-            Colors.white30,
-
+            color: Colors.white30,
           ),
-
-
         ),
-
-
-
-
-
         child: Row(
-
-
           mainAxisAlignment:
-          MainAxisAlignment.spaceBetween,
-
-
-
-          children:[
-
-
-
-
-
+              MainAxisAlignment.spaceBetween,
+          children: [
             GestureDetector(
-
-
-              onTap:(){
-
+              onTap: () {
                 showSettings(context);
-
               },
-
-
-
               child: const Icon(
-
-
                 Icons.settings_rounded,
-
-
-                color:Colors.white,
-
-
-                size:30,
-
-
+                color: Colors.white,
+                size: 30,
               ),
-
-
             ),
-
-
-
-
-
-
-
             Image.asset(
-
               widget.logo,
-
-              height:45,
-
+              height: 45,
             ),
-
-
-
-
-
-
-
             Row(
-
-
-              children:[
-
-
-
-
-
+              children: [
                 Container(
-
-                  key:widget.starKey,
-
-
-                  child:_imageCounterBox(
-
+                  key: widget.starKey,
+                  child: _imageCounterBox(
                     image:
-
-                    "assets/images/rewards/Star_gold.png",
-
-
-                    value:stars,
-
+                        "assets/images/rewards/Star_gold.png",
+                    value: reward.stars,
                   ),
-
-
                 ),
 
-
-
-
-
-
-                const SizedBox(width:8),
-
-
-
-
-
+                const SizedBox(width: 8),
 
                 _imageCounterBox(
-
                   image:
-
-                  "assets/images/rewards/reward_box.png",
-
-
-                  value:gems,
-
+                      "assets/images/rewards/gem.png",
+                  value: reward.gems,
                 ),
 
-
-
-
-
-
-                const SizedBox(width:8),
-
-
-
-
-
+                const SizedBox(width: 8),
 
                 GestureDetector(
-
-
-                  onTap:(){
-
+                  onTap: () {
                     openWallet(context);
-
                   },
-
-
-                  child:_coinBox(coins),
-
-
+                  child: _coinBox(reward.coins),
                 ),
-
-
-
               ],
-
-
-
             ),
-
-
-
           ],
-
-
-
         ),
-
-
-
       ),
-
-
-
     );
-
   }
-
-
-
-
-
-
-
-
 
   Widget _imageCounterBox({
-
     required String image,
-
     required int value,
-
-  }){
-
-
+  }) {
     return Container(
-
-
-      padding:
-
-      const EdgeInsets.symmetric(
-
-        horizontal:8,
-
-        vertical:5,
-
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 5,
       ),
-
-
-
-      decoration:
-
-      BoxDecoration(
-
-        color:
-        Colors.white24,
-
-
-        borderRadius:
-
-        BorderRadius.circular(18),
-
-
+      decoration: BoxDecoration(
+        color: Colors.white24,
+        borderRadius: BorderRadius.circular(18),
       ),
-
-
-
-
-
-      child:Row(
-
-
-        mainAxisSize:
-        MainAxisSize.min,
-
-
-
-        children:[
-
-
-
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
           Image.asset(
-
             image,
-
-            width:24,
-
-            height:24,
-
+            width: 24,
+            height: 24,
           ),
-
-
-
-          const SizedBox(width:4),
-
-
-
+          const SizedBox(width: 4),
           Text(
-
             "$value",
-
-            style:const TextStyle(
-
-              color:Colors.white,
-
-              fontSize:16,
-
-              fontWeight:FontWeight.bold,
-
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
-
           ),
-
-
-
         ],
-
-
-
       ),
-
-
-
     );
-
-
   }
 
-
-
-
-
-
-
-  Widget _coinBox(int value){
-
-
+  Widget _coinBox(int value) {
     return Container(
-
-
-      padding:
-
-      const EdgeInsets.symmetric(
-
-        horizontal:8,
-
-        vertical:5,
-
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 5,
       ),
-
-
-
-      decoration:
-
-      BoxDecoration(
-
-        color:Colors.white24,
-
-
-        borderRadius:
-
-        BorderRadius.circular(18),
-
-
+      decoration: BoxDecoration(
+        color: Colors.white24,
+        borderRadius: BorderRadius.circular(18),
       ),
-
-
-
-      child:Row(
-
-
-        mainAxisSize:
-        MainAxisSize.min,
-
-
-
-        children:[
-
-
-
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
           const Text(
-
             "🪙",
-
-            style:
-
-            TextStyle(
-
-              fontSize:22,
-
+            style: TextStyle(
+              fontSize: 22,
             ),
-
           ),
-
-
-
-          const SizedBox(width:4),
-
-
-
+          const SizedBox(width: 4),
           Text(
-
             "$value",
-
-            style:const TextStyle(
-
-              color:Colors.white,
-
-              fontSize:16,
-
-              fontWeight:FontWeight.bold,
-
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
-
           ),
-
-
-
         ],
-
-
-
       ),
-
-
-
     );
-
-
   }
-
-
-
-
 
   @override
-  void dispose(){
-
+  void dispose() {
     super.dispose();
-
   }
-
-
 }
