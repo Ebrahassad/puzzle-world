@@ -48,6 +48,11 @@ class _IslandScreenState
 
 
 
+  //==================================================
+  // بيانات اللاعب
+  //==================================================
+
+
   int totalStars = 0;
 
 
@@ -58,7 +63,7 @@ class _IslandScreenState
 
 
 
-  bool unlocked = true;
+  bool unlocked = false;
 
 
 
@@ -68,9 +73,13 @@ class _IslandScreenState
 
 
 
+  //==================================================
   // حركة الجزيرة
+  //==================================================
+
 
   late AnimationController floatController;
+
 
   late Animation<double> floatAnimation;
 
@@ -78,11 +87,16 @@ class _IslandScreenState
 
 
 
+  //==================================================
   // حركة الخلفية
+  //==================================================
+
 
   late AnimationController backgroundController;
 
+
   late Animation<double> backgroundMove;
+
 
   late Animation<double> backgroundScale;
 
@@ -90,15 +104,24 @@ class _IslandScreenState
 
 
 
-  // عدد الإعلانات المطلوبة لفتح الجزيرة
+  //==================================================
+  // نظام الإعلانات
+  //==================================================
+
 
   int requiredAds = 5;
 
 
+  int watchedAds = 0;
 
 
 
-  // ألوان أسماء الجزر
+
+
+  //==================================================
+  // لون اسم الجزيرة
+  //==================================================
+
 
   Color islandTitleColor(){
 
@@ -143,7 +166,10 @@ class _IslandScreenState
 
     }
 
+
   }
+
+
 
 
 
@@ -164,18 +190,29 @@ class _IslandScreenState
 
 
 
+
+    // حركة الجزيرة العائمة
+
+
     floatController = AnimationController(
 
       vsync:this,
 
       duration:
-      const Duration(seconds:3),
 
-    )..repeat(
+      const Duration(
 
-      reverse:true,
+        seconds:3,
 
-    );
+      ),
+
+    )
+      ..repeat(
+
+        reverse:true,
+
+      );
+
 
 
 
@@ -186,7 +223,8 @@ class _IslandScreenState
 
       end:8,
 
-    ).animate(
+    )
+        .animate(
 
       CurvedAnimation(
 
@@ -205,7 +243,8 @@ class _IslandScreenState
 
 
 
-    // حركة خفيفة لخلفية شاشة الجزيرة
+    // حركة الخلفية
+
 
     backgroundController = AnimationController(
 
@@ -219,11 +258,14 @@ class _IslandScreenState
 
       ),
 
-    )..repeat(
+    )
+      ..repeat(
 
-      reverse:true,
+        reverse:true,
 
-    );
+      );
+
+
 
 
 
@@ -234,7 +276,8 @@ class _IslandScreenState
 
       end:10,
 
-    ).animate(
+    )
+        .animate(
 
       CurvedAnimation(
 
@@ -245,6 +288,8 @@ class _IslandScreenState
       ),
 
     );
+
+
 
 
 
@@ -256,7 +301,8 @@ class _IslandScreenState
 
       end:1.03,
 
-    ).animate(
+    )
+        .animate(
 
       CurvedAnimation(
 
@@ -269,8 +315,20 @@ class _IslandScreenState
     );
 
 
-
   }
+
+
+
+
+
+
+
+
+
+  //==================================================
+  // تحميل بيانات الجزيرة
+  //==================================================
+
 
   Future<void> loadData() async {
 
@@ -279,6 +337,53 @@ class _IslandScreenState
 
     await PuzzleProgressManager
         .getTotalStars();
+
+
+
+
+    final islandOpened =
+
+    await PuzzleProgressManager
+        .isIslandUnlocked(
+
+      widget.island.id,
+
+    );
+
+
+
+
+    final ads =
+
+    PuzzleProgressManager
+        .getIslandRequiredAds(
+
+      widget.island.id,
+
+    );
+
+
+
+
+    final adsWatched =
+
+    await PuzzleProgressManager
+        .getIslandAds(
+
+      widget.island.id,
+
+    );
+
+
+
+
+
+    final coinsValue =
+
+    await PuzzleProgressManager
+        .getCoins();
+
+
 
 
 
@@ -292,12 +397,25 @@ class _IslandScreenState
         totalStars = stars;
 
 
+        coins = coinsValue;
+
+
+
+        requiredAds = ads;
+
+
+        watchedAds = adsWatched;
+
+
+
 
         // الحيوانات مفتوحة دائماً
 
         if(widget.island.id == "animals"){
 
+
           unlocked = true;
+
 
         }
 
@@ -306,53 +424,10 @@ class _IslandScreenState
 
           unlocked =
 
-          stars >= widget.island.requiredStars;
+              islandOpened ||
 
+              stars >= widget.island.requiredStars;
 
-        }
-
-
-
-        // زيادة الإعلانات حسب ترتيب الجزيرة
-
-        switch(widget.island.id){
-
-
-          case "cars":
-
-            requiredAds = 5;
-
-            break;
-
-
-
-          case "space":
-
-            requiredAds = 10;
-
-            break;
-
-
-
-          case "nature":
-
-            requiredAds = 15;
-
-            break;
-
-
-
-          case "landmarks":
-
-            requiredAds = 20;
-
-            break;
-
-
-
-          default:
-
-            requiredAds = 5;
 
         }
 
@@ -366,12 +441,9 @@ class _IslandScreenState
 
   }
 
-
-
-
-
-
-
+  //==================================================
+  // فتح المرحلة
+  //==================================================
 
 
   void openLevel(int level) {
@@ -396,7 +468,6 @@ class _IslandScreenState
 
       final levels =
 
-
       PuzzleLevelData.getLevels(
 
         widget.island.id,
@@ -414,7 +485,6 @@ class _IslandScreenState
 
 
             (item) =>
-
 
         item.levelNumber == level,
 
@@ -507,18 +577,21 @@ class _IslandScreenState
 
 
 
-  void showLockedDialog(){
+  //==================================================
+  // نافذة الجزيرة المغلقة
+  //==================================================
 
+
+  void showLockedDialog(){
 
 
     showDialog(
 
 
-      context:context,
+      context: context,
 
 
       builder:(_){
-
 
 
         return Dialog(
@@ -530,7 +603,6 @@ class _IslandScreenState
 
 
 
-
           child:Container(
 
 
@@ -538,7 +610,6 @@ class _IslandScreenState
             padding:
 
             const EdgeInsets.all(25),
-
 
 
 
@@ -573,9 +644,7 @@ class _IslandScreenState
 
 
 
-
               children:[
-
 
 
 
@@ -616,9 +685,7 @@ class _IslandScreenState
                   },
 
 
-
                 ),
-
 
 
 
@@ -672,8 +739,6 @@ class _IslandScreenState
 
 
 
-
-
                 const SizedBox(
 
                   height:10,
@@ -689,7 +754,7 @@ class _IslandScreenState
 
 
 
-                  "تحتاج ⭐ ${widget.island.requiredStars} لفتح الجزيرة\nأو شاهد $requiredAds إعلانات",
+                  "تحتاج ⭐ ${widget.island.requiredStars} لفتح الجزيرة\nأو شاهد $requiredAds إعلانات\n($watchedAds / $requiredAds)",
 
 
 
@@ -712,8 +777,6 @@ class _IslandScreenState
 
 
                 ),
-
-
 
 
 
@@ -746,7 +809,7 @@ class _IslandScreenState
 
                   label:const Text(
 
-                    "شاهد إعلان لفتح",
+                    "شاهد إعلان",
 
                   ),
 
@@ -770,7 +833,6 @@ class _IslandScreenState
 
 
                 ),
-
 
 
 
@@ -825,9 +887,7 @@ class _IslandScreenState
       },
 
 
-
     );
-
 
 
   }
@@ -839,381 +899,91 @@ class _IslandScreenState
 
 
 
-Future<void> watchRewardAd() async {
+
+  //==================================================
+  // مشاهدة إعلان لفتح الجزيرة
+  //==================================================
 
 
-  // هنا لاحقاً نضع AdMob Rewarded Ad
+  Future<void> watchRewardAd() async {
 
 
-  final opened =
+    // هنا يتم ربط AdMob Rewarded لاحقاً
+
+
+    final opened =
+
+    await PuzzleProgressManager
+
+        .watchIslandAd(
+
+      widget.island.id,
+
+    );
+
+
+
+
+
+    final ads =
+
+    await PuzzleProgressManager
+
+        .getIslandAds(
+
+      widget.island.id,
+
+    );
+
+
+
+
+
+
+    if(opened){
+
+
+
       await PuzzleProgressManager
-          .watchIslandAd(
-            widget.island.id,
-          );
 
+          .unlockIsland(
 
+        widget.island.id,
 
-  final ads =
-      await PuzzleProgressManager
-          .getIslandAds(
-            widget.island.id,
-          );
+      );
 
 
 
-  if(opened){
 
+      setState((){
 
-    setState((){
 
-      unlocked = true;
+        unlocked = true;
 
-    });
 
+        watchedAds = requiredAds;
 
 
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
+      });
 
-      const SnackBar(
 
-        content:Text(
-          "🎉 تم فتح الجزيرة",
-        ),
 
-      ),
 
-    );
 
 
-  }
+      ScaffoldMessenger.of(context)
 
-  else{
+          .showSnackBar(
 
 
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
 
-      SnackBar(
+        const SnackBar(
 
-        content:Text(
-          "📺 شاهد $ads / $requiredAds إعلانات",
-        ),
 
-      ),
 
-    );
+          content:Text(
 
-
-  }
-
-
-}
-
-  Widget levelButton(int level){
-
-
-
-    // فتح المرحلة الأولى فقط كبداية
-
-    bool levelOpen =
-
-    unlocked && level == 1;
-
-
-
-
-
-    return GestureDetector(
-
-
-
-      onTap:(){
-
-
-
-        if(levelOpen){
-
-
-
-          openLevel(level);
-
-
-
-        }
-
-        else{
-
-
-
-          if(!unlocked){
-
-            showLockedDialog();
-
-          }
-
-          else{
-
-
-            ScaffoldMessenger.of(context)
-
-                .showSnackBar(
-
-
-              const SnackBar(
-
-
-                content:Text(
-
-                  "أكمل المرحلة السابقة لفتح هذه المرحلة",
-
-                ),
-
-
-              ),
-
-
-            );
-
-
-          }
-
-
-
-        }
-
-
-
-      },
-
-
-
-
-
-
-      child:AnimatedContainer(
-
-
-
-        duration:
-
-        const Duration(
-
-          milliseconds:250,
-
-        ),
-
-
-
-
-
-        width:70,
-
-
-        height:70,
-
-
-
-
-
-
-        decoration:BoxDecoration(
-
-
-
-          color:
-
-          levelOpen
-
-              ? Colors.white
-
-              : Colors.white.withOpacity(0.55),
-
-
-
-
-
-          shape:
-
-          BoxShape.circle,
-
-
-
-
-
-          boxShadow:[
-
-
-
-            BoxShadow(
-
-
-
-              color:
-
-              Colors.black.withOpacity(0.25),
-
-
-
-              blurRadius:10,
-
-
-
-              offset:
-
-              const Offset(0,5),
-
-
-
-            ),
-
-
-
-          ],
-
-
-
-
-        ),
-
-
-
-
-
-
-        child:Center(
-
-
-
-          child:
-
-          !unlocked
-
-
-
-              ? Image.asset(
-
-
-
-            "assets/images/ui/level_lock.png",
-
-
-
-            width:38,
-
-
-
-            height:38,
-
-
-
-            errorBuilder:
-
-                (_,__,___){
-
-
-
-              return const Icon(
-
-
-
-                Icons.lock,
-
-
-
-                size:38,
-
-
-
-              );
-
-
-            },
-
-
-          )
-
-
-
-              : levelOpen
-
-
-
-              ? Text(
-
-
-
-            "$level",
-
-
-
-            style:const TextStyle(
-
-
-
-              fontSize:26,
-
-
-
-              fontWeight:
-
-              FontWeight.bold,
-
-
-
-              color:
-
-              Colors.blue,
-
-
-
-            ),
-
-
-
-          )
-
-
-
-              : Image.asset(
-
-
-
-            "assets/images/ui/level_lock.png",
-
-
-
-            width:35,
-
-
-
-            height:35,
-
-
-
-            errorBuilder:
-
-                (_,__,___){
-
-
-
-              return const Icon(
-
-
-
-                Icons.lock,
-
-
-
-                size:35,
-
-
-
-              );
-
-
-            },
-
+            "🎉 تم فتح الجزيرة",
 
           ),
 
@@ -1223,8 +993,396 @@ Future<void> watchRewardAd() async {
 
 
 
+      );
+
+
+
+    }
+
+    else{
+
+
+      setState((){
+
+
+        watchedAds = ads;
+
+
+      });
+
+
+
+
+      ScaffoldMessenger.of(context)
+
+          .showSnackBar(
+
+
+
+        SnackBar(
+
+
+
+          content:Text(
+
+            "📺 شاهد $ads / $requiredAds إعلانات",
+
+          ),
+
+
+
+        ),
+
+
+
+      );
+
+
+
+    }
+
+
+  }
+
+  //==================================================
+  // زر المرحلة
+  //==================================================
+
+
+  Widget levelButton(int level){
+
+
+
+    final levelKey =
+
+        "${widget.island.id}_level_$level";
+
+
+
+
+
+    return FutureBuilder<bool>(
+
+
+      future:
+
+      PuzzleProgressManager
+
+          .isLevelUnlocked(
+
+        levelKey,
+
       ),
 
+
+
+      builder:(context,snapshot){
+
+
+
+        final levelOpen =
+
+            snapshot.data ?? level == 1;
+
+
+
+
+        return GestureDetector(
+
+
+
+          onTap:(){
+
+
+
+            if(!unlocked){
+
+
+              showLockedDialog();
+
+
+              return;
+
+
+            }
+
+
+
+
+            if(levelOpen){
+
+
+              openLevel(level);
+
+
+            }
+
+            else{
+
+
+
+              ScaffoldMessenger.of(context)
+
+                  .showSnackBar(
+
+
+
+                const SnackBar(
+
+
+
+                  content:Text(
+
+                    "أكمل المرحلة السابقة لفتح هذه المرحلة",
+
+                  ),
+
+
+
+                ),
+
+
+
+              );
+
+
+
+            }
+
+
+
+          },
+
+
+
+
+
+          child:AnimatedContainer(
+
+
+
+            duration:
+
+            const Duration(
+
+              milliseconds:250,
+
+            ),
+
+
+
+
+            width:70,
+
+
+            height:70,
+
+
+
+
+
+            decoration:BoxDecoration(
+
+
+
+              color:
+
+              levelOpen
+
+                  ? Colors.white
+
+                  : Colors.white.withOpacity(0.55),
+
+
+
+
+
+              shape:
+
+              BoxShape.circle,
+
+
+
+
+
+              boxShadow:[
+
+
+
+                BoxShadow(
+
+
+
+                  color:
+
+                  Colors.black.withOpacity(0.25),
+
+
+
+                  blurRadius:10,
+
+
+
+                  offset:
+
+                  const Offset(0,5),
+
+
+
+                ),
+
+
+
+              ],
+
+
+
+            ),
+
+
+
+
+
+
+            child:Center(
+
+
+
+              child:
+
+              !unlocked
+
+
+
+                  ? Image.asset(
+
+
+
+                "assets/images/ui/level_lock.png",
+
+
+
+                width:38,
+
+
+
+                height:38,
+
+
+
+                errorBuilder:
+
+                    (_,__,___){
+
+
+
+                  return const Icon(
+
+                    Icons.lock,
+
+                    size:38,
+
+                  );
+
+
+                },
+
+
+              )
+
+
+
+                  : levelOpen
+
+
+
+                  ? Text(
+
+
+
+                "$level",
+
+
+
+                style:const TextStyle(
+
+
+
+                  fontSize:26,
+
+
+
+                  fontWeight:
+
+                  FontWeight.bold,
+
+
+
+                  color:
+
+                  Colors.blue,
+
+
+
+                ),
+
+
+
+              )
+
+
+
+                  : Image.asset(
+
+
+
+                "assets/images/ui/level_lock.png",
+
+
+
+                width:35,
+
+
+
+                height:35,
+
+
+
+                errorBuilder:
+
+                    (_,__,___){
+
+
+
+                  return const Icon(
+
+                    Icons.lock,
+
+                    size:35,
+
+                  );
+
+
+                },
+
+
+              ),
+
+
+
+            ),
+
+
+
+          ),
+
+
+
+        );
+
+
+
+      },
 
 
     );
@@ -1233,6 +1391,11 @@ Future<void> watchRewardAd() async {
 
   }
 
+  //==================================================
+  // بناء الشاشة
+  //==================================================
+
+
   @override
   Widget build(BuildContext context){
 
@@ -1240,7 +1403,7 @@ Future<void> watchRewardAd() async {
     return Scaffold(
 
 
-      body: Stack(
+      body:Stack(
 
 
         children:[
@@ -1248,15 +1411,18 @@ Future<void> watchRewardAd() async {
 
 
 
-          // خلفية شاشة المراحل
+          //==================================================
+          // خلفية شاشة الجزيرة
+          //==================================================
+
 
           Positioned.fill(
 
 
-            child: AnimatedBuilder(
+            child:AnimatedBuilder(
 
 
-              animation: backgroundController,
+              animation:backgroundController,
 
 
               builder:(context,child){
@@ -1266,26 +1432,37 @@ Future<void> watchRewardAd() async {
                 return Transform.scale(
 
 
+
                   scale:
 
                   backgroundScale.value,
 
 
 
-                  child: Transform.translate(
 
 
-                    offset: Offset(
+                  child:Transform.translate(
+
+
+
+                    offset:Offset(
+
+
 
                       backgroundMove.value,
 
+
+
                       0,
+
+
 
                     ),
 
 
 
-                    child: child,
+                    child:child,
+
 
 
                   ),
@@ -1299,7 +1476,8 @@ Future<void> watchRewardAd() async {
 
 
 
-              child: Image.asset(
+              child:Image.asset(
+
 
 
                 "assets/images/background/level_background.png",
@@ -1313,7 +1491,9 @@ Future<void> watchRewardAd() async {
               ),
 
 
+
             ),
+
 
 
           ),
@@ -1327,9 +1507,11 @@ Future<void> watchRewardAd() async {
 
           Container(
 
+
             color:
 
             Colors.white.withOpacity(0.08),
+
 
           ),
 
@@ -1340,7 +1522,10 @@ Future<void> watchRewardAd() async {
 
 
 
+          //==================================================
           // الشريط العلوي
+          //==================================================
+
 
           Positioned(
 
@@ -1358,9 +1543,12 @@ Future<void> watchRewardAd() async {
             child:GameToolbar(
 
 
+
               logo:
 
               "assets/images/ui/puzzle_logo.png",
+
+
 
 
 
@@ -1370,9 +1558,13 @@ Future<void> watchRewardAd() async {
 
 
 
+
+
               coins:
 
               coins,
+
+
 
 
 
@@ -1382,9 +1574,13 @@ Future<void> watchRewardAd() async {
 
 
 
+
+
               starKey:
 
               starKey,
+
+
 
 
 
@@ -1403,6 +1599,7 @@ Future<void> watchRewardAd() async {
             ),
 
 
+
           ),
 
 
@@ -1411,7 +1608,10 @@ Future<void> watchRewardAd() async {
 
 
 
-          // الجزيرة الرئيسية بدون شفافية
+          //==================================================
+          // الجزيرة الرئيسية 3D
+          //==================================================
+
 
           Positioned(
 
@@ -1429,6 +1629,7 @@ Future<void> watchRewardAd() async {
             child:AnimatedBuilder(
 
 
+
               animation:floatAnimation,
 
 
@@ -1444,7 +1645,9 @@ Future<void> watchRewardAd() async {
                   offset:Offset(
 
 
+
                     0,
+
 
 
                     floatAnimation.value,
@@ -1462,11 +1665,15 @@ Future<void> watchRewardAd() async {
                 );
 
 
+
               },
 
 
 
+
+
               child:Image.asset(
+
 
 
                 widget.island.image,
@@ -1486,10 +1693,13 @@ Future<void> watchRewardAd() async {
                     (_,__,___){
 
 
+
                   return const SizedBox();
 
 
+
                 },
+
 
 
               ),
@@ -1508,7 +1718,10 @@ Future<void> watchRewardAd() async {
 
 
 
-          // اسم الجزيرة تحت الصورة
+          //==================================================
+          // اسم الجزيرة
+          //==================================================
+
 
           Positioned(
 
@@ -1537,6 +1750,8 @@ Future<void> watchRewardAd() async {
 
 
 
+
+
               style:TextStyle(
 
 
@@ -1547,13 +1762,19 @@ Future<void> watchRewardAd() async {
 
 
 
+
+
                 fontSize:30,
+
+
 
 
 
                 fontWeight:
 
                 FontWeight.w900,
+
+
 
 
 
@@ -1572,6 +1793,8 @@ Future<void> watchRewardAd() async {
 
 
                     blurRadius:6,
+
+
 
 
 
@@ -1605,7 +1828,10 @@ Future<void> watchRewardAd() async {
 
 
 
-          // المراحل تبدأ أسفل منتصف الشاشة
+          //==================================================
+          // شبكة المراحل
+          //==================================================
+
 
           Positioned(
 
@@ -1631,16 +1857,24 @@ Future<void> watchRewardAd() async {
 
               const EdgeInsets.only(
 
+
+
                 top:20,
 
+
+
                 bottom:20,
+
+
 
               ),
 
 
 
-              gridDelegate:
 
+
+
+              gridDelegate:
 
               const SliverGridDelegateWithFixedCrossAxisCount(
 
@@ -1663,9 +1897,14 @@ Future<void> watchRewardAd() async {
 
 
 
+
+
               itemCount:
 
               widget.island.totalLevels,
+
+
+
 
 
 
@@ -1698,6 +1937,7 @@ Future<void> watchRewardAd() async {
 
 
 
+
         ],
 
 
@@ -1715,6 +1955,12 @@ Future<void> watchRewardAd() async {
 
 
 
+
+  //==================================================
+  // إغلاق الأنيميشن
+  //==================================================
+
+
   @override
   void dispose(){
 
@@ -1723,7 +1969,9 @@ Future<void> watchRewardAd() async {
     floatController.dispose();
 
 
+
     backgroundController.dispose();
+
 
 
 
