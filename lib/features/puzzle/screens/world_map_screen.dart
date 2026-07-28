@@ -26,12 +26,23 @@ class WorldMapScreen extends StatefulWidget {
 
 class _WorldMapScreenState
     extends State<WorldMapScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
+
 
 
   late AnimationController floatController;
 
+  late AnimationController backgroundController;
+
+
   late Animation<double> floatAnimation;
+
+  late Animation<double> backgroundAnimation;
+
+
+
+  String? pressedIsland;
+
 
 
   final Map<String,String> islandImages = {
@@ -59,46 +70,79 @@ class _WorldMapScreenState
 
   };
 
-
-
-
-  String? pressedIsland;
-
-
-
-
   @override
-  void initState(){
+  void initState() {
 
     super.initState();
 
 
+    // حركة طفو الجزر
+
     floatController = AnimationController(
 
-      vsync:this,
+      vsync: this,
 
-      duration:
-      const Duration(seconds:3),
+      duration: const Duration(
+        seconds: 3,
+      ),
 
     )..repeat(
-      reverse:true,
+      reverse: true,
     );
 
 
 
     floatAnimation = Tween<double>(
 
-      begin:-8,
+      begin: -8,
 
-      end:8,
+      end: 8,
 
     ).animate(
 
       CurvedAnimation(
 
-        parent:floatController,
+        parent: floatController,
 
-        curve:Curves.easeInOut,
+        curve: Curves.easeInOut,
+
+      ),
+
+    );
+
+
+
+
+
+    // حركة خلفية الخريطة
+
+    backgroundController = AnimationController(
+
+      vsync: this,
+
+      duration: const Duration(
+        seconds: 25,
+      ),
+
+    )..repeat(
+      reverse: true,
+    );
+
+
+
+    backgroundAnimation = Tween<double>(
+
+      begin: -12,
+
+      end: 12,
+
+    ).animate(
+
+      CurvedAnimation(
+
+        parent: backgroundController,
+
+        curve: Curves.easeInOut,
 
       ),
 
@@ -106,6 +150,7 @@ class _WorldMapScreenState
 
 
   }
+
 
 
 
@@ -119,32 +164,42 @@ class _WorldMapScreenState
 
       context,
 
+
       PageRouteBuilder(
 
+
         transitionDuration:
-        const Duration(milliseconds:700),
+
+        const Duration(
+          milliseconds:700,
+        ),
+
 
 
         pageBuilder:
+
             (_,animation,secondaryAnimation){
+
 
 
           return FadeTransition(
 
-            opacity:animation,
 
-            child:
+            opacity: animation,
 
-            IslandScreen(
 
-              island:world,
+            child: IslandScreen(
+
+              island: world,
 
             ),
+
 
           );
 
 
         },
+
 
       ),
 
@@ -152,148 +207,258 @@ class _WorldMapScreenState
 
 
   }
-Widget islandButton(
-    String id,
-    double x,
-    double y,
-) {
-
-
-  final world =
-  PuzzleData.getById(id);
-
-
-  if(world == null){
-    return const SizedBox();
-  }
 
 
 
-  return Positioned(
-
-
-    left:x-70,
-
-    top:y-70,
-
-
-    width:140,
-
-    height:140,
 
 
 
-    child: AnimatedBuilder(
-
-
-      animation:floatAnimation,
-
-
-      builder:(context,child){
-
-
-        return Transform.translate(
-
-
-          offset:Offset(
-            0,
-            floatAnimation.value,
-          ),
-
-
-          child:child,
-
-
-        );
-
-
-      },
 
 
 
-      child: GestureDetector(
+  Widget islandButton(
 
+      String id,
 
-        onTapDown:(_){
+      double x,
 
+      double y,
 
-          setState((){
+      {
 
-            pressedIsland=id;
+      double size = 140,
 
-          });
+      }
 
-
-        },
-
-
-
-        onTapUp:(_){
-
-
-          setState((){
-
-            pressedIsland=null;
-
-          });
+      ) {
 
 
 
-          openWorld(world);
+    final world =
+
+    PuzzleData.getById(id);
 
 
-        },
+
+    if(world == null){
+
+      return const SizedBox();
+
+    }
 
 
 
-        onTapCancel:(){
+
+    // الحيوانات فقط مفتوحة
+
+    final bool unlocked =
+
+        id == "animals";
 
 
-          setState((){
 
-            pressedIsland=null;
 
-          });
+
+    return Positioned(
+
+
+      left: x - size / 2,
+
+
+      top: y - size / 2,
+
+
+      width: size,
+
+
+      height: size,
+
+
+
+
+      child: AnimatedBuilder(
+
+
+        animation: floatAnimation,
+
+
+
+        builder: (context,child){
+
+
+
+          return Transform.translate(
+
+
+            offset: Offset(
+
+              0,
+
+              floatAnimation.value,
+
+            ),
+
+
+
+            child: child,
+
+
+          );
 
 
         },
 
 
 
-        child: AnimatedScale(
 
-
-          scale:
-
-          pressedIsland==id
-              ?1.18
-              :1.0,
-
-
-          duration:
-
-          const Duration(
-              milliseconds:180
-          ),
+        child: GestureDetector(
 
 
 
-          child: Hero(
+          onTapDown: unlocked
+
+              ? (_) {
+
+            setState(() {
+
+              pressedIsland = id;
+
+            });
+
+          }
+
+              : null,
 
 
-            tag:id,
 
 
-            child: Image.asset(
+
+          onTapUp: unlocked
+
+              ? (_) {
 
 
-              islandImages[id]!,
+            setState(() {
+
+              pressedIsland = null;
+
+            });
 
 
-              fit:BoxFit.contain,
+            openWorld(world);
+
+
+          }
+
+              : null,
+
+
+
+
+
+          onTapCancel: unlocked
+
+              ? () {
+
+            setState(() {
+
+              pressedIsland = null;
+
+            });
+
+
+          }
+
+              : null,
+
+
+
+
+
+          child: AnimatedScale(
+
+
+            scale:
+
+            pressedIsland == id
+
+                ? 1.15
+
+                : 1.0,
+
+
+
+            duration:
+
+            const Duration(
+              milliseconds:180,
+            ),
+
+
+
+
+            child: Stack(
+
+
+              alignment: Alignment.center,
+
+
+              children: [
+
+
+
+                Opacity(
+
+
+                  opacity:
+
+                  unlocked
+
+                      ? 1.0
+
+                      : 0.45,
+
+
+
+                  child: Image.asset(
+
+
+                    islandImages[id]!,
+
+
+                    fit: BoxFit.contain,
+
+
+                  ),
+
+
+                ),
+
+
+
+
+
+                if(!unlocked)
+
+
+                  Image.asset(
+
+
+                    "assets/images/ui/level_lock.png",
+
+
+                    width: size * 0.35,
+
+
+                  ),
+
+
+
+              ],
 
 
             ),
+
 
 
           ),
@@ -305,184 +470,298 @@ Widget islandButton(
       ),
 
 
-    ),
+    );
 
 
-  );
+  }
 
-}
-@override
-Widget build(BuildContext context){
 
+  @override
+  Widget build(BuildContext context) {
 
-return Scaffold(
 
+    return Scaffold(
 
-body:Stack(
 
+      body: Stack(
 
-children:[
 
+        fit: StackFit.expand,
 
 
-Positioned.fill(
+        children: [
 
 
-child:Image.asset(
 
+          // خلفية العالم بحركة بسيطة
 
-"assets/images/world/world_map.png",
+          Positioned.fill(
 
 
-fit:BoxFit.cover,
+            child: AnimatedBuilder(
 
 
-),
+              animation: backgroundAnimation,
 
 
-),
+              builder: (context, child){
 
 
+                return Transform.translate(
 
 
-SafeArea(
+                  offset: Offset(
 
+                    backgroundAnimation.value,
 
-child:LayoutBuilder(
+                    0,
 
+                  ),
 
-builder:(context,constraints){
 
+                  child: child,
 
 
-final width =
-constraints.maxWidth;
+                );
 
 
-final height =
-constraints.maxHeight;
+              },
 
 
 
-return Stack(
+              child: Image.asset(
 
 
-children:[
+                "assets/images/world/world_map.png",
 
 
+                fit: BoxFit.cover,
 
-// جزيرة الفضاء أعلى اليسار
 
-islandButton(
+              ),
 
-"space",
 
-width*0.22,
+            ),
 
-height*0.14,
 
-),
+          ),
 
 
 
 
-// الحيوانات
 
-islandButton(
 
-"animals",
+          // طبقة إضاءة خفيفة
 
-width*0.28,
+          Container(
 
-height*0.32,
+            color: Colors.black.withOpacity(0.08),
 
-),
+          ),
 
 
 
 
-// المعالم
 
-islandButton(
 
-"landmarks",
+          SafeArea(
 
-width*0.75,
 
-height*0.38,
+            child: LayoutBuilder(
 
-),
 
+              builder: (context, constraints){
 
 
 
-// السيارات أسفل
+                final width =
 
-islandButton(
+                constraints.maxWidth;
 
-"cars",
 
-width*0.22,
 
-height*0.70,
+                final height =
 
-),
+                constraints.maxHeight;
 
 
 
 
-// الطبيعة
 
-islandButton(
+                return Stack(
 
-"nature",
 
-width*0.55,
 
-height*0.78,
+                  children: [
 
-),
 
 
 
-],
 
+                    // جزيرة الفضاء - أعلى الشاشة في الوسط
 
+                    islandButton(
 
-);
 
+                      "space",
 
 
-},
+                      width * 0.5,
 
 
-),
+                      height * 0.13,
 
 
-),
+                      size: 180,
 
 
+                    ),
 
-],
 
 
-),
 
 
-);
 
+                    // جزيرة الحيوانات - العالم الأول المفتوح
 
-}
+                    islandButton(
 
 
+                      "animals",
 
 
-@override
-void dispose(){
+                      width * 0.35,
 
-floatController.dispose();
 
-super.dispose();
+                      height * 0.48,
 
-}
+
+                      size: 150,
+
+
+                    ),
+
+
+
+
+
+
+                    // جزيرة المعالم - مقفلة
+
+                    islandButton(
+
+
+                      "landmarks",
+
+
+                      width * 0.75,
+
+
+                      height * 0.50,
+
+
+                      size: 150,
+
+
+                    ),
+
+
+
+
+
+
+                    // جزيرة السيارات - مقفلة
+
+                    islandButton(
+
+
+                      "cars",
+
+
+                      width * 0.25,
+
+
+                      height * 0.75,
+
+
+                      size: 150,
+
+
+                    ),
+
+
+
+
+
+
+                    // جزيرة الطبيعة - مقفلة
+
+                    islandButton(
+
+
+                      "nature",
+
+
+                      width * 0.72,
+
+
+                      height * 0.78,
+
+
+                      size: 150,
+
+
+                    ),
+
+
+
+
+                  ],
+
+
+                );
+
+
+
+              },
+
+
+            ),
+
+
+          ),
+
+
+
+        ],
+
+
+      ),
+
+
+    );
+
+  }
+
+
+
+
+
+
+  @override
+  void dispose(){
+
+
+
+    floatController.dispose();
+
+
+    backgroundController.dispose();
+
+
+
+    super.dispose();
+
+
+  }
 }
