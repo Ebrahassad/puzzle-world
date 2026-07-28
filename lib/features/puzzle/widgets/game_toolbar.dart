@@ -10,6 +10,8 @@ class GameToolbar extends StatefulWidget {
 
   final VoidCallback? onBack;
 
+  final GlobalKey starKey;
+
 
   const GameToolbar({
 
@@ -17,28 +19,28 @@ class GameToolbar extends StatefulWidget {
 
     required this.logo,
 
+    required this.starKey,
+
     this.onBack,
 
   });
 
 
   @override
-  State<GameToolbar> createState() =>
-      _GameToolbarState();
+  State<GameToolbar> createState() => _GameToolbarState();
 
 }
 
 
 
+class _GameToolbarState extends State<GameToolbar> {
 
 
-class _GameToolbarState extends State<GameToolbar>{
-
+  int stars = 0;
 
   int coins = 0;
 
-  bool loading = true;
-
+  int rewards = 0;
 
 
   @override
@@ -52,14 +54,15 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
-
   Future<void> loadToolbarData() async {
+
+
+    final totalStars =
+    await PuzzleProgressManager.getTotalStars();
 
 
     final totalCoins =
     await PuzzleProgressManager.getCoins();
-
 
 
     if(!mounted) return;
@@ -67,18 +70,14 @@ class _GameToolbarState extends State<GameToolbar>{
 
     setState((){
 
-      coins = totalCoins;
+      stars = totalStars;
 
-      loading = false;
+      coins = totalCoins;
 
     });
 
 
   }
-
-
-
-
 
 
 
@@ -91,7 +90,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
       MaterialPageRoute(
 
-        builder:(_)=> const WalletScreen(),
+        builder: (_) => const WalletScreen(),
 
       ),
 
@@ -107,26 +106,6 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
-
-  void closeGame(BuildContext context){
-
-
-    Navigator.of(context).popUntil(
-
-      (route)=>route.isFirst,
-
-    );
-
-
-  }
-
-
-
-
-
-
-
   void showSettings(BuildContext context){
 
 
@@ -136,7 +115,6 @@ class _GameToolbarState extends State<GameToolbar>{
 
       builder:(_){
 
-
         return AlertDialog(
 
           title: const Text(
@@ -144,84 +122,31 @@ class _GameToolbarState extends State<GameToolbar>{
           ),
 
 
-          content: Column(
+          content: const Column(
 
-            mainAxisSize:
-            MainAxisSize.min,
-
+            mainAxisSize: MainAxisSize.min,
 
             children:[
 
-
-              const Text(
-
+              Text(
                 "Puzzle World",
-
                 style: TextStyle(
-
-                  fontWeight:
-                  FontWeight.bold,
-
+                  fontWeight: FontWeight.bold,
                 ),
-
               ),
 
+              SizedBox(height:10),
 
-              const SizedBox(height:10),
-
-
-              const Text(
+              Text(
                 "الإصدار: 1.0.0",
               ),
 
-
-              const SizedBox(height:20),
-
-
-
-              ElevatedButton.icon(
-
-                onPressed:(){
-
-
-                  Navigator.pop(context);
-
-
-                  closeGame(context);
-
-
-                },
-
-
-                icon:
-
-                const Icon(
-
-                  Icons.exit_to_app,
-
-                ),
-
-
-                label:
-
-                const Text(
-
-                  "إغلاق اللعبة",
-
-                ),
-
-              ),
-
-
             ],
-
 
           ),
 
 
-
           actions:[
-
 
             TextButton(
 
@@ -231,21 +156,15 @@ class _GameToolbarState extends State<GameToolbar>{
 
               },
 
-              child:
-
-              const Text(
-
+              child: const Text(
                 "حسناً",
-
               ),
 
             ),
 
           ],
 
-
         );
-
 
       },
 
@@ -258,29 +177,18 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
-
-
-
   @override
   Widget build(BuildContext context){
 
 
     return SafeArea(
 
-
       child: Container(
 
-
-        margin:
-
-        const EdgeInsets.all(12),
+        margin: const EdgeInsets.all(12),
 
 
-
-        padding:
-
-        const EdgeInsets.symmetric(
+        padding: const EdgeInsets.symmetric(
 
           horizontal:12,
 
@@ -289,60 +197,24 @@ class _GameToolbarState extends State<GameToolbar>{
         ),
 
 
+        decoration: BoxDecoration(
 
 
-        decoration:
-
-        BoxDecoration(
-
-
-          color:
-
-          Colors.black.withOpacity(0.35),
-
+          color: Colors.black.withOpacity(0.35),
 
 
           borderRadius:
-
           BorderRadius.circular(35),
 
 
+          border: Border.all(
 
-          border:
-
-          Border.all(
-
-            color:
-
-            Colors.white30,
+            color: Colors.white30,
 
           ),
 
 
-
-          boxShadow:[
-
-
-            BoxShadow(
-
-              color:
-
-              Colors.black.withOpacity(0.25),
-
-              blurRadius:10,
-
-              offset:
-
-              const Offset(0,4),
-
-            ),
-
-          ],
-
         ),
-
-
-
 
 
 
@@ -350,9 +222,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
           mainAxisAlignment:
-
           MainAxisAlignment.spaceBetween,
-
 
 
           children:[
@@ -368,13 +238,11 @@ class _GameToolbarState extends State<GameToolbar>{
               },
 
 
-              child:
-
-              const Icon(
+              child: const Icon(
 
                 Icons.settings_rounded,
 
-                color:Colors.white,
+                color: Colors.white,
 
                 size:30,
 
@@ -392,49 +260,179 @@ class _GameToolbarState extends State<GameToolbar>{
 
               height:45,
 
-              fit:
-
-              BoxFit.contain,
-
             ),
 
 
 
 
 
-            GestureDetector(
+            Row(
 
-              onTap:(){
-
-                openWallet(context);
-
-              },
+              children:[
 
 
-              child:
 
-              _coinBox(coins),
+                // ⭐ النجوم (هدف حركة النجمة الذهبية)
+
+                Container(
+
+                  key: widget.starKey,
+
+                  child: _imageCounterBox(
+
+                    image:
+                    "assets/images/rewards/Star_gold.png",
+
+                    value: stars,
+
+                  ),
+
+                ),
+
+
+
+
+                const SizedBox(width:8),
+
+
+
+
+
+                // 🎁 المكافآت
+
+                _imageCounterBox(
+
+                  image:
+                  "assets/images/rewards/reward_box.png",
+
+                  value: rewards,
+
+                ),
+
+
+
+
+                const SizedBox(width:8),
+
+
+
+
+                // 🪙 العملات
+
+                GestureDetector(
+
+                  onTap:(){
+
+                    openWallet(context);
+
+                  },
+
+
+                  child: _coinBox(coins),
+
+                ),
+
+
+              ],
 
             ),
-
 
 
           ],
 
-
         ),
-
 
       ),
 
-
     );
-
 
   }
 
 
 
+
+
+  Widget _imageCounterBox({
+
+    required String image,
+
+    required int value,
+
+  }){
+
+
+    return Container(
+
+
+      padding:
+      const EdgeInsets.symmetric(
+
+        horizontal:8,
+
+        vertical:5,
+
+      ),
+
+
+      decoration: BoxDecoration(
+
+        color: Colors.white24,
+
+        borderRadius:
+        BorderRadius.circular(18),
+
+      ),
+
+
+
+      child: Row(
+
+        mainAxisSize: MainAxisSize.min,
+
+
+        children:[
+
+
+          Image.asset(
+
+            image,
+
+            width:24,
+
+            height:24,
+
+          ),
+
+
+
+          const SizedBox(width:4),
+
+
+
+          Text(
+
+            "$value",
+
+            style: const TextStyle(
+
+              color: Colors.white,
+
+              fontSize:16,
+
+              fontWeight: FontWeight.bold,
+
+            ),
+
+          ),
+
+
+        ],
+
+      ),
+
+    );
+
+  }
 
 
 
@@ -447,44 +445,29 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
       padding:
-
       const EdgeInsets.symmetric(
 
-        horizontal:10,
+        horizontal:8,
 
-        vertical:6,
+        vertical:5,
 
       ),
 
 
+      decoration: BoxDecoration(
 
-      decoration:
-
-      BoxDecoration(
-
-
-        color:
-
-        Colors.white24,
-
+        color: Colors.white24,
 
         borderRadius:
-
         BorderRadius.circular(18),
-
 
       ),
 
 
 
-      child:
+      child: Row(
 
-      Row(
-
-
-        mainAxisSize:
-
-        MainAxisSize.min,
+        mainAxisSize: MainAxisSize.min,
 
 
         children:[
@@ -495,7 +478,6 @@ class _GameToolbarState extends State<GameToolbar>{
             "🪙",
 
             style:
-
             TextStyle(
 
               fontSize:22,
@@ -506,7 +488,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-          const SizedBox(width:5),
+          const SizedBox(width:4),
 
 
 
@@ -514,46 +496,24 @@ class _GameToolbarState extends State<GameToolbar>{
 
             "$value",
 
+            style: const TextStyle(
 
-            style:
-
-            const TextStyle(
-
-              color:Colors.white,
+              color: Colors.white,
 
               fontSize:16,
 
-              fontWeight:
-
-              FontWeight.bold,
+              fontWeight: FontWeight.bold,
 
             ),
 
           ),
 
 
-
         ],
-
 
       ),
 
-
     );
-
-
-  }
-
-
-
-
-
-
-
-  @override
-  void dispose(){
-
-    super.dispose();
 
   }
 
