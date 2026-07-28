@@ -535,47 +535,48 @@ final GlobalKey starKey = GlobalKey();
 
 
 
-  void unlockWithRewardAd(PuzzleModel world){
+  Future<void> unlockWithRewardAd(PuzzleModel world) async {
 
+  final opened =
+      await PuzzleProgressManager.watchIslandAd(
+        world.id,
+      );
 
-    // هنا سيتم ربط Rewarded AdMob لاحقاً
-
-
-    // عند اكتمال الإعلان:
-
-    // 1- حفظ فتح العالم
-
-    // 2- تحديث الخريطة
-
-    // 3- فتح الجزيرة مباشرة
-
-
-
-   PuzzleProgressManager.unlockIsland(
-  world.id,
-).then((_) {
 
   setState(() {});
 
-  ScaffoldMessenger.of(context).showSnackBar(
 
-    SnackBar(
+  if(opened){
 
-      content: Text(
-        "تم فتح ${world.title}",
+    ScaffoldMessenger.of(context).showSnackBar(
+
+      SnackBar(
+
+        content: Text(
+          "🎉 تم فتح ${world.title}",
+        ),
+
       ),
 
-    ),
+    );
 
-  );
+  } else {
 
-});
+    ScaffoldMessenger.of(context).showSnackBar(
 
+      SnackBar(
 
+        content: Text(
+          "شاهد إعلانات إضافية لفتح ${world.title}",
+        ),
 
+      ),
+
+    );
 
   }
 
+}
 
   Widget islandButton(
   String id,
@@ -1043,6 +1044,8 @@ final GlobalKey starKey = GlobalKey();
 
 
           ),
+
+
 Positioned(
   left: 0,
   right: 0,
@@ -1052,19 +1055,11 @@ Positioned(
 
     logo: "assets/images/ui/logo.png",
 
-    stars: 0,
-
-    coins: 0,
-
-    rewards: 0,
-
     starKey: starKey,
 
   ),
 
 ),
-
-
         ],
 
 
