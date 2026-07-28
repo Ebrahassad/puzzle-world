@@ -117,7 +117,18 @@ bool saved = false;
 
 
 
+bool get hasNextLevel {
 
+  if(widget.worldId == null ||
+      widget.level == null){
+
+    return false;
+
+  }
+
+  return widget.level! < 10;
+
+}
 
 
 
@@ -1061,17 +1072,16 @@ setState((){
                 // المستوى التالي
 
                 actionButton(
-  widget.level != null &&
-          widget.worldId != null
+  hasNextLevel
       ? "🚀 المستوى التالي"
       : "🌍 العودة للعالم",
-  Colors.purple,
-  widget.level != null &&
-          widget.worldId != null
+  hasNextLevel
+      ? Colors.purple
+      : Colors.blue,
+  hasNextLevel
       ? nextLevel
       : backHome,
 ),
-
 
 
 
@@ -1431,47 +1441,7 @@ setState((){
         children:[
 
 
-
-          Image.asset(
-
-
-
-            "assets/images/rewards/Star_gold.png",
-
-
-
-            width:55,
-
-            height:55,
-
-
-
-            errorBuilder:
-
-                (_,__,___){
-
-
-
-              return const Icon(
-
-                Icons.star,
-
-                size:55,
-
-              );
-
-
-            },
-
-
-
-          ),
-
-
-
-
-
-          const SizedBox(height:5),
+const SizedBox(height:10),
 
 
 
