@@ -58,6 +58,7 @@ class GameToolbar extends StatefulWidget {
 
 
 
+
   @override
   State<GameToolbar> createState() =>
       _GameToolbarState();
@@ -72,9 +73,8 @@ class GameToolbar extends StatefulWidget {
 
 
 
+
 class _GameToolbarState extends State<GameToolbar>{
-
-
 
 
 
@@ -87,9 +87,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
       MaterialPageRoute(
 
-        builder:(_)=>
-
-        const WalletScreen(),
+        builder:(_)=> const WalletScreen(),
 
       ),
 
@@ -125,23 +123,16 @@ class _GameToolbarState extends State<GameToolbar>{
   void showSettings(BuildContext context){
 
 
-
     showDialog(
 
-
-      context:context,
-
+      context: context,
 
       builder:(_){
-
 
         return AlertDialog(
 
 
-
-          title:
-
-          const Text(
+          title: const Text(
 
             "⚙️ الإعدادات",
 
@@ -149,19 +140,12 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
-
-
-          content:
-
-          Column(
-
+          content: Column(
 
 
             mainAxisSize:
 
             MainAxisSize.min,
-
 
 
             children:[
@@ -172,13 +156,17 @@ class _GameToolbarState extends State<GameToolbar>{
 
                 "Puzzle World",
 
+                style: TextStyle(
+
+                  fontWeight: FontWeight.bold,
+
+                ),
+
               ),
 
 
 
-
               const SizedBox(height:10),
-
 
 
 
@@ -190,16 +178,11 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
               const SizedBox(height:20),
 
 
 
-
-
-
               ElevatedButton.icon(
-
 
 
                 onPressed:(){
@@ -214,75 +197,54 @@ class _GameToolbarState extends State<GameToolbar>{
                 },
 
 
-                icon:
-
-                const Icon(
+                icon: const Icon(
 
                   Icons.exit_to_app,
 
                 ),
 
 
-
-                label:
-
-                const Text(
+                label: const Text(
 
                   "إغلاق اللعبة",
 
                 ),
 
 
-
               ),
 
 
-
             ],
-
 
 
           ),
 
 
 
-
-
-
           actions:[
-
 
 
             TextButton(
 
 
-
               onPressed:(){
 
-
                 Navigator.pop(context);
-
 
               },
 
 
-
-              child:
-
-              const Text(
+              child: const Text(
 
                 "حسناً",
 
               ),
 
 
-
             ),
 
 
-
           ],
-
 
 
         );
@@ -296,10 +258,8 @@ class _GameToolbarState extends State<GameToolbar>{
 
   }
 
-
   @override
   Widget build(BuildContext context){
-
 
 
     return SafeArea(
@@ -334,9 +294,11 @@ class _GameToolbarState extends State<GameToolbar>{
         BoxDecoration(
 
 
+
           color:
 
-          Colors.black38,
+          Colors.black.withOpacity(0.35),
+
 
 
 
@@ -358,7 +320,31 @@ class _GameToolbarState extends State<GameToolbar>{
           ),
 
 
+
+          boxShadow:[
+
+
+            BoxShadow(
+
+              color:
+
+              Colors.black.withOpacity(0.25),
+
+              blurRadius:10,
+
+              offset:
+
+              const Offset(0,4),
+
+            ),
+
+
+          ],
+
+
+
         ),
+
 
 
 
@@ -396,12 +382,15 @@ class _GameToolbarState extends State<GameToolbar>{
               const Icon(
 
 
-                Icons.settings,
+
+                Icons.settings_rounded,
+
 
 
                 color:
 
                 Colors.white,
+
 
 
                 size:30,
@@ -440,7 +429,6 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
             Row(
 
 
@@ -450,8 +438,8 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-                Container(
 
+                Container(
 
 
                   key:
@@ -459,15 +447,22 @@ class _GameToolbarState extends State<GameToolbar>{
                   widget.starKey,
 
 
-
                   child:
 
-                  _counterBox(
+                  _imageCounterBox(
 
 
-                    "⭐",
+
+                    image:
+
+                    "assets/images/rewards/Star_gold.png",
+
+
+
+                    value:
 
                     widget.stars,
+
 
 
                   ),
@@ -481,6 +476,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
+
                 const SizedBox(width:8),
 
 
@@ -488,12 +484,21 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-                _counterBox(
+
+                _imageCounterBox(
 
 
-                  "🎁",
+
+                  image:
+
+                  "assets/images/rewards/reward_box.png",
+
+
+
+                  value:
 
                   widget.rewards,
+
 
 
                 ),
@@ -503,7 +508,9 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
+
                 const SizedBox(width:8),
+
 
 
 
@@ -513,26 +520,27 @@ class _GameToolbarState extends State<GameToolbar>{
                 GestureDetector(
 
 
+
                   onTap:(){
+
 
 
                     openWallet(context);
 
 
+
                   },
+
 
 
                   child:
 
-                  _counterBox(
-
-
-                    "🪙",
+                  _coinBox(
 
                     widget.coins,
 
-
                   ),
+
 
 
                 ),
@@ -546,11 +554,11 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
           ],
 
 
         ),
+
 
 
       ),
@@ -569,13 +577,18 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-  Widget _counterBox(
+  Widget _imageCounterBox({
 
-      String icon,
 
-      int value,
 
-      ){
+    required String image,
+
+
+    required int value,
+
+
+
+  }){
 
 
 
@@ -588,10 +601,13 @@ class _GameToolbarState extends State<GameToolbar>{
       const EdgeInsets.symmetric(
 
 
-        horizontal:10,
+
+        horizontal:8,
 
 
-        vertical:6,
+
+        vertical:5,
+
 
 
       ),
@@ -599,9 +615,11 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
+
       decoration:
 
       BoxDecoration(
+
 
 
         color:
@@ -615,44 +633,123 @@ class _GameToolbarState extends State<GameToolbar>{
         BorderRadius.circular(18),
 
 
+
       ),
 
 
 
 
 
-      child:
-
-      Text(
+      child:Row(
 
 
 
-        "$icon $value",
+        mainAxisSize:
+
+        MainAxisSize.min,
 
 
 
-        style:
-
-        const TextStyle(
+        children:[
 
 
 
-          color:
-
-          Colors.white,
+          Image.asset(
 
 
 
-          fontSize:16,
+            image,
 
 
 
-          fontWeight:
-
-          FontWeight.bold,
+            width:24,
 
 
-        ),
+
+            height:24,
+
+
+
+            errorBuilder:
+
+                (_,__,___){
+
+
+
+              return const Icon(
+
+
+
+                Icons.star,
+
+
+
+                color:Colors.yellow,
+
+
+
+                size:24,
+
+
+
+              );
+
+
+            },
+
+
+          ),
+
+
+
+
+
+          const SizedBox(width:4),
+
+
+
+
+
+          Text(
+
+
+
+            "$value",
+
+
+
+            style:
+
+            const TextStyle(
+
+
+
+              color:
+
+              Colors.white,
+
+
+
+              fontSize:16,
+
+
+
+              fontWeight:
+
+              FontWeight.bold,
+
+
+
+            ),
+
+
+
+          ),
+
+
+
+        ],
+
 
 
       ),
@@ -662,8 +759,179 @@ class _GameToolbarState extends State<GameToolbar>{
     );
 
 
+
   }
 
+  Widget _coinBox(int value){
+
+
+
+    return Container(
+
+
+
+      padding:
+
+      const EdgeInsets.symmetric(
+
+
+
+        horizontal:8,
+
+
+
+        vertical:5,
+
+
+
+      ),
+
+
+
+
+
+      decoration:
+
+      BoxDecoration(
+
+
+
+        color:
+
+        Colors.white24,
+
+
+
+        borderRadius:
+
+        BorderRadius.circular(18),
+
+
+
+      ),
+
+
+
+
+
+      child:Row(
+
+
+
+        mainAxisSize:
+
+        MainAxisSize.min,
+
+
+
+        children:[
+
+
+
+          const Text(
+
+
+
+            "🪙",
+
+
+
+            style:
+
+            TextStyle(
+
+
+
+              fontSize:22,
+
+
+
+            ),
+
+
+
+          ),
+
+
+
+
+
+          const SizedBox(width:4),
+
+
+
+
+
+          Text(
+
+
+
+            "$value",
+
+
+
+            style:
+
+            const TextStyle(
+
+
+
+              color:
+
+              Colors.white,
+
+
+
+              fontSize:16,
+
+
+
+              fontWeight:
+
+              FontWeight.bold,
+
+
+
+            ),
+
+
+
+          ),
+
+
+
+        ],
+
+
+
+      ),
+
+
+
+    );
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  @override
+  void dispose(){
+
+
+
+    super.dispose();
+
+
+
+  }
 
 
 
