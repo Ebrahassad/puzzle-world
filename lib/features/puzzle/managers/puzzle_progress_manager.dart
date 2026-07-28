@@ -1679,202 +1679,10 @@ static Future<void> saveFavoritePuzzles(
 }
 
 
-//==================================================
-// 📜 سجل اللعب
-//==================================================
 
-static const String historyKey =
-    "puzzle_history";
 
 
-static Future<List<Map<String,dynamic>>>
-getPuzzleHistory() async {
 
-  final prefs = await _prefs;
-
-  final data =
-      jsonDecode(
-        prefs.getString(historyKey) ?? "[]",
-      );
-
-
-  return (data as List)
-    .map(
-      (e)=>Map<String,dynamic>.from(e),
-    )
-    .toList();
-
-}
-
-
-
-static Future<void> savePuzzleHistory(
-    List<Map<String,dynamic>> history,
-    ) async {
-
-  final prefs = await _prefs;
-
-
-  await prefs.setString(
-    historyKey,
-    jsonEncode(history),
-  );
-
-
-}
-
-
-
-static Future<void> clearPuzzleHistory() async {
-
-  final prefs = await _prefs;
-
-  await prefs.remove(historyKey);
-
-}
-
-
-//==================================================
-// 🏆 الترتيب
-//==================================================
-
-static const String leaderboardKey =
-    "puzzle_leaderboard";
-
-
-static Future<List<Map<String,dynamic>>>
-getLeaderboard() async {
-
-  final prefs = await _prefs;
-
-
-  final data =
-      jsonDecode(
-        prefs.getString(leaderboardKey) ?? "[]",
-      );
-
-
-  return List<Map<String,dynamic>>.from(
-    data,
-  );
-
-}
-
-
-
-static Future<void> saveLeaderboardScore(
-    Map<String,dynamic> score,
-    ) async {
-
-
-  final list =
-      await getLeaderboard();
-
-
-  list.add(score);
-
-
-  await (await _prefs).setString(
-    leaderboardKey,
-    jsonEncode(list),
-  );
-
-
-}
-
-
-//==================================================
-// 💾 حالات المراحل
-//==================================================
-
-static const String statesKey =
-    "puzzle_states";
-
-
-
-static Future<void> savePuzzleState(
-    String levelId,
-    Map<String,dynamic> state,
-    ) async {
-
-
-  final prefs = await _prefs;
-
-
-  final all =
-      jsonDecode(
-        prefs.getString(statesKey) ?? "{}",
-      );
-
-
-  all[levelId] = state;
-
-
-  await prefs.setString(
-    statesKey,
-    jsonEncode(all),
-  );
-
-
-}
-
-
-
-static Future<Map<String,dynamic>?>
-getPuzzleState(
-    String levelId,
-    ) async {
-
-
-  final prefs = await _prefs;
-
-
-  final all =
-      jsonDecode(
-        prefs.getString(statesKey) ?? "{}",
-      );
-
-
-  if(!all.containsKey(levelId)){
-
-    return null;
-
-  }
-
-
-  return Map<String,dynamic>.from(
-    all[levelId],
-  );
-
-
-}
-
-
-
-static Future<void> clearPuzzleState(
-    String levelId,
-    ) async {
-
-
-  final prefs = await _prefs;
-
-
-  final all =
-      jsonDecode(
-        prefs.getString(statesKey) ?? "{}",
-      );
-
-
-  all.remove(levelId);
-
-
-  await prefs.setString(
-    statesKey,
-    jsonEncode(all),
-  );
-
-
-}
 //==================================================
 // 🎮 حالة اللعب الحالية
 //==================================================
@@ -2340,8 +2148,6 @@ static Future<void> resetProgress() async {
   await prefs.remove(claimedRewardsKey);
 
 
-  // 💾 حذف حالات المراحل
-  await prefs.remove(statesKey);
 
 
   // 🎮 حذف حالة اللعب الحالية
@@ -2509,26 +2315,22 @@ static int getIslandRequiredAds(
       return 0;
 
     case "cars":
-      return 6;
-
-
-   
-    
-    
-
-    case "landmarks":
-      return 8;
+      return 5;
 
     case "nature":
       return 10;
 
-    case "space":
+    case "landmarks":
       return 15;
+
+    case "space":
+      return 20;
 
     default:
       return 9999;
   }
 }
+
 
 static String? getPreviousIsland(
     String islandId,
@@ -2539,14 +2341,14 @@ static String? getPreviousIsland(
     case "cars":
       return "animals";
 
-    case "landmarks":
+    case "nature":
       return "cars";
 
-    case "nature":
-      return "landmarks";
+    case "landmarks":
+      return "nature";
 
     case "space":
-      return "nature";
+      return "landmarks";
 
     default:
       return null;
