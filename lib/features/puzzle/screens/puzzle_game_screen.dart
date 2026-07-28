@@ -1313,7 +1313,7 @@ class _PuzzleGameScreenState
       );
 
 
-
+await PuzzleProgressManager.clearProgress();
 
 
 
@@ -1440,48 +1440,11 @@ class _PuzzleGameScreenState
 
 
 
-
-      final reward =
-
-      await RewardManager.completePuzzle(
-
-
-        difficulty:
-
-
-        widget.level.gridSize <= 4
-
-            ? 1
-
-            : widget.level.gridSize <= 6
-
-            ? 2
-
-            : 3,
+earnedStars = 0;
 
 
 
-        rewardKey:
-
-        "${widget.puzzle.id}_${widget.level.id}",
-
-
-      );
-
-
-
-
-
-
-
-      earnedStars =
-
-      reward?.stars ?? 3;
-
-
-
-
-
+await bgPlayer.stop();
 
 
       Navigator.pushReplacement(
@@ -1821,9 +1784,8 @@ class _PuzzleGameScreenState
 
 
 
-                            Text(
-
-                              "$earnedStars",
+                 const Text(
+  "---",
 
                               style:
 
@@ -2332,9 +2294,7 @@ class _PuzzleGameScreenState
 
 
             color:
-
-            Colors.black54,
-
+Colors.black.withOpacity(0.35),
 
 
             child:
