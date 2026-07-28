@@ -22,7 +22,6 @@ import '../widgets/reward_box_widget.dart';
 
 import '../managers/puzzle_hint_manager.dart';
 import '../managers/puzzle_progress_manager.dart';
-import '../managers/reward_manager.dart';
 
 import '../services/reward_ad_service.dart';
 import '../services/puzzle_audio_service.dart';
@@ -1313,22 +1312,6 @@ class _PuzzleGameScreenState
       );
 
 
-final reward = await RewardManager.completePuzzle(
-
-  difficulty:
-
-  widget.level.gridSize <= 4
-      ? 1
-      : widget.level.gridSize <= 6
-      ? 2
-      : 3,
-
-
-  rewardKey:
-
-  "${widget.puzzle.id}_${widget.level.id}",
-
-);
 
 
 
@@ -1365,16 +1348,13 @@ final reward = await RewardManager.completePuzzle(
 
 GameResultModel(
 
-  stars:
+  stars: 3,
 
-  reward?.stars ?? 3,
+  moves: moves,
 
-  moves:moves,
-
-  seconds:seconds,
+  seconds: seconds,
 
 ),
-
 
 
 
