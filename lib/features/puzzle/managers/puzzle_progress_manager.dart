@@ -61,6 +61,10 @@ class PuzzleProgressManager {
 
 
 
+static const String gameStateKey =
+      "puzzle_game_state";
+
+
   static const String gamesPlayedKey =
       "puzzle_games_played";
 
@@ -189,7 +193,18 @@ class PuzzleProgressManager {
 
 
 
+static Future<void> saveGameState(
+    Map<String,dynamic> state,
+    ) async {
 
+  final prefs = await _prefs;
+
+  await prefs.setString(
+    gameStateKey,
+    jsonEncode(state),
+  );
+
+}
 
   //==================================================
   // 📖 قراءة حالة البازل
@@ -269,7 +284,13 @@ class PuzzleProgressManager {
 
   }
 
+static Future<int> getTotalStars() async {
 
+  final prefs = await _prefs;
+
+  return prefs.getInt(starsKey) ?? 0;
+
+}
 
 
   static Future<void> addStars(
@@ -336,7 +357,26 @@ class PuzzleProgressManager {
   }
 
 
+static Future<void> saveLevelStars(
+    String levelId,
+    int stars,
+    ) async {
 
+  final prefs = await _prefs;
+
+  final data =
+      jsonDecode(
+        prefs.getString(levelStarsKey) ?? "{}",
+      );
+
+  data[levelId] = stars;
+
+  await prefs.setString(
+    levelStarsKey,
+    jsonEncode(data),
+  );
+
+}
 
 
   //==================================================
