@@ -120,7 +120,7 @@ class _PuzzleGameScreenState
 
   int hints = 0;
 
-
+int earnedStars = 3;
   
 
 
@@ -1315,7 +1315,12 @@ final GlobalKey starKey = GlobalKey();
 
 await PuzzleProgressManager.clearProgress();
 
+await RewardManager.addStars(
+  earnedStars,
+);
 
+
+await RewardManager.addReward();
 
 
       await playSound(
@@ -1465,7 +1470,7 @@ await bgPlayer.stop();
 
 
 
-              stars: 0,
+              stars: earnedStars,
 
               moves:
 
@@ -2177,6 +2182,5 @@ Colors.black.withOpacity(0.35),
 
 
   }
-
 
 }
