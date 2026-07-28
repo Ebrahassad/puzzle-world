@@ -2,38 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 
-
 class RewardBoxWidget extends StatefulWidget {
-
 
   final VoidCallback onRewardOpened;
 
-
   final VoidCallback? onStarReady;
-
 
   final GlobalKey? starTargetKey;
 
 
-
   const RewardBoxWidget({
-
 
     super.key,
 
-
     required this.onRewardOpened,
-
 
     this.onStarReady,
 
-
     this.starTargetKey,
 
-
   });
-
-
 
 
   @override
@@ -55,15 +43,14 @@ class _RewardBoxWidgetState
 
 
 
-  final AudioPlayer audioPlayer = AudioPlayer();
+  final AudioPlayer audioPlayer =
+      AudioPlayer();
 
 
 
   late AnimationController boxController;
 
-
   late AnimationController pulseController;
-
 
   late AnimationController starController;
 
@@ -71,9 +58,7 @@ class _RewardBoxWidgetState
 
   late Animation<double> boxScale;
 
-
   late Animation<double> boxRotate;
-
 
   late Animation<double> pulseScale;
 
@@ -81,31 +66,21 @@ class _RewardBoxWidgetState
 
   late Animation<double> starScale;
 
-
   late Animation<double> starOpacity;
 
 
-  late Animation<Offset> starMove;
-
-
-  late Animation<double> starSize;
-
-
-
-
-  bool opened = false;
-
-
-  bool showStar = false;
-
-
-  bool starArrived = false;
 
 
 
   Offset starOffset = Offset.zero;
 
 
+
+  bool opened = false;
+
+  bool showStar = false;
+
+  bool starArrived = false;
 
 
 
@@ -117,210 +92,169 @@ class _RewardBoxWidgetState
 
 
 
+    // حركة الصندوق
 
     boxController = AnimationController(
 
       vsync:this,
 
       duration:
-
-      const Duration(milliseconds:800),
-
-    );
-
-
-
-
-
-    boxScale = Tween<double>(
-
-      begin:1,
-
-      end:1.15,
-
-    ).animate(
-
-      CurvedAnimation(
-
-        parent:boxController,
-
-        curve:Curves.elasticOut,
-
+      const Duration(
+        milliseconds:800,
       ),
 
     );
 
 
 
+    boxScale =
+        Tween<double>(
+          begin:1,
+          end:1.15,
+        ).animate(
 
+          CurvedAnimation(
 
-    boxRotate = Tween<double>(
+            parent:
+            boxController,
 
-      begin:-0.08,
+            curve:
+            Curves.elasticOut,
 
-      end:0.08,
+          ),
 
-    ).animate(
+        );
 
-      CurvedAnimation(
 
-        parent:boxController,
 
-        curve:Curves.easeInOut,
 
-      ),
+    boxRotate =
+        Tween<double>(
+          begin:-0.08,
+          end:0.08,
+        ).animate(
 
-    );
+          CurvedAnimation(
 
+            parent:
+            boxController,
 
+            curve:
+            Curves.easeInOut,
 
+          ),
 
+        );
 
-    pulseController = AnimationController(
 
-      vsync:this,
 
-      duration:
 
-      const Duration(seconds:1),
 
-    )
+    // لمعان الصندوق
 
-      ..repeat(reverse:true);
+    pulseController =
+        AnimationController(
 
+          vsync:this,
 
+          duration:
+          const Duration(
+            seconds:1,
+          ),
 
+        )
+          ..repeat(
+            reverse:true,
+          );
 
 
-    pulseScale = Tween<double>(
 
-      begin:0.95,
 
-      end:1.08,
+    pulseScale =
+        Tween<double>(
+          begin:0.95,
+          end:1.08,
+        ).animate(
 
-    ).animate(
+          CurvedAnimation(
 
-      CurvedAnimation(
+            parent:
+            pulseController,
 
-        parent:pulseController,
+            curve:
+            Curves.easeInOut,
 
-        curve:Curves.easeInOut,
+          ),
 
-      ),
+        );
 
-    );
 
 
 
 
 
-    starController = AnimationController(
+    // حركة النجمة
 
-      vsync:this,
+    starController =
+        AnimationController(
 
-      duration:
+          vsync:this,
 
-      const Duration(milliseconds:1500),
+          duration:
+          const Duration(
+            milliseconds:1500,
+          ),
 
-    );
+        );
 
 
 
+    starScale =
+        Tween<double>(
+          begin:0.1,
+          end:1,
+        ).animate(
 
+          CurvedAnimation(
 
-    starScale = Tween<double>(
+            parent:
+            starController,
 
-      begin:0.2,
+            curve:
+            Curves.elasticOut,
 
-      end:1,
+          ),
 
-    ).animate(
+        );
 
-      CurvedAnimation(
 
-        parent:starController,
 
-        curve:Curves.elasticOut,
+    starOpacity =
+        Tween<double>(
+          begin:0,
+          end:1,
+        ).animate(
 
-      ),
+          CurvedAnimation(
 
-    );
+            parent:
+            starController,
 
+            curve:
+            Curves.easeIn,
 
+          ),
 
-
-
-    starOpacity = Tween<double>(
-
-      begin:0,
-
-      end:1,
-
-    ).animate(
-
-      CurvedAnimation(
-
-        parent:starController,
-
-        curve:Curves.easeIn,
-
-      ),
-
-    );
-
-
-
-
-
-    starMove = Tween<Offset>(
-
-      begin:Offset.zero,
-
-      end:Offset.zero,
-
-    ).animate(
-
-      CurvedAnimation(
-
-        parent:starController,
-
-        curve:Curves.easeInOut,
-
-      ),
-
-    );
-
-
-
-
-
-    starSize = Tween<double>(
-
-      begin:120,
-
-      end:28,
-
-    ).animate(
-
-      CurvedAnimation(
-
-        parent:starController,
-
-        curve:Curves.easeInOut,
-
-      ),
-
-    );
+        );
 
 
   }
 
-    void calculateStarPosition(){
+
+  void calculateStarPosition(){
 
     if(widget.starTargetKey == null){
-
       return;
-
     }
 
 
@@ -352,15 +286,32 @@ class _RewardBoxWidgetState
 
       final targetPosition =
       targetBox.localToGlobal(
-        Offset.zero,
+
+        Offset(
+
+          targetBox.size.width / 2,
+
+          targetBox.size.height / 2,
+
+        ),
+
       );
 
 
 
       final currentPosition =
       currentBox.localToGlobal(
-        Offset.zero,
+
+        Offset(
+
+          currentBox.size.width / 2,
+
+          currentBox.size.height / 2,
+
+        ),
+
       );
+
 
 
 
@@ -376,6 +327,7 @@ class _RewardBoxWidgetState
           targetPosition.dy -
               currentPosition.dy,
 
+
         );
 
 
@@ -385,14 +337,23 @@ class _RewardBoxWidgetState
 
     }catch(e){
 
+
       debugPrint(
+
         "Star position error: $e",
+
       );
+
 
     }
 
 
   }
+
+
+
+
+
 
 
   Future<void> openBox() async {
@@ -405,20 +366,34 @@ class _RewardBoxWidgetState
     }
 
 
+
     opened = true;
+
 
 
     try{
 
 
+
       pulseController.stop();
 
 
-      await playOpenSound();
+
+      await audioPlayer.play(
+
+        AssetSource(
+          "audio/reward_open.mp3",
+        ),
+
+      );
+
+
 
 
 
       await boxController.forward();
+
+
 
 
 
@@ -427,6 +402,9 @@ class _RewardBoxWidgetState
         return;
 
       }
+
+
+
 
 
 
@@ -452,6 +430,28 @@ class _RewardBoxWidgetState
 
 
 
+
+      if(!mounted){
+
+        return;
+
+      }
+
+
+
+
+
+      setState((){
+
+        starArrived = true;
+
+      });
+
+
+
+
+
+
       if(widget.onStarReady != null){
 
         widget.onStarReady!();
@@ -466,7 +466,7 @@ class _RewardBoxWidgetState
 
         const Duration(
 
-          milliseconds:300,
+          milliseconds:500,
 
         ),
 
@@ -491,22 +491,19 @@ class _RewardBoxWidgetState
 
 
 
+
     }catch(e){
 
 
       debugPrint(
 
-        "Reward open error: $e",
+        "Open reward box error: $e",
 
       );
 
 
 
-      if(mounted){
-
-        widget.onRewardOpened();
-
-      }
+      widget.onRewardOpened();
 
 
     }
@@ -514,45 +511,6 @@ class _RewardBoxWidgetState
 
   }
 
-
-
-
-
-
-
-  Future<void> playOpenSound() async {
-
-
-    try{
-
-
-      await audioPlayer.play(
-
-
-        AssetSource(
-
-          "audio/reward_open.mp3",
-
-        ),
-
-
-      );
-
-
-    }catch(e){
-
-
-      debugPrint(
-
-        "Reward sound error: $e",
-
-      );
-
-
-    }
-
-
-  }
 
 
 
@@ -568,72 +526,79 @@ class _RewardBoxWidgetState
 
       ){
 
-
     return Image.asset(
-
 
       path,
 
-
       width:size,
-
 
       height:size,
 
+      fit:
+
+      BoxFit.contain,
 
       errorBuilder:
 
           (_,__,___){
 
-
         return Icon(
-
 
           Icons.card_giftcard,
 
-
           size:size,
 
+          color:
 
-          color:Colors.orange,
-
+          Colors.orange,
 
         );
 
-
       },
 
-
     );
-
 
   }
 
 
+ id="7kq92m"
   @override
   Widget build(BuildContext context){
 
+
     return Center(
+
 
       child: GestureDetector(
 
-        onTap: openBox,
+
+        onTap:openBox,
 
 
-        child: Stack(
 
-          alignment: Alignment.center,
+        child:Stack(
 
 
-          clipBehavior: Clip.none,
+          alignment:
+
+          Alignment.center,
+
+
+          clipBehavior:
+
+          Clip.none,
+
 
 
           children:[
 
 
-            // صندوق المكافأة
+
+
+            // 🎁 صندوق المكافأة
 
             AnimatedBuilder(
+
 
               animation:
 
@@ -646,19 +611,24 @@ class _RewardBoxWidgetState
               ]),
 
 
+
               builder:(context,child){
 
 
+
                 return Transform.rotate(
+
 
                   angle:
 
                   boxRotate.value,
 
 
+
                   child:
 
                   Transform.scale(
+
 
                     scale:
 
@@ -667,25 +637,33 @@ class _RewardBoxWidgetState
                     pulseScale.value,
 
 
+
                     child:child,
 
 
                   ),
 
 
+
                 );
 
 
+
               },
+
+
 
 
               child:
 
               rewardImage(
 
+
                 "assets/images/rewards/reward_box.png",
 
+
                 170,
+
 
               ),
 
@@ -696,31 +674,55 @@ class _RewardBoxWidgetState
 
 
 
-            // النجمة التي تخرج من الصندوق
+
+
+            // ⭐ النجمة الذهبية
 
             if(showStar)
 
 
               AnimatedBuilder(
 
-                animation:starController,
+
+
+                animation:
+
+                starController,
+
 
 
                 builder:(context,child){
 
 
+
                   return Transform.translate(
+
+
 
                     offset:
 
-                    starOffset *
+                    Offset(
 
-                    starController.value,
+                      starOffset.dx *
+
+                      starController.value,
+
+
+                      starOffset.dy *
+
+                      starController.value,
+
+
+                    ),
+
+
 
 
                     child:
 
                     Transform.translate(
+
+
 
                       offset:
 
@@ -735,42 +737,61 @@ class _RewardBoxWidgetState
                       ),
 
 
+
                       child:
 
                       Opacity(
+
+
 
                         opacity:
 
                         starOpacity.value,
 
 
+
                         child:
 
                         Transform.scale(
+
+
 
                           scale:
 
                           starScale.value,
 
 
+
                           child:child,
+
 
 
                         ),
 
+
+
                       ),
+
+
 
                     ),
 
+
+
                   );
+
 
 
                 },
 
 
+
+
                 child:
 
                 AnimatedScale(
+
+
 
                   scale:
 
@@ -779,6 +800,7 @@ class _RewardBoxWidgetState
                       ? 0.35
 
                       : 1,
+
 
 
                   duration:
@@ -790,15 +812,20 @@ class _RewardBoxWidgetState
                   ),
 
 
+
                   child:
 
                   rewardImage(
 
+
                     "assets/images/rewards/Star_gold.png",
+
 
                     120,
 
+
                   ),
+
 
 
                 ),
@@ -808,50 +835,48 @@ class _RewardBoxWidgetState
 
 
 
+
+
           ],
+
 
 
         ),
 
 
+
       ),
+
 
 
     );
 
 
+
   }
+
+
+
+
+
+
+
 
   @override
   void dispose(){
 
 
-    try{
+
+    boxController.dispose();
 
 
-      boxController.dispose();
+    pulseController.dispose();
 
 
-      pulseController.dispose();
+    starController.dispose();
 
 
-      starController.dispose();
-
-
-      audioPlayer.dispose();
-
-
-    }catch(e){
-
-
-      debugPrint(
-
-        "Reward box dispose error: $e",
-
-      );
-
-
-    }
+    audioPlayer.dispose();
 
 
 
