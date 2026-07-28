@@ -148,17 +148,17 @@ class _PuzzleWinScreenState
 
       await PuzzleProgressManager.saveGameState({
 
-  "puzzleId": widget.puzzle.id,
+  "worldId": widget.worldId,
 
-  "levelId": widget.level.levelNumber,
+  "level": widget.level,
 
   "completed": true,
 
-  "stars": widget.stars,
+  "stars": widget.result.stars,
 
-  "moves": widget.moves,
+  "moves": widget.result.moves,
 
-  "time": widget.time,
+  "seconds": widget.result.seconds,
 
 });
 
