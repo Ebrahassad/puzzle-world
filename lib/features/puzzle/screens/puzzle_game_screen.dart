@@ -24,8 +24,8 @@ import '../managers/puzzle_hint_manager.dart';
 import '../managers/puzzle_progress_manager.dart';
 import '../managers/reward_manager.dart';
 
+
 import '../services/reward_ad_service.dart';
-import '../services/puzzle_audio_service.dart';
 
 
 import 'puzzle_win_screen.dart';
@@ -57,10 +57,10 @@ class PuzzleGameScreen extends StatefulWidget {
 
 
 
-
   @override
   State<PuzzleGameScreen> createState() =>
       _PuzzleGameScreenState();
+
 
 }
 
@@ -96,13 +96,20 @@ class _PuzzleGameScreenState
 
 
 
-  final AudioPlayer bgPlayer = AudioPlayer();
+  final AudioPlayer bgPlayer =
+      AudioPlayer();
 
 
-  final AudioPlayer effectPlayer = AudioPlayer();
+  final AudioPlayer effectPlayer =
+      AudioPlayer();
 
 
 
+
+
+  //==================================================
+  // حالة اللعبة
+  //==================================================
 
 
   int moves = 0;
@@ -113,6 +120,8 @@ class _PuzzleGameScreenState
 
   int hints = 0;
 
+
+  int earnedStars = 0;
 
 
 
@@ -130,9 +139,17 @@ class _PuzzleGameScreenState
   bool rewardOpened = false;
 
 
-bool starAnimationFinished = false;
+  bool starAnimationFinished = false;
 
-final GlobalKey starKey = GlobalKey();
+
+
+
+
+  final GlobalKey starKey = GlobalKey();
+
+
+
+
 
   double boardSize = 300;
 
@@ -184,11 +201,17 @@ final GlobalKey starKey = GlobalKey();
 
 
 
-    confettiController = ConfettiController(
+    confettiController =
+
+    ConfettiController(
 
       duration:
 
-      const Duration(seconds:3),
+      const Duration(
+
+        seconds:3,
+
+      ),
 
     );
 
@@ -252,14 +275,6 @@ final GlobalKey starKey = GlobalKey();
 
   }
 
-
-
-
-
-
-
-
-
   Future<void> playSound(String file) async {
 
 
@@ -300,6 +315,11 @@ final GlobalKey starKey = GlobalKey();
 
 
 
+  //==================================================
+  // تحميل صورة البازل
+  //==================================================
+
+
   Future<void> loadPuzzleImage() async {
 
 
@@ -319,7 +339,6 @@ final GlobalKey starKey = GlobalKey();
 
 
       stream.addListener(
-
 
 
         ImageStreamListener(
@@ -415,6 +434,11 @@ final GlobalKey starKey = GlobalKey();
 
 
 
+  //==================================================
+  // إنشاء لعبة جديدة
+  //==================================================
+
+
   void createGame(){
 
 
@@ -434,9 +458,15 @@ final GlobalKey starKey = GlobalKey();
 
       pieces = PuzzleGenerator.generate(
 
-        rows: widget.level.gridSize,
+        rows:
 
-        columns: widget.level.gridSize,
+        widget.level.gridSize,
+
+
+        columns:
+
+        widget.level.gridSize,
+
 
 
         imageWidth:
@@ -444,9 +474,11 @@ final GlobalKey starKey = GlobalKey();
         loadedImage!.width.toDouble(),
 
 
+
         imageHeight:
 
         loadedImage!.height.toDouble(),
+
 
 
         boardSize:
@@ -463,7 +495,9 @@ final GlobalKey starKey = GlobalKey();
 
       controller = PuzzleController(
 
-        pieces: pieces,
+        pieces:
+
+        pieces,
 
       );
 
@@ -490,13 +524,67 @@ final GlobalKey starKey = GlobalKey();
 
   }
 
+
+
+
+
+
+
+
+
+  //==================================================
+  // تحميل التقدم السابق
+  //==================================================
+
+
   Future<void> loadProgress() async {
 
 
     try{
 
 
-      hints = await PuzzleHintManager.getHints();
+      hints =
+
+      await PuzzleHintManager.getHints();
+
+
+
+
+
+
+      final saved =
+
+      await PuzzleProgressManager.loadProgress();
+
+
+
+
+
+
+      if(saved != null &&
+
+          saved["levelId"] == widget.level.id){
+
+
+
+        moves =
+
+            saved["moves"] ?? 0;
+
+
+
+        seconds =
+
+            saved["seconds"] ?? 0;
+
+
+
+        // لاحقاً يمكن إعادة ترتيب القطع
+
+        // من البيانات المحفوظة
+
+      }
+
 
 
 
@@ -562,67 +650,56 @@ final GlobalKey starKey = GlobalKey();
 
 
 
+  //==================================================
+  // المؤقت
+  //==================================================
+
+
   void startTimer(){
 
 
-    try{
-
-
-      timer?.cancel();
+    timer?.cancel();
 
 
 
 
 
-      timer = Timer.periodic(
+    timer = Timer.periodic(
 
 
 
-        const Duration(seconds:1),
+      const Duration(seconds:1),
 
 
 
-            (_){
+          (_){
 
 
 
-          if(!mounted || finishing){
+        if(!mounted || finishing){
 
-            return;
+          return;
 
-          }
-
-
+        }
 
 
 
-          setState((){
 
 
-            seconds++;
+        setState((){
 
 
-          });
+          seconds++;
 
 
-
-        },
-
-      );
+        });
 
 
 
-    }catch(e){
+      },
 
 
-      debugPrint(
-
-        "Timer error: $e",
-
-      );
-
-
-    }
+    );
 
 
   }
@@ -633,6 +710,11 @@ final GlobalKey starKey = GlobalKey();
 
 
 
+
+
+  //==================================================
+  // تحريك القطعة
+  //==================================================
 
 
   Future<void> movePiece(
@@ -672,19 +754,20 @@ final GlobalKey starKey = GlobalKey();
 
         final maxX =
 
-            boardSize - pieceSize;
+        boardSize - pieceSize;
 
 
 
         final maxY =
 
-            boardSize - pieceSize;
+        boardSize - pieceSize;
 
 
 
 
 
         if(piece.position.dx < 0){
+
 
           piece.position = Offset(
 
@@ -693,6 +776,7 @@ final GlobalKey starKey = GlobalKey();
             piece.position.dy,
 
           );
+
 
         }
 
@@ -702,6 +786,7 @@ final GlobalKey starKey = GlobalKey();
 
         if(piece.position.dy < 0){
 
+
           piece.position = Offset(
 
             piece.position.dx,
@@ -709,6 +794,7 @@ final GlobalKey starKey = GlobalKey();
             0,
 
           );
+
 
         }
 
@@ -718,6 +804,7 @@ final GlobalKey starKey = GlobalKey();
 
         if(piece.position.dx > maxX){
 
+
           piece.position = Offset(
 
             maxX,
@@ -725,6 +812,7 @@ final GlobalKey starKey = GlobalKey();
             piece.position.dy,
 
           );
+
 
         }
 
@@ -734,6 +822,7 @@ final GlobalKey starKey = GlobalKey();
 
         if(piece.position.dy > maxY){
 
+
           piece.position = Offset(
 
             piece.position.dx,
@@ -741,6 +830,7 @@ final GlobalKey starKey = GlobalKey();
             maxY,
 
           );
+
 
         }
 
@@ -765,12 +855,9 @@ final GlobalKey starKey = GlobalKey();
 
   }
 
-
-
-
-
-
-
+  //==================================================
+  // إسقاط القطعة وفحص مكانها
+  //==================================================
 
 
   Future<void> dropPiece(
@@ -778,7 +865,6 @@ final GlobalKey starKey = GlobalKey();
       PuzzlePiece piece,
 
       ) async {
-
 
 
     if(piece.placed || finishing){
@@ -883,6 +969,11 @@ final GlobalKey starKey = GlobalKey();
 
 
 
+  //==================================================
+  // حفظ تقدم اللعبة
+  //==================================================
+
+
   Future<void> saveGame() async {
 
 
@@ -950,6 +1041,11 @@ final GlobalKey starKey = GlobalKey();
 
 
 
+  //==================================================
+  // فحص اكتمال البازل
+  //==================================================
+
+
   void checkCompleted(){
 
 
@@ -965,9 +1061,7 @@ final GlobalKey starKey = GlobalKey();
       ){
 
 
-
         finishGame();
-
 
 
       }
@@ -997,6 +1091,11 @@ final GlobalKey starKey = GlobalKey();
 
 
 
+  //==================================================
+  // استخدام المساعدة
+  //==================================================
+
+
   Future<void> usePuzzleHint() async {
 
 
@@ -1006,7 +1105,6 @@ final GlobalKey starKey = GlobalKey();
       bool available =
 
       await PuzzleHintManager.consumeHint();
-
 
 
 
@@ -1153,6 +1251,18 @@ final GlobalKey starKey = GlobalKey();
   }
 
 
+
+
+
+
+
+
+
+  //==================================================
+  // إنهاء المرحلة
+  //==================================================
+
+
   Future<void> finishGame() async {
 
 
@@ -1177,9 +1287,28 @@ final GlobalKey starKey = GlobalKey();
 
 
 
+
+      // حفظ إكمال المرحلة
+
       await PuzzleProgressManager.completeLevel(
 
         widget.level.id,
+
+      );
+
+
+
+
+
+
+
+      // فتح المرحلة التالية
+
+      await PuzzleProgressManager.unlockNextLevel(
+
+        widget.puzzle.id,
+
+        widget.level.levelNumber + 1,
 
       );
 
@@ -1276,12 +1405,9 @@ final GlobalKey starKey = GlobalKey();
 
   }
 
-
-
-
-
-
-
+  //==================================================
+  // فتح شاشة الفوز
+  //==================================================
 
 
   Future<void> openWinScreen() async {
@@ -1304,19 +1430,6 @@ final GlobalKey starKey = GlobalKey();
 
 
 
-
-
-      await playSound(
-
-        "puzzle_reward.mp3",
-
-      );
-
-
-
-
-
-
       if(!mounted){
 
         return;
@@ -1328,43 +1441,95 @@ final GlobalKey starKey = GlobalKey();
 
 
 
+      final reward =
 
-      final reward = await RewardManager.completePuzzle(
-
-  difficulty:
-
-  widget.level.gridSize <= 4
-      ? 1
-      : widget.level.gridSize <= 6
-      ? 2
-      : 3,
+      await RewardManager.completePuzzle(
 
 
-  rewardKey:
-
-  "${widget.puzzle.id}_${widget.level.id}",
-
-);
+        difficulty:
 
 
+        widget.level.gridSize <= 4
 
-Navigator.pushReplacement(
+            ? 1
 
-  context,
+            : widget.level.gridSize <= 6
 
-  MaterialPageRoute(
+            ? 2
 
-    builder:(_)=>PuzzleWinScreen(
+            : 3,
 
-      result:
 
-      GameResultModel(
-  stars: reward?.stars ?? 3,
-  moves: moves,
-  time: Duration(
-    seconds: seconds,
-  ),
-),
+
+        rewardKey:
+
+        "${widget.puzzle.id}_${widget.level.id}",
+
+
+      );
+
+
+
+
+
+
+
+      earnedStars =
+
+      reward?.stars ?? 3;
+
+
+
+
+
+
+
+      Navigator.pushReplacement(
+
+
+        context,
+
+
+        MaterialPageRoute(
+
+
+          builder:(_)=>PuzzleWinScreen(
+
+
+
+            result:
+
+            GameResultModel(
+
+
+
+              stars:
+
+              earnedStars,
+
+
+
+              moves:
+
+              moves,
+
+
+
+              time:
+
+              Duration(
+
+                seconds:
+
+                seconds,
+
+              ),
+
+
+
+            ),
+
+
 
 
             difficulty:
@@ -1394,6 +1559,7 @@ Navigator.pushReplacement(
             level:
 
             widget.level.levelNumber,
+
 
 
 
@@ -1427,6 +1593,13 @@ Navigator.pushReplacement(
   }
 
 
+
+
+
+
+
+
+
   @override
   Widget build(BuildContext context){
 
@@ -1437,11 +1610,14 @@ Navigator.pushReplacement(
       return const Scaffold(
 
 
-        body: Center(
+        body:
+
+        Center(
 
 
-          child:CircularProgressIndicator(),
+          child:
 
+          CircularProgressIndicator(),
 
         ),
 
@@ -1480,7 +1656,9 @@ Navigator.pushReplacement(
           SafeArea(
 
 
-            child:Column(
+            child:
+
+            Column(
 
 
               children:[
@@ -1514,7 +1692,9 @@ Navigator.pushReplacement(
                   BoxDecoration(
 
 
-                    color:Colors.white,
+                    color:
+
+                    Colors.white,
 
 
                     borderRadius:
@@ -1528,7 +1708,9 @@ Navigator.pushReplacement(
 
                       const BoxShadow(
 
-                        color:Colors.black12,
+                        color:
+
+                        Colors.black12,
 
                         blurRadius:8,
 
@@ -1542,7 +1724,9 @@ Navigator.pushReplacement(
 
 
 
-                  child:Row(
+                  child:
+
+                  Row(
 
 
                     mainAxisAlignment:
@@ -1551,108 +1735,163 @@ Navigator.pushReplacement(
 
 
 
-   children:[
-
-
-  Text(
-    "🧩 $moves",
-    style:
-    const TextStyle(
-      fontSize:18,
-      fontWeight:FontWeight.bold,
-    ),
-  ),
+                    children:[
 
 
 
-  Text(
-    "⏱ $seconds",
-    style:
-    const TextStyle(
-      fontSize:18,
-      fontWeight:FontWeight.bold,
-    ),
-  ),
+                      Text(
 
+                        "🧩 $moves",
 
+                        style:
 
-  Container(
+                        const TextStyle(
 
-    key: starKey,
+                          fontSize:18,
 
-    child: Row(
+                          fontWeight:
 
-      children:[
+                          FontWeight.bold,
 
-        Image.asset(
+                        ),
 
-          "assets/images/rewards/Star_gold.png",
-
-          width:28,
-
-          height:28,
-
-        ),
-
-
-        const SizedBox(width:4),
-
-
-        const Text(
-
-          "0",
-
-          style:
-
-          TextStyle(
-
-            fontSize:18,
-
-            fontWeight:
-
-            FontWeight.bold,
-
-          ),
-
-        ),
-
-      ],
-
-    ),
-
-  ),
+                      ),
 
 
 
 
-  GestureDetector(
+                      Text(
 
-    onTap: usePuzzleHint,
+                        "⏱ $seconds",
 
-    child:
+                        style:
 
-    Text(
+                        const TextStyle(
 
-      "💡 $hints",
+                          fontSize:18,
 
-      style:
+                          fontWeight:
 
-      const TextStyle(
+                          FontWeight.bold,
 
-        fontSize:18,
+                        ),
 
-        fontWeight:
-
-        FontWeight.bold,
-
-      ),
-
-    ),
-
-  ),
+                      ),
 
 
-],
+
+
+
+                      Container(
+
+
+                        key:
+
+                        starKey,
+
+
+                        child:
+
+                        Row(
+
+
+                          children:[
+
+
+
+                            Image.asset(
+
+                              "assets/images/rewards/Star_gold.png",
+
+                              width:28,
+
+                              height:28,
+
+                            ),
+
+
+
+
+                            const SizedBox(
+
+                              width:4,
+
+                            ),
+
+
+
+
+                            Text(
+
+                              "$earnedStars",
+
+                              style:
+
+                              const TextStyle(
+
+                                fontSize:18,
+
+                                fontWeight:
+
+                                FontWeight.bold,
+
+                              ),
+
+                            ),
+
+
+
+                          ],
+
+
+
+                        ),
+
+
+
+                      ),
+
+
+
+
+
+
+                      GestureDetector(
+
+
+                        onTap:
+
+                        usePuzzleHint,
+
+
+
+                        child:
+
+                        Text(
+
+                          "💡 $hints",
+
+                          style:
+
+                          const TextStyle(
+
+                            fontSize:18,
+
+                            fontWeight:
+
+                            FontWeight.bold,
+
+                          ),
+
+                        ),
+
+
+
+                      ),
+
+
+
+                    ],
 
 
                   ),
@@ -1666,12 +1905,12 @@ Navigator.pushReplacement(
 
 
 
-
-
                 Expanded(
 
 
-                  child:Container(
+                  child:
+
+                  Container(
 
 
                     margin:
@@ -1689,7 +1928,9 @@ Navigator.pushReplacement(
                     BoxDecoration(
 
 
-                      color:Colors.white,
+                      color:
+
+                      Colors.white,
 
 
                       borderRadius:
@@ -1703,7 +1944,9 @@ Navigator.pushReplacement(
 
 
 
-                    child:ClipRRect(
+                    child:
+
+                    ClipRRect(
 
 
                       borderRadius:
@@ -1712,7 +1955,9 @@ Navigator.pushReplacement(
 
 
 
-                      child:Stack(
+                      child:
+
+                      Stack(
 
 
                         children:
@@ -1756,7 +2001,9 @@ Navigator.pushReplacement(
 
                               onPanUpdate:
 
-                                  (details){
+                              (details){
+
+
 
                                 movePiece(
 
@@ -1766,6 +2013,7 @@ Navigator.pushReplacement(
 
                                 );
 
+
                               },
 
 
@@ -1774,9 +2022,13 @@ Navigator.pushReplacement(
 
                               onPanEnd:
 
-                                  (_){
+                              (_){
+
+
 
                                 dropPiece(piece);
+
+
 
                               },
 
@@ -1787,15 +2039,6 @@ Navigator.pushReplacement(
                               child:
 
                               PuzzlePieceWidget(
-
-
-                                key:
-
-                                ValueKey(
-
-                                  piece.id,
-
-                                ),
 
 
 
@@ -1867,13 +2110,14 @@ Navigator.pushReplacement(
 
 
 
-
                   decoration:
 
                   BoxDecoration(
 
 
-                    color:Colors.white,
+                    color:
+
+                    Colors.white,
 
 
                     borderRadius:
@@ -1885,7 +2129,9 @@ Navigator.pushReplacement(
 
                     Border.all(
 
-                      color:Colors.orange,
+                      color:
+
+                      Colors.orange,
 
                       width:3,
 
@@ -1898,10 +2144,14 @@ Navigator.pushReplacement(
 
 
 
-                  child:Center(
+                  child:
+
+                  Center(
 
 
-                    child:SizedBox(
+                    child:
+
+                    SizedBox(
 
 
                       width:
@@ -1916,7 +2166,9 @@ Navigator.pushReplacement(
 
 
 
-                      child:Stack(
+                      child:
+
+                      Stack(
 
 
 
@@ -1960,6 +2212,7 @@ Navigator.pushReplacement(
                             child:
 
                             PuzzlePieceWidget(
+
 
 
                               piece:
@@ -2073,39 +2326,69 @@ Navigator.pushReplacement(
 
         if(showRewardBox)
 
-  Container(
-
-    color:
-    Colors.black54,
 
 
-    child:
-
- RewardBoxWidget(
-
-  starTargetKey: starKey,
+          Container(
 
 
-  onStarReady: (){
+            color:
 
-    starAnimationFinished = true;
-
-  },
+            Colors.black54,
 
 
-  onRewardOpened: (){
 
-    if(starAnimationFinished){
+            child:
 
-      openWinScreen();
+            RewardBoxWidget(
 
-    }
 
-  },
 
-),
+              starTargetKey:
 
-  ),
+              starKey,
+
+
+
+
+              onStarReady:
+
+              (){
+
+
+                starAnimationFinished = true;
+
+
+              },
+
+
+
+
+              onRewardOpened:
+
+              (){
+
+
+
+                if(starAnimationFinished){
+
+
+
+                  openWinScreen();
+
+
+
+                }
+
+
+
+              },
+
+
+            ),
+
+
+          ),
+
 
 
       ],
@@ -2128,44 +2411,26 @@ Navigator.pushReplacement(
   void dispose(){
 
 
-
-    try{
-
-
-      timer?.cancel();
+    timer?.cancel();
 
 
 
-      confettiController.dispose();
+    confettiController.dispose();
 
 
 
-      bgPlayer.stop();
+    bgPlayer.stop();
 
-      bgPlayer.dispose();
-
-
-
-      effectPlayer.dispose();
+    bgPlayer.dispose();
 
 
 
-    }catch(e){
+    effectPlayer.dispose();
 
-
-      debugPrint(
-
-        "Dispose error: $e",
-
-      );
-
-
-    }
 
 
 
     super.dispose();
-
 
 
   }
