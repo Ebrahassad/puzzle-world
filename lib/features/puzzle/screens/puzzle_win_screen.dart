@@ -16,6 +16,8 @@ import '../services/puzzle_save_service.dart';
 
 
 
+
+
 class PuzzleWinScreen extends StatefulWidget {
 
 
@@ -42,6 +44,7 @@ class PuzzleWinScreen extends StatefulWidget {
 
 
 
+
   const PuzzleWinScreen({
 
     super.key,
@@ -64,11 +67,18 @@ class PuzzleWinScreen extends StatefulWidget {
 
 
 
+
+
+
   @override
   State<PuzzleWinScreen> createState() =>
       _PuzzleWinScreenState();
 
+
 }
+
+
+
 
 
 
@@ -86,6 +96,7 @@ class _PuzzleWinScreenState
   RewardResultModel? reward;
 
 
+
   bool loading = true;
 
 
@@ -93,6 +104,8 @@ class _PuzzleWinScreenState
 
 
   bool saved = false;
+
+
 
 
 
@@ -108,6 +121,8 @@ class _PuzzleWinScreenState
 
 
 
+
+
   @override
   void initState(){
 
@@ -116,14 +131,25 @@ class _PuzzleWinScreenState
 
 
 
+
+
     animationController = AnimationController(
 
       vsync:this,
 
-      duration: const Duration(seconds:1),
+      duration:
+
+      const Duration(seconds:1),
 
     )
-      ..repeat(reverse:true);
+
+      ..repeat(
+
+        reverse:true,
+
+      );
+
+
 
 
 
@@ -139,9 +165,13 @@ class _PuzzleWinScreenState
 
       CurvedAnimation(
 
-        parent:animationController,
+        parent:
 
-        curve:Curves.easeInOut,
+        animationController,
+
+        curve:
+
+        Curves.easeInOut,
 
       ),
 
@@ -149,7 +179,12 @@ class _PuzzleWinScreenState
 
 
 
+
+
+
+
     initialize();
+
 
   }
 
@@ -170,24 +205,32 @@ class _PuzzleWinScreenState
       await PuzzleAudioService.playWinSound();
 
 
+
       await saveCompletion();
+
 
 
       await loadReward();
 
 
 
-    } catch(e){
+
+
+    }catch(e){
 
 
 
       if(mounted){
 
+
         setState((){
+
 
           loading = false;
 
+
         });
+
 
       }
 
@@ -211,7 +254,6 @@ class _PuzzleWinScreenState
     try {
 
 
-
       if(saved){
 
         return;
@@ -221,11 +263,16 @@ class _PuzzleWinScreenState
 
 
 
+
+
+
       if(widget.worldId == null ||
 
           widget.level == null){
 
+
         return;
+
 
       }
 
@@ -237,11 +284,20 @@ class _PuzzleWinScreenState
 
       await PuzzleWorldService.completeLevel(
 
-        worldId: widget.worldId!,
+        worldId:
 
-        level: widget.level!,
+        widget.worldId!,
 
-        stars: widget.result.stars,
+
+        level:
+
+        widget.level!,
+
+
+        stars:
+
+        widget.result.stars,
+
 
       );
 
@@ -253,11 +309,20 @@ class _PuzzleWinScreenState
 
       await PuzzleStatisticsService.addCompletedPuzzle(
 
-        stars: widget.result.stars,
+        stars:
 
-        moves: widget.result.moves,
+        widget.result.stars,
 
-        seconds: widget.result.seconds,
+
+        moves:
+
+        widget.result.moves,
+
+
+        seconds:
+
+        widget.result.seconds,
+
 
       );
 
@@ -269,9 +334,15 @@ class _PuzzleWinScreenState
 
       await PuzzleSaveService.saveLastPlayed(
 
-        worldId: widget.worldId!,
+        worldId:
 
-        levelId: "level_${widget.level}",
+        widget.worldId!,
+
+
+        levelId:
+
+        "level_${widget.level}",
+
 
       );
 
@@ -283,11 +354,20 @@ class _PuzzleWinScreenState
 
       await PuzzleAchievementService.checkPuzzleAchievements(
 
-        worldId: widget.worldId,
+        worldId:
 
-        level: widget.level,
+        widget.worldId,
 
-        result: widget.result,
+
+        level:
+
+        widget.level,
+
+
+        result:
+
+        widget.result,
+
 
       );
 
@@ -299,17 +379,33 @@ class _PuzzleWinScreenState
 
       await PuzzleEventService.levelCompleted(
 
-        worldId: widget.worldId,
+        worldId:
 
-        level: widget.level,
+        widget.worldId,
 
-        stars: widget.result.stars,
 
-        moves: widget.result.moves,
+        level:
 
-        seconds: widget.result.seconds,
+        widget.level,
+
+
+        stars:
+
+        widget.result.stars,
+
+
+        moves:
+
+        widget.result.moves,
+
+
+        seconds:
+
+        widget.result.seconds,
+
 
       );
+
 
 
 
@@ -320,25 +416,18 @@ class _PuzzleWinScreenState
 
 
 
+
+
     }catch(_){}
 
 
 
   }
 
-
-
-
-
-
-
-
-
   Future<void> loadReward() async {
 
 
     try {
-
 
 
       final key =
@@ -359,9 +448,15 @@ class _PuzzleWinScreenState
 
       await RewardManager.completePuzzle(
 
-        difficulty: widget.difficulty,
+        difficulty:
 
-        rewardKey:key,
+        widget.difficulty,
+
+
+        rewardKey:
+
+        key,
+
 
       );
 
@@ -392,7 +487,6 @@ class _PuzzleWinScreenState
         loading = false;
 
 
-
       });
 
 
@@ -402,8 +496,8 @@ class _PuzzleWinScreenState
     }catch(_){
 
 
-
       if(mounted){
+
 
         setState((){
 
@@ -411,11 +505,10 @@ class _PuzzleWinScreenState
           loading = false;
 
 
-
         });
 
-      }
 
+      }
 
 
     }
@@ -440,7 +533,9 @@ class _PuzzleWinScreenState
 
       if(adUsed || reward == null){
 
+
         return;
+
 
       }
 
@@ -464,7 +559,9 @@ class _PuzzleWinScreenState
 
       if(!watched){
 
+
         return;
+
 
       }
 
@@ -474,11 +571,61 @@ class _PuzzleWinScreenState
 
 
 
+      final oldReward = reward!;
+
+
+
+
+
+
+
+      await RewardManager.addCoins(
+
+        oldReward.coins,
+
+      );
+
+
+
+
+
+
+
+      await RewardManager.addGems(
+
+        oldReward.gems,
+
+      );
+
+
+
+
+
+
+
+      await RewardManager.addStars(
+
+        oldReward.stars,
+
+      );
+
+
+
+
+
+
+
       await PuzzleEventService.rewardDoubled(
 
-        coins: reward!.coins,
+        coins:
 
-        gems: reward!.gems,
+        oldReward.coins,
+
+
+        gems:
+
+        oldReward.gems,
+
 
       );
 
@@ -490,7 +637,9 @@ class _PuzzleWinScreenState
 
       if(!mounted){
 
+
         return;
+
 
       }
 
@@ -503,14 +652,16 @@ class _PuzzleWinScreenState
       setState((){
 
 
-        reward = reward!.multiply(2);
+        reward = oldReward.multiply(2);
 
 
         adUsed = true;
 
 
-
       });
+
+
+
 
 
 
@@ -521,11 +672,18 @@ class _PuzzleWinScreenState
 
   }
 
+
+
+
+
+
+
+
+
   Future<void> nextLevel() async {
 
 
     try {
-
 
 
       if(widget.onNextLevel != null){
@@ -544,6 +702,7 @@ class _PuzzleWinScreenState
 
 
 
+
       if(widget.worldId != null &&
 
           widget.level != null){
@@ -554,14 +713,22 @@ class _PuzzleWinScreenState
 
           context,
 
-          worldId: widget.worldId!,
 
-          currentLevel: widget.level!,
+          worldId:
+
+          widget.worldId!,
+
+
+          currentLevel:
+
+          widget.level!,
+
 
         );
 
 
       }
+
 
 
 
@@ -580,21 +747,78 @@ class _PuzzleWinScreenState
 
 
 
+  void backWorld(){
+
+
+    if(widget.onBackToWorld != null){
+
+
+      widget.onBackToWorld!();
+
+
+      return;
+
+
+    }
+
+
+
+    Navigator.pop(context);
+
+
+  }
+
+
+
+
+
+
+
+
+
+  void backHome(){
+
+
+    if(widget.onBackToHome != null){
+
+
+      widget.onBackToHome!();
+
+
+      return;
+
+
+    }
+
+
+
+    Navigator.popUntil(
+
+      context,
+
+      (route)=>route.isFirst,
+
+    );
+
+
+  }
+
   @override
   Widget build(BuildContext context){
-
 
 
     return Scaffold(
 
 
+      backgroundColor:
 
-      backgroundColor:Colors.transparent,
+      Colors.transparent,
 
 
 
-      body:Stack(
+      body:
 
+      Stack(
 
 
         children:[
@@ -604,12 +828,15 @@ class _PuzzleWinScreenState
           Positioned.fill(
 
 
+            child:
 
-            child:Image.asset(
+            Image.asset(
 
               "assets/images/background/win_background.png",
 
-              fit:BoxFit.cover,
+              fit:
+
+              BoxFit.cover,
 
             ),
 
@@ -622,10 +849,13 @@ class _PuzzleWinScreenState
           Positioned.fill(
 
 
+            child:
 
-            child:Container(
+            Container(
 
-              color:Colors.black.withOpacity(0.25),
+              color:
+
+              Colors.black.withOpacity(0.25),
 
             ),
 
@@ -638,14 +868,16 @@ class _PuzzleWinScreenState
           SafeArea(
 
 
+            child:
 
-            child: loading
-
+            loading
 
 
                 ? const Center(
 
-              child:CircularProgressIndicator(),
+              child:
+
+              CircularProgressIndicator(),
 
             )
 
@@ -668,38 +900,44 @@ class _PuzzleWinScreenState
                 ScaleTransition(
 
 
+                  scale:
 
-                  scale:scaleAnimation,
+                  scaleAnimation,
 
 
 
-                  child:const Text(
+                  child:
 
+                  const Text(
 
 
                     "أحسنت! أكملت المرحلة 🎉",
 
 
 
-                    textAlign:TextAlign.center,
+                    textAlign:
+
+                    TextAlign.center,
 
 
 
-                    style:TextStyle(
+                    style:
+
+                    TextStyle(
 
                       fontSize:30,
 
-                      fontWeight:FontWeight.bold,
+                      fontWeight:
 
-                      color:Colors.black,
+                      FontWeight.bold,
+
+                      color:
+
+                      Colors.black,
 
                     ),
 
-
-
                   ),
-
-
 
                 ),
 
@@ -727,15 +965,23 @@ class _PuzzleWinScreenState
 
                 Text(
 
+
                   "الحركات: ${widget.result.moves}",
 
-                  style:const TextStyle(
+
+                  style:
+
+                  const TextStyle(
 
                     fontSize:19,
 
-                    fontWeight:FontWeight.bold,
+                    fontWeight:
 
-                    color:Colors.black,
+                    FontWeight.bold,
+
+                    color:
+
+                    Colors.black,
 
                   ),
 
@@ -753,15 +999,23 @@ class _PuzzleWinScreenState
 
                 Text(
 
+
                   "الوقت: ${widget.result.seconds} ثانية",
 
-                  style:const TextStyle(
+
+                  style:
+
+                  const TextStyle(
 
                     fontSize:19,
 
-                    fontWeight:FontWeight.bold,
+                    fontWeight:
 
-                    color:Colors.black,
+                    FontWeight.bold,
+
+                    color:
+
+                    Colors.black,
 
                   ),
 
@@ -791,6 +1045,28 @@ class _PuzzleWinScreenState
 
 
 
+                // المستوى التالي
+
+                actionButton(
+
+                  "🚀 المستوى التالي",
+
+                  Colors.purple,
+
+                  nextLevel,
+
+                ),
+
+
+
+
+
+                const SizedBox(height:12),
+
+
+
+
+
                 if(!adUsed)
 
                   actionButton(
@@ -815,9 +1091,12 @@ class _PuzzleWinScreenState
 
                 Row(
 
+
                   mainAxisAlignment:
 
                   MainAxisAlignment.center,
+
+
 
                   children:[
 
@@ -869,10 +1148,7 @@ class _PuzzleWinScreenState
 
               ],
 
-
-
             ),
-
 
 
           ),
@@ -881,25 +1157,13 @@ class _PuzzleWinScreenState
 
         ],
 
-
-
       ),
-
 
 
     );
 
 
-
   }
-
-
-
-
-
-
-
-
 
   Widget rewardInfo(){
 
@@ -909,7 +1173,11 @@ class _PuzzleWinScreenState
 
       margin:
 
-      const EdgeInsets.symmetric(horizontal:40),
+      const EdgeInsets.symmetric(
+
+        horizontal:40,
+
+      ),
 
 
 
@@ -919,10 +1187,15 @@ class _PuzzleWinScreenState
 
 
 
-      decoration:BoxDecoration(
+      decoration:
+
+      BoxDecoration(
 
 
-        color:Colors.white.withOpacity(.85),
+        color:
+
+        Colors.white.withOpacity(.85),
+
 
 
         borderRadius:
@@ -934,7 +1207,11 @@ class _PuzzleWinScreenState
 
 
 
-      child:Column(
+
+
+      child:
+
+      Column(
 
 
 
@@ -944,19 +1221,28 @@ class _PuzzleWinScreenState
 
           Text(
 
+
             "🪙 العملات: ${reward!.coins}",
 
-            style:const TextStyle(
+
+            style:
+
+            const TextStyle(
 
               fontSize:18,
 
-              fontWeight:FontWeight.bold,
+              fontWeight:
 
-              color:Colors.black,
+              FontWeight.bold,
+
+              color:
+
+              Colors.black,
 
             ),
 
           ),
+
 
 
 
@@ -966,17 +1252,60 @@ class _PuzzleWinScreenState
 
 
 
+
           Text(
+
 
             "💎 الجواهر: ${reward!.gems}",
 
-            style:const TextStyle(
+
+            style:
+
+            const TextStyle(
 
               fontSize:18,
 
-              fontWeight:FontWeight.bold,
+              fontWeight:
 
-              color:Colors.black,
+              FontWeight.bold,
+
+              color:
+
+              Colors.black,
+
+            ),
+
+          ),
+
+
+
+
+
+          const SizedBox(height:5),
+
+
+
+
+
+          Text(
+
+
+            "⭐ Golden Star: ${reward!.stars}",
+
+
+            style:
+
+            const TextStyle(
+
+              fontSize:18,
+
+              fontWeight:
+
+              FontWeight.bold,
+
+              color:
+
+              Colors.black,
 
             ),
 
@@ -989,7 +1318,6 @@ class _PuzzleWinScreenState
 
 
       ),
-
 
 
     );
@@ -1008,14 +1336,24 @@ class _PuzzleWinScreenState
   Widget resultCard(){
 
 
+    final stars =
+
+    reward?.stars ?? widget.result.stars;
+
+
+
+
 
     return Container(
 
 
-
       margin:
 
-      const EdgeInsets.symmetric(horizontal:40),
+      const EdgeInsets.symmetric(
+
+        horizontal:40,
+
+      ),
 
 
 
@@ -1025,7 +1363,9 @@ class _PuzzleWinScreenState
 
 
 
-      decoration:BoxDecoration(
+      decoration:
+
+      BoxDecoration(
 
 
 
@@ -1047,11 +1387,15 @@ class _PuzzleWinScreenState
 
           const BoxShadow(
 
-            color:Colors.black26,
+            color:
+
+            Colors.black26,
 
             blurRadius:12,
 
-            offset:Offset(0,6),
+            offset:
+
+            Offset(0,6),
 
           ),
 
@@ -1065,7 +1409,11 @@ class _PuzzleWinScreenState
 
 
 
-      child:Column(
+
+
+      child:
+
+      Column(
 
 
 
@@ -1087,7 +1435,9 @@ class _PuzzleWinScreenState
 
 
 
-            errorBuilder:(_,__,___){
+            errorBuilder:
+
+                (_,__,___){
 
 
 
@@ -1098,7 +1448,6 @@ class _PuzzleWinScreenState
                 size:55,
 
               );
-
 
 
             },
@@ -1120,22 +1469,22 @@ class _PuzzleWinScreenState
           Text(
 
 
-
-            "+${widget.result.stars} Golden Star",
-
+            "+$stars Golden Star",
 
 
-            style:const TextStyle(
+            style:
 
+            const TextStyle(
 
+              color:
 
-              color:Colors.black,
+              Colors.black,
 
               fontSize:20,
 
-              fontWeight:FontWeight.bold,
+              fontWeight:
 
-
+              FontWeight.bold,
 
             ),
 
@@ -1158,3 +1507,148 @@ class _PuzzleWinScreenState
 
 
   }
+
+
+
+
+
+
+
+
+
+  Widget actionButton(
+
+
+      String text,
+
+
+      Color color,
+
+
+      VoidCallback action,
+
+
+      ){
+
+
+
+    return ElevatedButton(
+
+
+
+      onPressed:action,
+
+
+
+      style:
+
+      ElevatedButton.styleFrom(
+
+
+
+        backgroundColor:
+
+        color,
+
+
+
+        padding:
+
+        const EdgeInsets.symmetric(
+
+
+          horizontal:22,
+
+
+          vertical:12,
+
+
+        ),
+
+
+
+        shape:
+
+        RoundedRectangleBorder(
+
+
+          borderRadius:
+
+          BorderRadius.circular(25),
+
+
+        ),
+
+
+
+        elevation:5,
+
+
+
+      ),
+
+
+
+      child:
+
+      Text(
+
+
+        text,
+
+
+
+        style:
+
+        const TextStyle(
+
+
+          fontSize:16,
+
+
+          fontWeight:
+
+          FontWeight.bold,
+
+
+          color:
+
+          Colors.white,
+
+
+        ),
+
+
+
+      ),
+
+
+
+    );
+
+
+  }
+
+
+
+
+
+
+
+
+
+  @override
+  void dispose(){
+
+
+    animationController.dispose();
+
+
+    super.dispose();
+
+
+  }
+
+
+
+}
