@@ -30,14 +30,21 @@ class _WorldMapScreenState
 
 
 
+  // حركة طفو الجزر
+
   late AnimationController floatController;
-
-  late AnimationController backgroundController;
-
 
   late Animation<double> floatAnimation;
 
-  late Animation<double> backgroundAnimation;
+
+
+  // حركة الخلفية
+
+  late AnimationController backgroundController;
+
+  late Animation<double> backgroundMove;
+
+  late Animation<double> backgroundScale;
 
 
 
@@ -70,13 +77,19 @@ class _WorldMapScreenState
 
   };
 
+
+
+
+
   @override
   void initState() {
 
     super.initState();
 
 
-    // حركة طفو الجزر
+
+
+    // حركة الجزر العائمة
 
     floatController = AnimationController(
 
@@ -114,23 +127,30 @@ class _WorldMapScreenState
 
 
 
-    // حركة خلفية الخريطة
+
+
+    // حركة خفيفة للخلفية
 
     backgroundController = AnimationController(
 
       vsync: this,
 
       duration: const Duration(
-        seconds: 25,
+
+        seconds: 20,
+
       ),
 
     )..repeat(
+
       reverse: true,
+
     );
 
 
 
-    backgroundAnimation = Tween<double>(
+
+    backgroundMove = Tween<double>(
 
       begin: -12,
 
@@ -149,12 +169,28 @@ class _WorldMapScreenState
     );
 
 
+
+
+    backgroundScale = Tween<double>(
+
+      begin: 1.0,
+
+      end: 1.04,
+
+    ).animate(
+
+      CurvedAnimation(
+
+        parent: backgroundController,
+
+        curve: Curves.easeInOut,
+
+      ),
+
+    );
+
+
   }
-
-
-
-
-
 
 
   void openWorld(PuzzleModel world){
@@ -171,14 +207,16 @@ class _WorldMapScreenState
         transitionDuration:
 
         const Duration(
+
           milliseconds:700,
+
         ),
 
 
 
         pageBuilder:
 
-            (_,animation,secondaryAnimation){
+            (_, animation, secondaryAnimation){
 
 
 
@@ -203,6 +241,7 @@ class _WorldMapScreenState
 
       ),
 
+
     );
 
 
@@ -214,6 +253,331 @@ class _WorldMapScreenState
 
 
 
+  void showLockedDialog(PuzzleModel world){
+
+
+
+    showDialog(
+
+
+      context: context,
+
+
+      builder: (context){
+
+
+
+        return AlertDialog(
+
+
+
+          backgroundColor:
+
+          const Color(0xff263238),
+
+
+
+
+          shape:
+
+          RoundedRectangleBorder(
+
+            borderRadius:
+
+            BorderRadius.circular(25),
+
+          ),
+
+
+
+
+
+          title: const Center(
+
+
+            child: Text(
+
+
+              "🔒 عالم مغلق",
+
+
+
+              style: TextStyle(
+
+
+                color: Colors.white,
+
+
+                fontSize: 24,
+
+
+                fontWeight: FontWeight.bold,
+
+
+              ),
+
+
+            ),
+
+
+          ),
+
+
+
+
+
+          content: const Text(
+
+
+
+            "أكمل العوالم السابقة أو شاهد إعلان لفتح هذا العالم",
+
+
+
+            textAlign: TextAlign.center,
+
+
+
+            style: TextStyle(
+
+
+              color: Colors.white70,
+
+
+              fontSize: 17,
+
+
+            ),
+
+
+
+          ),
+
+
+
+
+
+
+          actionsAlignment:
+
+          MainAxisAlignment.center,
+
+
+
+          actions: [
+
+
+
+
+            ElevatedButton.icon(
+
+
+
+              style:
+
+              ElevatedButton.styleFrom(
+
+
+
+                backgroundColor:
+
+                Colors.orange,
+
+
+
+                padding:
+
+                const EdgeInsets.symmetric(
+
+                  horizontal:20,
+
+                  vertical:12,
+
+                ),
+
+
+
+                shape:
+
+                RoundedRectangleBorder(
+
+                  borderRadius:
+
+                  BorderRadius.circular(20),
+
+                ),
+
+
+              ),
+
+
+
+
+              icon:
+
+              const Icon(
+
+                Icons.play_circle,
+
+                color: Colors.white,
+
+              ),
+
+
+
+
+
+              label:
+
+              const Text(
+
+
+
+                "شاهد إعلان لفتح",
+
+
+
+                style: TextStyle(
+
+                  color: Colors.white,
+
+                  fontWeight: FontWeight.bold,
+
+                ),
+
+              ),
+
+
+
+
+
+              onPressed: (){
+
+
+
+                Navigator.pop(context);
+
+
+
+                unlockWithRewardAd(world);
+
+
+
+              },
+
+
+            ),
+
+
+
+
+
+
+            TextButton(
+
+
+
+              onPressed: (){
+
+
+
+                Navigator.pop(context);
+
+
+
+              },
+
+
+
+              child: const Text(
+
+
+
+                "إلغاء",
+
+
+
+                style: TextStyle(
+
+                  color: Colors.white70,
+
+                ),
+
+              ),
+
+
+            ),
+
+
+
+
+          ],
+
+
+
+        );
+
+
+      },
+
+
+    );
+
+  }
+
+
+
+
+
+
+
+
+
+  void unlockWithRewardAd(PuzzleModel world){
+
+
+    // هنا سيتم ربط Rewarded AdMob لاحقاً
+
+
+    // عند اكتمال الإعلان:
+
+    // 1- حفظ فتح العالم
+
+    // 2- تحديث الخريطة
+
+    // 3- فتح الجزيرة مباشرة
+
+
+
+    ScaffoldMessenger.of(context).showSnackBar(
+
+
+
+      const SnackBar(
+
+
+
+        content: Text(
+
+
+
+          "سيتم تشغيل الإعلان لفتح العالم",
+
+
+
+        ),
+
+
+
+      ),
+
+
+
+    );
+
+
+
+  }
 
 
   Widget islandButton(
@@ -226,11 +590,11 @@ class _WorldMapScreenState
 
       {
 
-      double size = 140,
+      double size = 150,
 
       }
 
-      ) {
+  ) {
 
 
 
@@ -249,7 +613,8 @@ class _WorldMapScreenState
 
 
 
-    // الحيوانات فقط مفتوحة
+
+    // جزيرة الحيوانات فقط مفتوحة حالياً
 
     final bool unlocked =
 
@@ -259,7 +624,9 @@ class _WorldMapScreenState
 
 
 
+
     return Positioned(
+
 
 
       left: x - size / 2,
@@ -276,18 +643,21 @@ class _WorldMapScreenState
 
 
 
+
       child: AnimatedBuilder(
+
 
 
         animation: floatAnimation,
 
 
 
-        builder: (context,child){
+        builder: (context, child){
 
 
 
           return Transform.translate(
+
 
 
             offset: Offset(
@@ -303,6 +673,7 @@ class _WorldMapScreenState
             child: child,
 
 
+
           );
 
 
@@ -311,71 +682,113 @@ class _WorldMapScreenState
 
 
 
+
         child: GestureDetector(
 
 
 
-          onTapDown: unlocked
 
-              ? (_) {
+          onTapDown: (_) {
+
+
 
             setState(() {
+
+
 
               pressedIsland = id;
 
+
+
             });
 
-          }
-
-              : null,
 
 
+          },
 
 
 
-          onTapUp: unlocked
 
-              ? (_) {
+
+
+
+          onTapUp: (_) {
+
 
 
             setState(() {
 
+
+
               pressedIsland = null;
+
+
 
             });
 
 
-            openWorld(world);
-
-
-          }
-
-              : null,
 
 
 
 
+            if(unlocked){
 
-          onTapCancel: unlocked
 
-              ? () {
+
+              openWorld(world);
+
+
+
+            }
+
+            else{
+
+
+
+              showLockedDialog(world);
+
+
+
+            }
+
+
+
+
+
+          },
+
+
+
+
+
+
+
+          onTapCancel: () {
+
+
 
             setState(() {
 
+
+
               pressedIsland = null;
+
+
 
             });
 
 
-          }
 
-              : null,
+          },
+
+
 
 
 
 
 
           child: AnimatedScale(
+
 
 
             scale:
@@ -388,11 +801,16 @@ class _WorldMapScreenState
 
 
 
+
+
             duration:
 
             const Duration(
+
               milliseconds:180,
+
             ),
+
 
 
 
@@ -400,14 +818,21 @@ class _WorldMapScreenState
             child: Stack(
 
 
+
               alignment: Alignment.center,
+
 
 
               children: [
 
 
 
+
+
+                // الجزيرة
+
                 Opacity(
+
 
 
                   opacity:
@@ -420,16 +845,22 @@ class _WorldMapScreenState
 
 
 
+
+
                   child: Image.asset(
+
 
 
                     islandImages[id]!,
 
 
+
                     fit: BoxFit.contain,
 
 
+
                   ),
+
 
 
                 ),
@@ -438,23 +869,38 @@ class _WorldMapScreenState
 
 
 
+
+
+                // القفل للجزر المغلقة
+
                 if(!unlocked)
+
 
 
                   Image.asset(
 
 
+
                     "assets/images/ui/level_lock.png",
 
 
+
                     width: size * 0.35,
+
+
+
+                    fit: BoxFit.contain,
+
 
 
                   ),
 
 
 
+
+
               ],
+
 
 
             ),
@@ -464,17 +910,20 @@ class _WorldMapScreenState
           ),
 
 
+
         ),
+
 
 
       ),
 
 
+
     );
 
 
-  }
 
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -493,7 +942,7 @@ class _WorldMapScreenState
 
 
 
-          // خلفية العالم بحركة بسيطة
+          // خلفية العالم مع حركة بسيطة
 
           Positioned.fill(
 
@@ -501,49 +950,73 @@ class _WorldMapScreenState
             child: AnimatedBuilder(
 
 
-              animation: backgroundAnimation,
+
+              animation: backgroundController,
+
 
 
               builder: (context, child){
 
 
-                return Transform.translate(
+
+                return Transform.scale(
 
 
-                  offset: Offset(
 
-                    backgroundAnimation.value,
+                  scale: backgroundScale.value,
 
-                    0,
+
+
+                  child: Transform.translate(
+
+
+
+                    offset: Offset(
+
+                      backgroundMove.value,
+
+                      0,
+
+                    ),
+
+
+
+                    child: child,
+
 
                   ),
 
 
-                  child: child,
-
 
                 );
+
 
 
               },
 
 
 
+
               child: Image.asset(
+
 
 
                 "assets/images/world/world_map.png",
 
 
+
                 fit: BoxFit.cover,
+
 
 
               ),
 
 
+
             ),
 
 
+
           ),
 
 
@@ -551,13 +1024,19 @@ class _WorldMapScreenState
 
 
 
-          // طبقة إضاءة خفيفة
+
+          // طبقة دمج خفيفة
 
           Container(
 
+
+
             color: Colors.black.withOpacity(0.08),
 
+
+
           ),
+
 
 
 
@@ -567,7 +1046,9 @@ class _WorldMapScreenState
           SafeArea(
 
 
+
             child: LayoutBuilder(
+
 
 
               builder: (context, constraints){
@@ -598,21 +1079,27 @@ class _WorldMapScreenState
 
 
 
-                    // جزيرة الفضاء - أعلى الشاشة في الوسط
+
+                    // جزيرة الفضاء - الأعلى في المنتصف
 
                     islandButton(
+
 
 
                       "space",
 
 
-                      width * 0.5,
+
+                      width * 0.50,
+
 
 
                       height * 0.13,
 
 
+
                       size: 180,
+
 
 
                     ),
@@ -622,24 +1109,31 @@ class _WorldMapScreenState
 
 
 
-                    // جزيرة الحيوانات - العالم الأول المفتوح
+
+                    // جزيرة الحيوانات - مفتوحة
 
                     islandButton(
+
 
 
                       "animals",
 
 
-                      width * 0.35,
+
+                      width * 0.32,
+
 
 
                       height * 0.48,
 
 
-                      size: 150,
+
+                      size: 155,
+
 
 
                     ),
+
 
 
 
@@ -651,19 +1145,25 @@ class _WorldMapScreenState
                     islandButton(
 
 
+
                       "landmarks",
 
 
-                      width * 0.75,
+
+                      width * 0.72,
+
 
 
                       height * 0.50,
 
 
-                      size: 150,
+
+                      size: 155,
+
 
 
                     ),
+
 
 
 
@@ -675,19 +1175,25 @@ class _WorldMapScreenState
                     islandButton(
 
 
+
                       "cars",
+
 
 
                       width * 0.25,
 
 
-                      height * 0.75,
+
+                      height * 0.78,
 
 
-                      size: 150,
+
+                      size: 155,
+
 
 
                     ),
+
 
 
 
@@ -699,16 +1205,21 @@ class _WorldMapScreenState
                     islandButton(
 
 
+
                       "nature",
+
 
 
                       width * 0.72,
 
 
+
                       height * 0.78,
 
 
-                      size: 150,
+
+                      size: 155,
+
 
 
                     ),
@@ -716,7 +1227,9 @@ class _WorldMapScreenState
 
 
 
+
                   ],
+
 
 
                 );
@@ -726,7 +1239,9 @@ class _WorldMapScreenState
               },
 
 
+
             ),
+
 
 
           ),
@@ -736,12 +1251,16 @@ class _WorldMapScreenState
         ],
 
 
+
       ),
+
 
 
     );
 
+
   }
+
 
 
 
@@ -756,6 +1275,7 @@ class _WorldMapScreenState
     floatController.dispose();
 
 
+
     backgroundController.dispose();
 
 
@@ -763,5 +1283,5 @@ class _WorldMapScreenState
     super.dispose();
 
 
+
   }
-}
