@@ -120,7 +120,7 @@ class _PuzzleGameScreenState
 
   int hints = 0;
 
-int earnedStars = 3;
+
   
 
 
@@ -1289,47 +1289,21 @@ final GlobalKey starKey = GlobalKey();
 
 
       // حفظ إكمال المرحلة
+await PuzzleProgressManager.completeLevel(
+  widget.level.id,
+);
 
-      await PuzzleProgressManager.completeLevel(
-
-        widget.level.id,
-
-      );
-
-
-
-
-
-
-
-      // فتح المرحلة التالية
-
-      await PuzzleProgressManager.unlockNextLevel(
-
-        widget.puzzle.id,
-
-        widget.level.levelNumber + 1,
-
-      );
-
+// فتح المرحلة التالية
+await PuzzleProgressManager.unlockNextLevel(
+  widget.puzzle.id,
+  widget.level.levelNumber + 1,
+);
 
 await PuzzleProgressManager.clearProgress();
 
-await RewardManager.addStars(
-  earnedStars,
+await playSound(
+  "puzzle_win.mp3",
 );
-
-
-await RewardManager.addReward();
-
-
-      await playSound(
-
-        "puzzle_win.mp3",
-
-      );
-
-
 
 
 
@@ -1464,34 +1438,13 @@ await bgPlayer.stop();
 
 
 
-            result:
-
-            GameResultModel(
-
-
-
-              stars: earnedStars,
-
-              moves:
-
-              moves,
-
-
-
-              time:
-
-              Duration(
-
-                seconds:
-
-                seconds,
-
-              ),
-
-
-
-            ),
-
+            result: GameResultModel(
+  stars: 0,
+  moves: moves,
+  time: Duration(
+    seconds: seconds,
+  ),
+),
 
 
 
