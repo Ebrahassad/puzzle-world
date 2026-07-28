@@ -6,6 +6,8 @@ import '../models/puzzle_model.dart';
 import 'island_screen.dart';
 
 import '../managers/puzzle_progress_manager.dart';
+import '../widgets/game_toolbar.dart';
+
 
 class WorldMapScreen extends StatefulWidget {
 
@@ -49,7 +51,7 @@ class _WorldMapScreenState
 
 
   String? pressedIsland;
-
+final GlobalKey starKey = GlobalKey();
 
 
   final Map<String,String> islandImages = {
@@ -1041,7 +1043,26 @@ class _WorldMapScreenState
 
 
           ),
+Positioned(
+  left: 0,
+  right: 0,
+  bottom: 10,
 
+  child: GameToolbar(
+
+    logo: "assets/images/ui/logo.png",
+
+    stars: 0,
+
+    coins: 0,
+
+    rewards: 0,
+
+    starKey: starKey,
+
+  ),
+
+),
 
 
         ],
