@@ -364,88 +364,43 @@ class RewardManager {
 
 
   //==================================================
-  // 🎬 مكافأة مشاهدة الإعلان
-  //==================================================
+// 🎬 مكافأة مشاهدة الإعلان
+//==================================================
 
+static Future<RewardResultModel?>
+rewardedAdBonus() async {
 
-  static Future<RewardResultModel?>
+  try {
 
-  rewardedAdBonus() async {
+    const reward = RewardResultModel(
+      coins: 100,
+      gems: 0,
+      stars: 1,
+    );
 
+    await addCoins(
+      reward.coins,
+    );
 
-    try {
+    await addStars(
+      reward.stars,
+    );
 
-
-      const reward = RewardResultModel(
-
-        coins:100,
-
-        gems:0,
-
-        stars:1,
-
+    if (reward.gems > 0) {
+      await addGems(
+        reward.gems,
       );
-
-
-
-
-
-
-      await addCoins(
-
-  doubled.coins,
-
-);
-
-
-
-
-
-await addStars(
-
-  doubled.stars,
-
-);
-
-
-
-
-
-
-if(doubled.gems > 0){
-
-  await addGems(
-
-    doubled.gems,
-
-  );
-
-}
-
-
-
-
-      return reward;
-
-
-
-    } catch (_) {
-
-
-      return null;
-
-
     }
 
+    return reward;
+
+  } catch (_) {
+
+    return null;
 
   }
 
-
-
-
-
-
-
+}
 
 
   //==================================================
