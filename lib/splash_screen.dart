@@ -24,13 +24,8 @@ class _SplashScreenState
     with TickerProviderStateMixin {
 
 
-  late AnimationController logoController;
   late AnimationController fadeController;
-  late AnimationController floatController;
 
-
-  late Animation<double> logoScale;
-  late Animation<double> logoFloat;
   late Animation<double> fadeAnimation;
 
 
@@ -41,86 +36,40 @@ class _SplashScreenState
     super.initState();
 
 
-    logoController = AnimationController(
-      vsync: this,
-      duration: const Duration(
-        seconds: 2,
-      ),
-    );
-
-
     fadeController = AnimationController(
+
       vsync: this,
+
       duration: const Duration(
         milliseconds: 1200,
       ),
-    );
-
-
-    floatController = AnimationController(
-      vsync: this,
-      duration: const Duration(
-        seconds: 3,
-      ),
-    );
-
-
-
-    logoScale = Tween<double>(
-      begin: 0.85,
-      end: 1.08,
-    ).animate(
-
-      CurvedAnimation(
-        parent: logoController,
-        curve: Curves.elasticOut,
-      ),
 
     );
-
-
-
-    logoFloat = Tween<double>(
-      begin: -10,
-      end: 10,
-    ).animate(
-
-      CurvedAnimation(
-        parent: floatController,
-        curve: Curves.easeInOut,
-      ),
-
-    );
-
 
 
     fadeAnimation = Tween<double>(
+
       begin: 0,
+
       end: 1,
+
     ).animate(
 
       CurvedAnimation(
+
         parent: fadeController,
+
         curve: Curves.easeIn,
+
       ),
 
     );
-
 
 
     fadeController.forward();
 
-
-    logoController.repeat(
-      reverse: true,
-    );
-
-
-    floatController.repeat(
-      reverse: true,
-    );
-
   }
+
 
 
 
@@ -147,68 +96,6 @@ class _SplashScreenState
 
 
 
-  Widget buildLogo() {
-
-
-    return AnimatedBuilder(
-
-      animation: Listenable.merge([
-
-        logoController,
-
-        floatController,
-
-      ]),
-
-
-      builder: (context, child) {
-
-
-        return Transform.translate(
-
-          offset: Offset(
-
-            0,
-
-            logoFloat.value,
-
-          ),
-
-
-          child: Transform.scale(
-
-            scale: logoScale.value,
-
-
-            child: child,
-
-          ),
-
-        );
-
-      },
-
-
-
-      child: Image.asset(
-
-        "assets/images/ui/puzzle_logo.png",
-
-        width: 220,
-
-        height: 220,
-
-        fit: BoxFit.contain,
-
-      ),
-
-    );
-
-  }
-
-
-
-
 
 
   @override
@@ -228,6 +115,8 @@ class _SplashScreenState
 
 
 
+          // خلفية شاشة البداية
+
           Image.asset(
 
             "assets/images/background/home_background.png",
@@ -239,6 +128,8 @@ class _SplashScreenState
 
 
 
+          // تعتيم خفيف
+
           Container(
 
             color: Colors.black.withOpacity(0.18),
@@ -249,16 +140,15 @@ class _SplashScreenState
 
 
 
+          // كلمة Puzzle World وهي التي تتحول لقطع بازل
+
           Positioned(
 
-
-            top: MediaQuery.of(context).size.height * 0.20,
-
+            top: MediaQuery.of(context).size.height * 0.38,
 
             left: 0,
 
             right: 0,
-
 
 
             child: FadeTransition(
@@ -268,40 +158,15 @@ class _SplashScreenState
 
               child: Center(
 
-                child: buildLogo(),
+
+                child: PuzzleSplashLogo(
+
+                  onFinished: openWorldMap,
+
+                ),
+
 
               ),
-
-            ),
-
-          ),
-
-
-
-
-
-
-          Positioned(
-
-
-            top: MediaQuery.of(context).size.height * 0.52,
-
-
-            left: 0,
-
-            right: 0,
-
-
-
-            child: Center(
-
-
-              child: PuzzleSplashLogo(
-
-                onFinished: openWorldMap,
-
-              ),
-
 
             ),
 
@@ -323,15 +188,12 @@ class _SplashScreenState
 
 
 
+
   @override
   void dispose() {
 
 
-    logoController.dispose();
-
     fadeController.dispose();
-
-    floatController.dispose();
 
 
     super.dispose();
