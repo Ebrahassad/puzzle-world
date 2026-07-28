@@ -315,7 +315,84 @@ class _RewardBoxWidgetState
 
   }
 
-  
+    void calculateStarPosition(){
+
+    if(widget.starTargetKey == null){
+
+      return;
+
+    }
+
+
+    try{
+
+
+      final targetBox =
+      widget.starTargetKey!
+          .currentContext
+          ?.findRenderObject()
+          as RenderBox?;
+
+
+
+      final currentBox =
+      context.findRenderObject()
+          as RenderBox?;
+
+
+
+      if(targetBox == null ||
+          currentBox == null){
+
+        return;
+
+      }
+
+
+
+      final targetPosition =
+      targetBox.localToGlobal(
+        Offset.zero,
+      );
+
+
+
+      final currentPosition =
+      currentBox.localToGlobal(
+        Offset.zero,
+      );
+
+
+
+      setState((){
+
+
+        starOffset = Offset(
+
+          targetPosition.dx -
+              currentPosition.dx,
+
+
+          targetPosition.dy -
+              currentPosition.dy,
+
+        );
+
+
+      });
+
+
+
+    }catch(e){
+
+      debugPrint(
+        "Star position error: $e",
+      );
+
+    }
+
+
+  }
 
 
   Future<void> openBox() async {
