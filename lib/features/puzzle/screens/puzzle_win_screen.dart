@@ -291,10 +291,7 @@ bool get hasNextLevel {
     );
 
 
-    await PuzzleProgressManager.addStars(
-      widget.result.stars,
-    );
-
+    
 
     await PuzzleProgressManager.unlockNextLevel(
       widget.worldId!,
@@ -490,71 +487,31 @@ setState((){
       final oldReward = reward!;
 
 
+final doubledReward =
+    await RewardManager.doubleReward(oldReward);
 
 
 
-
-
-      await RewardManager.addCoins(
-
-        oldReward.coins,
-
-      );
+await PuzzleEventService.rewardDoubled(
+  coins: oldReward.coins,
+  gems: oldReward.gems,
+);
 
 
 
+if(!mounted){
+  return;
+}
 
 
 
+setState((){
 
-      await RewardManager.addGems(
+  reward = doubledReward;
 
-        oldReward.gems,
+  adUsed = true;
 
-      );
-
-
-
-
-
-
-
-      
-
-
-
-
-
-
-      await PuzzleEventService.rewardDoubled(
-
-        coins:
-
-        oldReward.coins,
-
-
-        gems:
-
-        oldReward.gems,
-
-
-      );
-
-
-
-
-
-
-
-      if(!mounted){
-
-
-        return;
-
-
-      }
-
-
+});
 
 
 
