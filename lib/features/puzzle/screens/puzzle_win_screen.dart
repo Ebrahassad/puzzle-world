@@ -301,12 +301,22 @@ bool get hasNextLevel {
       widget.level!,
     );
 
+if (widget.level == 10) {
 
+  // سيتم استبدال اسم الجزيرة التالية لاحقاً
+  // عندما نربط ترتيب الجزر.
+
+}
     await PuzzleProgressManager.saveLastPuzzle(
       widget.worldId!,
       "level_${widget.level}",
     );
-
+await PuzzleProgressManager.saveGameState(
+  worldId: widget.worldId!,
+  levelId: "level_${widget.level}",
+  moves: widget.result.moves,
+  seconds: widget.result.seconds,
+);
 
     await PuzzleProgressManager.addCompletedPuzzle(
       moves: widget.result.moves,
@@ -509,12 +519,7 @@ setState((){
 
 
 
-      await RewardManager.addStars(
-
-        oldReward.stars,
-
-      );
-
+      
 
 
 
