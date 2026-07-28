@@ -422,15 +422,16 @@ class _IslandScreenState
         else{
 
 
-          unlocked =
+  unlocked =
 
-              islandOpened ||
+      islandOpened ||
 
-              stars >= widget.island.requiredStars;
+      stars >= widget.island.requiredStars ||
+
+      widget.island.id == "animals";
 
 
-        }
-
+}
 
 
       });
@@ -944,13 +945,6 @@ class _IslandScreenState
 
 
 
-      await PuzzleProgressManager
-
-          .unlockIsland(
-
-        widget.island.id,
-
-      );
 
 
 
@@ -1081,9 +1075,7 @@ class _IslandScreenState
 
 
         final levelOpen =
-
-            snapshot.data ?? level == 1;
-
+    snapshot.data ?? (level == 1);
 
 
 
@@ -1540,64 +1532,21 @@ class _IslandScreenState
 
 
 
-            child:GameToolbar(
+            child: GameToolbar(
 
+  logo:
+  "assets/images/ui/puzzle_logo.png",
 
+  starKey:
+  starKey,
 
-              logo:
+  onBack:(){
 
-              "assets/images/ui/puzzle_logo.png",
+    Navigator.pop(context);
 
+  },
 
-
-
-
-              stars:
-
-              totalStars,
-
-
-
-
-
-              coins:
-
-              coins,
-
-
-
-
-
-              rewards:
-
-              rewards,
-
-
-
-
-
-              starKey:
-
-              starKey,
-
-
-
-
-
-              onBack:(){
-
-
-
-                Navigator.pop(context);
-
-
-
-              },
-
-
-
-            ),
-
+),
 
 
           ),
