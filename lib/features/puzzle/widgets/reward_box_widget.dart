@@ -8,19 +8,32 @@ class RewardBoxWidget extends StatefulWidget {
 
   final VoidCallback onRewardOpened;
 
+
   final VoidCallback? onStarReady;
+
+
+  final GlobalKey? starTargetKey;
+
 
 
 
   const RewardBoxWidget({
 
+
     super.key,
+
 
     required this.onRewardOpened,
 
+
     this.onStarReady,
 
+
+    this.starTargetKey,
+
+
   });
+
 
 
 
@@ -54,9 +67,12 @@ class _RewardBoxWidgetState
 
 
 
+
   late AnimationController boxController;
 
+
   late AnimationController pulseController;
+
 
   late AnimationController starController;
 
@@ -66,7 +82,9 @@ class _RewardBoxWidgetState
 
   late Animation<double> boxScale;
 
+
   late Animation<double> boxRotate;
+
 
   late Animation<double> pulseScale;
 
@@ -76,7 +94,9 @@ class _RewardBoxWidgetState
 
   late Animation<double> starScale;
 
+
   late Animation<double> starOpacity;
+
 
   late Animation<Offset> starMove;
 
@@ -85,6 +105,7 @@ class _RewardBoxWidgetState
 
 
   bool opened = false;
+
 
   bool showStar = false;
 
@@ -99,19 +120,26 @@ class _RewardBoxWidgetState
   @override
   void initState(){
 
+
     super.initState();
+
+
 
 
 
     boxController = AnimationController(
 
+
       vsync:this,
+
 
       duration:
 
       const Duration(milliseconds:800),
 
+
     );
+
 
 
 
@@ -119,21 +147,30 @@ class _RewardBoxWidgetState
 
     boxScale = Tween<double>(
 
+
       begin:1,
+
 
       end:1.15,
 
+
     ).animate(
+
 
       CurvedAnimation(
 
+
         parent:boxController,
+
 
         curve:Curves.elasticOut,
 
+
       ),
 
+
     );
+
 
 
 
@@ -141,22 +178,29 @@ class _RewardBoxWidgetState
 
     boxRotate = Tween<double>(
 
+
       begin:-0.08,
+
 
       end:0.08,
 
+
     ).animate(
+
 
       CurvedAnimation(
 
+
         parent:boxController,
+
 
         curve:Curves.easeInOut,
 
+
       ),
 
-    );
 
+    );
 
 
 
@@ -165,19 +209,20 @@ class _RewardBoxWidgetState
 
     pulseController = AnimationController(
 
+
       vsync:this,
+
 
       duration:
 
       const Duration(seconds:1),
 
+
     )
 
-      ..repeat(
+      ..repeat(reverse:true);
 
-        reverse:true,
 
-      );
 
 
 
@@ -185,23 +230,29 @@ class _RewardBoxWidgetState
 
     pulseScale = Tween<double>(
 
+
       begin:0.95,
+
 
       end:1.08,
 
+
     ).animate(
+
 
       CurvedAnimation(
 
+
         parent:pulseController,
+
 
         curve:Curves.easeInOut,
 
+
       ),
 
+
     );
-
-
 
 
 
@@ -210,13 +261,18 @@ class _RewardBoxWidgetState
 
     starController = AnimationController(
 
+
       vsync:this,
+
 
       duration:
 
       const Duration(milliseconds:1500),
 
+
     );
+
+
 
 
 
@@ -224,21 +280,31 @@ class _RewardBoxWidgetState
 
     starScale = Tween<double>(
 
+
       begin:0.2,
+
 
       end:1,
 
+
     ).animate(
+
 
       CurvedAnimation(
 
+
         parent:starController,
+
 
         curve:Curves.elasticOut,
 
+
       ),
 
+
     );
+
+
 
 
 
@@ -246,21 +312,31 @@ class _RewardBoxWidgetState
 
     starOpacity = Tween<double>(
 
+
       begin:0,
+
 
       end:1,
 
+
     ).animate(
+
 
       CurvedAnimation(
 
+
         parent:starController,
+
 
         curve:Curves.easeIn,
 
+
       ),
 
+
     );
+
+
 
 
 
@@ -268,37 +344,37 @@ class _RewardBoxWidgetState
 
     starMove = Tween<Offset>(
 
+
       begin:Offset.zero,
+
 
       end:
 
       const Offset(0,-2.5),
 
+
     ).animate(
+
 
       CurvedAnimation(
 
+
         parent:starController,
+
 
         curve:Curves.easeOut,
 
+
       ),
+
 
     );
 
 
+
   }
 
-
-
-
-
-
-
-
-
   Future<void> openBox() async {
-
 
 
     if(opened || !mounted){
@@ -347,9 +423,13 @@ class _RewardBoxWidgetState
 
 
 
+
+
       setState((){
 
+
         showStar = true;
+
 
       });
 
@@ -367,9 +447,13 @@ class _RewardBoxWidgetState
 
 
 
+      // إعلام الشريط أن النجمة جاهزة للحركة
+
       if(widget.onStarReady != null){
 
+
         widget.onStarReady!();
+
 
       }
 
@@ -409,26 +493,33 @@ class _RewardBoxWidgetState
 
 
 
+
+
     }catch(e){
 
 
 
       debugPrint(
 
-        "Reward box error: $e",
+        "Reward box open error: $e",
 
       );
 
 
 
+
+
       if(mounted){
 
+
         widget.onRewardOpened();
+
 
       }
 
 
     }
+
 
 
   }
@@ -449,16 +540,22 @@ class _RewardBoxWidgetState
 
       await audioPlayer.play(
 
+
+
         AssetSource(
 
           "audio/reward_open.mp3",
 
         ),
 
+
+
       );
 
 
+
     }catch(e){
+
 
 
       debugPrint(
@@ -468,7 +565,9 @@ class _RewardBoxWidgetState
       );
 
 
+
     }
+
 
 
   }
@@ -493,11 +592,18 @@ class _RewardBoxWidgetState
 
     return Image.asset(
 
+
+
       path,
+
+
 
       width:size,
 
+
+
       height:size,
+
 
 
       errorBuilder:
@@ -505,20 +611,33 @@ class _RewardBoxWidgetState
           (_,__,___){
 
 
+
         return Icon(
+
+
 
           Icons.card_giftcard,
 
+
+
           size:size,
 
+
+
           color:Colors.orange,
+
+
 
         );
 
 
+
       },
 
+
+
     );
+
 
 
   }
@@ -620,7 +739,10 @@ class _RewardBoxWidgetState
 
                   ),
 
+
+
                 );
+
 
 
               },
@@ -633,9 +755,15 @@ class _RewardBoxWidgetState
 
               rewardImage(
 
+
+
                 "assets/images/rewards/reward_box.png",
 
+
+
                 170,
+
+
 
               ),
 
@@ -691,17 +819,26 @@ class _RewardBoxWidgetState
 
                     rewardImage(
 
+
+
                       "assets/images/rewards/Star_gold.png",
+
+
 
                       120,
 
+
+
                     ),
+
 
 
                   ),
 
 
+
                 ),
+
 
 
               ),
@@ -726,34 +863,51 @@ class _RewardBoxWidgetState
 
   }
 
-
-
-
-
-
-
-
-
   @override
   void dispose(){
 
 
 
-    boxController.dispose();
-
-
-    pulseController.dispose();
-
-
-    starController.dispose();
+    try{
 
 
 
-    audioPlayer.dispose();
+      boxController.dispose();
+
+
+
+      pulseController.dispose();
+
+
+
+      starController.dispose();
+
+
+
+      audioPlayer.dispose();
+
+
+
+    }catch(e){
+
+
+
+      debugPrint(
+
+        "Reward box dispose error: $e",
+
+      );
+
+
+
+    }
+
+
 
 
 
     super.dispose();
+
 
 
   }
