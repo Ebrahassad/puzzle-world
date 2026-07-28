@@ -102,9 +102,9 @@ class _PuzzleWinScreenState
 
   bool adUsed = false;
 
+bool doubling = false;
 
-  bool saved = false;
-
+bool saved = false;
 
 
 
@@ -480,15 +480,16 @@ class _PuzzleWinScreenState
 
       setState((){
 
+  reward = result ??
+      RewardResultModel(
+        stars: widget.result.stars,
+      );
 
-        reward = result;
+
+  loading = false;
 
 
-        loading = false;
-
-
-      });
-
+});
 
 
 
@@ -531,14 +532,17 @@ class _PuzzleWinScreenState
 
 
 
-      if(adUsed || reward == null){
+      if(adUsed || doubling || reward == null){
 
+  return;
 
-        return;
+}
 
+setState((){
 
-      }
+  doubling = true;
 
+});
 
 
 
@@ -651,25 +655,34 @@ class _PuzzleWinScreenState
 
       setState((){
 
+  reward = oldReward.multiply(2);
 
-        reward = oldReward.multiply(2);
+  adUsed = true;
 
-
-        adUsed = true;
-
-
-      });
+});
 
 
+setState((){
 
+  doubling = false;
 
-
-
-
-    }catch(_){}
+});
 
 
 
+    }catch(_){
+
+  if(mounted){
+
+    setState((){
+
+      doubling = false;
+
+    });
+
+  }
+
+}
   }
 
 
@@ -1048,15 +1061,16 @@ class _PuzzleWinScreenState
                 // المستوى التالي
 
                 actionButton(
-
-                  "🚀 المستوى التالي",
-
-                  Colors.purple,
-
-                  nextLevel,
-
-                ),
-
+  widget.level != null &&
+          widget.worldId != null
+      ? "🚀 المستوى التالي"
+      : "🌍 العودة للعالم",
+  Colors.purple,
+  widget.level != null &&
+          widget.worldId != null
+      ? nextLevel
+      : backHome,
+),
 
 
 
@@ -1069,16 +1083,13 @@ class _PuzzleWinScreenState
 
                 if(!adUsed)
 
-                  actionButton(
-
-                    "🎁 مضاعفة المكافأة",
-
-                    Colors.orange,
-
-                    doubleReward,
-
-                  ),
-
+  actionButton(
+    doubling
+        ? "⏳ جاري المضاعفة..."
+        : "🎁 مضاعفة المكافأة",
+    Colors.orange,
+    doubleReward,
+  ),
 
 
 
