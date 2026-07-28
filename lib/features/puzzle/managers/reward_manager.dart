@@ -434,37 +434,44 @@ rewardedAdBonus() async {
 
 
 
+static Future<RewardResultModel>
 
-      await addCoins(
+doubleReward(
 
-        reward.coins,
+    RewardResultModel reward,
 
-      );
-
-
-
+    ) async {
 
 
-      await addStars(
-
-        reward.stars,
-
-      );
+  try {
 
 
+    final doubled = RewardResultModel(
+
+      coins: reward.coins * 2,
+
+      gems: reward.gems * 2,
+
+      stars: reward.stars * 2,
+
+    );
 
 
 
+    return doubled;
 
-      if(reward.gems > 0){
 
-        await addGems(
 
-          reward.gems,
+  } catch (_) {
 
-        );
 
-      }
+    return reward;
+
+
+  }
+
+
+}
 
 
 
