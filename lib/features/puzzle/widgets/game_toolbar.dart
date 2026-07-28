@@ -14,7 +14,7 @@ class GameToolbar extends StatefulWidget {
   final VoidCallback? onBack;
 
 
-  final GlobalKey starKey;
+  
 
 
 
@@ -28,7 +28,7 @@ class GameToolbar extends StatefulWidget {
     required this.logo,
 
 
-    required this.starKey,
+    
 
 
     this.onBack,
@@ -110,7 +110,7 @@ class _GameToolbarState extends State<GameToolbar>{
     await PuzzleProgressManager.getCoins();
 
 
-
+if(!mounted) return;
 
     setState((){
 
@@ -508,47 +508,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-                Container(
-
-
-                  key:
-
-                  widget.starKey,
-
-
-                  child:
-
-                  _imageCounterBox(
-
-
-
-                    image:
-
-                    "assets/images/rewards/Star_gold.png",
-
-
-
-                    value:
-
-                    stars,
-
-
-
-                  ),
-
-
-
-                ),
-
-
-
-
-
-
-
-                const SizedBox(width:8),
-
-
+                
 
 
 
