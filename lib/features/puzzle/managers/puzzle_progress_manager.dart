@@ -10,27 +10,35 @@ class PuzzleProgressManager {
   PuzzleProgressManager._();
 
 
+
   //==================================================
-  // Keys
+  // 🔑 Keys
   //==================================================
+
 
   static const String progressKey =
       "puzzle_current_progress";
 
+
   static const String starsKey =
       "puzzle_total_stars";
+
 
   static const String coinsKey =
       "puzzle_coins";
 
+
   static const String gemsKey =
       "puzzle_gems";
+
 
   static const String hintsKey =
       "puzzle_hints";
 
+
   static const String lastWorldKey =
       "puzzle_last_world";
+
 
   static const String lastLevelKey =
       "puzzle_last_level";
@@ -38,24 +46,32 @@ class PuzzleProgressManager {
 
   static const String completedLevelsKey =
       "puzzle_completed_levels";
-static const String claimedRewardsKey =
-    "puzzle_claimed_rewards";
+
+
+  static const String claimedRewardsKey =
+      "puzzle_claimed_rewards";
+
 
   static const String unlockedLevelsKey =
       "puzzle_unlocked_levels";
+
 
   static const String levelStarsKey =
       "puzzle_level_stars";
 
 
+
   static const String gamesPlayedKey =
       "puzzle_games_played";
+
 
   static const String totalMovesKey =
       "puzzle_total_moves";
 
+
   static const String bestTimeKey =
       "puzzle_best_time";
+
 
 
   static const String achievementsKey =
@@ -68,6 +84,8 @@ static const String claimedRewardsKey =
 
   static const String dailyMissionKey =
       "puzzle_daily_missions";
+
+
 
 
   //==================================================
@@ -83,8 +101,9 @@ static const String claimedRewardsKey =
 
 
 
+
   //==================================================
-  // حفظ حالة البازل الحالية
+  // 💾 حفظ حالة البازل الحالية
   //==================================================
 
 
@@ -106,39 +125,55 @@ static const String claimedRewardsKey =
     final prefs = await _prefs;
 
 
+
     final data = {
+
 
       "puzzleId": puzzleId,
 
+
       "levelId": levelId,
 
+
       "moves": moves,
+
 
       "seconds": seconds,
 
 
+
       "pieces": pieces.map((piece){
+
 
         return {
 
+
           "id": piece.id,
+
 
           "row": piece.row,
 
+
           "column": piece.column,
+
 
           "x": piece.position.dx,
 
+
           "y": piece.position.dy,
+
 
           "placed": piece.placed,
 
+
         };
+
 
       }).toList(),
 
 
     };
+
 
 
     await prefs.setString(
@@ -157,7 +192,7 @@ static const String claimedRewardsKey =
 
 
   //==================================================
-  // قراءة حالة البازل
+  // 📖 قراءة حالة البازل
   //==================================================
 
 
@@ -169,9 +204,7 @@ static const String claimedRewardsKey =
     final prefs = await _prefs;
 
 
-    final value =
-
-    prefs.getString(progressKey);
+    final value = prefs.getString(progressKey);
 
 
 
@@ -197,13 +230,11 @@ static const String claimedRewardsKey =
 
 
   //==================================================
-  // حذف البازل المحفوظ
+  // 🗑️ حذف حالة البازل
   //==================================================
 
 
-  static Future<void>
-
-  clearProgress() async {
+  static Future<void> clearProgress() async {
 
 
     final prefs = await _prefs;
@@ -219,25 +250,22 @@ static const String claimedRewardsKey =
   }
 
 
+
+
+
   //==================================================
-  // ⭐ نظام النجوم
+  // ⭐ نظام النجوم Golden Star
   //==================================================
-
-
-  static Future<int> getTotalStars() async {
-
-    final prefs = await _prefs;
-
-    return prefs.getInt(starsKey) ?? 0;
-
-  }
-
-
 
 
   static Future<int> getStars() async {
 
-    return getTotalStars();
+
+    final prefs = await _prefs;
+
+
+    return prefs.getInt(starsKey) ?? 0;
+
 
   }
 
@@ -259,7 +287,9 @@ static const String claimedRewardsKey =
     prefs.getInt(starsKey) ?? 0;
 
 
+
     int value = current + amount;
+
 
 
     if(value < 0){
@@ -267,6 +297,7 @@ static const String claimedRewardsKey =
       value = 0;
 
     }
+
 
 
     await prefs.setInt(
@@ -279,7 +310,6 @@ static const String claimedRewardsKey =
 
 
   }
-
 
 
 
@@ -343,7 +373,9 @@ static const String claimedRewardsKey =
     prefs.getInt(coinsKey) ?? 0;
 
 
+
     int value = current + amount;
+
 
 
     if(value < 0){
@@ -351,6 +383,7 @@ static const String claimedRewardsKey =
       value = 0;
 
     }
+
 
 
     await prefs.setInt(
@@ -363,7 +396,6 @@ static const String claimedRewardsKey =
 
 
   }
-
 
 
 
@@ -412,7 +444,6 @@ static const String claimedRewardsKey =
 
 
 
-
   static Future<void> addGems(
 
       int amount,
@@ -428,7 +459,9 @@ static const String claimedRewardsKey =
     prefs.getInt(gemsKey) ?? 0;
 
 
+
     int value = current + amount;
+
 
 
     if(value < 0){
@@ -436,6 +469,7 @@ static const String claimedRewardsKey =
       value = 0;
 
     }
+
 
 
     await prefs.setInt(
@@ -448,7 +482,6 @@ static const String claimedRewardsKey =
 
 
   }
-
 
 
 
@@ -474,10 +507,6 @@ static const String claimedRewardsKey =
 
   }
 
-
-
-
-
   //==================================================
   // 💡 التلميحات
   //==================================================
@@ -497,7 +526,6 @@ static const String claimedRewardsKey =
 
 
 
-
   static Future<void> addHints(
 
       int amount,
@@ -513,7 +541,9 @@ static const String claimedRewardsKey =
     prefs.getInt(hintsKey) ?? 0;
 
 
+
     int value = current + amount;
+
 
 
     if(value < 0){
@@ -521,6 +551,7 @@ static const String claimedRewardsKey =
       value = 0;
 
     }
+
 
 
     await prefs.setInt(
@@ -549,11 +580,13 @@ static const String claimedRewardsKey =
     prefs.getInt(hintsKey) ?? 0;
 
 
+
     if(current <= 0){
 
       return false;
 
     }
+
 
 
     await prefs.setInt(
@@ -565,13 +598,18 @@ static const String claimedRewardsKey =
     );
 
 
+
     return true;
 
 
   }
 
+
+
+
+
   //==================================================
-  // 🏆 إكمال المراحل
+  // 🏆 المراحل المكتملة
   //==================================================
 
 
@@ -583,6 +621,7 @@ static const String claimedRewardsKey =
 
 
     final prefs = await _prefs;
+
 
 
     final levels =
@@ -599,6 +638,7 @@ static const String claimedRewardsKey =
 
 
       levels.add(levelKey);
+
 
 
       await prefs.setStringList(
@@ -629,6 +669,7 @@ static const String claimedRewardsKey =
     final prefs = await _prefs;
 
 
+
     final levels =
 
     prefs.getStringList(
@@ -636,6 +677,7 @@ static const String claimedRewardsKey =
       completedLevelsKey,
 
     ) ?? [];
+
 
 
     return levels.contains(levelKey);
@@ -653,6 +695,7 @@ static const String claimedRewardsKey =
     final prefs = await _prefs;
 
 
+
     return
 
     (prefs.getStringList(
@@ -665,49 +708,88 @@ static const String claimedRewardsKey =
   }
 
 
-//==================================================
-// 🎁 المكافآت المستلمة
-//==================================================
-
-static Future<void> markRewardClaimed(
-    String levelKey,
-    ) async {
-
-  final prefs = await _prefs;
-
-  final list =
-      prefs.getStringList(claimedRewardsKey) ?? [];
 
 
-  if(!list.contains(levelKey)){
 
-    list.add(levelKey);
+  //==================================================
+  // 🎁 المكافآت المستلمة
+  //==================================================
 
-    await prefs.setStringList(
+
+  static Future<void> markRewardClaimed(
+
+      String rewardKey,
+
+      ) async {
+
+
+    final prefs = await _prefs;
+
+
+
+    final rewards =
+
+    prefs.getStringList(
+
       claimedRewardsKey,
-      list,
-    );
+
+    ) ?? [];
+
+
+
+    if(!rewards.contains(rewardKey)){
+
+
+      rewards.add(rewardKey);
+
+
+
+      await prefs.setStringList(
+
+        claimedRewardsKey,
+
+        rewards,
+
+      );
+
+
+    }
+
 
   }
 
-}
 
 
 
 
-static Future<bool> isRewardClaimed(
-    String levelKey,
-    ) async {
+  static Future<bool> isRewardClaimed(
 
-  final prefs = await _prefs;
+      String rewardKey,
 
-  final list =
-      prefs.getStringList(claimedRewardsKey) ?? [];
+      ) async {
 
 
-  return list.contains(levelKey);
+    final prefs = await _prefs;
 
-}
+
+
+    final rewards =
+
+    prefs.getStringList(
+
+      claimedRewardsKey,
+
+    ) ?? [];
+
+
+
+    return rewards.contains(rewardKey);
+
+
+  }
+
+
+
 
 
   //==================================================
@@ -725,6 +807,7 @@ static Future<bool> isRewardClaimed(
     final prefs = await _prefs;
 
 
+
     final levels =
 
     prefs.getStringList(
@@ -739,6 +822,7 @@ static Future<bool> isRewardClaimed(
 
 
       levels.add(levelKey);
+
 
 
       await prefs.setStringList(
@@ -769,6 +853,7 @@ static Future<bool> isRewardClaimed(
     final prefs = await _prefs;
 
 
+
     final levels =
 
     prefs.getStringList(
@@ -779,9 +864,15 @@ static Future<bool> isRewardClaimed(
 
 
 
+    // المستوى الأول مفتوح تلقائياً
+
     if(levelKey.contains("_level_1")){
-  return true;
-}
+
+      return true;
+
+    }
+
+
 
     return levels.contains(levelKey);
 
@@ -801,115 +892,35 @@ static Future<bool> isRewardClaimed(
       ) async {
 
 
-    final next = currentLevel + 1;
-
-
     await unlockLevel(
 
-      "${worldId}_level_$next",
+      "${worldId}_level_${currentLevel + 1}",
 
     );
 
 
   }
 
-//==================================================
-// 🌍 فتح العوالم
-//==================================================
-
-static const String unlockedWorldsKey =
-    "puzzle_unlocked_worlds";
-
-
-static Future<void> unlockWorld(
-    String worldId,
-    ) async {
-
-
-  final prefs = await _prefs;
-
-
-  final worlds =
-      prefs.getStringList(
-        unlockedWorldsKey,
-      ) ?? [];
-
-
-  if(!worlds.contains(worldId)){
-
-
-    worlds.add(worldId);
-
-
-    await prefs.setStringList(
-      unlockedWorldsKey,
-      worlds,
-    );
-
-  }
-
-}
 
 
 
-//==================================================
-// 🌍 التحقق من فتح العالم
-//==================================================
-
-static Future<bool> isWorldUnlocked(
-    String worldId,
-    ) async {
-
-
-  final prefs = await _prefs;
-
-
-  final worlds =
-      prefs.getStringList(
-        unlockedWorldsKey,
-      ) ?? [];
-
-
-  // 🌟 العالم الأول مفتوح تلقائياً
-  if(worldId == "world_1"){
-
-    return true;
-
-  }
-
-
-  return worlds.contains(worldId);
-
-}
-
-
-static Future<void> unlockAllLevels(
-    String worldId,
-    ) async {
-
-
-  for(int i = 1; i <= 100; i++){
-
-
-    await unlockLevel(
-      "${worldId}_level_$i",
-    );
-
-
-  }
-
-}
 
   //==================================================
-  // ⭐ نجوم كل مرحلة
+  // 🌍 فتح العوالم
   //==================================================
 
 
-  static Future<void> saveLevelStars(
+  static const String unlockedWorldsKey =
 
-      String levelKey,
+      "puzzle_unlocked_worlds";
 
-      int stars,
+
+
+
+
+  static Future<void> unlockWorld(
+
+      String worldId,
 
       ) async {
 
@@ -917,33 +928,29 @@ static Future<void> unlockAllLevels(
     final prefs = await _prefs;
 
 
-    final data = Map<String,dynamic>.from(
 
-      jsonDecode(
+    final worlds =
 
-        prefs.getString(levelStarsKey) ?? "{}",
+    prefs.getStringList(
 
-      ),
+      unlockedWorldsKey,
 
-    );
-
-
-
-    final old = data[levelKey] ?? 0;
+    ) ?? [];
 
 
 
-    if(stars > old){
+    if(!worlds.contains(worldId)){
 
 
-      data[levelKey] = stars;
+      worlds.add(worldId);
 
 
-      await prefs.setString(
 
-        levelStarsKey,
+      await prefs.setStringList(
 
-        jsonEncode(data),
+        unlockedWorldsKey,
+
+        worlds,
 
       );
 
@@ -957,9 +964,9 @@ static Future<void> unlockAllLevels(
 
 
 
-  static Future<int> getLevelStars(
+  static Future<bool> isWorldUnlocked(
 
-      String levelKey,
+      String worldId,
 
       ) async {
 
@@ -967,18 +974,26 @@ static Future<void> unlockAllLevels(
     final prefs = await _prefs;
 
 
-    final data = Map<String,dynamic>.from(
 
-      jsonDecode(
+    final worlds =
 
-        prefs.getString(levelStarsKey) ?? "{}",
+    prefs.getStringList(
 
-      ),
+      unlockedWorldsKey,
 
-    );
+    ) ?? [];
 
 
-    return data[levelKey] ?? 0;
+
+    if(worldId == "world_1"){
+
+      return true;
+
+    }
+
+
+
+    return worlds.contains(worldId);
 
 
   }
@@ -986,60 +1001,62 @@ static Future<void> unlockAllLevels(
 
 
 
+
+  static Future<void> unlockAllLevels(
+
+      String worldId,
+
+      ) async {
+
+
+    for(int i = 1; i <= 100; i++){
+
+
+      await unlockLevel(
+
+        "${worldId}_level_$i",
+
+      );
+
+
+    }
+
+
+  }
 
   //==================================================
   // 🎮 آخر مستوى لعب
   //==================================================
 
-
   static Future<void> saveLastPuzzle(
-
       String worldId,
-
       String levelId,
-
       ) async {
-
 
     final prefs = await _prefs;
 
-
     await prefs.setString(
-
       lastWorldKey,
-
       worldId,
-
     );
-
 
     await prefs.setString(
-
       lastLevelKey,
-
       levelId,
-
     );
-
-
   }
 
 
 
-
-
-  static Future<Map<String,String>?>
-
-  getLastPuzzle() async {
-
+  static Future<Map<String,String>?> getLastPuzzle() async {
 
     final prefs = await _prefs;
 
+    final world =
+        prefs.getString(lastWorldKey);
 
-    final world = prefs.getString(lastWorldKey);
-
-    final level = prefs.getString(lastLevelKey);
-
+    final level =
+        prefs.getString(lastLevelKey);
 
 
     if(world == null || level == null){
@@ -1057,11 +1074,12 @@ static Future<void> unlockAllLevels(
 
     };
 
-
   }
 
+
+
   //==================================================
-  // 📊 الإحصائيات
+  // 📊 إحصائيات اللاعب
   //==================================================
 
 
@@ -1069,11 +1087,11 @@ static Future<void> unlockAllLevels(
 
     final prefs = await _prefs;
 
-    return prefs.getInt(gamesPlayedKey) ?? 0;
+    return prefs.getInt(
+      gamesPlayedKey,
+    ) ?? 0;
 
   }
-
-
 
 
 
@@ -1081,47 +1099,51 @@ static Future<void> unlockAllLevels(
 
     final prefs = await _prefs;
 
-    return prefs.getInt(totalMovesKey) ?? 0;
+    return prefs.getInt(
+      totalMovesKey,
+    ) ?? 0;
 
   }
 
 
-//==================================================
-// ➕ إضافة مجموع الحركات
-//==================================================
+
+  static Future<void> addTotalMoves(
+      int moves,
+      ) async {
 
 
-static Future<void> addTotalMoves(
+    if(moves <= 0){
 
-    int moves,
+      return;
 
-    ) async {
-
-
-  final prefs = await _prefs;
+    }
 
 
-  final current =
-      prefs.getInt(totalMovesKey) ?? 0;
+    final prefs = await _prefs;
 
 
-  await prefs.setInt(
-
-    totalMovesKey,
-
-    current + moves,
-
-  );
+    final current =
+        prefs.getInt(totalMovesKey) ?? 0;
 
 
-}
+    await prefs.setInt(
+      totalMovesKey,
+      current + moves,
+    );
+
+  }
+
+
+
 
 
   static Future<int> getBestTime() async {
 
     final prefs = await _prefs;
 
-    return prefs.getInt(bestTimeKey) ?? 0;
+    return prefs.getInt(
+      bestTimeKey,
+    ) ?? 0;
 
   }
 
@@ -1142,8 +1164,7 @@ static Future<void> addTotalMoves(
 
 
     final oldMoves =
-
-    prefs.getInt(totalMovesKey) ?? 0;
+        prefs.getInt(totalMovesKey) ?? 0;
 
 
     await prefs.setInt(
@@ -1157,8 +1178,7 @@ static Future<void> addTotalMoves(
 
 
     final oldGames =
-
-    prefs.getInt(gamesPlayedKey) ?? 0;
+        prefs.getInt(gamesPlayedKey) ?? 0;
 
 
     await prefs.setInt(
@@ -1171,14 +1191,13 @@ static Future<void> addTotalMoves(
 
 
 
-    final best =
 
-    prefs.getInt(bestTimeKey) ?? 0;
+    final best =
+        prefs.getInt(bestTimeKey) ?? 0;
 
 
 
     if(best == 0 || seconds < best){
-
 
       await prefs.setInt(
 
@@ -1188,9 +1207,7 @@ static Future<void> addTotalMoves(
 
       );
 
-
     }
-
 
   }
 
@@ -1204,9 +1221,7 @@ static Future<void> addTotalMoves(
 
 
   static Future<void> saveAchievement(
-
       String id,
-
       ) async {
 
 
@@ -1214,12 +1229,9 @@ static Future<void> addTotalMoves(
 
 
     final list =
-
-    prefs.getStringList(
-
-      achievementsKey,
-
-    ) ?? [];
+        prefs.getStringList(
+          achievementsKey,
+        ) ?? [];
 
 
 
@@ -1237,20 +1249,15 @@ static Future<void> addTotalMoves(
 
       );
 
-
     }
-
 
   }
 
 
 
 
-
   static Future<bool> hasAchievement(
-
       String id,
-
       ) async {
 
 
@@ -1258,55 +1265,71 @@ static Future<void> addTotalMoves(
 
 
     final list =
-
-    prefs.getStringList(
-
-      achievementsKey,
-
-    ) ?? [];
+        prefs.getStringList(
+          achievementsKey,
+        ) ?? [];
 
 
     return list.contains(id);
 
+  }
+
+
+
+
+
+  //==================================================
+  // 🎯 المهام اليومية
+  //==================================================
+
+
+  static Future<List<Map<String,dynamic>>>
+  getDailyMissions() async {
+
+
+    final prefs = await _prefs;
+
+
+    final data =
+        jsonDecode(
+
+          prefs.getString(
+            dailyMissionKey,
+          ) ?? "[]",
+
+        );
+
+
+    return List<Map<String,dynamic>>.from(
+      data,
+    );
 
   }
 
-//==================================================
-// 🎯 المهام اليومية
-//==================================================
-
-static Future<List<Map<String,dynamic>>>
-getDailyMissions() async {
-
-  final prefs = await _prefs;
-
-  final data =
-      jsonDecode(
-        prefs.getString(dailyMissionKey) ?? "[]",
-      );
-
-
-  return List<Map<String,dynamic>>.from(
-    data,
-  );
-
-}
 
 
 
-static Future<void> saveDailyMissions(
-    List<Map<String,dynamic>> missions,
-    ) async {
-
-  final prefs = await _prefs;
+  static Future<void> saveDailyMissions(
+      List<Map<String,dynamic>> missions,
+      ) async {
 
 
-  await prefs.setString(
-    dailyMissionKey,
-    jsonEncode(missions),
-  );
+    final prefs = await _prefs;
 
-}
+
+    await prefs.setString(
+
+      dailyMissionKey,
+
+      jsonEncode(
+        missions,
+      ),
+
+    );
+
+  }
+
+
 
 
 
@@ -1316,18 +1339,25 @@ static Future<void> saveDailyMissions(
 
 
   static Future<void> addExperience(
-
       int amount,
-
       ) async {
+
+
+    if(amount <= 0){
+
+      return;
+
+    }
 
 
     final prefs = await _prefs;
 
 
     final current =
+        prefs.getInt(
+          experienceKey,
+        ) ?? 0;
 
-    prefs.getInt(experienceKey) ?? 0;
 
 
     await prefs.setInt(
@@ -1338,60 +1368,59 @@ static Future<void> saveDailyMissions(
 
     );
 
-
   }
-
 
 
 
 
   static Future<int> getExperience() async {
 
-
     final prefs = await _prefs;
 
 
-    return prefs.getInt(experienceKey) ?? 0;
-
+    return prefs.getInt(
+      experienceKey,
+    ) ?? 0;
 
   }
 
-
-
-
-
   //==================================================
-  // 💾 تصدير واستيراد البيانات
+  // 💾 تصدير البيانات
   //==================================================
 
 
-  static Future<Map<String,dynamic>>
-
-  exportData() async {
+  static Future<Map<String,dynamic>> exportData() async {
 
 
     final prefs = await _prefs;
 
 
-    final result = <String,dynamic>{};
+    final data = <String,dynamic>{};
+
 
 
     for(final key in prefs.getKeys()){
 
 
-      result[key] = prefs.get(key);
+      data[key] = prefs.get(key);
 
 
     }
 
 
-    return result;
+
+    return data;
 
 
   }
 
 
 
+
+
+  //==================================================
+  // 📥 استيراد البيانات
+  //==================================================
 
 
   static Future<void> importData(
@@ -1404,10 +1433,12 @@ static Future<void> saveDailyMissions(
     final prefs = await _prefs;
 
 
+
     for(final item in data.entries){
 
 
       final value = item.value;
+
 
 
       if(value is int){
@@ -1424,6 +1455,7 @@ static Future<void> saveDailyMissions(
 
       }
 
+
       else if(value is String){
 
 
@@ -1437,6 +1469,7 @@ static Future<void> saveDailyMissions(
 
 
       }
+
 
       else if(value is List<String>){
 
@@ -1459,949 +1492,515 @@ static Future<void> saveDailyMissions(
   }
 
 
+
+
+
   //==================================================
-  // حذف تقدم مرحلة واحدة
+  // 🏝️ نظام الجزر
   //==================================================
 
 
-  static Future<void> removeLevel(
+  static const String unlockedIslandsKey =
 
-      String levelKey,
+      "puzzle_unlocked_islands";
+
+
+
+  static const String islandAdsKey =
+
+      "puzzle_island_ads";
+
+
+
+
+
+  static Future<void> unlockIsland(
+
+      String islandId,
 
       ) async {
+
 
 
     final prefs = await _prefs;
 
 
 
-    // حذف من المراحل المكتملة
-
-    final completed =
+    final islands =
 
     prefs.getStringList(
 
-      completedLevelsKey,
+      unlockedIslandsKey,
 
     ) ?? [];
 
 
 
-    completed.remove(levelKey);
+
+
+    if(!islands.contains(islandId)){
+
+
+      islands.add(islandId);
 
 
 
-    await prefs.setStringList(
+      await prefs.setStringList(
 
-      completedLevelsKey,
+        unlockedIslandsKey,
 
-      completed,
+        islands,
 
-    );
-
-
+      );
 
 
+    }
 
-    // حذف من المراحل المفتوحة
 
-    final unlocked =
+  }
+
+
+
+
+
+
+  static Future<bool> isIslandUnlocked(
+
+      String islandId,
+
+      ) async {
+
+
+
+    final prefs = await _prefs;
+
+
+
+    final islands =
 
     prefs.getStringList(
 
-      unlockedLevelsKey,
+      unlockedIslandsKey,
 
     ) ?? [];
 
 
 
-    unlocked.remove(levelKey);
+
+
+    // 🐻 الجزيرة الأولى مفتوحة
+
+    if(islandId == "animals"){
+
+      return true;
+
+    }
 
 
 
-    await prefs.setStringList(
+    return islands.contains(islandId);
 
-      unlockedLevelsKey,
 
-      unlocked,
+  }
+
+
+
+
+
+  static Future<int> getIslandAds(
+
+      String islandId,
+
+      ) async {
+
+
+
+    final prefs = await _prefs;
+
+
+
+    final data =
+
+    jsonDecode(
+
+      prefs.getString(
+
+        islandAdsKey,
+
+      ) ?? "{}",
 
     );
 
 
 
+    return data[islandId] ?? 0;
 
 
-    // حذف نجوم المرحلة
+  }
 
-    final starsData =
 
-    Map<String,dynamic>.from(
 
-      jsonDecode(
 
-        prefs.getString(levelStarsKey) ?? "{}",
 
-      ),
+
+  static Future<int> addIslandAd(
+
+      String islandId,
+
+      ) async {
+
+
+
+    final prefs = await _prefs;
+
+
+
+    final data =
+
+    jsonDecode(
+
+      prefs.getString(
+
+        islandAdsKey,
+
+      ) ?? "{}",
 
     );
 
 
 
-    starsData.remove(levelKey);
+    int count =
+
+    data[islandId] ?? 0;
+
+
+
+    count++;
+
+
+
+    data[islandId] = count;
 
 
 
     await prefs.setString(
 
-      levelStarsKey,
+      islandAdsKey,
 
-      jsonEncode(starsData),
+      jsonEncode(data),
 
     );
 
 
-  }
 
+    return count;
 
-//==================================================
-// حذف إكمال مرحلة
-//==================================================
-
-static Future<void> removeCompletedLevel(
-
-    String levelKey,
-
-    ) async {
-
-
-  final prefs = await _prefs;
-
-
-  final levels =
-
-  prefs.getStringList(
-
-    completedLevelsKey,
-
-  ) ?? [];
-
-
-
-  levels.remove(levelKey);
-
-
-
-  await prefs.setStringList(
-
-    completedLevelsKey,
-
-    levels,
-
-  );
-
-
-}
-
-
-
-
-
-//==================================================
-// حذف نجوم مرحلة
-//==================================================
-
-static Future<void> removeLevelStars(
-
-    String levelKey,
-
-    ) async {
-
-
-  final prefs = await _prefs;
-
-
-
-  final data = Map<String,dynamic>.from(
-
-    jsonDecode(
-
-      prefs.getString(levelStarsKey) ?? "{}",
-
-    ),
-
-  );
-
-
-
-  data.remove(levelKey);
-
-
-
-  await prefs.setString(
-
-    levelStarsKey,
-
-    jsonEncode(data),
-
-  );
-
-
-}
-
-//==================================================
-// ❤️ المفضلة
-//==================================================
-
-static const String favoritePuzzlesKey =
-    "puzzle_favorite_puzzles";
-
-
-static Future<List<String>> getFavoritePuzzles() async {
-
-  final prefs = await _prefs;
-
-  return prefs.getStringList(favoritePuzzlesKey) ?? [];
-
-}
-
-
-static Future<void> saveFavoritePuzzles(
-    List<String> list,
-    ) async {
-
-  final prefs = await _prefs;
-
-  await prefs.setStringList(
-    favoritePuzzlesKey,
-    list,
-  );
-
-}
-
-
-
-
-
-
-//==================================================
-// 🎮 حالة اللعب الحالية
-//==================================================
-
-
-static const String gameStateKey =
-    "puzzle_game_state";
-
-
-
-static Future<void> saveGameState({
-
-  required String worldId,
-
-  required String levelId,
-
-  required int moves,
-
-  required int seconds,
-
-}) async {
-
-
-  final prefs = await _prefs;
-
-
-  final data = {
-
-    "worldId": worldId,
-
-    "levelId": levelId,
-
-    "moves": moves,
-
-    "seconds": seconds,
-
-  };
-
-
-  await prefs.setString(
-    gameStateKey,
-    jsonEncode(data),
-  );
-
-
-}
-
-
-
-static Future<Map<String,dynamic>?>
-getGameState() async {
-
-
-  final prefs = await _prefs;
-
-
-  final value =
-      prefs.getString(gameStateKey);
-
-
-  if(value == null){
-
-    return null;
-
-  }
-
-
-  return Map<String,dynamic>.from(
-    jsonDecode(value),
-  );
-
-
-}
-
-
-
-static Future<void> clearGameState() async {
-
-
-  final prefs = await _prefs;
-
-
-  await prefs.remove(
-    gameStateKey,
-  );
-
-
-}
-
-//==================================================
-// 🎯 أعلى نتيجة
-//==================================================
-
-static const String highScoresKey =
-    "puzzle_high_scores";
-
-
-
-static Future<int> getHighScore(
-    String levelId,
-    ) async {
-
-
-  final prefs = await _prefs;
-
-
-  final data =
-      jsonDecode(
-        prefs.getString(highScoresKey) ?? "{}",
-      );
-
-
-  return data[levelId] ?? 0;
-
-
-}
-
-
-
-static Future<void> saveHighScore(
-    String levelId,
-    int score,
-    ) async {
-
-
-  final prefs = await _prefs;
-
-
-  final data =
-      jsonDecode(
-        prefs.getString(highScoresKey) ?? "{}",
-      );
-
-
-  data[levelId] = score;
-
-
-  await prefs.setString(
-    highScoresKey,
-    jsonEncode(data),
-  );
-
-
-}
-
-
-//==================================================
-// ⏱ وقت اللعب
-//==================================================
-
-static const String playTimeKey =
-    "puzzle_play_time";
-
-
-
-static Future<void> addPlayTime(
-    int seconds,
-    ) async {
-
-
-  final prefs = await _prefs;
-
-
-  final current =
-      prefs.getInt(playTimeKey) ?? 0;
-
-
-  await prefs.setInt(
-    playTimeKey,
-    current + seconds,
-  );
-
-
-}
-
-
-//==================================================
-// 👤 الملف الشخصي
-//==================================================
-
-static const String playerNameKey =
-    "puzzle_player_name";
-
-
-static Future<void> savePlayerName(
-    String name,
-    ) async {
-
-
-  final prefs = await _prefs;
-
-
-  await prefs.setString(
-    playerNameKey,
-    name,
-  );
-
-
-}
-
-
-
-static Future<String> getPlayerName() async {
-
-
-  final prefs = await _prefs;
-
-
-  return prefs.getString(playerNameKey) ?? "لاعب";
-
-
-}
-
-
-//==================================================
-// 🌐 اللغة
-//==================================================
-
-static const String languageKey =
-    "puzzle_language";
-
-
-static Future<void> saveLanguage(
-    String language,
-    ) async {
-
-
-  final prefs = await _prefs;
-
-
-  await prefs.setString(
-    languageKey,
-    language,
-  );
-
-
-}
-
-
-
-static Future<String> getLanguage() async {
-
-
-  final prefs = await _prefs;
-
-
-  return prefs.getString(languageKey) ?? "ar";
-
-
-}
-
-
-//==================================================
-// ⚙️ الإعدادات
-//==================================================
-
-static const String soundKey =
-    "puzzle_sound";
-
-static const String vibrationKey =
-    "puzzle_vibration";
-
-static const String darkModeKey =
-    "puzzle_dark_mode";
-
-
-static Future<bool> isSoundEnabled() async {
-
-  return (await _prefs).getBool(soundKey) ?? true;
-
-}
-
-
-
-static Future<void> saveSoundEnabled(
-    bool value,
-    ) async {
-
-  await (await _prefs)
-      .setBool(soundKey,value);
-
-}
-
-
-
-static Future<bool> isVibrationEnabled() async {
-
-  return (await _prefs)
-      .getBool(vibrationKey) ?? true;
-
-}
-
-
-
-static Future<void> saveVibrationEnabled(
-    bool value,
-    ) async {
-
-  await (await _prefs)
-      .setBool(vibrationKey,value);
-
-}
-
-
-
-static Future<bool> isDarkMode() async {
-
-  return (await _prefs)
-      .getBool(darkModeKey) ?? false;
-
-}
-
-
-
-static Future<void> saveDarkMode(
-    bool value,
-    ) async {
-
-  await (await _prefs)
-      .setBool(darkModeKey,value);
-
-}
-
-//==================================================
-// 🔔 نظام الإشعارات
-//==================================================
-
-static const String notificationsKey =
-    "puzzle_notifications";
-
-
-static Future<List<Map<String,dynamic>>>
-getNotifications() async {
-
-  final prefs = await _prefs;
-
-  final data =
-      jsonDecode(
-        prefs.getString(notificationsKey) ?? "[]",
-      );
-
-  return List<Map<String,dynamic>>.from(
-    data,
-  );
-
-}
-
-
-
-static Future<void> saveNotifications(
-    List<Map<String,dynamic>> notifications,
-    ) async {
-
-  final prefs = await _prefs;
-
-  await prefs.setString(
-    notificationsKey,
-    jsonEncode(notifications),
-  );
-
-}
-//==================================================
-// ⭐ التقييم
-//==================================================
-
-static const String ratingKey =
-    "puzzle_rating";
-
-
-static Future<bool> isRated() async {
-
-  return (await _prefs)
-      .containsKey(ratingKey);
-
-}
-
-
-
-static Future<void> saveRating(
-    int rating,
-    ) async {
-
-  await (await _prefs)
-      .setInt(ratingKey,rating);
-
-}
-
-
-
-static Future<int> getRating() async {
-
-  return (await _prefs)
-      .getInt(ratingKey) ?? 0;
-
-}
-
-
-
-static Future<void> resetRating() async {
-
-  await (await _prefs)
-      .remove(ratingKey);
-
-}
-
-
-//==================================================
-// 📚 البرنامج التعليمي
-//==================================================
-
-static const String tutorialKey =
-    "puzzle_tutorial";
-
-
-static Future<bool> isTutorialCompleted() async {
-
-  return (await _prefs)
-      .getBool(tutorialKey) ?? false;
-
-}
-
-
-
-static Future<void> completeTutorial() async {
-
-  await (await _prefs)
-      .setBool(tutorialKey,true);
-
-}
-
-
-
-static Future<void> resetTutorial() async {
-
-  await (await _prefs)
-      .remove(tutorialKey);
-
-}
-//==================================================
-// 🔄 إعادة ضبط التقدم فقط
-//==================================================
-
-
-static Future<void> resetProgress() async {
-
-  final prefs = await _prefs;
-
-
-  await prefs.remove(progressKey);
-
-  await prefs.remove(completedLevelsKey);
-
-  await prefs.remove(unlockedLevelsKey);
-
-  await prefs.remove(levelStarsKey);
-
-  await prefs.remove(lastWorldKey);
-
-  await prefs.remove(lastLevelKey);
-
-
-  // 🎁 حذف المكافآت المستلمة
-  await prefs.remove(claimedRewardsKey);
-
-
-
-
-  // 🎮 حذف حالة اللعب الحالية
-  await prefs.remove(gameStateKey);
-
-
-}
-
-//==================================================
-// 🗑️ حذف جميع بيانات اللاعب
-//==================================================
-
-
-static Future<void> resetAll() async {
-
-  final prefs = await _prefs;
-
-
-  await prefs.clear();
-
-
-}
-  
-static const String unlockedIslandsKey =
-    "puzzle_unlocked_islands";
-
-
-static const String islandAdsKey =
-    "puzzle_island_ads";
-
-
-
-static Future<void> unlockIsland(
-    String islandId,
-    ) async {
-
-
-  final prefs = await _prefs;
-
-
-  final islands =
-      prefs.getStringList(
-        unlockedIslandsKey,
-      ) ?? [];
-
-
-
-  if(!islands.contains(islandId)){
-
-
-    islands.add(islandId);
-
-
-    await prefs.setStringList(
-      unlockedIslandsKey,
-      islands,
-    );
-
-
-  }
-
-}
-
-static Future<bool> isIslandUnlocked(
-    String islandId,
-    ) async {
-
-
-  final prefs = await _prefs;
-
-
-  final islands =
-      prefs.getStringList(
-        unlockedIslandsKey,
-      ) ?? [];
-
-
-
-  // جزيرة الحيوانات مفتوحة دائماً
-
-  if(islandId == "animals"){
-
-    return true;
 
   }
 
 
 
-  return islands.contains(islandId);
-
-
-}
-
-
-static Future<int> getIslandAds(
-    String islandId,
-    ) async {
-
-
-  final prefs = await _prefs;
-
-
-  final data =
-      jsonDecode(
-        prefs.getString(islandAdsKey) ?? "{}",
-      );
-
-
-  return data[islandId] ?? 0;
-
-
-}
 
 
 
-static Future<int> addIslandAd(
-    String islandId,
-    ) async {
+  //==================================================
+  // 📺 فتح الجزيرة بالإعلانات
+  //==================================================
 
 
-  final prefs = await _prefs;
+  static int getIslandRequiredAds(
 
+      String islandId,
 
-  final data =
-      jsonDecode(
-        prefs.getString(islandAdsKey) ?? "{}",
-      );
-
-
-
-  int count =
-      data[islandId] ?? 0;
+      ) {
 
 
 
-  count++;
+    switch(islandId){
 
 
-  data[islandId] = count;
+      case "animals":
+
+        return 0;
+
+
+      case "cars":
+
+        return 5;
+
+
+      case "nature":
+
+        return 10;
+
+
+      case "landmarks":
+
+        return 15;
+
+
+      case "space":
+
+        return 20;
 
 
 
-  await prefs.setString(
-    islandAdsKey,
-    jsonEncode(data),
-  );
+      default:
+
+        return 9999;
 
 
-  return count;
+    }
 
 
-}
-//==================================================
-// 🏝️ نظام متطلبات فتح الجزر
-//==================================================
-
-
-static int getIslandRequiredAds(
-    String islandId,
-) {
-
-  switch (islandId) {
-
-    case "animals":
-      return 0;
-
-    case "cars":
-      return 5;
-
-    case "nature":
-      return 10;
-
-    case "landmarks":
-      return 15;
-
-    case "space":
-      return 20;
-
-    default:
-      return 9999;
   }
-}
-
-
-static String? getPreviousIsland(
-    String islandId,
-) {
-
-  switch (islandId) {
-
-    case "cars":
-      return "animals";
-
-    case "nature":
-      return "cars";
-
-    case "landmarks":
-      return "nature";
-
-    case "space":
-      return "landmarks";
-
-    default:
-      return null;
-  }
-}
-//==================================================
-// 📺 إضافة مشاهدة إعلان وفتح الجزيرة تلقائياً
-//==================================================
-
-
-static Future<bool> watchIslandAd(
-    String islandId,
-    ) async {
-
-
-  final current =
-      await addIslandAd(islandId);
 
 
 
-  final required =
-      getIslandRequiredAds(islandId);
 
 
 
-  if(current >= required){
+  static Future<bool> watchIslandAd(
+
+      String islandId,
+
+      ) async {
 
 
-    await unlockIsland(
+
+    final count =
+
+    await addIslandAd(
+
       islandId,
+
     );
 
 
-    return true;
+
+    final required =
+
+    getIslandRequiredAds(
+
+      islandId,
+
+    );
+
+
+
+    if(count >= required){
+
+
+      await unlockIsland(
+
+        islandId,
+
+      );
+
+
+      return true;
+
+
+    }
+
+
+
+    return false;
 
 
   }
 
 
-  return false;
 
 
-}
-static Future<void> unlockIslandByAds(
-    String islandId,
-    ) async {
+
+  //==================================================
+  // ⚙️ الإعدادات
+  //==================================================
 
 
-  await unlockIsland(
-    islandId,
-  );
+  static const String soundKey =
+
+      "puzzle_sound";
 
 
-}
+  static const String vibrationKey =
+
+      "puzzle_vibration";
+
+
+  static const String darkModeKey =
+
+      "puzzle_dark_mode";
+
+
+
+
+
+  static Future<bool> isSoundEnabled() async {
+
+
+    return (await _prefs)
+
+        .getBool(soundKey) ?? true;
+
+
+  }
+
+
+
+
+
+  static Future<void> saveSoundEnabled(
+
+      bool value,
+
+      ) async {
+
+
+    await (await _prefs)
+
+        .setBool(soundKey,value);
+
+
+  }
+
+
+
+
+
+
+  static Future<bool> isVibrationEnabled() async {
+
+
+    return (await _prefs)
+
+        .getBool(vibrationKey) ?? true;
+
+
+  }
+
+
+
+
+
+  static Future<void> saveVibrationEnabled(
+
+      bool value,
+
+      ) async {
+
+
+    await (await _prefs)
+
+        .setBool(
+
+          vibrationKey,
+
+          value,
+
+        );
+
+
+  }
+
+
+
+
+
+  static Future<bool> isDarkMode() async {
+
+
+    return (await _prefs)
+
+        .getBool(darkModeKey) ?? false;
+
+
+  }
+
+
+
+
+
+  static Future<void> saveDarkMode(
+
+      bool value,
+
+      ) async {
+
+
+    await (await _prefs)
+
+        .setBool(
+
+          darkModeKey,
+
+          value,
+
+        );
+
+
+  }
+
+
+
+
+
+
+  //==================================================
+  // 🔄 إعادة ضبط التقدم
+  //==================================================
+
+
+  static Future<void> resetProgress() async {
+
+
+    final prefs = await _prefs;
+
+
+
+    await prefs.remove(progressKey);
+
+    await prefs.remove(completedLevelsKey);
+
+    await prefs.remove(unlockedLevelsKey);
+
+    await prefs.remove(levelStarsKey);
+
+    await prefs.remove(claimedRewardsKey);
+
+    await prefs.remove(lastWorldKey);
+
+    await prefs.remove(lastLevelKey);
+
+    await prefs.remove(unlockedIslandsKey);
+
+    await prefs.remove(islandAdsKey);
+
+    await prefs.remove(gameStateKey);
+
+
+  }
+
+
+
+
+
+  //==================================================
+  // 🗑️ حذف كل بيانات اللاعب
+  //==================================================
+
+
+  static Future<void> resetAll() async {
+
+
+    final prefs = await _prefs;
+
+
+    await prefs.clear();
+
+
+  }
+
 
 }
