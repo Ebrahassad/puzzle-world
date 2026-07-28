@@ -409,29 +409,12 @@ class _IslandScreenState
 
 
 
-        // الحيوانات مفتوحة دائماً
+// نظام فتح الجزر
 
-        if(widget.island.id == "animals"){
-
-
-          unlocked = true;
-
-
-        }
-
-        else{
-
-
-  unlocked =
-
-      islandOpened ||
-
-      stars >= widget.island.requiredStars ||
-
-      widget.island.id == "animals";
-
-
-}
+unlocked =
+    islandOpened ||
+    stars >= widget.island.requiredStars ||
+    widget.island.id == "animals";
 
 
       });
