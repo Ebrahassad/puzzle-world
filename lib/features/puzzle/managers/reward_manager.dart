@@ -53,33 +53,9 @@ class RewardManager {
 
     try {
 
-      await PuzzleProgressManager.addCoins(amount);
-
-    } catch (_) {}
-
-  }
-
-
-
-
-
-  static Future<void> removeCoins(
-
-      int amount,
-
-      ) async {
-
-
-    if(amount <= 0){
-
-      return;
-
-    }
-
-
-    try {
-
-      await PuzzleProgressManager.addCoins(-amount);
+      await PuzzleProgressManager.addCoins(
+        amount,
+      );
 
     } catch (_) {}
 
@@ -133,33 +109,9 @@ class RewardManager {
 
     try {
 
-      await PuzzleProgressManager.addGems(amount);
-
-    } catch (_) {}
-
-  }
-
-
-
-
-
-  static Future<void> removeGems(
-
-      int amount,
-
-      ) async {
-
-
-    if(amount <= 0){
-
-      return;
-
-    }
-
-
-    try {
-
-      await PuzzleProgressManager.addGems(-amount);
+      await PuzzleProgressManager.addGems(
+        amount,
+      );
 
     } catch (_) {}
 
@@ -213,7 +165,9 @@ class RewardManager {
 
     try {
 
-      await PuzzleProgressManager.addStars(amount);
+      await PuzzleProgressManager.addStars(
+        amount,
+      );
 
     } catch (_) {}
 
@@ -226,6 +180,39 @@ class RewardManager {
 
 
 
+  //==================================================
+  // 🎁 تطبيق المكافأة الموحد
+  //==================================================
+
+
+  static Future<void> applyReward(
+
+      RewardResultModel reward,
+
+      ) async {
+
+
+    await addCoins(
+      reward.coins,
+    );
+
+
+    await addGems(
+      reward.gems,
+    );
+
+
+    await addStars(
+      reward.stars,
+    );
+
+
+    await PuzzleProgressManager.addHints(
+      reward.hints,
+    );
+
+
+  }
 
   //==================================================
   // 🎮 مكافأة إنهاء البازل
@@ -256,8 +243,6 @@ class RewardManager {
 
 
 
-
-
       if(claimed){
 
         return null;
@@ -268,8 +253,7 @@ class RewardManager {
 
 
 
-
-      RewardResultModel reward;
+      late RewardResultModel reward;
 
 
 
@@ -280,6 +264,7 @@ class RewardManager {
 
         case 1:
 
+
           reward = const RewardResultModel(
 
             coins:50,
@@ -288,12 +273,14 @@ class RewardManager {
 
           );
 
+
           break;
 
 
 
 
         case 2:
+
 
           reward = const RewardResultModel(
 
@@ -303,12 +290,14 @@ class RewardManager {
 
           );
 
+
           break;
 
 
 
 
         case 3:
+
 
           reward = const RewardResultModel(
 
@@ -320,12 +309,14 @@ class RewardManager {
 
           );
 
+
           break;
 
 
 
 
         default:
+
 
           reward = const RewardResultModel(
 
@@ -337,6 +328,7 @@ class RewardManager {
 
           );
 
+
           break;
 
 
@@ -347,7 +339,11 @@ class RewardManager {
 
 
 
-      await _applyReward(reward);
+      await applyReward(
+
+        reward,
+
+      );
 
 
 
@@ -387,45 +383,8 @@ class RewardManager {
 
 
 
-
   //==================================================
-  // تطبيق المكافأة
-  //==================================================
-
-
-  static Future<void> _applyReward(
-
-      RewardResultModel reward,
-
-      ) async {
-
-
-    await addCoins(
-
-      reward.coins,
-
-    );
-
-
-    await addGems(
-
-      reward.gems,
-
-    );
-
-
-    await addStars(
-
-      reward.stars,
-
-    );
-
-
-  }
-
-
-  //==================================================
-  // 🎬 مكافأة مشاهدة الإعلان
+  // 📺 مكافأة مشاهدة الإعلان
   //==================================================
 
 
@@ -449,7 +408,7 @@ class RewardManager {
 
 
 
-      await _applyReward(
+      await applyReward(
 
         reward,
 
@@ -473,7 +432,6 @@ class RewardManager {
 
 
   }
-
 
 
 
@@ -508,54 +466,35 @@ class RewardManager {
 
       return reward;
 
-
     }
 
 
   }
-
-
-
-
-
-
-
-
 
   //==================================================
   // 🎁 المكافأة اليومية
   //==================================================
 
 
-  static Future<bool>
+  static const String dailyRewardKey =
+      "puzzle_daily_reward";
 
-  canClaimDailyReward() async {
+
+
+
+  static Future<bool> canClaimDailyReward() async {
 
 
     try {
 
 
       final prefs =
-
-      await SharedPreferences.getInstance();
-
-
-
-
-
-      const key =
-
-      "puzzle_daily_reward";
-
-
+          await SharedPreferences.getInstance();
 
 
 
       final saved =
-
-      prefs.getString(key);
-
-
+          prefs.getString(dailyRewardKey);
 
 
 
@@ -570,32 +509,30 @@ class RewardManager {
 
 
 
-
-
       final last =
+          DateTime.tryParse(saved);
 
-      DateTime.parse(saved);
 
+
+      if(last == null){
+
+        return true;
+
+      }
 
 
 
 
 
       final now =
-
-      DateTime.now();
-
+          DateTime.now();
 
 
 
 
 
-      return
-
-          last.year != now.year ||
-
+      return last.year != now.year ||
           last.month != now.month ||
-
           last.day != now.day;
 
 
@@ -618,7 +555,6 @@ class RewardManager {
 
 
 
-
   static Future<RewardResultModel?>
 
   claimDailyReward() async {
@@ -628,8 +564,7 @@ class RewardManager {
 
 
       final available =
-
-      await canClaimDailyReward();
+          await canClaimDailyReward();
 
 
 
@@ -646,9 +581,9 @@ class RewardManager {
 
 
 
-      final prefs =
 
-      await SharedPreferences.getInstance();
+      final prefs =
+          await SharedPreferences.getInstance();
 
 
 
@@ -657,7 +592,7 @@ class RewardManager {
 
       await prefs.setString(
 
-        "puzzle_daily_reward",
+        dailyRewardKey,
 
         DateTime.now()
 
@@ -687,14 +622,11 @@ class RewardManager {
 
 
 
-
-
-      await _applyReward(
+      await applyReward(
 
         reward,
 
       );
-
 
 
 
@@ -725,7 +657,7 @@ class RewardManager {
 
 
   //==================================================
-  // 🧹 إعادة ضبط المكافأة اليومية
+  // 🧹 حذف المكافأة اليومية
   //==================================================
 
 
@@ -738,16 +670,14 @@ class RewardManager {
 
 
       final prefs =
-
-      await SharedPreferences.getInstance();
-
+          await SharedPreferences.getInstance();
 
 
 
 
       await prefs.remove(
 
-        "puzzle_daily_reward",
+        dailyRewardKey,
 
       );
 
@@ -760,31 +690,60 @@ class RewardManager {
   }
 
 
+
+
+
+
+
+
   //==================================================
-  // 📦 جميع بيانات المكافآت
+  // 📦 قراءة جميع المكافآت الحالية
   //==================================================
 
-  static Future<RewardResultModel> getReward() async {
+
+  static Future<RewardResultModel>
+
+  getReward() async {
+
 
     try {
 
+
       return RewardResultModel(
 
-        coins: await getCoins(),
+        coins:
 
-        gems: await getGems(),
+        await getCoins(),
 
-        stars: await getStars(),
+
+
+        gems:
+
+        await getGems(),
+
+
+
+        stars:
+
+        await getStars(),
+
+
 
       );
 
-    } catch (_) {
+
+
+    }catch(_){
+
 
       return const RewardResultModel();
 
+
     }
 
+
   }
+
 
 
 }
