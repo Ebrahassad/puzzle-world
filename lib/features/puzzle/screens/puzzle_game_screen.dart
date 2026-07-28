@@ -18,7 +18,7 @@ import '../engine/puzzle_piece.dart';
 
 import '../widgets/puzzle_piece_widget.dart';
 import '../widgets/reward_box_widget.dart';
-
+import '../widgets/game_toolbar.dart';
 
 import '../managers/puzzle_hint_manager.dart';
 import '../managers/puzzle_progress_manager.dart';
@@ -121,7 +121,7 @@ class _PuzzleGameScreenState
   int hints = 0;
 
 
-  int earnedStars = 0;
+  
 
 
 
@@ -1440,7 +1440,6 @@ await PuzzleProgressManager.clearProgress();
 
 
 
-earnedStars = 0;
 
 
 
@@ -1466,11 +1465,7 @@ await bgPlayer.stop();
 
 
 
-              stars:
-
-              earnedStars,
-
-
+              stars: 0,
 
               moves:
 
@@ -1627,191 +1622,10 @@ await bgPlayer.stop();
               children:[
 
 
-
-                Container(
-
-
-                  height:65,
-
-
-                  margin:
-
-                  const EdgeInsets.all(10),
-
-
-
-                  padding:
-
-                  const EdgeInsets.symmetric(
-
-                    horizontal:15,
-
-                  ),
-
-
-
-                  decoration:
-
-                  BoxDecoration(
-
-
-                    color:
-
-                    Colors.white,
-
-
-                    borderRadius:
-
-                    BorderRadius.circular(30),
-
-
-
-                    boxShadow:[
-
-
-                      const BoxShadow(
-
-                        color:
-
-                        Colors.black12,
-
-                        blurRadius:8,
-
-                      ),
-
-                    ],
-
-
-                  ),
-
-
-
-
-                  child:
-
-                  Row(
-
-
-                    mainAxisAlignment:
-
-                    MainAxisAlignment.spaceAround,
-
-
-
-                    children:[
-
-
-
-                      Text(
-
-                        "🧩 $moves",
-
-                        style:
-
-                        const TextStyle(
-
-                          fontSize:18,
-
-                          fontWeight:
-
-                          FontWeight.bold,
-
-                        ),
-
-                      ),
-
-
-
-
-                      Text(
-
-                        "⏱ $seconds",
-
-                        style:
-
-                        const TextStyle(
-
-                          fontSize:18,
-
-                          fontWeight:
-
-                          FontWeight.bold,
-
-                        ),
-
-                      ),
-
-
-
-
-
-                      Container(
-
-
-                        key:
-
-                        starKey,
-
-
-                        child:
-
-                        Row(
-
-
-                          children:[
-
-
-
-                            Image.asset(
-
-                              "assets/images/rewards/Star_gold.png",
-
-                              width:28,
-
-                              height:28,
-
-                            ),
-
-
-
-
-                            const SizedBox(
-
-                              width:4,
-
-                            ),
-
-
-
-
-                 const Text(
-  "---",
-
-                              style:
-
-                              const TextStyle(
-
-                                fontSize:18,
-
-                                fontWeight:
-
-                                FontWeight.bold,
-
-                              ),
-
-                            ),
-
-
-
-                          ],
-
-
-
-                        ),
-
-
-
-                      ),
+GameToolbar(
+  logo: "assets/images/logo.png",
+  starKey: starKey,
+),
 
 
 
