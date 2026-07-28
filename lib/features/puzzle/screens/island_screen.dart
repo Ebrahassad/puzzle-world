@@ -839,50 +839,76 @@ class _IslandScreenState
 
 
 
-
-  void watchRewardAd(){
-
+Future<void> watchRewardAd() async {
 
 
-    // سيتم ربط Rewarded AdMob هنا
+  // هنا لاحقاً نضع AdMob Rewarded Ad
 
-    // بعد اكتمال عدد الإعلانات المطلوبة:
 
-    // حفظ فتح الجزيرة في ProgressManager
+  final opened =
+      await PuzzleProgressManager
+          .watchIslandAd(
+            widget.island.id,
+          );
+
+
+
+  final ads =
+      await PuzzleProgressManager
+          .getIslandAds(
+            widget.island.id,
+          );
+
+
+
+  if(opened){
+
+
+    setState((){
+
+      unlocked = true;
+
+    });
 
 
 
     ScaffoldMessenger.of(context)
-
         .showSnackBar(
 
-
-
-      SnackBar(
-
-
+      const SnackBar(
 
         content:Text(
-
-
-
-          "شاهد $requiredAds إعلانات لفتح العالم",
-
-
-
+          "🎉 تم فتح الجزيرة",
         ),
 
-
-
       ),
-
-
 
     );
 
 
+  }
+
+  else{
+
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+
+      SnackBar(
+
+        content:Text(
+          "📺 شاهد $ads / $requiredAds إعلانات",
+        ),
+
+      ),
+
+    );
+
 
   }
+
+
+}
 
   Widget levelButton(int level){
 
