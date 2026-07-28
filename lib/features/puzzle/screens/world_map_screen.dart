@@ -1079,21 +1079,15 @@ Positioned(
 
 
 
-  @override
-  void dispose(){
-
-
+    @override
+  void dispose() {
 
     floatController.dispose();
 
-
-
     backgroundController.dispose();
-
-
 
     super.dispose();
 
-
-
   }
+
+} 
