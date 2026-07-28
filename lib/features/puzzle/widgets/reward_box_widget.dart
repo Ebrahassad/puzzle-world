@@ -69,7 +69,7 @@ class _RewardBoxWidgetState
   late Animation<double> starOpacity;
 
 
-late Animation<Offset> starMove;
+
 
 
   Offset starOffset = Offset.zero;
@@ -247,10 +247,7 @@ late Animation<Offset> starMove;
 
         );
 
-
-  }
-
-starMove =
+    starMove =
     Tween<Offset>(
       begin: Offset.zero,
       end: Offset.zero,
@@ -267,6 +264,11 @@ starMove =
       ),
 
     );
+
+  }
+
+
+
 
 
   void calculateStarPosition(){
