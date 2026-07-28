@@ -760,7 +760,31 @@ class RewardManager {
   }
 
 
+  //==================================================
+  // 📦 جميع بيانات المكافآت
+  //==================================================
 
+  static Future<RewardResultModel> getReward() async {
+
+    try {
+
+      return RewardResultModel(
+
+        coins: await getCoins(),
+
+        gems: await getGems(),
+
+        stars: await getStars(),
+
+      );
+
+    } catch (_) {
+
+      return const RewardResultModel();
+
+    }
+
+  }
 
 
 }
