@@ -436,121 +436,85 @@ await PuzzleProgressManager.saveGameState(
 
   Future<void> doubleReward() async {
 
+  try {
 
-    try {
+    if(adUsed || doubling || reward == null){
+      return;
+    }
 
-
-
-      if(adUsed || doubling || reward == null){
-
-  return;
-
-}
-
-setState((){
-
-  doubling = true;
-
-});
-
-
-
-
-
-
-      final watched =
-
-      await PuzzleRewardAdService
-
-          .watchAdForDoubleReward();
-
-
-
-
-
-
-
-      if(!watched){
-
-
-        return;
-
-
-      }
-
-
-
-
-
-
-
-      final oldReward = reward!;
-
-
-final doubledReward =
-    await RewardManager.doubleReward(oldReward);
-
-
-
-await PuzzleEventService.rewardDoubled(
-  coins: oldReward.coins,
-  gems: oldReward.gems,
-);
-
-
-
-if(!mounted){
-  return;
-}
-
-
-
-setState((){
-
-  reward = doubledReward;
-
-  adUsed = true;
-
-});
-
-
-
-
-
-      setState((){
-
-  reward = oldReward.multiply(2);
-
-  adUsed = true;
-
-});
-
-
-setState((){
-
-  doubling = false;
-
-});
-
-
-
-    }catch(_){
-
-  if(mounted){
 
     setState((){
+      doubling = true;
+    });
+
+
+
+    final watched =
+        await PuzzleRewardAdService
+            .watchAdForDoubleReward();
+
+
+
+    if(!watched){
+
+      setState((){
+        doubling = false;
+      });
+
+      return;
+    }
+
+
+
+    final oldReward = reward!;
+
+
+
+    final doubledReward =
+        await RewardManager.doubleReward(oldReward);
+
+
+
+    await PuzzleEventService.rewardDoubled(
+      coins: oldReward.coins,
+      gems: oldReward.gems,
+    );
+
+
+
+    if(!mounted){
+      return;
+    }
+
+
+
+    setState((){
+
+      reward = doubledReward;
+
+      adUsed = true;
 
       doubling = false;
 
     });
 
+
+
+  }catch(e){
+
+    if(mounted){
+
+      setState((){
+
+        doubling = false;
+
+      });
+
+    }
+
   }
 
 }
-  }
-
-
-
 
 
 
