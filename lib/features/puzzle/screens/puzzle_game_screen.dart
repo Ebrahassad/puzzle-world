@@ -167,7 +167,7 @@ class _PuzzleGameScreenState
 
 
 
-
+final GlobalKey starKey = GlobalKey();
 
 
   double get pieceSize =>
@@ -1624,42 +1624,13 @@ await bgPlayer.stop();
 
 GameToolbar(
   logo: "assets/images/logo.png",
+  starKey: starKey,
 ),
 
 
 
 
-
-                      GestureDetector(
-
-
-                        onTap:
-
-                        usePuzzleHint,
-
-
-
-                        child:
-
-                        Text(
-
-                          "💡 $hints",
-
-                          style:
-
-                          const TextStyle(
-
-                            fontSize:18,
-
-                            fontWeight:
-
-                            FontWeight.bold,
-
-                          ),
-
-                        ),
-
-
+                      
 
                       ),
 
