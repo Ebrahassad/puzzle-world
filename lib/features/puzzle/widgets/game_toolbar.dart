@@ -4,54 +4,29 @@ import '../screens/wallet_screen.dart';
 import '../managers/puzzle_progress_manager.dart';
 
 
-
 class GameToolbar extends StatefulWidget {
 
-
   final String logo;
-
 
   final VoidCallback? onBack;
 
 
-  
-
-
-
-
   const GameToolbar({
-
 
     super.key,
 
-
     required this.logo,
-
-
-    
-
 
     this.onBack,
 
-
   });
-
-
-
-
-
 
 
   @override
   State<GameToolbar> createState() =>
       _GameToolbarState();
 
-
 }
-
-
-
-
 
 
 
@@ -60,35 +35,20 @@ class GameToolbar extends StatefulWidget {
 class _GameToolbarState extends State<GameToolbar>{
 
 
-
-  int stars = 0;
-
   int coins = 0;
 
-  int rewards = 0;
-
-
-
   bool loading = true;
-
-
-
 
 
 
   @override
   void initState(){
 
-
     super.initState();
-
 
     loadToolbarData();
 
-
   }
-
-
 
 
 
@@ -97,37 +57,26 @@ class _GameToolbarState extends State<GameToolbar>{
   Future<void> loadToolbarData() async {
 
 
-
-    final totalStars =
-
-    await PuzzleProgressManager.getTotalStars();
-
-
-
-
     final totalCoins =
-
     await PuzzleProgressManager.getCoins();
 
 
-if(!mounted) return;
+
+    if(!mounted) return;
+
 
     setState((){
 
-
-      stars = totalStars;
-
-
       coins = totalCoins;
 
-
       loading = false;
-
 
     });
 
 
   }
+
+
 
 
 
@@ -138,29 +87,27 @@ if(!mounted) return;
 
     Navigator.push(
 
-
       context,
-
 
       MaterialPageRoute(
 
-
         builder:(_)=> const WalletScreen(),
-
 
       ),
 
-
     ).then((_){
 
-
       loadToolbarData();
-
 
     });
 
 
   }
+
+
+
+
+
 
   void closeGame(BuildContext context){
 
@@ -179,39 +126,31 @@ if(!mounted) return;
 
 
 
+
   void showSettings(BuildContext context){
 
 
     showDialog(
 
-
       context: context,
-
 
       builder:(_){
 
 
         return AlertDialog(
 
-
           title: const Text(
-
             "⚙️ الإعدادات",
-
           ),
-
 
 
           content: Column(
 
-
             mainAxisSize:
-
             MainAxisSize.min,
 
 
             children:[
-
 
 
               const Text(
@@ -220,24 +159,20 @@ if(!mounted) return;
 
                 style: TextStyle(
 
-                  fontWeight: FontWeight.bold,
+                  fontWeight:
+                  FontWeight.bold,
 
                 ),
 
               ),
 
 
-
               const SizedBox(height:10),
 
 
-
               const Text(
-
                 "الإصدار: 1.0.0",
-
               ),
-
 
 
               const SizedBox(height:20),
@@ -245,7 +180,6 @@ if(!mounted) return;
 
 
               ElevatedButton.icon(
-
 
                 onPressed:(){
 
@@ -259,19 +193,22 @@ if(!mounted) return;
                 },
 
 
-                icon: const Icon(
+                icon:
+
+                const Icon(
 
                   Icons.exit_to_app,
 
                 ),
 
 
-                label: const Text(
+                label:
+
+                const Text(
 
                   "إغلاق اللعبة",
 
                 ),
-
 
               ),
 
@@ -288,25 +225,21 @@ if(!mounted) return;
 
             TextButton(
 
-
               onPressed:(){
-
 
                 Navigator.pop(context);
 
-
               },
 
+              child:
 
-              child: const Text(
+              const Text(
 
                 "حسناً",
 
               ),
 
-
             ),
-
 
           ],
 
@@ -316,11 +249,13 @@ if(!mounted) return;
 
       },
 
-
     );
 
 
   }
+
+
+
 
 
 
@@ -337,11 +272,9 @@ if(!mounted) return;
       child: Container(
 
 
-
         margin:
 
         const EdgeInsets.all(12),
-
 
 
 
@@ -363,18 +296,15 @@ if(!mounted) return;
         BoxDecoration(
 
 
-
           color:
 
           Colors.black.withOpacity(0.35),
 
 
 
-
           borderRadius:
 
           BorderRadius.circular(35),
-
 
 
 
@@ -407,10 +337,7 @@ if(!mounted) return;
 
             ),
 
-
           ],
-
-
 
         ),
 
@@ -418,8 +345,8 @@ if(!mounted) return;
 
 
 
-        child: Row(
 
+        child: Row(
 
 
           mainAxisAlignment:
@@ -432,16 +359,11 @@ if(!mounted) return;
 
 
 
-
-
             GestureDetector(
-
 
               onTap:(){
 
-
                 showSettings(context);
-
 
               },
 
@@ -450,27 +372,15 @@ if(!mounted) return;
 
               const Icon(
 
-
-
                 Icons.settings_rounded,
 
-
-
-                color:
-
-                Colors.white,
-
-
+                color:Colors.white,
 
                 size:30,
 
-
               ),
 
-
             ),
-
-
 
 
 
@@ -478,17 +388,13 @@ if(!mounted) return;
 
             Image.asset(
 
-
               widget.logo,
 
-
               height:45,
-
 
               fit:
 
               BoxFit.contain,
-
 
             ),
 
@@ -496,88 +402,18 @@ if(!mounted) return;
 
 
 
+            GestureDetector(
+
+              onTap:(){
+
+                openWallet(context);
+
+              },
 
 
-            Row(
+              child:
 
-
-
-              children:[
-
-
-
-
-
-                
-
-
-
-
-
-                _imageCounterBox(
-
-
-
-                  image:
-
-                  "assets/images/rewards/reward_box.png",
-
-
-
-                  value:
-
-                  rewards,
-
-
-
-                ),
-
-
-
-
-
-
-
-                const SizedBox(width:8),
-
-
-
-
-
-
-
-                GestureDetector(
-
-
-
-                  onTap:(){
-
-
-
-                    openWallet(context);
-
-
-
-                  },
-
-
-
-                  child:
-
-                  _coinBox(
-
-                    coins,
-
-                  ),
-
-
-
-                ),
-
-
-
-              ],
-
+              _coinBox(coins),
 
             ),
 
@@ -589,196 +425,10 @@ if(!mounted) return;
         ),
 
 
-
       ),
 
 
     );
-
-
-  }
-
-  Widget _imageCounterBox({
-
-
-
-    required String image,
-
-
-    required int value,
-
-
-
-  }){
-
-
-
-    return Container(
-
-
-
-      padding:
-
-      const EdgeInsets.symmetric(
-
-
-
-        horizontal:8,
-
-
-
-        vertical:5,
-
-
-
-      ),
-
-
-
-
-
-      decoration:
-
-      BoxDecoration(
-
-
-
-        color:
-
-        Colors.white24,
-
-
-
-        borderRadius:
-
-        BorderRadius.circular(18),
-
-
-
-      ),
-
-
-
-
-
-      child:Row(
-
-
-
-        mainAxisSize:
-
-        MainAxisSize.min,
-
-
-
-        children:[
-
-
-
-          Image.asset(
-
-
-
-            image,
-
-
-
-            width:24,
-
-
-
-            height:24,
-
-
-
-            errorBuilder:
-
-                (_,__,___){
-
-
-
-              return const Icon(
-
-
-
-                Icons.star,
-
-
-                color:
-
-                Colors.yellow,
-
-
-                size:24,
-
-
-
-              );
-
-
-            },
-
-
-          ),
-
-
-
-
-
-          const SizedBox(width:4),
-
-
-
-
-
-          Text(
-
-
-
-            "$value",
-
-
-
-            style:
-
-            const TextStyle(
-
-
-
-              color:
-
-              Colors.white,
-
-
-
-              fontSize:16,
-
-
-
-              fontWeight:
-
-              FontWeight.bold,
-
-
-
-            ),
-
-
-
-          ),
-
-
-
-        ],
-
-
-
-      ),
-
-
-
-    );
-
 
 
   }
@@ -793,28 +443,18 @@ if(!mounted) return;
   Widget _coinBox(int value){
 
 
-
     return Container(
-
 
 
       padding:
 
       const EdgeInsets.symmetric(
 
+        horizontal:10,
 
-
-        horizontal:8,
-
-
-
-        vertical:5,
-
-
+        vertical:6,
 
       ),
-
-
 
 
 
@@ -823,11 +463,9 @@ if(!mounted) return;
       BoxDecoration(
 
 
-
         color:
 
         Colors.white24,
-
 
 
         borderRadius:
@@ -835,15 +473,13 @@ if(!mounted) return;
         BorderRadius.circular(18),
 
 
-
       ),
 
 
 
+      child:
 
-
-      child:Row(
-
+      Row(
 
 
         mainAxisSize:
@@ -851,78 +487,47 @@ if(!mounted) return;
         MainAxisSize.min,
 
 
-
         children:[
-
 
 
           const Text(
 
-
-
             "🪙",
-
-
 
             style:
 
             TextStyle(
 
-
-
               fontSize:22,
 
-
-
             ),
-
-
 
           ),
 
 
 
-
-
-          const SizedBox(width:4),
-
-
+          const SizedBox(width:5),
 
 
 
           Text(
 
-
-
             "$value",
-
 
 
             style:
 
             const TextStyle(
 
-
-
-              color:
-
-              Colors.white,
-
-
+              color:Colors.white,
 
               fontSize:16,
-
-
 
               fontWeight:
 
               FontWeight.bold,
 
-
-
             ),
-
-
 
           ),
 
@@ -931,17 +536,13 @@ if(!mounted) return;
         ],
 
 
-
       ),
-
 
 
     );
 
 
-
   }
-
 
 
 
@@ -952,12 +553,9 @@ if(!mounted) return;
   @override
   void dispose(){
 
-
     super.dispose();
 
-
   }
-
 
 
 }
