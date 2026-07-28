@@ -1359,16 +1359,12 @@ Navigator.pushReplacement(
       result:
 
       GameResultModel(
-
-        stars:
-
-        reward?.stars ?? 3,
-
-        moves:moves,
-
-        seconds:seconds,
-
-      ),
+  stars: reward?.stars ?? 3,
+  moves: moves,
+  time: Duration(
+    seconds: seconds,
+  ),
+),
 
 
             difficulty:
