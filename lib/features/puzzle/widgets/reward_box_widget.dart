@@ -69,7 +69,7 @@ class _RewardBoxWidgetState
   late Animation<double> starOpacity;
 
 
-
+late Animation<Offset> starMove;
 
 
   Offset starOffset = Offset.zero;
@@ -249,6 +249,24 @@ class _RewardBoxWidgetState
 
 
   }
+
+starMove =
+    Tween<Offset>(
+      begin: Offset.zero,
+      end: Offset.zero,
+    ).animate(
+
+      CurvedAnimation(
+
+        parent:
+        starController,
+
+        curve:
+        Curves.easeInOut,
+
+      ),
+
+    );
 
 
   void calculateStarPosition(){
@@ -697,25 +715,21 @@ class _RewardBoxWidgetState
 
                   return Transform.translate(
 
+  offset:
+
+  Offset(
+
+    starOffset.dx *
+
+    starController.value,
 
 
-                    offset:
+    (starOffset.dy - 120) *
 
-                    Offset(
-
-                      starOffset.dx *
-
-                      starController.value,
+    starController.value,
 
 
-                      starOffset.dy *
-
-                      starController.value,
-
-
-                    ),
-
-
+  ),
 
 
                     child:
