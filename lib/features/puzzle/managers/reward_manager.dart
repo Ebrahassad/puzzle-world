@@ -44,6 +44,13 @@ class RewardManager {
       ) async {
 
 
+    if(amount <= 0){
+
+      return;
+
+    }
+
+
     try {
 
       await PuzzleProgressManager.addCoins(amount);
@@ -61,6 +68,13 @@ class RewardManager {
       int amount,
 
       ) async {
+
+
+    if(amount <= 0){
+
+      return;
+
+    }
 
 
     try {
@@ -110,6 +124,13 @@ class RewardManager {
       ) async {
 
 
+    if(amount <= 0){
+
+      return;
+
+    }
+
+
     try {
 
       await PuzzleProgressManager.addGems(amount);
@@ -127,6 +148,13 @@ class RewardManager {
       int amount,
 
       ) async {
+
+
+    if(amount <= 0){
+
+      return;
+
+    }
 
 
     try {
@@ -176,6 +204,13 @@ class RewardManager {
       ) async {
 
 
+    if(amount <= 0){
+
+      return;
+
+    }
+
+
     try {
 
       await PuzzleProgressManager.addStars(amount);
@@ -183,6 +218,13 @@ class RewardManager {
     } catch (_) {}
 
   }
+
+
+
+
+
+
+
 
 
   //==================================================
@@ -227,11 +269,7 @@ class RewardManager {
 
 
 
-      int coins;
-
-      int gems = 0;
-
-      int stars;
+      RewardResultModel reward;
 
 
 
@@ -242,9 +280,13 @@ class RewardManager {
 
         case 1:
 
-          coins = 50;
+          reward = const RewardResultModel(
 
-          stars = 1;
+            coins:50,
+
+            stars:1,
+
+          );
 
           break;
 
@@ -253,9 +295,13 @@ class RewardManager {
 
         case 2:
 
-          coins = 100;
+          reward = const RewardResultModel(
 
-          stars = 2;
+            coins:100,
+
+            stars:2,
+
+          );
 
           break;
 
@@ -264,11 +310,15 @@ class RewardManager {
 
         case 3:
 
-          coins = 150;
+          reward = const RewardResultModel(
 
-          gems = 1;
+            coins:150,
 
-          stars = 3;
+            gems:1,
+
+            stars:3,
+
+          );
 
           break;
 
@@ -277,11 +327,15 @@ class RewardManager {
 
         default:
 
-          coins = 200;
+          reward = const RewardResultModel(
 
-          gems = 2;
+            coins:200,
 
-          stars = 5;
+            gems:2,
+
+            stars:5,
+
+          );
 
           break;
 
@@ -293,26 +347,7 @@ class RewardManager {
 
 
 
-
-      await addCoins(coins);
-
-
-
-
-
-      if(gems > 0){
-
-        await addGems(gems);
-
-      }
-
-
-
-
-
-
-      await addStars(stars);
-
+      await _applyReward(reward);
 
 
 
@@ -330,21 +365,11 @@ class RewardManager {
 
 
 
-
-
-      return RewardResultModel(
-
-        coins: coins,
-
-        gems: gems,
-
-        stars: stars,
-
-      );
+      return reward;
 
 
 
-    } catch (_) {
+    }catch(_){
 
 
       return null;
@@ -364,47 +389,101 @@ class RewardManager {
 
 
   //==================================================
-// 🎬 مكافأة مشاهدة الإعلان
-//==================================================
+  // تطبيق المكافأة
+  //==================================================
 
-static Future<RewardResultModel?>
-rewardedAdBonus() async {
 
-  try {
+  static Future<void> _applyReward(
 
-    const reward = RewardResultModel(
-      coins: 100,
-      gems: 0,
-      stars: 1,
-    );
+      RewardResultModel reward,
+
+      ) async {
+
 
     await addCoins(
+
       reward.coins,
+
     );
+
+
+    await addGems(
+
+      reward.gems,
+
+    );
+
 
     await addStars(
+
       reward.stars,
+
     );
 
-    if (reward.gems > 0) {
-      await addGems(
-        reward.gems,
-      );
-    }
-
-    return reward;
-
-  } catch (_) {
-
-    return null;
 
   }
 
-}
+
+  //==================================================
+  // 🎬 مكافأة مشاهدة الإعلان
+  //==================================================
+
+
+  static Future<RewardResultModel?>
+
+  rewardedAdBonus() async {
+
+
+    try {
+
+
+      const reward = RewardResultModel(
+
+        coins:100,
+
+        stars:1,
+
+      );
+
+
+
+
+
+      await _applyReward(
+
+        reward,
+
+      );
+
+
+
+
+
+      return reward;
+
+
+
+    }catch(_){
+
+
+      return null;
+
+
+    }
+
+
+  }
+
+
+
+
+
+
+
 
 
   //==================================================
-  // ⭐ مضاعفة مكافأة الفوز بعد الإعلان
+  // ⭐ مضاعفة المكافأة
   //==================================================
 
 
@@ -420,70 +499,11 @@ rewardedAdBonus() async {
     try {
 
 
-      final doubled = RewardResultModel(
-
-        coins: reward.coins * 2,
-
-        gems: reward.gems * 2,
-
-        stars: reward.stars * 2,
-
-      );
+      return reward.multiply(2);
 
 
 
-
-
-static Future<RewardResultModel>
-
-doubleReward(
-
-    RewardResultModel reward,
-
-    ) async {
-
-
-  try {
-
-
-    final doubled = RewardResultModel(
-
-      coins: reward.coins * 2,
-
-      gems: reward.gems * 2,
-
-      stars: reward.stars * 2,
-
-    );
-
-
-
-    return doubled;
-
-
-
-  } catch (_) {
-
-
-    return reward;
-
-
-  }
-
-
-}
-
-
-
-
-
-
-
-      return doubled;
-
-
-
-    } catch (_) {
+    }catch(_){
 
 
       return reward;
@@ -493,6 +513,14 @@ doubleReward(
 
 
   }
+
+
+
+
+
+
+
+
 
   //==================================================
   // 🎁 المكافأة اليومية
@@ -572,7 +600,7 @@ doubleReward(
 
 
 
-    } catch (_) {
+    }catch(_){
 
 
       return true;
@@ -590,6 +618,7 @@ doubleReward(
 
 
 
+
   static Future<RewardResultModel?>
 
   claimDailyReward() async {
@@ -598,7 +627,7 @@ doubleReward(
     try {
 
 
-      final canClaim =
+      final available =
 
       await canClaimDailyReward();
 
@@ -606,7 +635,7 @@ doubleReward(
 
 
 
-      if(!canClaim){
+      if(!available){
 
         return null;
 
@@ -660,33 +689,9 @@ doubleReward(
 
 
 
-      await addCoins(
+      await _applyReward(
 
-        reward.coins,
-
-      );
-
-
-
-
-
-
-
-      await addGems(
-
-        reward.gems,
-
-      );
-
-
-
-
-
-
-
-      await addStars(
-
-        reward.stars,
+        reward,
 
       );
 
@@ -700,7 +705,7 @@ doubleReward(
 
 
 
-    } catch (_) {
+    }catch(_){
 
 
       return null;
@@ -720,7 +725,7 @@ doubleReward(
 
 
   //==================================================
-  // 🧹 تنظيف مكافأة يومية
+  // 🧹 إعادة ضبط المكافأة اليومية
   //==================================================
 
 
@@ -739,6 +744,7 @@ doubleReward(
 
 
 
+
       await prefs.remove(
 
         "puzzle_daily_reward",
@@ -747,9 +753,13 @@ doubleReward(
 
 
 
-    } catch (_) {}
+    }catch(_){}
+
+
 
   }
+
+
 
 
 
