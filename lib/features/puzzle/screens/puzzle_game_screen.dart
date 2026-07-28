@@ -145,7 +145,7 @@ class _PuzzleGameScreenState
 
 
 
-  final GlobalKey starKey = GlobalKey();
+ 
 
 
 
@@ -1624,9 +1624,7 @@ await bgPlayer.stop();
 
 GameToolbar(
   logo: "assets/images/logo.png",
-  starKey: starKey,
 ),
-
 
 
 
