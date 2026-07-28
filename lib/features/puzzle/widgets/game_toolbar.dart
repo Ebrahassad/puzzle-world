@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../screens/wallet_screen.dart';
+import '../managers/puzzle_progress_manager.dart';
 
 
 
@@ -8,15 +9,6 @@ class GameToolbar extends StatefulWidget {
 
 
   final String logo;
-
-
-  final int stars;
-
-
-  final int coins;
-
-
-  final int rewards;
 
 
   final VoidCallback? onBack;
@@ -34,15 +26,6 @@ class GameToolbar extends StatefulWidget {
 
 
     required this.logo,
-
-
-    required this.stars,
-
-
-    required this.coins,
-
-
-    required this.rewards,
 
 
     required this.starKey,
@@ -78,20 +61,29 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-  void openWallet(BuildContext context){
+  int stars = 0;
+
+  int coins = 0;
+
+  int rewards = 0;
 
 
-    Navigator.push(
 
-      context,
+  bool loading = true;
 
-      MaterialPageRoute(
 
-        builder:(_)=> const WalletScreen(),
 
-      ),
 
-    );
+
+
+  @override
+  void initState(){
+
+
+    super.initState();
+
+
+    loadToolbarData();
 
 
   }
@@ -101,6 +93,74 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
+
+  Future<void> loadToolbarData() async {
+
+
+
+    final totalStars =
+
+    await PuzzleProgressManager.getTotalStars();
+
+
+
+
+    final totalCoins =
+
+    await PuzzleProgressManager.getCoins();
+
+
+
+
+    setState((){
+
+
+      stars = totalStars;
+
+
+      coins = totalCoins;
+
+
+      loading = false;
+
+
+    });
+
+
+  }
+
+
+
+
+
+  void openWallet(BuildContext context){
+
+
+    Navigator.push(
+
+
+      context,
+
+
+      MaterialPageRoute(
+
+
+        builder:(_)=> const WalletScreen(),
+
+
+      ),
+
+
+    ).then((_){
+
+
+      loadToolbarData();
+
+
+    });
+
+
+  }
 
   void closeGame(BuildContext context){
 
@@ -119,15 +179,17 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
   void showSettings(BuildContext context){
 
 
     showDialog(
 
+
       context: context,
 
+
       builder:(_){
+
 
         return AlertDialog(
 
@@ -229,7 +291,9 @@ class _GameToolbarState extends State<GameToolbar>{
 
               onPressed:(){
 
+
                 Navigator.pop(context);
+
 
               },
 
@@ -258,6 +322,11 @@ class _GameToolbarState extends State<GameToolbar>{
 
   }
 
+
+
+
+
+
   @override
   Widget build(BuildContext context){
 
@@ -265,7 +334,7 @@ class _GameToolbarState extends State<GameToolbar>{
     return SafeArea(
 
 
-      child:Container(
+      child: Container(
 
 
 
@@ -349,7 +418,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-        child:Row(
+        child: Row(
 
 
 
@@ -461,7 +530,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
                     value:
 
-                    widget.stars,
+                    stars,
 
 
 
@@ -497,7 +566,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
                   value:
 
-                  widget.rewards,
+                  rewards,
 
 
 
@@ -537,7 +606,7 @@ class _GameToolbarState extends State<GameToolbar>{
 
                   _coinBox(
 
-                    widget.coins,
+                    coins,
 
                   ),
 
@@ -568,14 +637,6 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
   }
-
-
-
-
-
-
-
-
 
   Widget _imageCounterBox({
 
@@ -683,9 +744,9 @@ class _GameToolbarState extends State<GameToolbar>{
                 Icons.star,
 
 
+                color:
 
-                color:Colors.yellow,
-
+                Colors.yellow,
 
 
                 size:24,
@@ -761,6 +822,13 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
   }
+
+
+
+
+
+
+
 
   Widget _coinBox(int value){
 
@@ -921,14 +989,11 @@ class _GameToolbarState extends State<GameToolbar>{
 
 
 
-
   @override
   void dispose(){
 
 
-
     super.dispose();
-
 
 
   }
