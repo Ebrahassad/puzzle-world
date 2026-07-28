@@ -315,7 +315,7 @@ class _RewardBoxWidgetState
 
   }
 
-  bool starArrived = false;
+  
 
 
   Future<void> openBox() async {
