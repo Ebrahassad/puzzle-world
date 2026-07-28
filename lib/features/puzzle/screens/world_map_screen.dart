@@ -5,7 +5,7 @@ import '../models/puzzle_model.dart';
 
 import 'island_screen.dart';
 
-
+import '../managers/puzzle_progress_manager.dart';
 
 class WorldMapScreen extends StatefulWidget {
 
@@ -549,31 +549,26 @@ class _WorldMapScreenState
 
 
 
-    ScaffoldMessenger.of(context).showSnackBar(
+   PuzzleProgressManager.unlockIsland(
+  world.id,
+).then((_) {
 
+  setState(() {});
 
+  ScaffoldMessenger.of(context).showSnackBar(
 
-      const SnackBar(
+    SnackBar(
 
-
-
-        content: Text(
-
-
-
-          "سيتم تشغيل الإعلان لفتح العالم",
-
-
-
-        ),
-
-
-
+      content: Text(
+        "تم فتح ${world.title}",
       ),
 
+    ),
 
+  );
 
-    );
+});
+
 
 
 
@@ -581,350 +576,151 @@ class _WorldMapScreenState
 
 
   Widget islandButton(
-
-      String id,
-
-      double x,
-
-      double y,
-
-      {
-
-      double size = 150,
-
-      }
-
-  ) {
-
-
-
-    final world =
-
-    PuzzleData.getById(id);
-
-
-
-    if(world == null){
-
-      return const SizedBox();
-
-    }
-
-
-
-
-
-    // جزيرة الحيوانات فقط مفتوحة حالياً
-
-    final bool unlocked =
-
-        id == "animals";
-
-
-
-
-
-
-    return Positioned(
-
-
-
-      left: x - size / 2,
-
-
-      top: y - size / 2,
-
-
-      width: size,
-
-
-      height: size,
-
-
-
-
-
-      child: AnimatedBuilder(
-
-
-
-        animation: floatAnimation,
-
-
-
-        builder: (context, child){
-
-
-
-          return Transform.translate(
-
-
-
-            offset: Offset(
-
-              0,
-
-              floatAnimation.value,
-
-            ),
-
-
-
-            child: child,
-
-
-
-          );
-
-
-        },
-
-
-
-
-
-        child: GestureDetector(
-
-
-
-
-          onTapDown: (_) {
-
-
-
-            setState(() {
-
-
-
-              pressedIsland = id;
-
-
-
-            });
-
-
+  String id,
+  double x,
+  double y, {
+  double size = 150,
+}) {
+  final world = PuzzleData.getById(id);
+
+  if (world == null) {
+    return const SizedBox();
+  }
+
+  return FutureBuilder<bool>(
+    future: PuzzleProgressManager.isIslandUnlocked(id),
+    builder: (context, snapshot) {
+
+      final bool unlocked = snapshot.data ?? false;
+
+      return Positioned(
+        left: x - size / 2,
+        top: y - size / 2,
+        width: size,
+        height: size,
+
+        child: AnimatedBuilder(
+          animation: floatAnimation,
+
+          builder: (context, child) {
+
+            return Transform.translate(
+              offset: Offset(
+                0,
+                floatAnimation.value,
+              ),
+
+              child: child,
+            );
 
           },
 
+          child: GestureDetector(
 
+            onTapDown: (_) {
+              setState(() {
+                pressedIsland = id;
+              });
+            },
 
 
+            onTapUp: (_) {
 
+              setState(() {
+                pressedIsland = null;
+              });
 
 
-          onTapUp: (_) {
+              if (unlocked) {
 
+                openWorld(world);
 
+              } else {
 
-            setState(() {
+                showLockedDialog(world);
 
+              }
 
+            },
 
-              pressedIsland = null;
 
+            onTapCancel: () {
 
+              setState(() {
+                pressedIsland = null;
+              });
 
-            });
+            },
 
 
+            child: AnimatedScale(
 
+              scale: pressedIsland == id
+                  ? 1.15
+                  : 1.0,
 
+              duration:
+              const Duration(
+                milliseconds:180,
+              ),
 
 
-            if(unlocked){
+              child: Stack(
 
+                alignment: Alignment.center,
 
+                children: [
 
-              openWorld(world);
 
+                  Opacity(
 
+                    opacity: unlocked
+                        ? 1.0
+                        : 0.45,
 
-            }
 
-            else{
+                    child: Image.asset(
 
+                      islandImages[id]!,
 
+                      fit: BoxFit.contain,
 
-              showLockedDialog(world);
-
-
-
-            }
-
-
-
-
-
-          },
-
-
-
-
-
-
-
-          onTapCancel: () {
-
-
-
-            setState(() {
-
-
-
-              pressedIsland = null;
-
-
-
-            });
-
-
-
-          },
-
-
-
-
-
-
-
-          child: AnimatedScale(
-
-
-
-            scale:
-
-            pressedIsland == id
-
-                ? 1.15
-
-                : 1.0,
-
-
-
-
-
-            duration:
-
-            const Duration(
-
-              milliseconds:180,
-
-            ),
-
-
-
-
-
-            child: Stack(
-
-
-
-              alignment: Alignment.center,
-
-
-
-              children: [
-
-
-
-
-
-                // الجزيرة
-
-                Opacity(
-
-
-
-                  opacity:
-
-                  unlocked
-
-                      ? 1.0
-
-                      : 0.45,
-
-
-
-
-
-                  child: Image.asset(
-
-
-
-                    islandImages[id]!,
-
-
-
-                    fit: BoxFit.contain,
-
-
+                    ),
 
                   ),
 
 
 
-                ),
+                  if (!unlocked)
+
+                    Image.asset(
+
+                      "assets/images/ui/level_lock.png",
+
+                      width: size * 0.35,
+
+                      fit: BoxFit.contain,
+
+                    ),
 
 
+                ],
 
-
-
-
-
-                // القفل للجزر المغلقة
-
-                if(!unlocked)
-
-
-
-                  Image.asset(
-
-
-
-                    "assets/images/ui/level_lock.png",
-
-
-
-                    width: size * 0.35,
-
-
-
-                    fit: BoxFit.contain,
-
-
-
-                  ),
-
-
-
-
-
-              ],
-
-
+              ),
 
             ),
-
-
 
           ),
 
-
-
         ),
 
+      );
 
+    },
 
-      ),
+  );
 
-
-
-    );
-
-
-
-  }
-
+}
   @override
   Widget build(BuildContext context) {
 
