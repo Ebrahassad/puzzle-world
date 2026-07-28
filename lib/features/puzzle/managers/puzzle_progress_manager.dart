@@ -2539,10 +2539,9 @@ static String? getPreviousIsland(
     case "cars":
       return "animals";
 
-   case "animals":
+    case "landmarks":
       return "cars";
 
-    
     case "nature":
       return "landmarks";
 
@@ -2553,7 +2552,6 @@ static String? getPreviousIsland(
       return null;
   }
 }
-
 //==================================================
 // 📺 إضافة مشاهدة إعلان وفتح الجزيرة تلقائياً
 //==================================================
