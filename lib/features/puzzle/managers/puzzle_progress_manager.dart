@@ -2509,28 +2509,18 @@ static int getIslandRequiredAds(
       return 0;
 
     case "cars":
-      return 5;
-
-    case "food":
       return 6;
 
-    case "sea":
-      return 7;
 
-    case "dinosaurs":
-      return 8;
-
-    case "flags":
-      return 9;
-
-    case "jobs":
-      return 10;
+   
+    
+    
 
     case "landmarks":
-      return 11;
+      return 8;
 
     case "nature":
-      return 12;
+      return 10;
 
     case "space":
       return 15;
@@ -2549,24 +2539,10 @@ static String? getPreviousIsland(
     case "cars":
       return "animals";
 
-    case "food":
+   case "animals":
       return "cars";
 
-    case "sea":
-      return "food";
-
-    case "dinosaurs":
-      return "sea";
-
-    case "flags":
-      return "dinosaurs";
-
-    case "jobs":
-      return "flags";
-
-    case "landmarks":
-      return "jobs";
-
+    
     case "nature":
       return "landmarks";
 
