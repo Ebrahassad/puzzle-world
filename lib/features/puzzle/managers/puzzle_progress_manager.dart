@@ -2501,34 +2501,82 @@ static Future<int> addIslandAd(
 
 static int getIslandRequiredAds(
     String islandId,
-    ) {
+) {
 
-  switch(islandId){
+  switch (islandId) {
+
+    case "animals":
+      return 0;
 
     case "cars":
       return 5;
 
-
-    case "space":
+    case "food":
       return 6;
 
-
-    case "landmarks":
+    case "sea":
       return 7;
 
-
-    case "nature":
+    case "dinosaurs":
       return 8;
 
+    case "flags":
+      return 9;
+
+    case "jobs":
+      return 10;
+
+    case "landmarks":
+      return 11;
+
+    case "nature":
+      return 12;
+
+    case "space":
+      return 15;
 
     default:
-      return 5;
-
+      return 9999;
   }
-
 }
 
+static String? getPreviousIsland(
+    String islandId,
+) {
 
+  switch (islandId) {
+
+    case "cars":
+      return "animals";
+
+    case "food":
+      return "cars";
+
+    case "sea":
+      return "food";
+
+    case "dinosaurs":
+      return "sea";
+
+    case "flags":
+      return "dinosaurs";
+
+    case "jobs":
+      return "flags";
+
+    case "landmarks":
+      return "jobs";
+
+    case "nature":
+      return "landmarks";
+
+    case "space":
+      return "nature";
+
+    default:
+      return null;
+  }
+}
 
 //==================================================
 // 📺 إضافة مشاهدة إعلان وفتح الجزيرة تلقائياً
