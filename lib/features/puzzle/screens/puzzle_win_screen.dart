@@ -4,15 +4,16 @@ import '../models/game_result_model.dart';
 import '../models/reward_result_model.dart';
 
 import '../managers/reward_manager.dart';
+import '../managers/puzzle_progress_manager.dart';
 
-import '../services/puzzle_world_service.dart';
+
+
 import '../services/puzzle_navigation_service.dart';
 import '../services/puzzle_reward_ad_service.dart';
 import '../services/puzzle_audio_service.dart';
 import '../services/puzzle_event_service.dart';
-import '../services/puzzle_statistics_service.dart';
-import '../services/puzzle_achievement_service.dart';
-import '../services/puzzle_save_service.dart';
+
+
 
 
 
@@ -261,180 +262,70 @@ bool get hasNextLevel {
 
   Future<void> saveCompletion() async {
 
+  try {
 
-    try {
+    if(saved){
+      return;
+    }
 
 
-      if(saved){
+    if(widget.worldId == null ||
+       widget.level == null){
 
-        return;
+      return;
+    }
 
-      }
 
+    final levelKey =
+        "${widget.worldId}_level_${widget.level}";
 
 
+    await PuzzleProgressManager.completeLevel(
+      levelKey,
+    );
 
 
+    await PuzzleProgressManager.saveLevelStars(
+      levelKey,
+      widget.result.stars,
+    );
 
 
-      if(widget.worldId == null ||
+    await PuzzleProgressManager.addStars(
+      widget.result.stars,
+    );
 
-          widget.level == null){
 
+    await PuzzleProgressManager.unlockNextLevel(
+      widget.worldId!,
+      widget.level!,
+    );
 
-        return;
 
+    await PuzzleProgressManager.saveLastPuzzle(
+      widget.worldId!,
+      "level_${widget.level}",
+    );
 
-      }
 
+    await PuzzleProgressManager.addCompletedPuzzle(
+      moves: widget.result.moves,
+      seconds: widget.result.seconds,
+    );
 
 
+    saved = true;
 
 
+  }catch(e){
 
-
-      await PuzzleWorldService.completeLevel(
-
-        worldId:
-
-        widget.worldId!,
-
-
-        level:
-
-        widget.level!,
-
-
-        stars:
-
-        widget.result.stars,
-
-
-      );
-
-
-
-
-
-
-
-      await PuzzleStatisticsService.addCompletedPuzzle(
-
-        stars:
-
-        widget.result.stars,
-
-
-        moves:
-
-        widget.result.moves,
-
-
-        seconds:
-
-        widget.result.seconds,
-
-
-      );
-
-
-
-
-
-
-
-      await PuzzleSaveService.saveLastPlayed(
-
-        worldId:
-
-        widget.worldId!,
-
-
-        levelId:
-
-        "level_${widget.level}",
-
-
-      );
-
-
-
-
-
-
-
-      await PuzzleAchievementService.checkPuzzleAchievements(
-
-        worldId:
-
-        widget.worldId,
-
-
-        level:
-
-        widget.level,
-
-
-        result:
-
-        widget.result,
-
-
-      );
-
-
-
-
-
-
-
-      await PuzzleEventService.levelCompleted(
-
-        worldId:
-
-        widget.worldId,
-
-
-        level:
-
-        widget.level,
-
-
-        stars:
-
-        widget.result.stars,
-
-
-        moves:
-
-        widget.result.moves,
-
-
-        seconds:
-
-        widget.result.seconds,
-
-
-      );
-
-
-
-
-
-
-
-      saved = true;
-
-
-
-
-
-    }catch(_){}
-
-
+    debugPrint(
+      "خطأ حفظ الفوز: $e",
+    );
 
   }
 
+}
   Future<void> loadReward() async {
 
 
