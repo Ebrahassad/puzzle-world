@@ -7,13 +7,10 @@ import 'puzzle_piece.dart';
 class PuzzleController {
 
 
-
   final List<PuzzlePiece> pieces;
 
 
-
   final double boardOffsetY;
-
 
 
   PuzzleController({
@@ -23,8 +20,6 @@ class PuzzleController {
     this.boardOffsetY = 0,
 
   });
-
-
 
 
 
@@ -85,9 +80,9 @@ class PuzzleController {
 
 
 
-      piece.column * pieceSize,
+      (piece.column * pieceSize),
 
-
+      
 
       (piece.row * pieceSize) + boardOffsetY,
 
@@ -100,10 +95,47 @@ class PuzzleController {
 
 
 
+    final pieceCenter = Offset(
+
+
+
+      piece.position.dx + (pieceSize / 2),
+
+
+
+      piece.position.dy + (pieceSize / 2),
+
+
+
+    );
+
+
+
+
+
+
+    final targetCenter = Offset(
+
+
+
+      target.dx + (pieceSize / 2),
+
+
+
+      target.dy + (pieceSize / 2),
+
+
+
+    );
+
+
+
+
+
 
     final distance =
 
-    (piece.position - target)
+    (pieceCenter - targetCenter)
 
         .distance;
 
@@ -115,7 +147,8 @@ class PuzzleController {
 
     final tolerance =
 
-        pieceSize * 0.35;
+        pieceSize * 0.45;
+
 
 
 
@@ -142,6 +175,7 @@ class PuzzleController {
 
 
     }
+
 
 
 
@@ -220,6 +254,8 @@ class PuzzleController {
 
 
 
+
+
     lockPiece(
 
       piece,
@@ -227,6 +263,8 @@ class PuzzleController {
       pieceSize,
 
     );
+
+
 
 
 
@@ -244,23 +282,17 @@ class PuzzleController {
 
 
 
-  int get completedPieces {
+  int get completedPieces =>
 
+      pieces
 
+          .where(
 
-    return pieces
+            (piece)=>piece.placed,
 
-        .where(
+          )
 
-          (piece)=>piece.placed,
-
-    )
-
-        .length;
-
-
-
-  }
+          .length;
 
 
 
@@ -270,17 +302,11 @@ class PuzzleController {
 
 
 
-  int get remainingPieces {
+  int get remainingPieces =>
 
+      pieces.length -
 
-
-    return pieces.length -
-
-        completedPieces;
-
-
-
-  }
+          completedPieces;
 
 
 
@@ -355,10 +381,13 @@ class PuzzleController {
     for(final piece in pieces){
 
 
+
       piece.reset();
 
 
+
     }
+
 
 
   }
@@ -382,6 +411,7 @@ class PuzzleController {
     for(final piece in pieces){
 
 
+
       lockPiece(
 
         piece,
@@ -391,7 +421,9 @@ class PuzzleController {
       );
 
 
+
     }
+
 
 
   }
