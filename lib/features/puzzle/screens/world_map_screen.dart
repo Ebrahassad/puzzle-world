@@ -90,9 +90,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
     super.initState();
 
-
-    islands = puzzleWorldData;
-
+islands = PuzzleData.puzzles;
 
 
     mapController = AnimationController(
