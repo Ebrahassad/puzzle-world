@@ -254,7 +254,7 @@ class _IslandScreenState
 
       const Duration(
 
-        seconds:25,
+        seconds:20,
 
       ),
 
@@ -637,11 +637,11 @@ unlocked =
 
 
 
-                  "assets/images/ui/level_lock.png",
+                  "assets/images/ui/lock.png",
 
 
 
-                  height:80,
+                  height:90,
 
 
 
@@ -1451,23 +1451,19 @@ unlocked =
 
 
 
-              child:Image.asset(
+              child:Opacity(
 
+  opacity:0.55,
 
+  child:Image.asset(
 
-                "assets/images/background/level_background.png",
+    "assets/images/background/level_background.png",
 
+    fit:BoxFit.cover,
 
+  ),
 
-                fit:BoxFit.cover,
-
-
-
-              ),
-
-
-
-            ),
+),
 
 
 
@@ -1612,7 +1608,7 @@ unlocked =
 
 
 
-                height:280,
+                height:340,
 
 
 
