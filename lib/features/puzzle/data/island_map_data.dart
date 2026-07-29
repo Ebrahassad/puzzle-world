@@ -7,56 +7,14 @@ class IslandMapData {
   static const Map<String, IslandMapModel> positions = {
 
     //==========================================
-    // SPACE
-    //==========================================
-
-    "island_1": IslandMapModel(
-
-      islandId: "island_1",
-
-      position: Offset(572, 205),
-
-      size: 170,
-
-    ),
-
-    //==========================================
-    // WORLD LANDMARKS
-    //==========================================
-
-    "island_2": IslandMapModel(
-
-      islandId: "island_2",
-
-      position: Offset(856, 629),
-
-      size: 170,
-
-    ),
-
-    //==========================================
     // ANIMALS
     //==========================================
 
-    "island_3": IslandMapModel(
+    "animals": IslandMapModel(
 
-      islandId: "island_3",
+      islandId: "animals",
 
       position: Offset(356, 593),
-
-      size: 170,
-
-    ),
-
-    //==========================================
-    // NATURE
-    //==========================================
-
-    "island_4": IslandMapModel(
-
-      islandId: "island_4",
-
-      position: Offset(844, 1099),
 
       size: 170,
 
@@ -66,11 +24,53 @@ class IslandMapData {
     // CARS
     //==========================================
 
-    "island_5": IslandMapModel(
+    "cars": IslandMapModel(
 
-      islandId: "island_5",
+      islandId: "cars",
 
       position: Offset(376, 1099),
+
+      size: 170,
+
+    ),
+
+    //==========================================
+    // NATURE
+    //==========================================
+
+    "nature": IslandMapModel(
+
+      islandId: "nature",
+
+      position: Offset(844, 1099),
+
+      size: 170,
+
+    ),
+
+    //==========================================
+    // LANDMARKS
+    //==========================================
+
+    "landmarks": IslandMapModel(
+
+      islandId: "landmarks",
+
+      position: Offset(856, 629),
+
+      size: 170,
+
+    ),
+
+    //==========================================
+    // SPACE
+    //==========================================
+
+    "space": IslandMapModel(
+
+      islandId: "space",
+
+      position: Offset(572, 205),
 
       size: 170,
 
