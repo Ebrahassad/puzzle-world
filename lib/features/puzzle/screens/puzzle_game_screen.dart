@@ -21,7 +21,7 @@ import '../managers/puzzle_hint_manager.dart';
 import '../managers/puzzle_progress_manager.dart';
 
 import '../services/reward_ad_service.dart';
-import '../services/puzzle_level_unlock_service.dart';
+
 
 import 'puzzle_win_screen.dart';
 
@@ -158,37 +158,11 @@ class _PuzzleGameScreenState
 
   Future<void> initGame() async {
 
+  await initAudio();
 
-    await initAudio();
+  await loadPuzzleImage();
 
-
-    pieces = PuzzleGenerator.generate(
-
-      rows: widget.level.gridSize,
-
-      columns: widget.level.gridSize,
-
-      imageWidth: boardSize,
-
-      imageHeight: boardSize,
-
-      boardSize: boardSize,
-
-    );
-
-
-
-    controller = PuzzleController(
-
-      pieces: pieces,
-
-    );
-
-
-
-    await loadProgress();
-
-
+}
     if(mounted){
 
       setState((){
@@ -254,7 +228,7 @@ class _PuzzleGameScreenState
                 );
 
 
-            generatePuzzle();
+            await generatePuzzle();
 
 
           },
@@ -307,7 +281,7 @@ class _PuzzleGameScreenState
 
 
 
-  void generatePuzzle(){
+  Future<void> generatePuzzle() async {
 
     pieces =
         PuzzleGenerator.generate(
@@ -827,12 +801,9 @@ class _PuzzleGameScreenState
 
       await PuzzleProgressManager.completeLevel(
 
-        "${widget.puzzle.id}_${widget.level.id}",
+  "${widget.puzzle.id}_level_${widget.level.levelNumber}",
 
-      );
-
-
-
+);
 
 
       await PuzzleProgressManager.unlockNextLevel(
