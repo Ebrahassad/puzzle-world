@@ -1530,8 +1530,56 @@ buildRewardBox(),
 
 
 
+Future<ui.Image> _loadUiImage(String path) async {
+
+  final Completer<ui.Image> completer =
+      Completer();
+
+  final ImageStream stream =
+      AssetImage(path)
+          .resolve(const ImageConfiguration());
+
+  late ImageStreamListener listener;
+
+  listener = ImageStreamListener(
+    (ImageInfo info, bool _) {
+
+      completer.complete(
+        info.image,
+      );
+
+      stream.removeListener(listener);
+
+    },
+  );
 
 
+  stream.addListener(listener);
+
+
+  return completer.future;
+
+}
+
+Future<void> playSound(String file) async {
+
+  try {
+
+    await effectPlayer.play(
+      AssetSource(
+        "audio/$file",
+      ),
+    );
+
+  } catch(e){
+
+    debugPrint(
+      "Sound error: $e",
+    );
+
+  }
+
+}
 
 
   @override
