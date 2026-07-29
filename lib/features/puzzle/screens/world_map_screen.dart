@@ -231,7 +231,7 @@ islands = PuzzleData.puzzles;
 
   @override
   Widget build(BuildContext context) {
-
+final screen = MediaQuery.of(context).size;
 
     return Scaffold(
 
@@ -448,12 +448,11 @@ islands = PuzzleData.puzzles;
                       return Positioned(
 
                         left:
-                        mapData.position.dx,
+screen.width * mapData.x,
 
-
-                        top:
-                        mapData.position.dy +
-                            animation.value,
+top:
+screen.height * mapData.y +
+    animation.value,
 
 
 
@@ -535,13 +534,11 @@ islands = PuzzleData.puzzles;
 
                               island.image,
 
+width:
+screen.width * mapData.size,
 
-                              width:
-                              mapData.size,
-
-
-                              height:
-                              mapData.size,
+height:
+screen.width * mapData.size,
 
 
                               fit:BoxFit.contain,
