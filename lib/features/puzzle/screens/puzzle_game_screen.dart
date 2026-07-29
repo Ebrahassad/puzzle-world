@@ -163,18 +163,8 @@ class _PuzzleGameScreenState
   await loadPuzzleImage();
 
 }
-    if(mounted){
-
-      setState((){
-
-        loading = false;
-
-      });
-
-    }
 
 
-  }
 
   Future<void> initAudio() async {
 
@@ -207,119 +197,65 @@ class _PuzzleGameScreenState
 
   Future<void> loadPuzzleImage() async {
 
-    try {
+  try {
 
-      final completer =
-      AssetImage(
-        widget.level.image,
-      ).resolve(
-        const ImageConfiguration(),
-      );
+    loadedImage =
+        await _loadUiImage(
+          widget.level.image,
+        );
 
 
-      completer.addListener(
-        ImageStreamListener(
-              (info, _) async {
+    await generatePuzzle();
 
 
-            loadedImage =
-                await _loadUiImage(
-                  widget.level.image,
-                );
+  } catch(e) {
+
+    debugPrint(
+      "IMAGE ERROR: $e",
+    );
 
 
-            await generatePuzzle();
+    if(mounted){
 
+      setState((){
 
-          },
-        ),
-      );
+        loading = false;
 
-
-    } catch(e) {
-
-      debugPrint(
-        "IMAGE ERROR: $e",
-      );
+      });
 
     }
 
   }
 
-
-
-
-
-  Future<ui.Image> _loadUiImage(
-      String asset,
-      ) async {
-
-
-    final data =
-    await DefaultAssetBundle.of(context)
-        .load(asset);
-
-
-
-    final codec =
-    await ui.instantiateImageCodec(
-      data.buffer.asUint8List(),
-    );
-
-
-
-    final frame =
-    await codec.getNextFrame();
-
-
-
-    return frame.image;
-
-  }
-
-
-
-
+}
 
   Future<void> generatePuzzle() async {
 
-    pieces =
-        PuzzleGenerator.generate(
+  pieces =
+      PuzzleGenerator.generate(
 
-          rows:
-          widget.level.gridSize,
+        rows: widget.level.gridSize,
 
+        columns: widget.level.gridSize,
 
-          columns:
-          widget.level.gridSize,
+        imageWidth: loadedImage!.width.toDouble(),
 
+        imageHeight: loadedImage!.height.toDouble(),
 
-          imageWidth:
-          loadedImage!.width.toDouble(),
+        boardSize: boardSize,
 
-
-          imageHeight:
-          loadedImage!.height.toDouble(),
+      );
 
 
-          boardSize:
-          boardSize,
-
-        );
-
-
-
-    controller =
-        PuzzleController(
-          pieces: pieces,
-        );
+  controller =
+      PuzzleController(
+        pieces: pieces,
+      );
 
 
+  await loadProgress();
 
-    loadProgress();
-
-  }
-
+}
 
 
 
@@ -1037,50 +973,48 @@ class _PuzzleGameScreenState
 
   Widget buildRewardBox(){
 
+  if(!showRewardBox){
 
-    if(!showRewardBox){
-
-      return const SizedBox();
-
-    }
-
-
-
-
-    return RewardBoxWidget(
-
-      starTargetKey:
-
-      starKey,
-
-
-
-      onStarReady: (){
-
-
-        starAnimationFinished = true;
-
-
-      },
-
-
-
-      onRewardOpened: (){
-
-
-        if(starAnimationFinished){
-
-          openWinScreen();
-
-        }
-
-
-      },
-
-    );
-
+    return const SizedBox();
 
   }
+
+
+  return Container(
+
+    color: Colors.black.withOpacity(0.35),
+
+    child: Center(
+
+      child: RewardBoxWidget(
+
+        starTargetKey: starKey,
+
+        onStarReady: (){
+
+          starAnimationFinished = true;
+
+        },
+
+
+        onRewardOpened: (){
+
+          if(starAnimationFinished){
+
+            openWinScreen();
+
+          }
+
+        },
+
+      ),
+
+    ),
+
+  );
+
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -1581,73 +1515,7 @@ class _PuzzleGameScreenState
 
 
 
-
-
-        if(showRewardBox)
-
-          Container(
-
-
-            color:
-
-            Colors.black.withOpacity(0.35),
-
-
-
-
-
-            child:
-
-            Center(
-
-
-              child:
-
-              RewardBoxWidget(
-
-
-
-                starTargetKey:
-
-                starKey,
-
-
-
-                onStarReady: (){
-
-
-                  starAnimationFinished = true;
-
-
-                },
-
-
-
-
-
-                onRewardOpened: (){
-
-
-                  if(starAnimationFinished){
-
-
-                    openWinScreen();
-
-
-                  }
-
-
-                },
-
-
-              ),
-
-
-            ),
-
-
-
-          ),
+buildRewardBox(),
 
 
 
