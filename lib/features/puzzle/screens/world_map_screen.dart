@@ -8,7 +8,7 @@ import '../data/island_map_data.dart';
 import '../models/puzzle_model.dart';
 import '../models/island_map_model.dart';
 
-import '../widgets/game_toolbar.dart';
+
 
 import 'island_screen.dart';
 
@@ -51,7 +51,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
   String? selectedIsland;
 
-  final GlobalKey starKey = GlobalKey();
+  
 
   //==================================================
   // MAP ANIMATION
@@ -387,19 +387,67 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                   ),
                 ),
 
-                //==================================================
-                // TOOLBAR
-                //==================================================
+//==================================================
+// TOP BUTTONS
+//==================================================
 
-                Align(
-                  alignment: Alignment.topCenter,
-                  child: GameToolbar(
-                    logo: "assets/images/ui/puzzle_logo.png",
-                    starKey: starKey,
-                    onBack: () {},
-                  ),
-                ),
-              ],
+SafeArea(
+  child: Padding(
+    padding: const EdgeInsets.symmetric(
+      horizontal: 16,
+      vertical: 10,
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+
+        // زر الإعدادات
+        GestureDetector(
+          onTap: () {
+            // شاشة الإعدادات
+          },
+          child: Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: Colors.black54,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: const Icon(
+              Icons.settings_rounded,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+        ),
+
+        // زر المحفظة
+        GestureDetector(
+          onTap: () {
+            Navigator.pushNamed(
+              context,
+              '/wallet',
+            );
+          },
+          child: Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: Colors.amber,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: const Icon(
+              Icons.account_balance_wallet_rounded,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+        ),
+
+      ],
+    ),
+  ),
+),           ],
             );
           },
         ),
