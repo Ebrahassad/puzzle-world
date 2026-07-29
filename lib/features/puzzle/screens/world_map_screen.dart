@@ -572,23 +572,21 @@ islands = PuzzleData.puzzles;
 
 
 
+//==================================================
+// TOOLBAR
+//==================================================
 
-          //==================================================
-          // TOOLBAR
-          //==================================================
+Align(
 
+  alignment: Alignment.topCenter,
 
-          const Align(
+  child: GameToolbar(
 
-            alignment:Alignment.topCenter,
+    logo: "assets/images/ui/puzzle_logo.png",
 
+  ),
 
-            child:GameToolbar(),
-
-          ),
-
-
-
+),
         ],
 
       ),
