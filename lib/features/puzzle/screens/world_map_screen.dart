@@ -77,6 +77,8 @@ class _WorldMapScreenState extends State<WorldMapScreen>
       islandControllers = {};
 
 
+final GlobalKey starKey = GlobalKey();
+
 
   final Map<String, Animation<double>>
       islandAnimations = {};
@@ -584,9 +586,15 @@ Align(
 
     logo: "assets/images/ui/puzzle_logo.png",
 
+    starKey: starKey,
+
+    onBack: () {},
+
   ),
 
 ),
+
+
         ],
 
       ),
