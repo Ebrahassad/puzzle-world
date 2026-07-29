@@ -1,30 +1,19 @@
-import 'package:flutter/material.dart';
-
-
 class IslandMapModel {
-
-
   final String islandId;
 
+  /// قيمة من 0 إلى 1
+  final double x;
 
-  // مكان الجزيرة على الخريطة
-  final Offset position;
+  /// قيمة من 0 إلى 1
+  final double y;
 
-
-  // حجم الجزيرة
+  /// نسبة من عرض الشاشة
   final double size;
 
-
-
   const IslandMapModel({
-
     required this.islandId,
-
-    required this.position,
-
+    required this.x,
+    required this.y,
     required this.size,
-
   });
-
-
 }
