@@ -361,15 +361,22 @@ class _PuzzleGameScreenState
 
     }catch(e){
 
+ debugPrint(
+   "LOAD ERROR: $e",
+ );
 
-      debugPrint(
-        "LOAD ERROR: $e",
-      );
+ if(mounted){
 
-    }
+   setState((){
 
-  }
+     loading = false;
+     imageReady = false;
 
+   });
+
+ }
+
+}
 
 
 
@@ -591,119 +598,81 @@ class _PuzzleGameScreenState
 
   Future<void> usePuzzleHint() async {
 
+  try {
 
-    try {
-
-
-      bool available =
-      await PuzzleHintManager.consumeHint();
+    bool available =
+        await PuzzleHintManager.consumeHint();
 
 
+    if(!available){
 
-      if(!available){
-
-
-        final watched =
-        await RewardAdService.showRewardAd();
+      final watched =
+          await RewardAdService.showRewardAd();
 
 
+      if(watched){
 
-        if(watched){
+        await PuzzleHintManager.addHints(3);
 
-
-          await PuzzleHintManager.addHints(3);
-
-
-          available = true;
-
-
-        }
-
+        available = true;
 
       }
-
-
-
-
-
-      if(!available){
-
-        return;
-
-      }
-
-
-
-
-
-      final piece =
-      PuzzleHintManager.findAvailablePiece(
-        pieces,
-      );
-
-
-
-
-      if(piece == null){
-
-        return;
-
-      }
-
-
-
-
-
-      setState((){
-
-
-        controller.applyHint(
-
-          piece,
-
-          pieceSize,
-
-        );
-
-
-        moves++;
-
-
-      });
-
-
-
-
-
-      await playSound(
-        "puzzle_success.mp3",
-      );
-
-
-
-      await saveGame();
-
-
-
-      checkCompleted();
-
-
-
-
-    }catch(e){
-
-      debugPrint(
-        "HINT ERROR: $e",
-      );
 
     }
 
 
+    if(!available){
+
+      return;
+
+    }
+
+
+    final piece =
+        PuzzleHintManager.findAvailablePiece(
+          pieces,
+        );
+
+
+    if(piece == null){
+
+      return;
+
+    }
+
+
+    setState((){
+
+      controller.applyHint(
+        piece,
+        pieceSize,
+      );
+
+      moves++;
+
+    });
+
+
+    await playSound(
+      "puzzle_success.mp3",
+    );
+
+
+    await saveGame();
+
+
+    checkCompleted();
+
+
+  }catch(e){
+
+    debugPrint(
+      "HINT ERROR: $e",
+    );
+
   }
 
-
-
-
+}
 
 
 
