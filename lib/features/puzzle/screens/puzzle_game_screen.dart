@@ -56,12 +56,9 @@ class PuzzleGameScreen extends StatefulWidget {
 
 
 
-
-
   @override
   State<PuzzleGameScreen> createState() =>
       _PuzzleGameScreenState();
-
 
 }
 
@@ -79,7 +76,8 @@ class _PuzzleGameScreenState
 
 
 
-  late List<PuzzlePiece> pieces;
+  List<PuzzlePiece> pieces = [];
+
 
 
   late PuzzleController controller;
@@ -107,12 +105,6 @@ class _PuzzleGameScreenState
 
 
 
-
-
-
-  //===============================
-  // حالة اللعبة
-  //===============================
 
 
   int moves = 0;
@@ -143,9 +135,6 @@ class _PuzzleGameScreenState
 
 
 
-
-
-  // حجم اللوحة
 
 
   double boardSize = 300;
@@ -185,12 +174,9 @@ class _PuzzleGameScreenState
 
 
   @override
-  void initState(){
-
+  void initState() {
 
     super.initState();
-
-
 
 
 
@@ -199,8 +185,6 @@ class _PuzzleGameScreenState
       widget.level.image,
 
     );
-
-
 
 
 
@@ -220,9 +204,8 @@ class _PuzzleGameScreenState
 
 
 
-
-
     initAudio();
+
 
 
     loadPuzzleImage();
@@ -237,16 +220,10 @@ class _PuzzleGameScreenState
 
 
 
-
-  //===============================
-  // تشغيل الصوت
-  //===============================
-
-
   Future<void> initAudio() async {
 
 
-    try{
+    try {
 
 
       await bgPlayer.setReleaseMode(
@@ -268,7 +245,7 @@ class _PuzzleGameScreenState
       );
 
 
-    }catch(e){
+    } catch(e) {
 
 
       debugPrint(
@@ -280,320 +257,75 @@ class _PuzzleGameScreenState
 
     }
 
-
   }
-
-
-
-
-
-
-
-
-
-  Future<void> playSound(String file) async {
-
-
-    try{
-
-
-      await effectPlayer.play(
-
-        AssetSource(
-
-          "audio/$file",
-
-        ),
-
-      );
-
-
-    }catch(e){
-
-
-      debugPrint(
-
-        "Sound error: $e",
-
-      );
-
-
-    }
-
-
-  }
-
-
-
-
-
-
-
-
-
-  //===============================
-  // تحميل صورة المرحلة
-  //===============================
-
-
-  Future<void> loadPuzzleImage() async {
-
-
-    try{
-
-
-      final stream =
-
-      puzzleImage.resolve(
-
-        const ImageConfiguration(),
-
-      );
-
-
-
-
-
-      stream.addListener(
-
-
-        ImageStreamListener(
-
-              (info,_){
-
-
-
-            loadedImage = info.image;
-
-debugPrint(
-  "IMAGE SIZE: ${loadedImage!.width} x ${loadedImage!.height}",
-);
-
-
-
-
-            final width =
-
-            MediaQueryData.fromView(
-
-              WidgetsBinding
-
-                  .instance
-
-                  .platformDispatcher
-
-                  .views
-
-                  .first,
-
-            ).size.width;
-
-
-
-
-
-            boardSize = width * 0.82;
-
-
-
-
-
-            if(mounted){
-
-  setState(() {
-    imageReady = true;
-  });
-
-}
-
-debugPrint("IMAGE LOADED");
-
-createGame();
-
-
-          },
-
-        ),
-
-      );
-
-
-
-    }catch(e){
-
-
-      debugPrint(
-
-        "Image loading error: $e",
-
-      );
-
-
-
-      if(mounted){
-
-
-        setState((){
-
-
-          loading = false;
-
-
-        });
-
-
-      }
-
-
-    }
-
-
-  }
-
-  //===============================
-  // إنشاء لعبة جديدة
-  //===============================
-
-
-  void createGame(){
-
-  try{
-
-    if(loadedImage == null){
-      debugPrint("IMAGE NULL");
-      return;
-    }
-
-    debugPrint("CREATE GAME START");
-
-    pieces = PuzzleGenerator.generate(
-
-      rows:
-      widget.level.gridSize,
-
-      columns:
-      widget.level.gridSize,
-
-      imageWidth:
-      loadedImage!.width.toDouble(),
-
-      imageHeight:
-      loadedImage!.height.toDouble(),
-
-      boardSize:
-      boardSize,
-
-    );
-
-    debugPrint(
-      "PIECES CREATED: ${pieces.length}",
-    );
-
-
-    controller = PuzzleController(
-  pieces: pieces,
-);
-
-
-if(pieces.isNotEmpty){
-
-  debugPrint("START LOAD PROGRESS");
-
-  loadProgress();
-
-}else{
-
-  debugPrint("PIECES EMPTY");
-
-}
-  }catch(e){
-
-    debugPrint(
-      "Create game error: $e",
-    );
-
-  }
-
-}
-
-
-
-
 
   //===============================
   // تحميل التقدم
   //===============================
 
-
   Future<void> loadProgress() async {
 
-  debugPrint("LOAD PROGRESS START");
+    try {
 
-  try{
-
-      hints =
-
-      await PuzzleHintManager.getHints();
-
-
-debugPrint("HINTS LOADED");
-
-
+      hints = await PuzzleHintManager.getHints();
 
 
       final saved =
-
-      await PuzzleProgressManager.loadProgress();
-
-
-
-debugPrint("SAVE DATA LOADED: $saved");
-
+          await PuzzleProgressManager.loadProgress();
 
 
       if(saved != null &&
-
           saved["levelId"] == widget.level.id){
 
 
-
         moves =
-
             saved["moves"] ?? 0;
 
 
-
         seconds =
-
             saved["seconds"] ?? 0;
 
 
+        final savedPieces =
+            saved["pieces"];
+
+
+        if(savedPieces != null){
+
+          for(final item in savedPieces){
+
+            final piece =
+            pieces.firstWhere(
+                  (p)=>p.id == item["id"],
+              orElse: ()=>pieces.first,
+            );
+
+
+            piece.position = Offset(
+              item["x"],
+              item["y"],
+            );
+
+
+            piece.placed =
+                item["placed"] ?? false;
+
+          }
+
+        }
 
       }
 
 
 
+      if(!mounted) return;
 
 
+      setState((){
 
+        loading = false;
 
-
-      if(mounted){
-
-debugPrint("GAME READY");
-
-        setState((){
-
-
-          loading = false;
-
-
-        });
-
-
-      }
-
-
+      });
 
 
 
@@ -603,36 +335,24 @@ debugPrint("GAME READY");
 
     }catch(e){
 
-
       debugPrint(
-
-        "Load progress error: $e",
-
+        "LOAD ERROR: $e",
       );
-
 
 
       if(mounted){
 
-
         setState((){
 
-
-          loading = false;
-
+          loading=false;
 
         });
 
-
       }
-
 
     }
 
-
   }
-
-
 
 
 
@@ -644,53 +364,32 @@ debugPrint("GAME READY");
   // المؤقت
   //===============================
 
-
   void startTimer(){
-
 
     timer?.cancel();
 
 
+    timer =
+        Timer.periodic(
+          const Duration(seconds:1),
+              (_){
+
+            if(!mounted || finishing){
+
+              return;
+
+            }
 
 
+            setState((){
 
-    timer = Timer.periodic(
+              seconds++;
 
-
-
-      const Duration(seconds:1),
-
+            });
 
 
-          (_){
-
-
-
-        if(!mounted || finishing){
-
-          return;
-
-        }
-
-
-
-
-
-        setState((){
-
-
-          seconds++;
-
-
-        });
-
-
-
-      },
-
-
-    );
-
+          },
+        );
 
   }
 
@@ -701,11 +400,9 @@ debugPrint("GAME READY");
 
 
 
-
   //===============================
-  // تحريك قطعة
+  // تحريك القطعة
   //===============================
-
 
   Future<void> movePiece(
 
@@ -716,8 +413,8 @@ debugPrint("GAME READY");
       ) async {
 
 
-
-    if(piece.placed || finishing){
+    if(piece.placed ||
+        finishing){
 
       return;
 
@@ -725,109 +422,39 @@ debugPrint("GAME READY");
 
 
 
-
-
-
-
     setState((){
-
 
 
       piece.position += details.delta;
 
 
 
-
-
       final maxX =
-
-      boardSize - pieceSize;
-
+          boardSize - pieceSize;
 
 
       final maxY =
-
-      boardSize - pieceSize;
-
+          boardSize - pieceSize;
 
 
 
 
+      piece.position = Offset(
 
-
-      if(piece.position.dx < 0){
-
-
-        piece.position = Offset(
-
+        piece.position.dx
+            .clamp(
           0,
-
-          piece.position.dy,
-
-        );
-
-
-      }
-
-
-
-
-
-
-      if(piece.position.dy < 0){
-
-
-        piece.position = Offset(
-
-          piece.position.dx,
-
-          0,
-
-        );
-
-
-      }
-
-
-
-
-
-
-
-      if(piece.position.dx > maxX){
-
-
-        piece.position = Offset(
-
           maxX,
-
-          piece.position.dy,
-
-        );
+        ),
 
 
-      }
-
-
-
-
-
-
-
-      if(piece.position.dy > maxY){
-
-
-        piece.position = Offset(
-
-          piece.position.dx,
-
+        piece.position.dy
+            .clamp(
+          0,
           maxY,
+        ),
 
-        );
-
-
-      }
-
+      );
 
 
 
@@ -844,11 +471,9 @@ debugPrint("GAME READY");
 
 
 
-
   //===============================
   // إسقاط القطعة
   //===============================
-
 
   Future<void> dropPiece(
 
@@ -857,16 +482,12 @@ debugPrint("GAME READY");
       ) async {
 
 
-
-    if(piece.placed || finishing){
+    if(piece.placed ||
+        finishing){
 
       return;
 
     }
-
-
-
-
 
 
 
@@ -877,31 +498,20 @@ debugPrint("GAME READY");
 
       controller.checkPiecePosition(
 
-
         piece,
 
-
         pieceSize,
-
 
       );
 
 
 
 
-
-
-
       setState((){
-
 
         moves++;
 
-
       });
-
-
-
 
 
 
@@ -910,29 +520,19 @@ debugPrint("GAME READY");
 
 
         await playSound(
-
           "puzzle_success.mp3",
-
         );
 
 
-      }
-
-      else{
+      }else{
 
 
         await playSound(
-
           "puzzle_fail.mp3",
-
         );
 
 
       }
-
-
-
-
 
 
 
@@ -944,24 +544,16 @@ debugPrint("GAME READY");
 
 
 
-
-
     }catch(e){
 
-
       debugPrint(
-
-        "Drop piece error: $e",
-
+        "DROP ERROR: $e",
       );
-
 
     }
 
 
   }
-
-
 
 
 
@@ -973,7 +565,6 @@ debugPrint("GAME READY");
   // حفظ اللعبة
   //===============================
 
-
   Future<void> saveGame() async {
 
 
@@ -982,70 +573,52 @@ debugPrint("GAME READY");
 
       await PuzzleProgressManager.saveProgress(
 
-
-
         puzzleId:
-
         widget.puzzle.id,
 
 
-
         levelId:
-
         widget.level.id,
 
 
-
         pieces:
-
         pieces,
 
 
-
         moves:
-
         moves,
 
 
-
         seconds:
-
         seconds,
 
 
-
       );
-
 
 
     }catch(e){
 
 
       debugPrint(
-
-        "Save game error: $e",
-
+        "SAVE ERROR: $e",
       );
 
 
     }
 
-
   }
-
 
   //===============================
   // فحص اكتمال البازل
   //===============================
 
-
   void checkCompleted(){
-
 
     try{
 
 
-      if(controller.isCompleted && !finishing){
+      if(controller.isCompleted &&
+          !finishing){
 
 
         finishGame();
@@ -1054,13 +627,12 @@ debugPrint("GAME READY");
       }
 
 
-
     }catch(e){
 
 
       debugPrint(
 
-        "Check complete error: $e",
+        "CHECK COMPLETE ERROR: $e",
 
       );
 
@@ -1069,7 +641,6 @@ debugPrint("GAME READY");
 
 
   }
-
 
 
 
@@ -1082,7 +653,6 @@ debugPrint("GAME READY");
   // استخدام التلميح
   //===============================
 
-
   Future<void> usePuzzleHint() async {
 
 
@@ -1092,7 +662,6 @@ debugPrint("GAME READY");
       bool available =
 
       await PuzzleHintManager.consumeHint();
-
 
 
 
@@ -1109,20 +678,16 @@ debugPrint("GAME READY");
 
 
 
-
         if(watched){
 
 
-
           await PuzzleHintManager.addHints(3);
-
 
 
           available = true;
 
 
         }
-
 
 
       }
@@ -1135,9 +700,7 @@ debugPrint("GAME READY");
 
       if(!available){
 
-
         return;
-
 
       }
 
@@ -1159,13 +722,9 @@ debugPrint("GAME READY");
 
 
 
-
-
       if(piece == null){
 
-
         return;
-
 
       }
 
@@ -1175,9 +734,7 @@ debugPrint("GAME READY");
 
 
 
-
       setState((){
-
 
 
         controller.applyHint(
@@ -1189,9 +746,7 @@ debugPrint("GAME READY");
         );
 
 
-
         moves++;
-
 
 
       });
@@ -1220,12 +775,14 @@ debugPrint("GAME READY");
 
 
 
+
+
     }catch(e){
 
 
       debugPrint(
 
-        "Hint error: $e",
+        "HINT ERROR: $e",
 
       );
 
@@ -1243,10 +800,10 @@ debugPrint("GAME READY");
 
 
 
+
   //===============================
   // إنهاء المرحلة
   //===============================
-
 
   Future<void> finishGame() async {
 
@@ -1256,8 +813,6 @@ debugPrint("GAME READY");
       return;
 
     }
-
-
 
 
 
@@ -1276,10 +831,6 @@ debugPrint("GAME READY");
 
 
 
-
-
-      // حفظ الإنجاز
-
       await PuzzleProgressManager.completeLevel(
 
         widget.level.id,
@@ -1291,14 +842,11 @@ debugPrint("GAME READY");
 
 
 
-
-      // فتح المرحلة التالية
-
       await PuzzleProgressManager.unlockNextLevel(
 
         widget.puzzle.id,
 
-        widget.level.levelNumber + 1,
+        widget.level.levelNumber,
 
       );
 
@@ -1307,9 +855,7 @@ debugPrint("GAME READY");
 
 
 
-
       await PuzzleProgressManager.clearProgress();
-
 
 
 
@@ -1327,8 +873,6 @@ debugPrint("GAME READY");
 
 
 
-
-
       if(!mounted){
 
         return;
@@ -1340,10 +884,7 @@ debugPrint("GAME READY");
 
 
 
-
-
       confettiController.play();
-
 
 
 
@@ -1367,14 +908,12 @@ debugPrint("GAME READY");
 
 
 
+
       if(!mounted){
 
         return;
 
       }
-
-
-
 
 
 
@@ -1392,15 +931,17 @@ debugPrint("GAME READY");
 
 
 
-
     }catch(e){
 
 
       debugPrint(
 
-        "Finish game error: $e",
+        "FINISH ERROR: $e",
 
       );
+
+
+      finishing = false;
 
 
     }
@@ -1416,10 +957,10 @@ debugPrint("GAME READY");
 
 
 
+
   //===============================
   // فتح شاشة الفوز
   //===============================
-
 
   Future<void> openWinScreen() async {
 
@@ -1434,13 +975,17 @@ debugPrint("GAME READY");
 
 
 
-
-
     try{
 
 
       rewardOpened = true;
 
+
+
+
+
+
+      await bgPlayer.stop();
 
 
 
@@ -1459,32 +1004,23 @@ debugPrint("GAME READY");
 
 
 
-      await bgPlayer.stop();
-
-
-
-
-
-
-
       Navigator.pushReplacement(
-
 
 
         context,
 
 
-
         MaterialPageRoute(
 
 
+          builder: (_)=>
 
-          builder: (_)=> PuzzleWinScreen(
+          PuzzleWinScreen(
 
 
+            result:
 
-            result: GameResultModel(
-
+            GameResultModel(
 
 
               stars:
@@ -1508,7 +1044,6 @@ debugPrint("GAME READY");
               ),
 
 
-
             ),
 
 
@@ -1517,7 +1052,6 @@ debugPrint("GAME READY");
 
 
             difficulty:
-
 
 
             widget.level.gridSize <= 4
@@ -1535,10 +1069,7 @@ debugPrint("GAME READY");
 
 
 
-
             worldId:
-
-
 
             widget.puzzle.id,
 
@@ -1550,11 +1081,7 @@ debugPrint("GAME READY");
 
             level:
 
-
-
             widget.level.levelNumber,
-
-
 
 
 
@@ -1562,9 +1089,7 @@ debugPrint("GAME READY");
           ),
 
 
-
         ),
-
 
 
       );
@@ -1578,7 +1103,7 @@ debugPrint("GAME READY");
 
       debugPrint(
 
-        "Open win screen error: $e",
+        "OPEN WIN ERROR: $e",
 
       );
 
@@ -1588,29 +1113,25 @@ debugPrint("GAME READY");
 
   }
 
-  @override
-  Widget build(BuildContext context){
 
 
-    if(loading || !imageReady){
 
 
-      return const Scaffold(
 
 
-        body: Center(
 
 
-          child:
 
-          CircularProgressIndicator(),
+  //===============================
+  // فتح صندوق المكافأة
+  //===============================
+
+  Widget buildRewardBox(){
 
 
-        ),
+    if(!showRewardBox){
 
-
-      );
-
+      return const SizedBox();
 
     }
 
@@ -1618,133 +1139,168 @@ debugPrint("GAME READY");
 
 
 
+    return Container(
+
+      color:
+
+      Colors.black.withOpacity(0.35),
+
+
+
+
+
+      child:
+
+      RewardBoxWidget(
+
+
+        starTargetKey:
+
+        starKey,
+
+
+
+
+
+        onStarReady:
+
+        (){
+
+
+          starAnimationFinished = true;
+
+
+        },
+
+
+
+
+
+
+        onRewardOpened:
+
+        (){
+
+
+          if(starAnimationFinished){
+
+
+            openWinScreen();
+
+
+          }
+
+
+        },
+
+
+
+      ),
+
+
+    );
+
+
+  }
+
+  //===============================
+  // بناء واجهة اللعبة
+  //===============================
+
+  @override
+  Widget build(BuildContext context) {
+
+
+    if (loading ||
+        !imageReady ||
+        !::pieces.isInitialized) {
+
+      return const Scaffold(
+
+        body: Center(
+
+          child: CircularProgressIndicator(),
+
+        ),
+
+      );
+
+    }
+
 
 
     return Stack(
 
-
-      children:[
-
+      children: [
 
 
         Scaffold(
 
-
           backgroundColor:
-
           Colors.blue.shade50,
 
 
+          body: SafeArea(
 
+            child: Column(
 
-
-          body:
-
-          SafeArea(
-
-
-            child:
-
-            Column(
-
-
-              children:[
-
-
+              children: [
 
 
 
                 GameToolbar(
 
-
                   logo:
-"assets/images/ui/puzzle_logo.png",
-
+                  "assets/images/ui/puzzle_logo.png",
 
                   starKey:
-
                   starKey,
 
+                ),
 
+
+
+                const SizedBox(
+                  height: 10,
                 ),
 
 
 
 
 
-
-
-                const SizedBox(height:10),
-
-
-
-
-
-
-
-                // منطقة القطع العشوائية
-
                 Expanded(
 
-
-                  child:
-
-                  Container(
-
+                  child: Container(
 
                     margin:
-
                     const EdgeInsets.symmetric(
+                      horizontal: 10,
+                    ),
 
-                      horizontal:10,
+
+                    decoration: BoxDecoration(
+
+                      color: Colors.white,
+
+                      borderRadius:
+                      BorderRadius.circular(25),
 
                     ),
 
 
 
-
-
-                    decoration:
-
-                    BoxDecoration(
-
-
-                      color:
-
-                      Colors.white,
-
+                    child: ClipRRect(
 
                       borderRadius:
-
-                      BorderRadius.circular(25),
-
-
-                    ),
-
-
-
-
-
-                    child:
-
-                    ClipRRect(
-
-
-                      borderRadius:
-
                       BorderRadius.circular(25),
 
 
 
-                      child:
-
-                      Stack(
-
+                      child: Stack(
 
                         children:
 
                         pieces.map((piece){
-
 
 
                           if(piece.placed){
@@ -1755,44 +1311,28 @@ debugPrint("GAME READY");
 
 
 
-
-
-
                           return Positioned(
 
-
                             left:
-
                             piece.position.dx,
 
 
-
                             top:
-
                             piece.position.dy,
 
 
 
-
-
                             child:
-
                             GestureDetector(
 
 
-
                               onPanUpdate:
-
-                              (details){
-
+                                  (details){
 
 
                                 movePiece(
-
                                   piece,
-
                                   details,
-
                                 );
 
 
@@ -1800,25 +1340,16 @@ debugPrint("GAME READY");
 
 
 
-
-
-
-
                               onPanEnd:
-
-                              (_){
-
+                                  (_) {
 
 
-                                dropPiece(piece);
-
+                                dropPiece(
+                                  piece,
+                                );
 
 
                               },
-
-
-
-
 
 
 
@@ -1826,51 +1357,34 @@ debugPrint("GAME READY");
 
                               PuzzlePieceWidget(
 
-
-
                                 piece:
-
                                 piece,
 
 
-
                                 image:
-
                                 puzzleImage,
 
 
-
                                 size:
-
                                 pieceSize,
-
 
 
                               ),
 
-
-
                             ),
 
-
                           );
-
-
 
 
 
                         }).toList(),
 
 
-
                       ),
-
 
                     ),
 
-
                   ),
-
 
                 ),
 
@@ -1879,61 +1393,38 @@ debugPrint("GAME READY");
 
 
 
-
-
-
-
-                // لوحة البازل
-
                 Container(
 
-
                   height:
-
                   boardSize + 40,
 
 
-
                   margin:
-
                   const EdgeInsets.all(10),
 
 
 
-
-
                   decoration:
-
                   BoxDecoration(
 
-
                     color:
-
                     Colors.white,
 
 
-
                     borderRadius:
-
                     BorderRadius.circular(25),
 
 
-
-
                     border:
-
                     Border.all(
 
                       color:
-
                       Colors.orange,
 
                       width:
-
                       3,
 
                     ),
-
 
                   ),
 
@@ -1941,30 +1432,16 @@ debugPrint("GAME READY");
 
 
 
+                  child: Center(
 
-
-                  child:
-
-                  Center(
-
-
-
-                    child:
-
-                    SizedBox(
-
+                    child: SizedBox(
 
                       width:
-
                       boardSize,
-
 
 
                       height:
-
                       boardSize,
-
-
 
 
 
@@ -1972,11 +1449,7 @@ debugPrint("GAME READY");
 
                       Stack(
 
-
-
                         children:
-
-
 
                         pieces.map((piece){
 
@@ -1995,11 +1468,9 @@ debugPrint("GAME READY");
                           return Positioned(
 
 
-
                             left:
 
                             piece.column *
-
                                 pieceSize,
 
 
@@ -2007,10 +1478,7 @@ debugPrint("GAME READY");
                             top:
 
                             piece.row *
-
                                 pieceSize,
-
-
 
 
 
@@ -2018,63 +1486,41 @@ debugPrint("GAME READY");
 
                             PuzzlePieceWidget(
 
-
-
                               piece:
-
                               piece,
 
 
-
                               image:
-
                               puzzleImage,
 
 
-
                               size:
-
                               pieceSize,
-
-
 
                             ),
 
-
-
                           );
-
-
 
 
 
                         }).toList(),
 
 
-
                       ),
-
 
                     ),
 
-
                   ),
-
 
                 ),
 
 
 
-
-
               ],
-
 
             ),
 
-
           ),
-
 
         ),
 
@@ -2083,51 +1529,32 @@ debugPrint("GAME READY");
 
 
 
-
-        // تأثير الفوز
-
         Align(
 
-
           alignment:
-
           Alignment.topCenter,
-
-
-
 
 
           child:
 
           ConfettiWidget(
 
-
-
             confettiController:
-
             confettiController,
 
 
-
             blastDirectionality:
-
             BlastDirectionality.explosive,
 
 
-
             numberOfParticles:
-
             40,
 
 
-
             gravity:
-
             0.3,
 
-
           ),
-
 
         ),
 
@@ -2135,22 +1562,12 @@ debugPrint("GAME READY");
 
 
 
-
-
-        // صندوق المكافأة
-
         if(showRewardBox)
-
-
 
           Container(
 
-
             color:
-
             Colors.black.withOpacity(0.35),
-
-
 
 
 
@@ -2158,70 +1575,45 @@ debugPrint("GAME READY");
 
             RewardBoxWidget(
 
-
-
               starTargetKey:
-
               starKey,
 
 
 
+              onStarReady: (){
 
 
-              onStarReady:
-
-              (){
-
-
-                starAnimationFinished = true;
+                starAnimationFinished =
+                true;
 
 
               },
 
 
 
-
-
-
-
-              onRewardOpened:
-
-              (){
+              onRewardOpened: (){
 
 
                 if(starAnimationFinished){
 
-
                   openWinScreen();
-
 
                 }
 
 
-
               },
 
-
-
             ),
-
-
 
           ),
 
 
-
       ],
-
 
     );
 
 
   }
-
-
-
-
 
 
 
@@ -2235,11 +1627,7 @@ debugPrint("GAME READY");
 
 
 
-
-
     confettiController.dispose();
-
-
 
 
 
@@ -2249,19 +1637,13 @@ debugPrint("GAME READY");
 
 
 
-
-
     effectPlayer.dispose();
-
-
 
 
 
     super.dispose();
 
-
   }
-
 
 
 }
