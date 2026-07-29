@@ -1057,11 +1057,12 @@ unlocked =
 
       builder:(context,snapshot){
 
+  final levelOpen =
+      snapshot.data ?? false;
 
 
-        final levelOpen =
-    snapshot.data ?? (level == 1);
 
+        
 
 
         return GestureDetector(
