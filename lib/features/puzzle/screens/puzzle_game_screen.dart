@@ -365,6 +365,9 @@ class _PuzzleGameScreenState
 
             loadedImage = info.image;
 
+debugPrint(
+  "IMAGE SIZE: ${loadedImage!.width} x ${loadedImage!.height}",
+);
 
 
 
@@ -395,12 +398,17 @@ class _PuzzleGameScreenState
 
 
 
-            imageReady = true;
+            if(mounted){
 
+  setState(() {
+    imageReady = true;
+  });
 
+}
 
-            createGame();
+debugPrint("IMAGE LOADED");
 
+createGame();
 
 
           },
@@ -449,96 +457,64 @@ class _PuzzleGameScreenState
 
   void createGame(){
 
+  try{
 
-    try{
-
-
-      if(loadedImage == null){
-
-        return;
-
-      }
-
-
-
-
-
-
-      pieces = PuzzleGenerator.generate(
-
-
-        rows:
-
-        widget.level.gridSize,
-
-
-
-        columns:
-
-        widget.level.gridSize,
-
-
-
-        imageWidth:
-
-        loadedImage!.width.toDouble(),
-
-
-
-        imageHeight:
-
-        loadedImage!.height.toDouble(),
-
-
-
-        boardSize:
-
-        boardSize,
-
-      );
-
-
-
-
-
-
-
-      controller = PuzzleController(
-
-
-        pieces:
-
-        pieces,
-
-
-      );
-
-
-
-
-
-      loadProgress();
-
-
-
-    }catch(e){
-
-
-      debugPrint(
-
-        "Create game error: $e",
-
-      );
-
-
+    if(loadedImage == null){
+      debugPrint("IMAGE NULL");
+      return;
     }
 
+    debugPrint("CREATE GAME START");
+
+    pieces = PuzzleGenerator.generate(
+
+      rows:
+      widget.level.gridSize,
+
+      columns:
+      widget.level.gridSize,
+
+      imageWidth:
+      loadedImage!.width.toDouble(),
+
+      imageHeight:
+      loadedImage!.height.toDouble(),
+
+      boardSize:
+      boardSize,
+
+    );
+
+    debugPrint(
+      "PIECES CREATED: ${pieces.length}",
+    );
+
+
+    controller = PuzzleController(
+  pieces: pieces,
+);
+
+
+if(pieces.isNotEmpty){
+
+  debugPrint("START LOAD PROGRESS");
+
+  loadProgress();
+
+}else{
+
+  debugPrint("PIECES EMPTY");
+
+}
+  }catch(e){
+
+    debugPrint(
+      "Create game error: $e",
+    );
 
   }
 
-
-
-
+}
 
 
 
@@ -551,16 +527,16 @@ class _PuzzleGameScreenState
 
   Future<void> loadProgress() async {
 
+  debugPrint("LOAD PROGRESS START");
 
-    try{
-
+  try{
 
       hints =
 
       await PuzzleHintManager.getHints();
 
 
-
+debugPrint("HINTS LOADED");
 
 
 
@@ -571,7 +547,7 @@ class _PuzzleGameScreenState
 
 
 
-
+debugPrint("SAVE DATA LOADED: $saved");
 
 
 
@@ -604,6 +580,7 @@ class _PuzzleGameScreenState
 
       if(mounted){
 
+debugPrint("GAME READY");
 
         setState((){
 
@@ -1681,8 +1658,7 @@ class _PuzzleGameScreenState
 
 
                   logo:
-
-                  "assets/images/logo.png",
+"assets/images/ui/puzzle_logo.png",
 
 
                   starKey:
