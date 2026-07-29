@@ -531,29 +531,28 @@ class PuzzleLevelData {
 
   static PuzzleLevelModel? getLevel({
 
-    required String puzzleId,
+  required String puzzleId,
 
-    required String levelId,
+  required String levelId,
 
-  }) {
+}) {
+
+  final worldLevels = getLevels(puzzleId);
 
 
-    final worldLevels = getLevels(puzzleId);
+  for (final level in worldLevels) {
 
+    if (level.id == levelId ||
+        "level_${level.levelNumber}" == levelId) {
 
-    try {
-
-      return worldLevels.firstWhere(
-            (level) => level.id == levelId,
-      );
-
-    } catch (_) {
-
-      return null;
+      return level;
 
     }
 
   }
 
 
+  return null;
+
+}
 }
