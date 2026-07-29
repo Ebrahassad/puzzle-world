@@ -5,43 +5,33 @@ import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
 import 'package:audioplayers/audioplayers.dart';
 
-
 import '../models/game_result_model.dart';
 import '../models/puzzle_level_model.dart';
 import '../models/puzzle_model.dart';
-
 
 import '../engine/puzzle_controller.dart';
 import '../engine/puzzle_generator.dart';
 import '../engine/puzzle_piece.dart';
 
-
 import '../widgets/puzzle_piece_widget.dart';
 import '../widgets/reward_box_widget.dart';
 import '../widgets/game_toolbar.dart';
 
-
 import '../managers/puzzle_hint_manager.dart';
 import '../managers/puzzle_progress_manager.dart';
 
-
 import '../services/reward_ad_service.dart';
-
+import '../services/puzzle_level_unlock_service.dart';
 
 import 'puzzle_win_screen.dart';
 
 
 
-
-
-
 class PuzzleGameScreen extends StatefulWidget {
-
 
   final PuzzleModel puzzle;
 
   final PuzzleLevelModel level;
-
 
 
   const PuzzleGameScreen({
@@ -55,7 +45,6 @@ class PuzzleGameScreen extends StatefulWidget {
   });
 
 
-
   @override
   State<PuzzleGameScreen> createState() =>
       _PuzzleGameScreenState();
@@ -65,24 +54,15 @@ class PuzzleGameScreen extends StatefulWidget {
 
 
 
-
-
-
-
-
 class _PuzzleGameScreenState
-
     extends State<PuzzleGameScreen> {
-
-
-
-  List<PuzzlePiece> pieces = [];
 
 
 
   late PuzzleController controller;
 
 
+  List<PuzzlePiece> pieces = [];
 
 
 
@@ -90,8 +70,6 @@ class _PuzzleGameScreenState
 
 
   late ConfettiController confettiController;
-
-
 
 
 
@@ -105,41 +83,27 @@ class _PuzzleGameScreenState
 
 
 
-
-
   int moves = 0;
 
-
   int seconds = 0;
-
 
   int hints = 0;
 
 
 
-
-
   bool loading = true;
-
 
   bool finishing = false;
 
-
   bool showRewardBox = false;
 
-
   bool rewardOpened = false;
-
 
   bool starAnimationFinished = false;
 
 
 
-
-
-  double boardSize = 300;
-
-
+  final double boardSize = 300;
 
 
 
@@ -153,16 +117,11 @@ class _PuzzleGameScreenState
 
 
 
-
-
   final GlobalKey starKey = GlobalKey();
 
 
 
-
-
   double get pieceSize =>
-
       boardSize / widget.level.gridSize;
 
 
@@ -170,45 +129,25 @@ class _PuzzleGameScreenState
 
 
 
-
-
-
   @override
-  void initState() {
+  void initState(){
 
     super.initState();
 
 
-
     puzzleImage = AssetImage(
-
       widget.level.image,
-
     );
-
 
 
     confettiController =
-
-    ConfettiController(
-
-      duration:
-
-      const Duration(
-
-        seconds:3,
-
-      ),
-
-    );
+        ConfettiController(
+          duration:
+          const Duration(seconds:3),
+        );
 
 
-
-    initAudio();
-
-
-
-    loadPuzzleImage();
+    initGame();
 
 
   }
@@ -217,102 +156,281 @@ class _PuzzleGameScreenState
 
 
 
+  Future<void> initGame() async {
 
 
+    await initAudio();
+
+
+    pieces = PuzzleGenerator.generate(
+
+      rows: widget.level.gridSize,
+
+      columns: widget.level.gridSize,
+
+      imageWidth: boardSize,
+
+      imageHeight: boardSize,
+
+      boardSize: boardSize,
+
+    );
+
+
+
+    controller = PuzzleController(
+
+      pieces: pieces,
+
+    );
+
+
+
+    await loadProgress();
+
+
+    if(mounted){
+
+      setState((){
+
+        loading = false;
+
+      });
+
+    }
+
+
+  }
 
   Future<void> initAudio() async {
 
-
     try {
 
-
       await bgPlayer.setReleaseMode(
-
         ReleaseMode.loop,
-
       );
 
 
-
       await bgPlayer.play(
-
         AssetSource(
-
           "audio/puzzle_bgm.mp3",
-
         ),
-
       );
 
 
     } catch(e) {
 
-
       debugPrint(
-
         "Audio error: $e",
-
       );
-
 
     }
 
   }
 
-  //===============================
-  // تحميل التقدم
-  //===============================
+
+
+
+  Future<void> loadPuzzleImage() async {
+
+    try {
+
+      final completer =
+      AssetImage(
+        widget.level.image,
+      ).resolve(
+        const ImageConfiguration(),
+      );
+
+
+      completer.addListener(
+        ImageStreamListener(
+              (info, _) async {
+
+
+            loadedImage =
+                await _loadUiImage(
+                  widget.level.image,
+                );
+
+
+            generatePuzzle();
+
+
+          },
+        ),
+      );
+
+
+    } catch(e) {
+
+      debugPrint(
+        "IMAGE ERROR: $e",
+      );
+
+    }
+
+  }
+
+
+
+
+
+  Future<ui.Image> _loadUiImage(
+      String asset,
+      ) async {
+
+
+    final data =
+    await DefaultAssetBundle.of(context)
+        .load(asset);
+
+
+
+    final codec =
+    await ui.instantiateImageCodec(
+      data.buffer.asUint8List(),
+    );
+
+
+
+    final frame =
+    await codec.getNextFrame();
+
+
+
+    return frame.image;
+
+  }
+
+
+
+
+
+  void generatePuzzle(){
+
+    pieces =
+        PuzzleGenerator.generate(
+
+          rows:
+          widget.level.gridSize,
+
+
+          columns:
+          widget.level.gridSize,
+
+
+          imageWidth:
+          loadedImage!.width.toDouble(),
+
+
+          imageHeight:
+          loadedImage!.height.toDouble(),
+
+
+          boardSize:
+          boardSize,
+
+        );
+
+
+
+    controller =
+        PuzzleController(
+          pieces: pieces,
+        );
+
+
+
+    loadProgress();
+
+  }
+
+
+
+
 
   Future<void> loadProgress() async {
 
     try {
 
-      hints = await PuzzleHintManager.getHints();
+
+      hints =
+      await PuzzleHintManager.getHints();
+
 
 
       final saved =
-          await PuzzleProgressManager.loadProgress();
+      await PuzzleProgressManager.loadProgress();
+
+
 
 
       if(saved != null &&
-          saved["levelId"] == widget.level.id){
+          saved["levelId"] ==
+              widget.level.id){
 
 
         moves =
             saved["moves"] ?? 0;
 
 
+
         seconds =
             saved["seconds"] ?? 0;
 
 
+
         final savedPieces =
-            saved["pieces"];
+        saved["pieces"];
+
 
 
         if(savedPieces != null){
 
+
           for(final item in savedPieces){
+
 
             final piece =
             pieces.firstWhere(
-                  (p)=>p.id == item["id"],
-              orElse: ()=>pieces.first,
+
+                  (p)=>
+              p.id ==
+                  item["id"],
+
+
+              orElse:
+                  ()=> pieces.first,
+
             );
 
 
-            piece.position = Offset(
-              item["x"],
-              item["y"],
-            );
+
+            piece.position =
+                Offset(
+
+                  (item["x"] ?? 0)
+                      .toDouble(),
+
+
+                  (item["y"] ?? 0)
+                      .toDouble(),
+
+                );
+
 
 
             piece.placed =
-                item["placed"] ?? false;
+                item["placed"] ??
+                    false;
+
 
           }
 
+
         }
+
 
       }
 
@@ -321,9 +439,12 @@ class _PuzzleGameScreenState
       if(!mounted) return;
 
 
+
       setState((){
 
         loading = false;
+
+        imageReady = true;
 
       });
 
@@ -335,20 +456,10 @@ class _PuzzleGameScreenState
 
     }catch(e){
 
+
       debugPrint(
         "LOAD ERROR: $e",
       );
-
-
-      if(mounted){
-
-        setState((){
-
-          loading=false;
-
-        });
-
-      }
 
     }
 
@@ -358,27 +469,30 @@ class _PuzzleGameScreenState
 
 
 
-
-
-  //===============================
-  // المؤقت
-  //===============================
-
   void startTimer(){
+
 
     timer?.cancel();
 
 
+
     timer =
         Timer.periodic(
-          const Duration(seconds:1),
-              (_){
 
-            if(!mounted || finishing){
+          const Duration(
+            seconds:1,
+          ),
+
+              (_) {
+
+
+            if(!mounted ||
+                finishing){
 
               return;
 
             }
+
 
 
             setState((){
@@ -389,7 +503,9 @@ class _PuzzleGameScreenState
 
 
           },
+
         );
+
 
   }
 
@@ -398,12 +514,6 @@ class _PuzzleGameScreenState
 
 
 
-
-
-  //===============================
-  // تحريك القطعة
-  //===============================
-
   Future<void> movePiece(
 
       PuzzlePiece piece,
@@ -411,6 +521,7 @@ class _PuzzleGameScreenState
       DragUpdateDetails details,
 
       ) async {
+
 
 
     if(piece.placed ||
@@ -422,39 +533,31 @@ class _PuzzleGameScreenState
 
 
 
+
     setState((){
 
 
-      piece.position += details.delta;
+      piece.position +=
+          details.delta;
 
 
 
-      final maxX =
-          boardSize - pieceSize;
+      piece.position =
+          Offset(
+
+            piece.position.dx.clamp(
+              0,
+              boardSize-pieceSize,
+            ),
 
 
-      final maxY =
-          boardSize - pieceSize;
+            piece.position.dy.clamp(
+              0,
+              boardSize-pieceSize,
+            ),
 
 
-
-
-      piece.position = Offset(
-
-        piece.position.dx
-            .clamp(
-          0,
-          maxX,
-        ),
-
-
-        piece.position.dy
-            .clamp(
-          0,
-          maxY,
-        ),
-
-      );
+          );
 
 
 
@@ -468,18 +571,12 @@ class _PuzzleGameScreenState
 
 
 
-
-
-
-  //===============================
-  // إسقاط القطعة
-  //===============================
-
   Future<void> dropPiece(
 
       PuzzlePiece piece,
 
       ) async {
+
 
 
     if(piece.placed ||
@@ -491,85 +588,47 @@ class _PuzzleGameScreenState
 
 
 
-    try{
+    final correct =
+    controller.checkPiecePosition(
 
+      piece,
 
-      final correct =
+      pieceSize,
 
-      controller.checkPiecePosition(
-
-        piece,
-
-        pieceSize,
-
-      );
+    );
 
 
 
+    setState((){
 
-      setState((){
+      moves++;
 
-        moves++;
-
-      });
-
+    });
 
 
 
-      if(correct){
+    await playSound(
 
+      correct
+          ? "puzzle_success.mp3"
+          : "puzzle_fail.mp3",
 
-        await playSound(
-          "puzzle_success.mp3",
-        );
-
-
-      }else{
-
-
-        await playSound(
-          "puzzle_fail.mp3",
-        );
-
-
-      }
+    );
 
 
 
-      await saveGame();
+    await saveGame();
 
 
 
-      checkCompleted();
-
-
-
-    }catch(e){
-
-      debugPrint(
-        "DROP ERROR: $e",
-      );
-
-    }
+    checkCompleted();
 
 
   }
 
-
-
-
-
-
-
-  //===============================
-  // حفظ اللعبة
-  //===============================
-
   Future<void> saveGame() async {
 
-
-    try{
-
+    try {
 
       await PuzzleProgressManager.saveProgress(
 
@@ -592,53 +651,31 @@ class _PuzzleGameScreenState
         seconds:
         seconds,
 
-
       );
 
 
-    }catch(e){
-
+    } catch(e){
 
       debugPrint(
         "SAVE ERROR: $e",
       );
 
-
     }
 
   }
 
-  //===============================
-  // فحص اكتمال البازل
-  //===============================
+
+
+
 
   void checkCompleted(){
 
-    try{
+    if(controller.isCompleted &&
+        !finishing){
 
-
-      if(controller.isCompleted &&
-          !finishing){
-
-
-        finishGame();
-
-
-      }
-
-
-    }catch(e){
-
-
-      debugPrint(
-
-        "CHECK COMPLETE ERROR: $e",
-
-      );
-
+      finishGame();
 
     }
-
 
   }
 
@@ -646,24 +683,15 @@ class _PuzzleGameScreenState
 
 
 
-
-
-
-  //===============================
-  // استخدام التلميح
-  //===============================
 
   Future<void> usePuzzleHint() async {
 
 
-    try{
+    try {
 
 
       bool available =
-
       await PuzzleHintManager.consumeHint();
-
-
 
 
 
@@ -671,10 +699,7 @@ class _PuzzleGameScreenState
 
 
         final watched =
-
         await RewardAdService.showRewardAd();
-
-
 
 
 
@@ -696,8 +721,6 @@ class _PuzzleGameScreenState
 
 
 
-
-
       if(!available){
 
         return;
@@ -708,16 +731,10 @@ class _PuzzleGameScreenState
 
 
 
-
-
       final piece =
-
       PuzzleHintManager.findAvailablePiece(
-
         pieces,
-
       );
-
 
 
 
@@ -727,8 +744,6 @@ class _PuzzleGameScreenState
         return;
 
       }
-
-
 
 
 
@@ -755,15 +770,9 @@ class _PuzzleGameScreenState
 
 
 
-
-
       await playSound(
-
         "puzzle_success.mp3",
-
       );
-
-
 
 
 
@@ -776,16 +785,11 @@ class _PuzzleGameScreenState
 
 
 
-
     }catch(e){
 
-
       debugPrint(
-
         "HINT ERROR: $e",
-
       );
-
 
     }
 
@@ -798,13 +802,6 @@ class _PuzzleGameScreenState
 
 
 
-
-
-
-  //===============================
-  // إنهاء المرحلة
-  //===============================
-
   Future<void> finishGame() async {
 
 
@@ -816,27 +813,23 @@ class _PuzzleGameScreenState
 
 
 
-
-    try{
-
-
-      finishing = true;
+    finishing = true;
 
 
 
-      timer?.cancel();
+    timer?.cancel();
 
 
 
+    try {
 
 
 
       await PuzzleProgressManager.completeLevel(
 
-        widget.level.id,
+        "${widget.puzzle.id}_${widget.level.id}",
 
       );
-
 
 
 
@@ -854,9 +847,29 @@ class _PuzzleGameScreenState
 
 
 
+      await PuzzleProgressManager.addCompletedPuzzle(
+
+        moves: moves,
+
+        seconds: seconds,
+
+      );
+
+
+
+
+
+      await PuzzleProgressManager.addStars(
+
+        widget.level.rewardStars,
+
+      );
+
+
+
+
 
       await PuzzleProgressManager.clearProgress();
-
 
 
 
@@ -872,7 +885,6 @@ class _PuzzleGameScreenState
 
 
 
-
       if(!mounted){
 
         return;
@@ -883,10 +895,7 @@ class _PuzzleGameScreenState
 
 
 
-
       confettiController.play();
-
-
 
 
 
@@ -906,9 +915,6 @@ class _PuzzleGameScreenState
 
 
 
-
-
-
       if(!mounted){
 
         return;
@@ -921,12 +927,9 @@ class _PuzzleGameScreenState
 
       setState((){
 
-
         showRewardBox = true;
 
-
       });
-
 
 
 
@@ -955,13 +958,6 @@ class _PuzzleGameScreenState
 
 
 
-
-
-
-  //===============================
-  // فتح شاشة الفوز
-  //===============================
-
   Future<void> openWinScreen() async {
 
 
@@ -973,142 +969,91 @@ class _PuzzleGameScreenState
 
 
 
-
-
-    try{
-
-
-      rewardOpened = true;
+    rewardOpened = true;
 
 
 
-
-
-
-      await bgPlayer.stop();
+    await bgPlayer.stop();
 
 
 
 
 
+    if(!mounted){
 
-      if(!mounted){
+      return;
 
-        return;
-
-      }
-
+    }
 
 
 
 
 
+    Navigator.pushReplacement(
 
-      Navigator.pushReplacement(
-
-
-        context,
+      context,
 
 
-        MaterialPageRoute(
+      MaterialPageRoute(
+
+        builder: (_)=>
 
 
-          builder: (_)=>
+        PuzzleWinScreen(
 
-          PuzzleWinScreen(
+          result:
 
+          GameResultModel(
 
-            result:
-
-            GameResultModel(
-
-
-              stars:
-
-              widget.level.rewardStars,
+            stars:
+            widget.level.rewardStars,
 
 
-
-              moves:
-
-              moves,
+            moves:
+            moves,
 
 
+            time:
 
-              time:
+            Duration(
 
-              Duration(
-
-                seconds: seconds,
-
-              ),
-
+              seconds:
+              seconds,
 
             ),
-
-
-
-
-
-
-            difficulty:
-
-
-            widget.level.gridSize <= 4
-
-                ? 1
-
-                : widget.level.gridSize <= 6
-
-                ? 2
-
-                : 3,
-
-
-
-
-
-
-            worldId:
-
-            widget.puzzle.id,
-
-
-
-
-
-
-
-            level:
-
-            widget.level.levelNumber,
-
-
-
 
           ),
 
 
+
+          difficulty:
+
+          widget.level.gridSize <= 4
+
+              ? 1
+
+              : widget.level.gridSize <= 6
+
+              ? 2
+
+              : 3,
+
+
+
+          worldId:
+          widget.puzzle.id,
+
+
+
+          level:
+          widget.level.levelNumber,
+
+
         ),
 
+      ),
 
-      );
-
-
-
-
-
-    }catch(e){
-
-
-      debugPrint(
-
-        "OPEN WIN ERROR: $e",
-
-      );
-
-
-    }
+    );
 
 
   }
@@ -1118,13 +1063,6 @@ class _PuzzleGameScreenState
 
 
 
-
-
-
-
-  //===============================
-  // فتح صندوق المكافأة
-  //===============================
 
   Widget buildRewardBox(){
 
@@ -1138,88 +1076,56 @@ class _PuzzleGameScreenState
 
 
 
+    return RewardBoxWidget(
 
-    return Container(
+      starTargetKey:
 
-      color:
-
-      Colors.black.withOpacity(0.35),
-
+      starKey,
 
 
 
-
-      child:
-
-      RewardBoxWidget(
+      onStarReady: (){
 
 
-        starTargetKey:
+        starAnimationFinished = true;
 
-        starKey,
+
+      },
 
 
 
+      onRewardOpened: (){
 
 
-        onStarReady:
+        if(starAnimationFinished){
 
-        (){
+          openWinScreen();
 
-
-          starAnimationFinished = true;
-
-
-        },
+        }
 
 
-
-
-
-
-        onRewardOpened:
-
-        (){
-
-
-          if(starAnimationFinished){
-
-
-            openWinScreen();
-
-
-          }
-
-
-        },
-
-
-
-      ),
-
+      },
 
     );
 
 
   }
 
-  //===============================
-  // بناء واجهة اللعبة
-  //===============================
-
   @override
   Widget build(BuildContext context) {
 
 
-    if (loading ||
-        !imageReady ||
-        !::pieces.isInitialized) {
+    if(loading || !imageReady){
 
       return const Scaffold(
 
-        body: Center(
+        body:
 
-          child: CircularProgressIndicator(),
+        Center(
+
+          child:
+
+          CircularProgressIndicator(),
 
         ),
 
@@ -1229,20 +1135,32 @@ class _PuzzleGameScreenState
 
 
 
+
+
     return Stack(
 
       children: [
 
 
+
         Scaffold(
 
+
           backgroundColor:
+
           Colors.blue.shade50,
 
 
-          body: SafeArea(
 
-            child: Column(
+          body:
+
+          SafeArea(
+
+
+            child:
+
+            Column(
+
 
               children: [
 
@@ -1251,17 +1169,25 @@ class _PuzzleGameScreenState
                 GameToolbar(
 
                   logo:
+
                   "assets/images/ui/puzzle_logo.png",
 
+
                   starKey:
+
                   starKey,
+
 
                 ),
 
 
 
+
+
                 const SizedBox(
-                  height: 10,
+
+                  height:10,
+
                 ),
 
 
@@ -1270,37 +1196,64 @@ class _PuzzleGameScreenState
 
                 Expanded(
 
-                  child: Container(
+
+                  child:
+
+                  Container(
+
 
                     margin:
+
                     const EdgeInsets.symmetric(
-                      horizontal: 10,
-                    ),
 
-
-                    decoration: BoxDecoration(
-
-                      color: Colors.white,
-
-                      borderRadius:
-                      BorderRadius.circular(25),
+                      horizontal:10,
 
                     ),
 
 
 
-                    child: ClipRRect(
+
+                    decoration:
+
+                    BoxDecoration(
+
+                      color:
+
+                      Colors.white,
+
 
                       borderRadius:
+
+                      BorderRadius.circular(25),
+
+
+                    ),
+
+
+
+
+
+                    child:
+
+                    ClipRRect(
+
+
+                      borderRadius:
+
                       BorderRadius.circular(25),
 
 
 
-                      child: Stack(
+                      child:
+
+                      Stack(
+
+
 
                         children:
 
                         pieces.map((piece){
+
 
 
                           if(piece.placed){
@@ -1311,45 +1264,64 @@ class _PuzzleGameScreenState
 
 
 
+
                           return Positioned(
 
+
                             left:
+
                             piece.position.dx,
 
 
+
                             top:
+
                             piece.position.dy,
 
 
 
+
                             child:
+
                             GestureDetector(
 
 
+
                               onPanUpdate:
+
                                   (details){
 
 
                                 movePiece(
+
                                   piece,
+
                                   details,
+
                                 );
 
 
                               },
+
+
 
 
 
                               onPanEnd:
+
                                   (_) {
 
 
                                 dropPiece(
+
                                   piece,
+
                                 );
 
 
                               },
+
+
 
 
 
@@ -1357,21 +1329,29 @@ class _PuzzleGameScreenState
 
                               PuzzlePieceWidget(
 
+
                                 piece:
+
                                 piece,
 
 
+
                                 image:
+
                                 puzzleImage,
 
 
+
                                 size:
+
                                 pieceSize,
 
 
                               ),
 
+
                             ),
+
 
                           );
 
@@ -1380,11 +1360,16 @@ class _PuzzleGameScreenState
                         }).toList(),
 
 
+
                       ),
+
 
                     ),
 
+
+
                   ),
+
 
                 ),
 
@@ -1395,36 +1380,53 @@ class _PuzzleGameScreenState
 
                 Container(
 
+
                   height:
+
                   boardSize + 40,
 
 
+
                   margin:
+
                   const EdgeInsets.all(10),
 
 
 
+
+
                   decoration:
+
                   BoxDecoration(
 
+
                     color:
+
                     Colors.white,
 
 
+
                     borderRadius:
+
                     BorderRadius.circular(25),
 
 
+
+
                     border:
+
                     Border.all(
 
                       color:
+
                       Colors.orange,
 
                       width:
+
                       3,
 
                     ),
+
 
                   ),
 
@@ -1432,22 +1434,36 @@ class _PuzzleGameScreenState
 
 
 
-                  child: Center(
 
-                    child: SizedBox(
+                  child:
+
+                  Center(
+
+
+
+                    child:
+
+                    SizedBox(
+
 
                       width:
+
                       boardSize,
+
 
 
                       height:
+
                       boardSize,
+
+
 
 
 
                       child:
 
                       Stack(
+
 
                         children:
 
@@ -1471,6 +1487,7 @@ class _PuzzleGameScreenState
                             left:
 
                             piece.column *
+
                                 pieceSize,
 
 
@@ -1478,7 +1495,10 @@ class _PuzzleGameScreenState
                             top:
 
                             piece.row *
+
                                 pieceSize,
+
+
 
 
 
@@ -1486,18 +1506,26 @@ class _PuzzleGameScreenState
 
                             PuzzlePieceWidget(
 
+
                               piece:
+
                               piece,
 
 
+
                               image:
+
                               puzzleImage,
 
 
+
                               size:
+
                               pieceSize,
 
+
                             ),
+
 
                           );
 
@@ -1508,9 +1536,13 @@ class _PuzzleGameScreenState
 
                       ),
 
+
                     ),
 
+
                   ),
+
+
 
                 ),
 
@@ -1518,9 +1550,14 @@ class _PuzzleGameScreenState
 
               ],
 
+
+
             ),
 
+
+
           ),
+
 
         ),
 
@@ -1528,33 +1565,46 @@ class _PuzzleGameScreenState
 
 
 
-
         Align(
 
+
           alignment:
+
           Alignment.topCenter,
+
 
 
           child:
 
           ConfettiWidget(
 
+
             confettiController:
+
             confettiController,
 
 
+
             blastDirectionality:
+
             BlastDirectionality.explosive,
 
 
+
             numberOfParticles:
+
             40,
 
 
+
             gravity:
+
             0.3,
 
+
           ),
+
+
 
         ),
 
@@ -1566,54 +1616,80 @@ class _PuzzleGameScreenState
 
           Container(
 
+
             color:
+
             Colors.black.withOpacity(0.35),
+
+
 
 
 
             child:
 
-            RewardBoxWidget(
-
-              starTargetKey:
-              starKey,
+            Center(
 
 
+              child:
 
-              onStarReady: (){
-
-
-                starAnimationFinished =
-                true;
-
-
-              },
+              RewardBoxWidget(
 
 
 
-              onRewardOpened: (){
+                starTargetKey:
+
+                starKey,
 
 
-                if(starAnimationFinished){
 
-                  openWinScreen();
-
-                }
+                onStarReady: (){
 
 
-              },
+                  starAnimationFinished = true;
+
+
+                },
+
+
+
+
+
+                onRewardOpened: (){
+
+
+                  if(starAnimationFinished){
+
+
+                    openWinScreen();
+
+
+                  }
+
+
+                },
+
+
+              ),
+
 
             ),
+
+
 
           ),
 
 
+
       ],
+
+
 
     );
 
-
   }
+
+
+
 
 
 
@@ -1631,9 +1707,11 @@ class _PuzzleGameScreenState
 
 
 
+
     bgPlayer.stop();
 
     bgPlayer.dispose();
+
 
 
 
@@ -1642,6 +1720,7 @@ class _PuzzleGameScreenState
 
 
     super.dispose();
+
 
   }
 
