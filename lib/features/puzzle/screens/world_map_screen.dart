@@ -700,7 +700,7 @@ final GlobalKey starKey = GlobalKey();
 
                       "assets/images/ui/level_lock.png",
 
-                      width: size * 0.35,
+                      width: size * 0.45,
 
                       fit: BoxFit.contain,
 
@@ -882,28 +882,11 @@ final GlobalKey starKey = GlobalKey();
                     // جزيرة الفضاء - الأعلى في المنتصف
 
                     islandButton(
-
-
-
-                      "space",
-
-
-
-                      width * 0.50,
-
-
-
-                      height * 0.13,
-
-
-
-                      size: 180,
-
-
-
-                    ),
-
-
+  "space",
+  width * 0.50,
+  height * 0.11,
+  size: 230,
+),
 
 
 
@@ -912,27 +895,11 @@ final GlobalKey starKey = GlobalKey();
                     // جزيرة الحيوانات - مفتوحة
 
                     islandButton(
-
-
-
-                      "animals",
-
-
-
-                      width * 0.32,
-
-
-
-                      height * 0.48,
-
-
-
-                      size: 155,
-
-
-
-                    ),
-
+  "animals",
+  width * 0.32,
+  height * 0.46,
+  size: 190,
+),
 
 
 
@@ -941,30 +908,12 @@ final GlobalKey starKey = GlobalKey();
 
                     // جزيرة المعالم - مقفلة
 
-                    islandButton(
-
-
-
-                      "landmarks",
-
-
-
-                      width * 0.72,
-
-
-
-                      height * 0.50,
-
-
-
-                      size: 155,
-
-
-
-                    ),
-
-
-
+                   islandButton(
+  "landmarks",
+  width * 0.72,
+  height * 0.47,
+  size: 190,
+),
 
 
 
@@ -972,28 +921,11 @@ final GlobalKey starKey = GlobalKey();
                     // جزيرة السيارات - مقفلة
 
                     islandButton(
-
-
-
-                      "cars",
-
-
-
-                      width * 0.25,
-
-
-
-                      height * 0.78,
-
-
-
-                      size: 155,
-
-
-
-                    ),
-
-
+  "cars",
+  width * 0.25,
+  height * 0.70,
+  size: 190,
+),
 
 
 
@@ -1001,29 +933,12 @@ final GlobalKey starKey = GlobalKey();
 
                     // جزيرة الطبيعة - مقفلة
 
-                    islandButton(
-
-
-
-                      "nature",
-
-
-
-                      width * 0.72,
-
-
-
-                      height * 0.78,
-
-
-
-                      size: 155,
-
-
-
-                    ),
-
-
+                   islandButton(
+  "nature",
+  width * 0.72,
+  height * 0.70,
+  size: 190,
+),
 
 
 
@@ -1053,7 +968,7 @@ Positioned(
 
   child: GameToolbar(
 
-    logo: "assets/images/ui/logo.png",
+    logo: "assets/images/ui/puzzle_logo.png",
 
     starKey: starKey,
 
