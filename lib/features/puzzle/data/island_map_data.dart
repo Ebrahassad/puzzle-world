@@ -1,9 +1,6 @@
-import 'package:flutter/material.dart';
-
 import '../models/island_map_model.dart';
 
 class IslandMapData {
-
   static const Map<String, IslandMapModel> positions = {
 
     //==========================================
@@ -11,13 +8,10 @@ class IslandMapData {
     //==========================================
 
     "animals": IslandMapModel(
-
       islandId: "animals",
-
-      position: Offset(356, 593),
-
-      size: 170,
-
+      x: 0.28,
+      y: 0.31,
+      size: 0.15,
     ),
 
     //==========================================
@@ -25,13 +19,10 @@ class IslandMapData {
     //==========================================
 
     "cars": IslandMapModel(
-
       islandId: "cars",
-
-      position: Offset(376, 1099),
-
-      size: 170,
-
+      x: 0.28,
+      y: 0.58,
+      size: 0.15,
     ),
 
     //==========================================
@@ -39,13 +30,10 @@ class IslandMapData {
     //==========================================
 
     "nature": IslandMapModel(
-
       islandId: "nature",
-
-      position: Offset(844, 1099),
-
-      size: 170,
-
+      x: 0.67,
+      y: 0.58,
+      size: 0.15,
     ),
 
     //==========================================
@@ -53,13 +41,10 @@ class IslandMapData {
     //==========================================
 
     "landmarks": IslandMapModel(
-
       islandId: "landmarks",
-
-      position: Offset(856, 629),
-
-      size: 170,
-
+      x: 0.67,
+      y: 0.33,
+      size: 0.15,
     ),
 
     //==========================================
@@ -67,15 +52,10 @@ class IslandMapData {
     //==========================================
 
     "space": IslandMapModel(
-
       islandId: "space",
-
-      position: Offset(572, 205),
-
-      size: 170,
-
+      x: 0.47,
+      y: 0.10,
+      size: 0.15,
     ),
-
   };
-
 }
