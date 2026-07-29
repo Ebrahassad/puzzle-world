@@ -3,7 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../data/puzzle_world_data.dart';
+import '../data/puzzle_data.dart';
 import '../data/island_map_data.dart';
 
 import '../models/puzzle_model.dart';
