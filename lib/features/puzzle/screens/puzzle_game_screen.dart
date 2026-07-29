@@ -378,7 +378,7 @@ class _PuzzleGameScreenState
 
 }
 
-
+  }
 
 
   void startTimer(){
