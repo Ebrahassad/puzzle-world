@@ -906,11 +906,9 @@ static Future<void> saveLevelStars(
 
     // المستوى الأول مفتوح تلقائياً
 
-    if(levelKey.contains("_level_1")){
-
-      return true;
-
-    }
+    if(levelKey.endsWith("_level_1")){
+  return true;
+}
 
 
 
