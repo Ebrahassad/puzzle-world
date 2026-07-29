@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../data/puzzle_level_data.dart';
+import '../data/island_background_data.dart';
+
 import '../managers/puzzle_progress_manager.dart';
 
 import '../models/puzzle_model.dart';
@@ -1233,7 +1235,7 @@ unlocked =
 
 
 
-                "assets/images/ui/level_lock.png",
+                "assets/images/ui/lock.png",
 
 
 
@@ -1311,7 +1313,7 @@ unlocked =
 
 
 
-                "assets/images/ui/level_lock.png",
+                "assets/images/ui/lock.png",
 
 
 
@@ -1453,11 +1455,13 @@ unlocked =
 
               child:Opacity(
 
-  opacity:0.55,
+  opacity:0.40,
 
   child:Image.asset(
 
-    "assets/images/background/level_background.png",
+    IslandBackgroundData.getBackground(
+      widget.island.id,
+    ),
 
     fit:BoxFit.cover,
 
