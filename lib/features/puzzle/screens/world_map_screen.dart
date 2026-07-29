@@ -11,7 +11,7 @@ import '../models/island_map_model.dart';
 
 
 import 'island_screen.dart';
-
+import 'wallet_screen.dart';
 
 
 class WorldMapScreen extends StatefulWidget {
@@ -435,10 +435,12 @@ SafeArea(
               color: Colors.white,
             ),
             onPressed: () {
-              Navigator.pushNamed(
-                context,
-                '/wallet',
-              );
+              Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (_) => const WalletScreen(),
+  ),
+);
             },
           ),
         ),
