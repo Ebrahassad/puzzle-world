@@ -3,116 +3,120 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../data/puzzle_data.dart';
-import '../models/puzzle_model.dart';
 
-import 'island_screen.dart';
+import '../data/puzzle_world_data.dart';
+import '../data/island_map_data.dart';
+
+
+import '../models/puzzle_model.dart';
+import '../models/island_map_model.dart';
+
 
 import '../managers/puzzle_progress_manager.dart';
 import '../managers/reward_manager.dart';
 
+
 import '../widgets/game_toolbar.dart';
+
+
+import 'island_screen.dart';
+
+
 
 
 
 class WorldMapScreen extends StatefulWidget {
 
+
   const WorldMapScreen({
+
     super.key,
+
   });
+
 
 
   @override
   State<WorldMapScreen> createState() =>
       _WorldMapScreenState();
 
+
 }
 
 
 
 
+
+
+
 class _WorldMapScreenState extends State<WorldMapScreen>
-    with
-        TickerProviderStateMixin {
+    with TickerProviderStateMixin {
 
 
-
-  //==================================================
-  // IMAGE
-  //==================================================
 
   final String mapImage =
       "assets/images/world/world_map.png";
 
 
 
-  //==================================================
-  // MAP ANIMATION
-  //==================================================
 
-  late AnimationController mapController;
-
-  late Animation<double> mapScaleAnimation;
-
-  late Animation<Offset> mapMoveAnimation;
-
-
-
-  //==================================================
-  // STAR FIELD ANIMATION
-  //==================================================
-
-  late AnimationController starsController;
-
-  late Animation<double> starsAnimation;
-
-
-
-  //==================================================
-  // SEA EFFECT ANIMATION
-  //==================================================
-
-  late AnimationController seaController;
-
-  late Animation<double> seaAnimation;
-
-
-
-  //==================================================
-  // ISLAND FLOAT ANIMATIONS
-  //==================================================
-
-  final Map<String, AnimationController>
-      islandControllers = {};
-
-  final Map<String, Animation<double>>
-      islandAnimations = {};
-
-
-
-  //==================================================
-  // TAP EFFECT
-  //==================================================
-
-  String? selectedIsland;
-
-
-
-  //==================================================
-  // DATA
-  //==================================================
 
   late List<PuzzleModel> islands;
 
 
 
-  //==================================================
-  // TIMER
-  //==================================================
 
-  Timer? refreshTimer;
+  final Map<String, IslandMapModel>
+      islandPositions =
+      IslandMapData.positions;
 
 
+
+
+
+  String? selectedIsland;
+
+
+
+
+
+  late AnimationController mapController;
+
+
+  late Animation<double> mapScaleAnimation;
+
+
+  late Animation<Offset> mapMoveAnimation;
+
+
+
+
+
+  late AnimationController starsController;
+
+
+  late Animation<double> starsAnimation;
+
+
+
+
+
+  late AnimationController seaController;
+
+
+  late Animation<double> seaAnimation;
+
+
+
+
+
+  final Map<String, AnimationController>
+      islandControllers = {};
+
+
+
+  final Map<String, Animation<double>>
+      islandAnimations = {};
 
   @override
   void initState() {
@@ -121,126 +125,272 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
 
 
-    islands = puzzleWorld;
+    //==================================================
+    // LOAD DATA
+    //==================================================
+
+
+    islands =
+        puzzleWorldData;
 
 
 
-    //==============================
-    // BACKGROUND MAP ZOOM + MOVE
-    //==============================
 
-    mapController = AnimationController(
-      vsync: this,
-      duration: const Duration(
-        seconds: 18,
-      ),
-    )..repeat(
-      reverse: true,
-    );
+
+    //==================================================
+    // MAP ANIMATION
+    //==================================================
+
+
+    mapController =
+        AnimationController(
+
+          vsync: this,
+
+          duration:
+          const Duration(
+
+            seconds: 18,
+
+          ),
+
+        )
+          ..repeat(
+
+            reverse: true,
+
+          );
+
+
+
 
 
     mapScaleAnimation =
         Tween<double>(
+
+
           begin: 1.0,
+
+
           end: 1.08,
+
+
         ).animate(
+
+
           CurvedAnimation(
-            parent: mapController,
-            curve: Curves.easeInOut,
+
+            parent:
+            mapController,
+
+
+            curve:
+            Curves.easeInOut,
+
+
           ),
+
+
         );
+
+
 
 
 
     mapMoveAnimation =
         Tween<Offset>(
-          begin: Offset.zero,
-          end: const Offset(
+
+
+          begin:
+          Offset.zero,
+
+
+          end:
+          const Offset(
+
             0.02,
+
             -0.02,
+
           ),
+
+
         ).animate(
+
+
           CurvedAnimation(
-            parent: mapController,
-            curve: Curves.easeInOut,
+
+            parent:
+            mapController,
+
+
+            curve:
+            Curves.easeInOut,
+
+
           ),
+
+
         );
 
 
 
-    //==============================
-    // STARS
-    //==============================
 
-    starsController = AnimationController(
-      vsync: this,
-      duration: const Duration(
-        seconds: 8,
-      ),
-    )..repeat();
+
+
+    //==================================================
+    // STARS ANIMATION
+    //==================================================
+
+
+    starsController =
+        AnimationController(
+
+          vsync: this,
+
+          duration:
+          const Duration(
+
+            seconds: 8,
+
+          ),
+
+        )
+          ..repeat();
+
+
 
 
 
     starsAnimation =
         Tween<double>(
+
+
           begin: 0,
+
+
           end: 1,
+
+
         ).animate(
+
+
           CurvedAnimation(
-            parent: starsController,
-            curve: Curves.linear,
+
+            parent:
+            starsController,
+
+
+            curve:
+            Curves.linear,
+
+
           ),
+
+
         );
 
 
 
-    //==============================
-    // SEA MOVEMENT
-    //==============================
 
-    seaController = AnimationController(
-      vsync: this,
-      duration: const Duration(
-        seconds: 10,
-      ),
-    )..repeat(
-      reverse: true,
-    );
+
+
+    //==================================================
+    // SEA ANIMATION
+    //==================================================
+
+
+    seaController =
+        AnimationController(
+
+          vsync: this,
+
+          duration:
+          const Duration(
+
+            seconds: 10,
+
+          ),
+
+        )
+          ..repeat(
+
+            reverse: true,
+
+          );
+
+
+
 
 
     seaAnimation =
         Tween<double>(
+
+
           begin: 0.05,
+
+
           end: 0.15,
+
+
         ).animate(
+
+
           CurvedAnimation(
-            parent: seaController,
-            curve: Curves.easeInOut,
+
+            parent:
+            seaController,
+
+
+            curve:
+            Curves.easeInOut,
+
+
           ),
+
+
         );
 
 
 
-    //==============================
-    // CREATE ISLAND FLOAT
-    //==============================
+
+
+
+    //==================================================
+    // ISLAND FLOAT
+    //==================================================
+
 
     for (final island in islands) {
 
 
       final controller =
           AnimationController(
+
             vsync: this,
-            duration: Duration(
+
+
+            duration:
+            Duration(
+
               seconds:
-                  3 +
+              3 +
                   math.Random()
                       .nextInt(4),
+
+
             ),
+
+
           )
             ..repeat(
+
               reverse: true,
+
             );
+
+
+
 
 
       islandControllers[island.id] =
@@ -248,26 +398,47 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
 
 
+
+
       islandAnimations[island.id] =
           Tween<double>(
+
+
             begin: -6,
+
+
             end: 6,
+
+
           ).animate(
+
+
             CurvedAnimation(
-              parent: controller,
-              curve: Curves.easeInOut,
+
+              parent:
+              controller,
+
+
+              curve:
+              Curves.easeInOut,
+
+
             ),
+
+
           );
+
 
     }
 
 
-
   }
+
 
   //==================================================
   // DISPOSE
   //==================================================
+
 
   @override
   void dispose() {
@@ -283,22 +454,25 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
 
 
+
     for (final controller
         in islandControllers.values) {
 
+
       controller.dispose();
+
 
     }
 
 
 
-    refreshTimer?.cancel();
-
-
 
     super.dispose();
 
+
   }
+
+
 
 
 
@@ -308,30 +482,40 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // BUILD
   //==================================================
 
+
   @override
   Widget build(BuildContext context) {
 
 
     return Scaffold(
 
+
       extendBodyBehindAppBar: true,
 
 
+
       body: Stack(
+
 
         children: [
 
 
 
-          //========================================
+
+
+          //==================================================
           // BACKGROUND MAP
-          //========================================
+          //==================================================
+
 
           AnimatedBuilder(
 
-            animation: mapController,
+            animation:
+            mapController,
 
-            builder: (
+
+            builder:
+                (
                 context,
                 child,
                 ) {
@@ -339,37 +523,50 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
               return Positioned.fill(
 
-                child: Transform.translate(
+
+                child:
+                Transform.translate(
+
 
                   offset:
-                  mapMoveAnimation.value *
-                      80,
+                  mapMoveAnimation.value * 80,
 
 
-                  child: Transform.scale(
+
+                  child:
+                  Transform.scale(
+
 
                     scale:
                     mapScaleAnimation.value,
 
 
-                    child: Image.asset(
+
+                    child:
+                    Image.asset(
+
 
                       mapImage,
 
 
-                      fit: BoxFit.cover,
+                      fit:
+                      BoxFit.cover,
 
 
                     ),
 
+
                   ),
 
+
                 ),
+
 
               );
 
 
             },
+
 
           ),
 
@@ -377,16 +574,19 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
 
 
-          //========================================
-          // SPACE STARS LAYER
-          //========================================
+          //==================================================
+          // STAR FIELD
+          //==================================================
+
 
           AnimatedBuilder(
 
-            animation: starsController,
+            animation:
+            starsController,
 
 
-            builder: (
+            builder:
+                (
                 context,
                 child,
                 ) {
@@ -394,25 +594,36 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
               return Positioned.fill(
 
-                child: IgnorePointer(
 
-                  child: CustomPaint(
+                child:
+                IgnorePointer(
+
+
+                  child:
+                  CustomPaint(
+
 
                     painter:
                     StarFieldPainter(
 
+
                       starsAnimation.value,
+
 
                     ),
 
+
                   ),
 
+
                 ),
+
 
               );
 
 
             },
+
 
           ),
 
@@ -420,16 +631,19 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
 
 
-          //========================================
-          // SEA MOVING EFFECT
-          //========================================
+          //==================================================
+          // SEA EFFECT
+          //==================================================
+
 
           AnimatedBuilder(
 
-            animation: seaController,
+            animation:
+            seaController,
 
 
-            builder: (
+            builder:
+                (
                 context,
                 child,
                 ) {
@@ -437,15 +651,22 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
               return Positioned.fill(
 
-                child: IgnorePointer(
 
-                  child: Container(
+                child:
+                IgnorePointer(
+
+
+                  child:
+                  Container(
+
 
                     decoration:
                     BoxDecoration(
 
+
                       gradient:
                       LinearGradient(
+
 
                         begin:
                         Alignment.topLeft,
@@ -455,123 +676,97 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                         Alignment.bottomRight,
 
 
+
                         colors: [
 
+
                           Colors.white.withOpacity(
+
                             seaAnimation.value,
+
                           ),
+
 
 
                           Colors.transparent,
 
 
+
                           Colors.blue.withOpacity(
+
                             seaAnimation.value,
+
                           ),
 
 
-                        ],
-
-
-                        stops: const [
-
-                          0.0,
-
-                          0.5,
-
-                          1.0,
 
                         ],
+
 
                       ),
 
+
                     ),
+
 
                   ),
 
+
                 ),
+
 
               );
 
 
             },
 
+
           ),
 
+          //==================================================
+          // ISLANDS
+          //==================================================
 
-
-
-
-          //========================================
-          // ISLANDS AREA
-          //========================================
 
           SafeArea(
 
-            child: Stack(
+            child:
+            Stack(
 
               children: [
 
-
-
-                // الجزر ستضاف هنا في الجزء الثالث
-
-
-
-              ],
-
-            ),
-
-          ),
-
-
-
-
-          //========================================
-          // TOOLBAR
-          //========================================
-
-          const Align(
-
-            alignment:
-            Alignment.topCenter,
-
-
-            child:
-            GameToolbar(),
-
-
-          ),
-
-
-
-        ],
-
-      ),
-
-
-    );
-
-
-  }
-
-                //========================================
-                // ISLANDS
-                //========================================
 
                 ...islands.map(
 
                   (island) {
 
 
+                    final mapData =
+                        islandPositions[island.id];
+
+
+
+                    if (mapData == null) {
+
+                      return const SizedBox();
+
+                    }
+
+
+
+
                     final animation =
                         islandAnimations[island.id];
 
 
+
+
                     return AnimatedBuilder(
+
 
                       animation:
                       animation!,
+
 
 
                       builder:
@@ -584,17 +779,21 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
                         return Positioned(
 
+
                           left:
-                          island.position.dx,
+                          mapData.position.dx,
+
 
 
                           top:
-                          island.position.dy +
+                          mapData.position.dy +
                               animation.value,
+
 
 
                           child:
                           GestureDetector(
+
 
 
                             onTapDown:
@@ -606,50 +805,65 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                                 selectedIsland =
                                     island.id;
 
+
                               });
 
 
                             },
 
 
-                            onTapUp:
-                                (_) {
+
+                            onTapCancel:
+                                () {
 
 
-                              Future.delayed(
+                              setState(() {
 
-                                const Duration(
-                                  milliseconds: 150,
-                                ),
-
-                                    () {
+                                selectedIsland =
+                                    null;
 
 
-                                  if (!mounted) {
-                                    return;
-                                  }
+                              });
 
 
-                                  openIsland(
-                                      island
-                                  );
+                            },
 
 
-                                },
 
+                            onTap:
+                                () {
+
+
+                              setState(() {
+
+                                selectedIsland =
+                                    null;
+
+
+                              });
+
+
+
+                              openIsland(
+                                island,
                               );
 
 
                             },
 
 
+
                             child:
                             AnimatedContainer(
 
+
                               duration:
                               const Duration(
+
                                 milliseconds: 250,
+
                               ),
+
 
 
                               transform:
@@ -659,9 +873,8 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                                   ?
 
                               Matrix4.identity()
-                                ..scale(
-                                  1.08,
-                                )
+                                ..scale(1.08)
+
 
                                   :
 
@@ -669,30 +882,34 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
 
 
+
                               child:
                               Stack(
 
+
                                 alignment:
                                 Alignment.center,
+
 
 
                                 children: [
 
 
 
-                                  // الجزيرة
+
 
                                   Image.asset(
+
 
                                     island.image,
 
 
                                     width:
-                                    island.size,
+                                    mapData.size,
 
 
                                     height:
-                                    island.size,
+                                    mapData.size,
 
 
                                   ),
@@ -700,43 +917,51 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
 
 
-                                  // لمعان الضغط
 
-                                  if (
+
+                                  if(
                                   selectedIsland ==
                                       island.id
                                   )
 
                                     Container(
 
+
                                       width:
-                                      island.size,
+                                      mapData.size,
 
 
                                       height:
-                                      island.size,
+                                      mapData.size,
+
 
 
                                       decoration:
                                       BoxDecoration(
 
+
                                         shape:
                                         BoxShape.circle,
 
 
+
                                         boxShadow: [
 
+
                                           BoxShadow(
+
 
                                             color:
                                             Colors.yellow
                                                 .withOpacity(
-                                                0.8
+                                                0.75
                                             ),
+
 
 
                                             blurRadius:
                                             35,
+
 
 
                                             spreadRadius:
@@ -745,18 +970,21 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
                                           ),
 
+
                                         ],
 
+
                                       ),
+
 
                                     ),
 
 
 
 
-                                  // القفل
 
-                                  if (
+
+                                  if(
                                   !islandUnlocked(
                                       island
                                   )
@@ -764,19 +992,23 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
                                     Container(
 
+
                                       width:
-                                      island.size * .35,
+                                      mapData.size * 0.35,
 
 
                                       height:
-                                      island.size * .35,
+                                      mapData.size * 0.35,
+
 
 
                                       decoration:
                                       const BoxDecoration(
 
+
                                         color:
                                         Colors.black54,
+
 
 
                                         shape:
@@ -786,8 +1018,10 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                                       ),
 
 
+
                                       child:
                                       const Icon(
+
 
                                         Icons.lock,
 
@@ -796,11 +1030,13 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                                         Colors.white,
 
 
+
                                         size:
                                         35,
 
 
                                       ),
+
 
                                     ),
 
@@ -828,7 +1064,151 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
                   },
 
+
                 ),
+
+
+              ],
+
+
+            ),
+
+          ),
+
+
+
+
+
+          //==================================================
+          // TOOLBAR
+          //==================================================
+
+
+          const Align(
+
+            alignment:
+            Alignment.topCenter,
+
+
+            child:
+            GameToolbar(),
+
+
+          ),
+
+
+
+        ],
+
+      ),
+
+    );
+
+
+  }
+
+
+
+
+
+
+  //==================================================
+  // CHECK ISLAND UNLOCK
+  //==================================================
+
+
+  bool islandUnlocked(
+      PuzzleModel island
+      ) {
+
+
+    return PuzzleProgressManager
+        .isIslandUnlocked(
+        island.id
+    );
+
+
+  }
+
+
+
+
+
+
+  //==================================================
+  // OPEN ISLAND
+  //==================================================
+
+
+  void openIsland(
+      PuzzleModel island
+      ) async {
+
+
+
+    if (!islandUnlocked(island)) {
+
+
+
+      await RewardManager
+          .showUnlockIslandAd(
+          island.id
+      );
+
+
+
+      return;
+
+
+    }
+
+
+
+
+
+    if (!mounted) {
+
+      return;
+
+    }
+
+
+
+
+    Navigator.push(
+
+
+      context,
+
+
+      MaterialPageRoute(
+
+
+        builder:
+            (_) => IslandScreen(
+
+
+          island:
+          island,
+
+
+        ),
+
+
+      ),
+
+
+    );
+
+
+  }
+
+
+}
+
+
+
+
 
 
 
@@ -836,15 +1216,19 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 // STAR FIELD PAINTER
 //==================================================
 
+
 class StarFieldPainter extends CustomPainter {
 
 
   final double animation;
 
 
+
   StarFieldPainter(
       this.animation,
       );
+
+
 
 
 
@@ -855,13 +1239,17 @@ class StarFieldPainter extends CustomPainter {
       ) {
 
 
+
     final paint =
     Paint();
 
 
 
+
     final random =
     math.Random(10);
+
+
 
 
 
@@ -888,12 +1276,15 @@ class StarFieldPainter extends CustomPainter {
 
 
       final y =
-          (baseY +
-              animation *
-                  40 *
-                  (i % 3 + 1))
+          (
+              baseY +
+                  animation *
+                      40 *
+                      (i % 3 + 1)
+          )
               %
               size.height;
+
 
 
 
@@ -906,8 +1297,12 @@ class StarFieldPainter extends CustomPainter {
 
 
 
+
+
       paint.color =
           Colors.white.withOpacity(
+
+
             0.25 +
                 (
                     math.sin(
@@ -921,20 +1316,31 @@ class StarFieldPainter extends CustomPainter {
                 )
                 /
                 4,
+
+
           );
+
+
 
 
 
       canvas.drawCircle(
 
+
         Offset(
+
           x,
+
           y,
+
         ),
+
 
         radius,
 
+
         paint,
+
 
       );
 
@@ -943,6 +1349,7 @@ class StarFieldPainter extends CustomPainter {
 
 
   }
+
 
 
 
