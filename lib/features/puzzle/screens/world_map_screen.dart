@@ -3,15 +3,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../data/puzzle_data.dart';
-import '../data/island_map_data.dart';
-
 import '../models/puzzle_model.dart';
-import '../models/island_map_model.dart';
-
-
 
 import 'island_screen.dart';
 import 'wallet_screen.dart';
+
 
 
 class WorldMapScreen extends StatefulWidget {
@@ -20,534 +16,1112 @@ class WorldMapScreen extends StatefulWidget {
     super.key,
   });
 
+
   @override
   State<WorldMapScreen> createState() =>
       _WorldMapScreenState();
+
 }
+
 
 
 
 class _WorldMapScreenState extends State<WorldMapScreen>
     with TickerProviderStateMixin {
 
+
+
   //==================================================
-  // ASSETS / DESIGN SIZE
+  // صورة العالم (تحتوي الجزر الخمس)
   //==================================================
+
 
   static const String mapImage =
       "assets/images/world/world_map.png";
 
-  static const double designWidth = 1080;
-  static const double designHeight = 1920;
+
 
   //==================================================
-  // DATA
+  // بيانات الجزر للفتح فقط
+  // لا يوجد رسم جزر
   //==================================================
+
 
   late final List<PuzzleModel> islands;
 
-  final Map<String, IslandMapModel> islandPositions =
-      IslandMapData.positions;
+
+
+
+  //==================================================
+  // تأثير حركة الخريطة
+  //==================================================
+
+
+  late AnimationController mapController;
+
+
+  late Animation<double> mapScaleAnimation;
+
+
+  late Animation<Offset> mapMoveAnimation;
+
+
+
+
+  //==================================================
+  // النجوم بالخلفية
+  //==================================================
+
+
+  late AnimationController starsController;
+
+
+  late Animation<double> starsAnimation;
+
+
+
+
+  //==================================================
+  // تأثير البحر
+  //==================================================
+
+
+  late AnimationController seaController;
+
+
+  late Animation<double> seaAnimation;
+
+
+
+
+  //==================================================
+  // الجزيرة المختارة
+  //==================================================
+
 
   String? selectedIsland;
 
-  
 
-  //==================================================
-  // MAP ANIMATION
-  //==================================================
-
-  late final AnimationController mapController;
-  late final Animation<double> mapScaleAnimation;
-  late final Animation<Offset> mapMoveAnimation;
-
-  //==================================================
-  // STARS
-  //==================================================
-
-  late final AnimationController starsController;
-  late final Animation<double> starsAnimation;
-
-  //==================================================
-  // SEA
-  //==================================================
-
-  late final AnimationController seaController;
-  late final Animation<double> seaAnimation;
-
-  //==================================================
-  // ISLAND FLOAT
-  //==================================================
-
-  final Map<String, AnimationController> islandControllers = {};
-  final Map<String, Animation<double>> islandAnimations = {};
 
   @override
   void initState() {
+
     super.initState();
+
+
+
+    // جميع الجزر مفتوحة مؤقتاً
 
     islands = PuzzleData.puzzles;
 
-    //==================================================
-    // MAP ANIMATION
-    //==================================================
+
+
+
+    // حركة الخريطة
 
     mapController = AnimationController(
-      vsync: this,
-      duration: const Duration(
-        seconds: 18,
+
+      vsync:this,
+
+      duration:
+
+      const Duration(
+
+        seconds:18,
+
       ),
+
     )..repeat(
-        reverse: true,
-      );
 
-    mapScaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.08,
-    ).animate(
-      CurvedAnimation(
-        parent: mapController,
-        curve: Curves.easeInOut,
-      ),
+      reverse:true,
+
     );
 
-    mapMoveAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(
-        0.02,
-        -0.02,
-      ),
-    ).animate(
-      CurvedAnimation(
-        parent: mapController,
-        curve: Curves.easeInOut,
-      ),
-    );
 
-    //==================================================
-    // STARS ANIMATION
-    //==================================================
 
-    starsController = AnimationController(
-      vsync: this,
-      duration: const Duration(
-        seconds: 8,
-      ),
-    )..repeat();
 
-    starsAnimation = Tween<double>(
-      begin: 0,
-      end: 1,
-    ).animate(
-      CurvedAnimation(
-        parent: starsController,
-        curve: Curves.linear,
-      ),
-    );
+    mapScaleAnimation =
+        Tween<double>(
 
-    //==================================================
-    // SEA ANIMATION
-    //==================================================
+          begin:1.0,
 
-    seaController = AnimationController(
-      vsync: this,
-      duration: const Duration(
-        seconds: 10,
-      ),
-    )..repeat(
-        reverse: true,
-      );
+          end:1.03,
 
-    seaAnimation = Tween<double>(
-      begin: 0.05,
-      end: 0.15,
-    ).animate(
-      CurvedAnimation(
-        parent: seaController,
-        curve: Curves.easeInOut,
-      ),
-    );
+        ).animate(
 
-    //==================================================
-    // ISLAND FLOAT ANIMATION
-    //==================================================
 
-    for (final island in islands) {
-      final controller = AnimationController(
-        vsync: this,
-        duration: Duration(
-          seconds: 3 + math.Random().nextInt(4),
-        ),
-      )..repeat(
-          reverse: true,
+          CurvedAnimation(
+
+            parent:mapController,
+
+            curve:Curves.easeInOut,
+
+          ),
+
         );
 
-      final animation = Tween<double>(
-        begin: -8,
-        end: 8,
-      ).animate(
-        CurvedAnimation(
-          parent: controller,
-          curve: Curves.easeInOut,
-        ),
-      );
 
-      islandControllers[island.id] = controller;
-      islandAnimations[island.id] = animation;
-    }
+
+
+
+    mapMoveAnimation =
+        Tween<Offset>(
+
+          begin:Offset.zero,
+
+          end:
+
+          const Offset(
+
+            0.01,
+
+            -0.01,
+
+          ),
+
+        ).animate(
+
+
+          CurvedAnimation(
+
+            parent:mapController,
+
+            curve:Curves.easeInOut,
+
+          ),
+
+        );
+
+
+
+
+
+    // حركة النجوم
+
+
+    starsController = AnimationController(
+
+      vsync:this,
+
+      duration:
+
+      const Duration(
+
+        seconds:8,
+
+      ),
+
+    )..repeat();
+
+
+
+
+    starsAnimation =
+        Tween<double>(
+
+          begin:0,
+
+          end:1,
+
+        ).animate(
+
+
+          CurvedAnimation(
+
+            parent:starsController,
+
+            curve:Curves.linear,
+
+          ),
+
+        );
+
+
+
+
+
+    // حركة البحر
+
+
+    seaController = AnimationController(
+
+      vsync:this,
+
+      duration:
+
+      const Duration(
+
+        seconds:10,
+
+      ),
+
+    )..repeat(
+
+      reverse:true,
+
+    );
+
+
+
+
+
+    seaAnimation =
+        Tween<double>(
+
+          begin:0.03,
+
+          end:0.10,
+
+        ).animate(
+
+
+          CurvedAnimation(
+
+            parent:seaController,
+
+            curve:Curves.easeInOut,
+
+          ),
+
+        );
+
+
+
   }
 
-  //==================================================
-  // BUILD
-  //==================================================
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      body: SafeArea(
-        top: false,
-        bottom: false,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final screenWidth = constraints.maxWidth;
-            final screenHeight = constraints.maxHeight;
+//==================================================
+// BUILD
+//==================================================
 
-            final scaleX = screenWidth / designWidth;
-            final scaleY = screenHeight / designHeight;
-            final islandScale = scaleX < scaleY ? scaleX : scaleY;
 
-            return Stack(
-              children: [
+@override
+Widget build(BuildContext context) {
 
-                //==================================================
-                // BACKGROUND MAP
-                //==================================================
 
-                Positioned.fill(
-                  child: AnimatedBuilder(
-                    animation: mapController,
-                    builder: (context, child) {
-                      return Transform.translate(
-                        offset: mapMoveAnimation.value * 80,
-                        child: Transform.scale(
-                          scale: mapScaleAnimation.value,
-                          child: Image.asset(
-                            mapImage,
-                            fit: BoxFit.cover,
-                          ),
+  final size = MediaQuery.of(context).size;
+
+
+  return Scaffold(
+
+
+    body:Stack(
+
+
+      children:[
+
+
+
+        //==================================================
+        // خريطة العالم كاملة
+        //==================================================
+
+
+        Positioned.fill(
+
+
+          child:AnimatedBuilder(
+
+
+            animation:mapController,
+
+
+            builder:(context,child){
+
+
+              return Transform.translate(
+
+
+                offset:
+                mapMoveAnimation.value * 40,
+
+
+
+                child:Transform.scale(
+
+
+                  scale:
+                  mapScaleAnimation.value,
+
+
+
+                  child:Center(
+
+
+                    child:Image.asset(
+
+
+                      mapImage,
+
+
+
+                      fit:BoxFit.contain,
+
+
+                      width:
+                      size.width,
+
+
+
+                      height:
+                      size.height,
+
+
+                    ),
+
+
+                  ),
+
+
+                ),
+
+
+              );
+
+
+            },
+
+
+          ),
+
+
+        ),
+
+
+
+
+
+        //==================================================
+        // تأثير النجوم
+        //==================================================
+
+
+        Positioned.fill(
+
+
+          child:IgnorePointer(
+
+
+            child:AnimatedBuilder(
+
+
+              animation:starsController,
+
+
+              builder:(context,child){
+
+
+                return CustomPaint(
+
+
+                  painter:StarFieldPainter(
+
+                    starsAnimation.value,
+
+                  ),
+
+
+                );
+
+
+              },
+
+
+            ),
+
+
+          ),
+
+
+        ),
+
+
+
+
+
+
+        //==================================================
+        // تأثير البحر
+        //==================================================
+
+
+        Positioned.fill(
+
+
+          child:IgnorePointer(
+
+
+            child:AnimatedBuilder(
+
+
+              animation:seaController,
+
+
+              builder:(context,child){
+
+
+                return Container(
+
+
+                  decoration:BoxDecoration(
+
+
+                    gradient:LinearGradient(
+
+
+                      colors:[
+
+
+                        Colors.white.withOpacity(
+                          seaAnimation.value,
                         ),
-                      );
-                    },
-                  ),
-                ),
 
-                //==================================================
-                // STAR FIELD
-                //==================================================
 
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: AnimatedBuilder(
-                      animation: starsController,
-                      builder: (context, child) {
-                        return CustomPaint(
-                          painter: StarFieldPainter(
-                            starsAnimation.value,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
+                        Colors.transparent,
 
-                //==================================================
-                // SEA EFFECT
-                //==================================================
 
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: AnimatedBuilder(
-                      animation: seaController,
-                      builder: (context, child) {
-                        return Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Colors.white.withOpacity(
-                                  seaAnimation.value,
-                                ),
-                                Colors.transparent,
-                                Colors.blue.withOpacity(
-                                  seaAnimation.value,
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
+                        Colors.blue.withOpacity(
+                          seaAnimation.value,
+                        ),
 
-                //==================================================
-                // ISLANDS
-                //==================================================
 
-                Center(
-                  child: SizedBox(
-                    width: designWidth,
-                    height: designHeight,
-                    child: Stack(
-                      children: [
-                        ...islands.map((island) {
-                          final mapData = islandPositions[island.id];
-
-                          if (mapData == null) {
-                            return const SizedBox();
-                          }
-
-                          final animation = islandAnimations[island.id]!;
-
-                          return AnimatedBuilder(
-                            animation: animation,
-                            builder: (context, child) {
-                              final left = designWidth * mapData.x;
-                              final top = designHeight * mapData.y;
-
-                              final size = designWidth * mapData.size;
-
-                              return Positioned(
-                                left: left,
-                                top: top + animation.value,
-                                child: GestureDetector(
-                                  onTapDown: (_) {
-                                    setState(() {
-                                      selectedIsland = island.id;
-                                    });
-                                  },
-                                  onTapCancel: () {
-                                    setState(() {
-                                      selectedIsland = null;
-                                    });
-                                  },
-                                  onTap: () {
-                                    setState(() {
-                                      selectedIsland = null;
-                                    });
-
-                                    openIsland(island);
-                                  },
-                                  child: AnimatedContainer(
-                                    duration: const Duration(
-                                      milliseconds: 250,
-                                    ),
-                                    transform:
-                                        selectedIsland == island.id
-                                            ? (Matrix4.identity()
-                                              ..scale(1.08))
-                                            : Matrix4.identity(),
-                                    child: Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        Image.asset(
-                                          island.image,
-                                          width: size,
-                                          height: size,
-                                          fit: BoxFit.contain,
-                                        ),
-                                        if (selectedIsland == island.id)
-                                          Container(
-                                            width: size,
-                                            height: size,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.yellow
-                                                      .withOpacity(0.75),
-                                                  blurRadius: 35,
-                                                  spreadRadius: 8,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        }),
                       ],
+
+
                     ),
+
+
                   ),
+
+
+                );
+
+
+              },
+
+
+            ),
+
+
+          ),
+
+
+        ),
+
+
+
+
+
+        //==================================================
+        // مناطق الضغط على الجزر
+        // (بدون صور)
+        //==================================================
+
+
+
+        // الحيوانات
+
+
+        islandButton(
+
+          left:size.width * 0.25,
+
+          top:size.height * 0.32,
+
+          width:size.width * 0.20,
+
+          islandId:"animals",
+
+        ),
+
+
+
+
+        // الفضاء
+
+
+        islandButton(
+
+          left:size.width * 0.43,
+
+          top:size.height * 0.10,
+
+          width:size.width * 0.18,
+
+          islandId:"space",
+
+        ),
+
+
+
+
+        // المعالم
+
+
+        islandButton(
+
+          left:size.width * 0.62,
+
+          top:size.height * 0.33,
+
+          width:size.width * 0.20,
+
+          islandId:"landmarks",
+
+        ),
+
+
+
+
+        // السيارات
+
+
+        islandButton(
+
+          left:size.width * 0.25,
+
+          top:size.height * 0.57,
+
+          width:size.width * 0.20,
+
+          islandId:"cars",
+
+        ),
+
+
+
+
+
+        // الطبيعة
+
+
+        islandButton(
+
+          left:size.width * 0.62,
+
+          top:size.height * 0.57,
+
+          width:size.width * 0.20,
+
+          islandId:"nature",
+
+        ),
+
+
+
+
+
+        //==================================================
+        // أزرار الأعلى
+        //==================================================
+
+
+        SafeArea(
+
+
+          child:Padding(
+
+
+            padding:
+            EdgeInsets.symmetric(
+
+              horizontal:size.width * 0.04,
+
+              vertical:size.height * 0.02,
+
+            ),
+
+
+            child:Row(
+
+
+              mainAxisAlignment:
+              MainAxisAlignment.spaceBetween,
+
+
+              children:[
+
+
+
+                // الإعدادات يسار
+
+
+                circleButton(
+
+                  icon:Icons.settings_rounded,
+
+                  color:Colors.black54,
+
+                  onTap:(){
+
+
+                  },
+
                 ),
 
-//==================================================
-// TOP BUTTONS
-//==================================================
 
-SafeArea(
-  child: Padding(
-    padding: EdgeInsets.symmetric(
-      horizontal: MediaQuery.of(context).size.width * 0.04,
-      vertical: MediaQuery.of(context).size.height * 0.015,
-    ),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
 
-        // الإعدادات يسار
-        Container(
-          width: MediaQuery.of(context).size.width * 0.12,
-          height: MediaQuery.of(context).size.width * 0.12,
-          decoration: BoxDecoration(
-            color: Colors.black54,
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: IconButton(
-            icon: const Icon(
-              Icons.settings_rounded,
-              color: Colors.white,
+
+
+                // المحفظة يمين
+
+
+                circleButton(
+
+                  icon:
+                  Icons.account_balance_wallet_rounded,
+
+                  color:Colors.amber,
+
+                  onTap:(){
+
+
+                    Navigator.push(
+
+                      context,
+
+                      MaterialPageRoute(
+
+                        builder:(_)=>
+                        const WalletScreen(),
+
+                      ),
+
+                    );
+
+
+                  },
+
+                ),
+
+
+              ],
+
+
             ),
-            onPressed: () {
-              // فتح الإعدادات
-            },
+
+
           ),
+
+
         ),
 
 
-        // المحفظة يمين
-        Container(
-          width: MediaQuery.of(context).size.width * 0.12,
-          height: MediaQuery.of(context).size.width * 0.12,
-          decoration: BoxDecoration(
-            color: Colors.amber,
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: IconButton(
-            icon: const Icon(
-              Icons.account_balance_wallet_rounded,
-              color: Colors.white,
-            ),
-            onPressed: () {
-              Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (_) => const WalletScreen(),
-  ),
-);
-            },
-          ),
-        ),
 
       ],
+
+
     ),
-  ),
-) 
 
-          ],
-            );
-          },
-        ),
+
+  );
+
+
+}
+
+//==================================================
+// زر ضغط الجزيرة الشفاف
+//==================================================
+
+
+Widget islandButton({
+
+  required double left,
+
+  required double top,
+
+  required double width,
+
+  required String islandId,
+
+}) {
+
+
+  return Positioned(
+
+    left:left,
+
+    top:top,
+
+    child:GestureDetector(
+
+      behavior:HitTestBehavior.translucent,
+
+
+      onTap:(){
+
+
+        final island =
+
+        islands.firstWhere(
+
+          (item)=>
+
+          item.id == islandId,
+
+        );
+
+
+        openIsland(island);
+
+
+      },
+
+
+      child:Container(
+
+
+        width:width,
+
+
+        height:width,
+
+        color:Colors.transparent,
+
+
       ),
-    );
-  }
 
-  //==================================================
-  // OPEN ISLAND
-  //==================================================
 
-  void openIsland(
-    PuzzleModel island,
-  ) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => IslandScreen(
-          island: island,
-        ),
-      ),
-    );
-  }
+    ),
 
-  //==================================================
-  // DISPOSE
-  //==================================================
 
-  @override
-  void dispose() {
-    mapController.dispose();
-    starsController.dispose();
-    seaController.dispose();
+  );
 
-    for (final controller in islandControllers.values) {
-      controller.dispose();
-    }
 
-    super.dispose();
-  }
 }
 
 
 
+
+
+
 //==================================================
-// STAR FIELD PAINTER
+// زر علوي دائري
 //==================================================
+
+
+Widget circleButton({
+
+  required IconData icon,
+
+  required Color color,
+
+  required VoidCallback onTap,
+
+}) {
+
+
+  return Container(
+
+
+    width:
+
+    MediaQuery.of(context).size.width * 0.12,
+
+
+    height:
+
+    MediaQuery.of(context).size.width * 0.12,
+
+
+
+    decoration:BoxDecoration(
+
+
+      color:color,
+
+
+      borderRadius:
+
+      BorderRadius.circular(18),
+
+
+      boxShadow:[
+
+
+        BoxShadow(
+
+
+          color:Colors.black.withOpacity(.25),
+
+
+          blurRadius:8,
+
+
+          offset:
+
+          const Offset(0,4),
+
+
+        ),
+
+
+      ],
+
+
+    ),
+
+
+
+    child:IconButton(
+
+
+      icon:Icon(
+
+        icon,
+
+        color:Colors.white,
+
+      ),
+
+
+      onPressed:onTap,
+
+
+    ),
+
+
+  );
+
+
+}
+
+
+
+
+
+
+
+//==================================================
+// فتح الجزيرة
+//==================================================
+
+
+void openIsland(
+
+    PuzzleModel island,
+
+    ){
+
+
+  Navigator.push(
+
+
+    context,
+
+
+    MaterialPageRoute(
+
+
+      builder:(_)=>
+
+      IslandScreen(
+
+        island:island,
+
+      ),
+
+
+    ),
+
+
+  );
+
+
+}
+
+
+
+
+
+
+//==================================================
+// إغلاق الانيميشن
+//==================================================
+
+
+@override
+void dispose(){
+
+
+  mapController.dispose();
+
+
+  starsController.dispose();
+
+
+  seaController.dispose();
+
+
+
+  super.dispose();
+
+
+}
+
+
+
+
+
+
+//==================================================
+// رسم النجوم
+//==================================================
+
 
 class StarFieldPainter extends CustomPainter {
+
+
   final double animation;
 
+
+
   const StarFieldPainter(
-    this.animation,
-  );
+
+      this.animation,
+
+      );
+
+
+
+
 
   @override
   void paint(
-    Canvas canvas,
-    Size size,
-  ) {
+
+      Canvas canvas,
+
+      Size size,
+
+      ){
+
+
     final paint = Paint();
+
+
     final random = math.Random(10);
 
-    for (int i = 0; i < 80; i++) {
-      final x = random.nextDouble() * size.width;
-      final baseY = random.nextDouble() * size.height;
 
-      final y = (baseY +
-              animation * 40 * (i % 3 + 1)) %
+
+
+    for(int i = 0; i < 80; i++){
+
+
+
+      final x =
+
+      random.nextDouble() *
+
+          size.width;
+
+
+
+
+      final baseY =
+
+      random.nextDouble() *
+
           size.height;
 
-      final radius = random.nextDouble() * 1.8 + 0.5;
 
-      paint.color = Colors.white.withOpacity(
+
+
+      final y =
+
+      (baseY +
+
+          animation *
+
+              40 *
+
+              (i % 3 + 1))
+
+          %
+
+          size.height;
+
+
+
+
+
+      final radius =
+
+      random.nextDouble() *
+
+          1.8 +
+
+          0.5;
+
+
+
+
+
+      paint.color =
+
+      Colors.white.withOpacity(
+
+
         0.25 +
+
+
             (math.sin(
-                      animation * math.pi * 2 + i,
-                    ) +
-                    1) /
-                4,
+
+              animation *
+
+                  math.pi *
+
+                  2 +
+
+                  i,
+
+            ) + 1) / 4,
+
+
       );
+
+
+
+
 
       canvas.drawCircle(
+
         Offset(
+
           x,
+
           y,
+
         ),
+
         radius,
+
         paint,
+
       );
+
+
     }
+
+
   }
+
+
+
+
+
 
   @override
   bool shouldRepaint(
-    covariant StarFieldPainter oldDelegate,
-  ) {
+
+      covariant StarFieldPainter oldDelegate,
+
+      ){
+
+
     return oldDelegate.animation != animation;
+
+
   }
+
+
 }
