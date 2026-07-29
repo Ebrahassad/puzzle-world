@@ -393,61 +393,62 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
 SafeArea(
   child: Padding(
-    padding: const EdgeInsets.symmetric(
-      horizontal: 16,
-      vertical: 10,
+    padding: EdgeInsets.symmetric(
+      horizontal: MediaQuery.of(context).size.width * 0.04,
+      vertical: MediaQuery.of(context).size.height * 0.015,
     ),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
 
-        // زر الإعدادات
-        GestureDetector(
-          onTap: () {
-            // شاشة الإعدادات
-          },
-          child: Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: Colors.black54,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: const Icon(
+        // الإعدادات يسار
+        Container(
+          width: MediaQuery.of(context).size.width * 0.12,
+          height: MediaQuery.of(context).size.width * 0.12,
+          decoration: BoxDecoration(
+            color: Colors.black54,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: IconButton(
+            icon: const Icon(
               Icons.settings_rounded,
               color: Colors.white,
-              size: 28,
             ),
+            onPressed: () {
+              // فتح الإعدادات
+            },
           ),
         ),
 
-        // زر المحفظة
-        GestureDetector(
-          onTap: () {
-            Navigator.pushNamed(
-              context,
-              '/wallet',
-            );
-          },
-          child: Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: Colors.amber,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: const Icon(
+
+        // المحفظة يمين
+        Container(
+          width: MediaQuery.of(context).size.width * 0.12,
+          height: MediaQuery.of(context).size.width * 0.12,
+          decoration: BoxDecoration(
+            color: Colors.amber,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: IconButton(
+            icon: const Icon(
               Icons.account_balance_wallet_rounded,
               color: Colors.white,
-              size: 28,
             ),
+            onPressed: () {
+              Navigator.pushNamed(
+                context,
+                '/wallet',
+              );
+            },
           ),
         ),
 
       ],
     ),
   ),
-),           ],
+) 
+
+          ],
             );
           },
         ),
