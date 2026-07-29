@@ -250,33 +250,7 @@ class _PuzzleGameScreenState
   }
 
 }
-  Future<void> generatePuzzle() async {
-
-  pieces =
-      PuzzleGenerator.generate(
-
-        rows: widget.level.gridSize,
-
-        columns: widget.level.gridSize,
-
-        imageWidth: loadedImage!.width.toDouble(),
-
-        imageHeight: loadedImage!.height.toDouble(),
-
-        boardSize: boardSize,
-
-      );
-
-
-  controller =
-      PuzzleController(
-        pieces: pieces,
-      );
-
-
-  await loadProgress();
-
-}
+  
 
 
 
