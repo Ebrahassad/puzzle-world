@@ -199,21 +199,43 @@ class _PuzzleGameScreenState
 
   try {
 
-    loadedImage =
-        await _loadUiImage(
-          widget.level.image,
-        );
+    debugPrint("LOAD IMAGE: ${widget.level.image}");
 
-
-    await generatePuzzle();
-
-
-  } catch(e) {
-
-    debugPrint(
-      "IMAGE ERROR: $e",
+    loadedImage = await _loadUiImage(
+      widget.level.image,
     );
 
+    debugPrint(
+      "IMAGE LOADED: ${loadedImage!.width} x ${loadedImage!.height}",
+    );
+
+    pieces = PuzzleGenerator.generate(
+
+      rows: widget.level.gridSize,
+
+      columns: widget.level.gridSize,
+
+      imageWidth: loadedImage!.width.toDouble(),
+
+      imageHeight: loadedImage!.height.toDouble(),
+
+      boardSize: boardSize,
+
+    );
+
+
+    controller = PuzzleController(
+      pieces: pieces,
+    );
+
+
+    await loadProgress();
+
+
+  } catch(e, stack){
+
+    debugPrint("GAME LOAD ERROR: $e");
+    debugPrint(stack.toString());
 
     if(mounted){
 
@@ -228,7 +250,6 @@ class _PuzzleGameScreenState
   }
 
 }
-
   Future<void> generatePuzzle() async {
 
   pieces =
