@@ -1466,7 +1466,7 @@ unlocked =
 ),
 
 
-
+),
           ),
 
 
@@ -1481,7 +1481,7 @@ unlocked =
 
             color:
 
-            Colors.white.withOpacity(0.08),
+            Colors.white.withOpacity(0.15),
 
 
           ),
@@ -1498,41 +1498,33 @@ unlocked =
           //==================================================
 
 
-          Positioned(
+          
+Positioned(
+
+  top:0,
+
+  left:0,
+
+  right:0,
 
 
-            top:0,
+  child: GameToolbar(
 
+    logo:
+    "assets/images/ui/puzzle_logo.png",
 
-            left:0,
+    starKey:
+    starKey,
 
+    onBack:(){
 
-            right:0,
+      Navigator.pop(context);
 
+    },
 
-
-            child: GameToolbar(
-
-  logo:
-  "assets/images/ui/puzzle_logo.png",
-
-  starKey:
-  starKey,
-
-  onBack:(){
-
-    Navigator.pop(context);
-
-  },
+  ),
 
 ),
-
-
-          ),
-
-
-
-
 
 
 
