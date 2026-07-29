@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'features/puzzle/screens/world_map_screen.dart';
-import 'features/puzzle/widgets/puzzle_splash_logo.dart';
 
 
 class SplashScreen extends StatefulWidget {
@@ -24,9 +23,14 @@ class _SplashScreenState
     with TickerProviderStateMixin {
 
 
-  late AnimationController fadeController;
 
-  late Animation<double> fadeAnimation;
+  late AnimationController controller;
+
+
+  late Animation<double> scaleAnimation;
+
+
+  late Animation<double> shakeAnimation;
 
 
 
@@ -36,20 +40,22 @@ class _SplashScreenState
     super.initState();
 
 
-    fadeController = AnimationController(
+
+    controller = AnimationController(
 
       vsync: this,
 
       duration: const Duration(
-        milliseconds: 1200,
+        milliseconds: 2500,
       ),
 
     );
 
 
-    fadeAnimation = Tween<double>(
 
-      begin: 0,
+    scaleAnimation = Tween<double>(
+
+      begin: 0.2,
 
       end: 1,
 
@@ -57,16 +63,87 @@ class _SplashScreenState
 
       CurvedAnimation(
 
-        parent: fadeController,
+        parent: controller,
 
-        curve: Curves.easeIn,
+        curve: Curves.elasticOut,
 
       ),
 
     );
 
 
-    fadeController.forward();
+
+    shakeAnimation = TweenSequence<double>(
+
+      [
+
+        TweenSequenceItem(
+
+          tween: Tween(
+            begin: 0,
+            end: 0.03,
+          ),
+
+          weight: 1,
+
+        ),
+
+        TweenSequenceItem(
+
+          tween: Tween(
+            begin: 0.03,
+            end: -0.03,
+          ),
+
+          weight: 1,
+
+        ),
+
+        TweenSequenceItem(
+
+          tween: Tween(
+            begin: -0.03,
+            end: 0,
+          ),
+
+          weight: 1,
+
+        ),
+
+      ],
+
+    ).animate(
+
+      CurvedAnimation(
+
+        parent: controller,
+
+        curve: const Interval(
+          0.75,
+          1,
+        ),
+
+      ),
+
+    );
+
+
+
+
+    controller.forward();
+
+
+
+    Future.delayed(
+
+      const Duration(
+        milliseconds: 3500,
+      ),
+
+      openWorldMap,
+
+    );
+
 
   }
 
@@ -74,8 +151,7 @@ class _SplashScreenState
 
 
 
-  void openWorldMap() {
-
+  void openWorldMap(){
 
     Navigator.pushReplacement(
 
@@ -98,8 +174,9 @@ class _SplashScreenState
 
 
 
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context){
 
 
     return Scaffold(
@@ -115,8 +192,6 @@ class _SplashScreenState
 
 
 
-          // خلفية شاشة البداية
-
           Image.asset(
 
             "assets/images/background/home_background.png",
@@ -128,8 +203,6 @@ class _SplashScreenState
 
 
 
-          // تعتيم خفيف
-
           Container(
 
             color: Colors.black.withOpacity(0.18),
@@ -140,35 +213,58 @@ class _SplashScreenState
 
 
 
-          // كلمة Puzzle World وهي التي تتحول لقطع بازل
 
-          Positioned(
-
-            top: MediaQuery.of(context).size.height * 0.38,
-
-            left: 0,
-
-            right: 0,
+          Center(
 
 
-            child: FadeTransition(
-
-              opacity: fadeAnimation,
+            child: AnimatedBuilder(
 
 
-              child: Center(
+              animation: controller,
 
 
-                child: PuzzleSplashLogo(
+              builder: (context,child){
 
-                  onFinished: openWorldMap,
 
-                ),
+                return Transform.scale(
+
+
+                  scale: scaleAnimation.value,
+
+
+                  child: Transform.rotate(
+
+
+                    angle: shakeAnimation.value,
+
+
+                    child: child,
+
+
+                  ),
+
+
+                );
+
+
+              },
+
+
+              child: Image.asset(
+
+
+                "assets/images/ui/puzzle_logo.png",
+
+
+                width: 230,
 
 
               ),
 
+
+
             ),
+
 
           ),
 
@@ -182,6 +278,7 @@ class _SplashScreenState
 
     );
 
+
   }
 
 
@@ -189,14 +286,17 @@ class _SplashScreenState
 
 
 
+
+
   @override
-  void dispose() {
+  void dispose(){
 
 
-    fadeController.dispose();
+    controller.dispose();
 
 
     super.dispose();
+
 
   }
 
