@@ -87,6 +87,49 @@ class PuzzleGenerator {
 
 
 
+    /*
+      إنشاء أماكن بداية احترافية
+      بدون تداخل بين القطع
+    */
+
+    final startPositions =
+    <Offset>[];
+
+
+
+    final spacing =
+        screenPieceSize + 6;
+
+
+
+    for(int y = 0; y < rows; y++){
+
+      for(int x = 0; x < columns; x++){
+
+
+        startPositions.add(
+
+          Offset(
+
+            x * spacing,
+
+            y * spacing,
+
+          ),
+
+        );
+
+
+      }
+
+    }
+
+
+
+    startPositions.shuffle(random);
+
+
+
 
 
     int index = 0;
@@ -104,8 +147,6 @@ class PuzzleGenerator {
 
 
 
-
-        // قص الصورة حسب الحجم الحقيقي
 
         final sourceRect = Rect.fromLTWH(
 
@@ -135,7 +176,8 @@ class PuzzleGenerator {
 
 
 
-        final top = row == 0
+        final top =
+        row == 0
 
             ? EdgeType.flat
 
@@ -151,7 +193,8 @@ class PuzzleGenerator {
 
 
 
-        final bottom = row == rows - 1
+        final bottom =
+        row == rows - 1
 
             ? EdgeType.flat
 
@@ -163,7 +206,8 @@ class PuzzleGenerator {
 
 
 
-        final left = column == 0
+        final left =
+        column == 0
 
             ? EdgeType.flat
 
@@ -179,12 +223,51 @@ class PuzzleGenerator {
 
 
 
-        final right = column == columns - 1
+        final right =
+        column == columns - 1
 
             ? EdgeType.flat
 
             : horizontalEdges[row][column];
 
+
+
+
+
+
+
+
+
+        Offset startPosition =
+        startPositions[index];
+
+
+
+
+
+        // حماية من خروج القطع خارج اللوحة
+
+        startPosition = Offset(
+
+          startPosition.dx.clamp(
+
+            0,
+
+            boardSize - screenPieceSize,
+
+          ),
+
+
+          startPosition.dy.clamp(
+
+            0,
+
+            boardSize - screenPieceSize,
+
+          ),
+
+
+        );
 
 
 
@@ -256,29 +339,9 @@ class PuzzleGenerator {
 
 
 
+            position:
 
-
-            // مكان البداية داخل قسم القطع
-
-            position: Offset(
-
-
-
-              random.nextDouble() *
-
-                  (boardSize - screenPieceSize),
-
-
-
-
-
-              random.nextDouble() *
-
-                  (boardSize - screenPieceSize),
-
-
-
-            ),
+            startPosition,
 
 
 
