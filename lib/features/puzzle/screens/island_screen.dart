@@ -220,35 +220,32 @@ class _IslandScreenState
           //==================================================
 
           Positioned.fill(
-            child: AnimatedBuilder(
-              animation: backgroundController,
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: backgroundScale.value,
-                  child: Transform.translate(
-                    offset: Offset(
-                      backgroundMove.value,
-                      0,
-                    ),
-                    child: child,
-                  ),
-                );
-              },
-              child: Opacity(
-  
-  opacity: 0.75,
-  child: Image.asset(
-    IslandBackgroundData.getBackground(
-      widget.island.id,
+  child: AnimatedBuilder(
+    animation: backgroundController,
+    builder: (context, child) {
+      return Transform.scale(
+        scale: backgroundScale.value,
+        child: Transform.translate(
+          offset: Offset(
+            backgroundMove.value,
+            0,
+          ),
+          child: child,
+        ),
+      );
+    },
+
+    child: Opacity(
+      opacity: 0.75,
+      child: Image.asset(
+        IslandBackgroundData.getBackground(
+          widget.island.id,
+        ),
+        fit: BoxFit.fill,
+      ),
     ),
-    width: double.infinity,
-    height: double.infinity,
-    fit: BoxFit.cover,
   ),
 ),
-            ),
-          ),
-
           // طبقة دمج خفيفة
           Container(
   color: Colors.white.withOpacity(0.05),
