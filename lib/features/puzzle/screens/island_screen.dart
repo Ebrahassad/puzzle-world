@@ -146,24 +146,26 @@ class _IslandScreenState
   //==================================================
 
   void openLevel(int level) {
-    final levels = PuzzleLevelData.getLevels(
-      widget.island.id,
-    );
 
-    final selectedLevel = levels.firstWhere(
-      (item) => item.levelNumber == level,
-    );
+  final levels = PuzzleLevelData.getLevels(
+    widget.island.id,
+  );
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PuzzleGameScreen(
-          puzzle: widget.island,
-          level: selectedLevel,
-        ),
+
+  final selectedLevel = levels[level - 1];
+
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => PuzzleGameScreen(
+        puzzle: widget.island,
+        level: selectedLevel,
       ),
-    );
-  }
+    ),
+  );
+
+}
 
   //==================================================
   // LEVEL BUTTON
