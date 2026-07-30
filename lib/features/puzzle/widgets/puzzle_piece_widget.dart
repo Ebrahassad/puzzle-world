@@ -34,7 +34,9 @@ class PuzzlePieceWidget extends StatefulWidget {
 
   @override
   State<PuzzlePieceWidget> createState() =>
+
       _PuzzlePieceWidgetState();
+
 
 }
 
@@ -43,16 +45,17 @@ class PuzzlePieceWidget extends StatefulWidget {
 
 
 class _PuzzlePieceWidgetState
+
     extends State<PuzzlePieceWidget> {
 
 
   ui.Image? cachedImage;
 
 
-  ImageStream? imageStream;
+  ImageStream? _imageStream;
 
 
-  ImageStreamListener? listener;
+  ImageStreamListener? _listener;
 
 
 
@@ -60,9 +63,12 @@ class _PuzzlePieceWidgetState
   @override
   void didChangeDependencies() {
 
+
     super.didChangeDependencies();
 
+
     _loadImage();
+
 
   }
 
@@ -84,9 +90,12 @@ class _PuzzlePieceWidgetState
 
     if (oldWidget.image != widget.image) {
 
+
       _loadImage();
 
+
     }
+
 
   }
 
@@ -97,15 +106,24 @@ class _PuzzlePieceWidgetState
   void _loadImage() {
 
 
-    if (listener != null && imageStream != null) {
+    if (_listener != null &&
 
-      imageStream!.removeListener(listener!);
+        _imageStream != null) {
+
+
+      _imageStream!.removeListener(
+
+        _listener!,
+
+      );
+
 
     }
 
 
 
-    imageStream = widget.image.resolve(
+
+    _imageStream = widget.image.resolve(
 
       createLocalImageConfiguration(
 
@@ -117,7 +135,8 @@ class _PuzzlePieceWidgetState
 
 
 
-    listener = ImageStreamListener(
+    _listener = ImageStreamListener(
+
 
       (info, _) {
 
@@ -138,6 +157,7 @@ class _PuzzlePieceWidgetState
       },
 
 
+
       onError: (error, stackTrace) {
 
 
@@ -150,20 +170,26 @@ class _PuzzlePieceWidgetState
 
       },
 
+
     );
 
 
 
-    imageStream!.addListener(listener!);
+    _imageStream!.addListener(
+
+      _listener!,
+
+    );
+
 
   }
 
-
-
-
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+
+    BuildContext context,
+
+  ) {
 
 
     if (cachedImage == null) {
@@ -177,7 +203,10 @@ class _PuzzlePieceWidgetState
 
       );
 
+
     }
+
+
 
 
 
@@ -186,6 +215,8 @@ class _PuzzlePieceWidgetState
 
       child: CustomPaint(
 
+
+        // نفس حجم القطعة بدون مساحة إضافية
 
         size: Size(
 
@@ -212,6 +243,7 @@ class _PuzzlePieceWidgetState
         ),
 
 
+
       ),
 
 
@@ -219,16 +251,23 @@ class _PuzzlePieceWidgetState
 
 
   }
+
+
+
+
+
   @override
   void dispose() {
 
 
-    if (listener != null && imageStream != null) {
+    if (_listener != null &&
+
+        _imageStream != null) {
 
 
-      imageStream!.removeListener(
+      _imageStream!.removeListener(
 
-        listener!,
+        _listener!,
 
       );
 
@@ -236,7 +275,9 @@ class _PuzzlePieceWidgetState
     }
 
 
+
     super.dispose();
+
 
   }
 
