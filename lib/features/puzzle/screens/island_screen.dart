@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import '../data/puzzle_level_data.dart';
 import '../data/island_background_data.dart';
 
-import '../managers/puzzle_progress_manager.dart';
-
 import '../models/puzzle_model.dart';
 import '../models/puzzle_level_model.dart';
 
@@ -15,30 +13,17 @@ import 'puzzle_game_screen.dart';
 
 
 class IslandScreen extends StatefulWidget {
-
-
   final PuzzleModel island;
 
-
-
   const IslandScreen({
-
     super.key,
-
     required this.island,
-
   });
-
-
 
   @override
   State<IslandScreen> createState() =>
       _IslandScreenState();
-
-
 }
-
-
 
 
 
@@ -48,1860 +33,335 @@ class _IslandScreenState
     extends State<IslandScreen>
     with TickerProviderStateMixin {
 
-
-
   //==================================================
-  // بيانات اللاعب
+  // TOP TOOLBAR KEY
   //==================================================
-
-
-  int totalStars = 0;
-
-
-  int coins = 0;
-
-
-  int rewards = 0;
-
-
-
-  bool unlocked = false;
-
-
 
   final GlobalKey starKey = GlobalKey();
 
-
-
-
-
   //==================================================
-  // حركة الجزيرة
+  // FLOAT ANIMATION
   //==================================================
-
 
   late AnimationController floatController;
-
-
   late Animation<double> floatAnimation;
 
-
-
-
-
   //==================================================
-  // حركة الخلفية
+  // BACKGROUND ANIMATION
   //==================================================
-
 
   late AnimationController backgroundController;
-
-
   late Animation<double> backgroundMove;
-
-
   late Animation<double> backgroundScale;
 
-
-
-
-
   //==================================================
-  // نظام الإعلانات
+  // TITLE COLOR
   //==================================================
 
-
-  int requiredAds = 5;
-
-
-  int watchedAds = 0;
-
-
-
-
-
-  //==================================================
-  // لون اسم الجزيرة
-  //==================================================
-
-
-  Color islandTitleColor(){
-
-
-    switch(widget.island.id){
-
-
+  Color islandTitleColor() {
+    switch (widget.island.id) {
       case "animals":
-
         return const Color(0xffB87928);
 
-
-
       case "cars":
-
         return const Color(0xff2196F3);
 
-
-
       case "space":
-
         return const Color(0xff8E44AD);
 
-
-
       case "nature":
-
         return const Color(0xff4CAF50);
 
-
-
       case "landmarks":
-
         return const Color(0xffD4AF37);
 
-
-
       default:
-
         return Colors.white;
-
-
     }
-
-
   }
 
-
-
-
-
-
-
-
-
   @override
-  void initState(){
-
-
+  void initState() {
     super.initState();
 
-
-
-    loadData();
-
-
-
-
-
-    // حركة الجزيرة العائمة
-
+    //==================================================
+    // FLOAT ANIMATION
+    //==================================================
 
     floatController = AnimationController(
-
-      vsync:this,
-
-      duration:
-
-      const Duration(
-
-        seconds:3,
-
+      vsync: this,
+      duration: const Duration(
+        seconds: 3,
       ),
-
-    )
-      ..repeat(
-
-        reverse:true,
-
+    )..repeat(
+        reverse: true,
       );
-
-
-
-
 
     floatAnimation = Tween<double>(
-
-      begin:-8,
-
-      end:8,
-
-    )
-        .animate(
-
+      begin: -8,
+      end: 8,
+    ).animate(
       CurvedAnimation(
-
-        parent:floatController,
-
-        curve:Curves.easeInOut,
-
+        parent: floatController,
+        curve: Curves.easeInOut,
       ),
-
     );
 
-
-
-
-
-
-
-
-    // حركة الخلفية
-
+    //==================================================
+    // BACKGROUND ANIMATION
+    //==================================================
 
     backgroundController = AnimationController(
-
-      vsync:this,
-
-      duration:
-
-      const Duration(
-
-        seconds:20,
-
+      vsync: this,
+      duration: const Duration(
+        seconds: 20,
       ),
-
-    )
-      ..repeat(
-
-        reverse:true,
-
+    )..repeat(
+        reverse: true,
       );
-
-
-
-
-
 
     backgroundMove = Tween<double>(
-
-      begin:-10,
-
-      end:10,
-
-    )
-        .animate(
-
+      begin: -10,
+      end: 10,
+    ).animate(
       CurvedAnimation(
-
-        parent:backgroundController,
-
-        curve:Curves.easeInOut,
-
+        parent: backgroundController,
+        curve: Curves.easeInOut,
       ),
-
     );
-
-
-
-
-
-
 
     backgroundScale = Tween<double>(
-
-      begin:1.0,
-
-      end:1.03,
-
-    )
-        .animate(
-
+      begin: 1.0,
+      end: 1.03,
+    ).animate(
       CurvedAnimation(
-
-        parent:backgroundController,
-
-        curve:Curves.easeInOut,
-
+        parent: backgroundController,
+        curve: Curves.easeInOut,
       ),
-
     );
-
-
-  }
-
-
-
-
-
-
-
-
-
-  //==================================================
-  // تحميل بيانات الجزيرة
-  //==================================================
-
-
-  Future<void> loadData() async {
-
-
-    final stars =
-
-    await PuzzleProgressManager
-        .getTotalStars();
-
-
-
-
-    final islandOpened =
-
-    await PuzzleProgressManager
-        .isIslandUnlocked(
-
-      widget.island.id,
-
-    );
-
-
-
-
-    final ads =
-
-    PuzzleProgressManager
-        .getIslandRequiredAds(
-
-      widget.island.id,
-
-    );
-
-
-
-
-    final adsWatched =
-
-    await PuzzleProgressManager
-        .getIslandAds(
-
-      widget.island.id,
-
-    );
-
-
-
-
-
-    final coinsValue =
-
-    await PuzzleProgressManager
-        .getCoins();
-
-
-
-
-
-
-    if(mounted){
-
-
-      setState((){
-
-
-        totalStars = stars;
-
-
-        coins = coinsValue;
-
-
-
-        requiredAds = ads;
-
-
-        watchedAds = adsWatched;
-
-
-
-
-// نظام فتح الجزر
-
-unlocked =
-    islandOpened ||
-    stars >= widget.island.requiredStars ||
-    widget.island.id == "animals";
-
-
-      });
-
-
-    }
-
-
   }
 
   //==================================================
-  // فتح المرحلة
+  // OPEN LEVEL
   //==================================================
-
 
   void openLevel(int level) {
-
-
-    if(!unlocked){
-
-
-      showLockedDialog();
-
-
-      return;
-
-
-    }
-
-
-
-
-    try {
-
-
-      final levels =
-
-      PuzzleLevelData.getLevels(
-
-        widget.island.id,
-
-      );
-
-
-
-
-
-      final selectedLevel =
-
-
-      levels.firstWhere(
-
-
-            (item) =>
-
-        item.levelNumber == level,
-
-
-      );
-
-
-
-
-
-
-      Navigator.push(
-
-
-        context,
-
-
-        MaterialPageRoute(
-
-
-          builder:(_)=>
-
-
-              PuzzleGameScreen(
-
-
-                puzzle: widget.island,
-
-
-                level: selectedLevel,
-
-
-              ),
-
-
-        ),
-
-
-      );
-
-
-
-
-    }
-
-    catch(e){
-
-
-
-      debugPrint(
-
-        "خطأ في فتح المرحلة: $e",
-
-      );
-
-
-
-      ScaffoldMessenger.of(context)
-
-          .showSnackBar(
-
-
-        const SnackBar(
-
-
-          content: Text(
-
-            "حدث خطأ في فتح المرحلة",
-
-          ),
-
-
-        ),
-
-
-      );
-
-
-
-    }
-
-
-  }
-
-
-
-
-
-
-
-
-
-  //==================================================
-  // نافذة الجزيرة المغلقة
-  //==================================================
-
-
-  void showLockedDialog(){
-
-
-    showDialog(
-
-
-      context: context,
-
-
-      builder:(_){
-
-
-        return Dialog(
-
-
-          backgroundColor:
-
-          Colors.transparent,
-
-
-
-          child:Container(
-
-
-
-            padding:
-
-            const EdgeInsets.all(25),
-
-
-
-            decoration:BoxDecoration(
-
-
-
-              color:
-
-              Colors.white,
-
-
-
-              borderRadius:
-
-              BorderRadius.circular(30),
-
-
-
-            ),
-
-
-
-
-            child:Column(
-
-
-
-              mainAxisSize:
-
-              MainAxisSize.min,
-
-
-
-              children:[
-
-
-
-
-                Image.asset(
-
-
-
-                  "assets/images/ui/lock.png",
-
-
-
-                  height:90,
-
-
-
-                  errorBuilder:
-
-                      (_,__,___){
-
-
-
-                    return const Icon(
-
-
-
-                      Icons.lock,
-
-
-
-                      size:75,
-
-
-
-                    );
-
-
-                  },
-
-
-                ),
-
-
-
-
-
-                const SizedBox(
-
-                  height:15,
-
-                ),
-
-
-
-
-
-                Text(
-
-
-
-                  "🔒 ${widget.island.title}",
-
-
-
-                  textAlign:
-
-                  TextAlign.center,
-
-
-
-                  style:const TextStyle(
-
-
-
-                    fontSize:22,
-
-
-
-                    fontWeight:
-
-                    FontWeight.bold,
-
-
-
-                  ),
-
-
-
-                ),
-
-
-
-
-
-                const SizedBox(
-
-                  height:10,
-
-                ),
-
-
-
-
-
-
-                Text(
-
-
-
-                  "تحتاج ⭐ ${widget.island.requiredStars} لفتح الجزيرة\nأو شاهد $requiredAds إعلانات\n($watchedAds / $requiredAds)",
-
-
-
-                  textAlign:
-
-                  TextAlign.center,
-
-
-
-                  style:const TextStyle(
-
-
-
-                    fontSize:16,
-
-
-
-                  ),
-
-
-
-                ),
-
-
-
-
-
-
-                const SizedBox(
-
-                  height:20,
-
-                ),
-
-
-
-
-
-
-                ElevatedButton.icon(
-
-
-
-                  icon:const Icon(
-
-                    Icons.play_circle,
-
-                  ),
-
-
-
-
-                  label:const Text(
-
-                    "شاهد إعلان",
-
-                  ),
-
-
-
-
-                  onPressed:(){
-
-
-
-                    Navigator.pop(context);
-
-
-
-                    watchRewardAd();
-
-
-
-                  },
-
-
-
-                ),
-
-
-
-
-
-
-                TextButton(
-
-
-
-                  onPressed:(){
-
-
-
-                    Navigator.pop(context);
-
-
-
-                  },
-
-
-
-                  child:const Text(
-
-                    "إلغاء",
-
-                  ),
-
-
-
-                ),
-
-
-
-
-              ],
-
-
-
-            ),
-
-
-
-          ),
-
-
-
-        );
-
-
-
-      },
-
-
-    );
-
-
-  }
-
-
-
-
-
-
-
-
-
-  //==================================================
-  // مشاهدة إعلان لفتح الجزيرة
-  //==================================================
-
-
-  Future<void> watchRewardAd() async {
-
-
-    // هنا يتم ربط AdMob Rewarded لاحقاً
-
-
-    final opened =
-
-    await PuzzleProgressManager
-
-        .watchIslandAd(
-
+    final levels = PuzzleLevelData.getLevels(
       widget.island.id,
-
     );
 
-
-
-
-
-    final ads =
-
-    await PuzzleProgressManager
-
-        .getIslandAds(
-
-      widget.island.id,
-
+    final selectedLevel = levels.firstWhere(
+      (item) => item.levelNumber == level,
     );
 
-
-
-
-
-
-    if(opened){
-
-
-
-
-
-
-
-      setState((){
-
-
-        unlocked = true;
-
-
-        watchedAds = requiredAds;
-
-
-      });
-
-
-
-
-
-
-      ScaffoldMessenger.of(context)
-
-          .showSnackBar(
-
-
-
-        const SnackBar(
-
-
-
-          content:Text(
-
-            "🎉 تم فتح الجزيرة",
-
-          ),
-
-
-
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PuzzleGameScreen(
+          puzzle: widget.island,
+          level: selectedLevel,
         ),
-
-
-
-      );
-
-
-
-    }
-
-    else{
-
-
-      setState((){
-
-
-        watchedAds = ads;
-
-
-      });
-
-
-
-
-      ScaffoldMessenger.of(context)
-
-          .showSnackBar(
-
-
-
-        SnackBar(
-
-
-
-          content:Text(
-
-            "📺 شاهد $ads / $requiredAds إعلانات",
-
-          ),
-
-
-
-        ),
-
-
-
-      );
-
-
-
-    }
-
-
-  }
-
-  //==================================================
-  // زر المرحلة
-  //==================================================
-
-
-  Widget levelButton(int level){
-
-
-
-    final levelKey =
-
-        "${widget.island.id}_level_$level";
-
-
-
-
-
-    return FutureBuilder<bool>(
-
-
-      future:
-
-      PuzzleProgressManager
-
-          .isLevelUnlocked(
-
-        levelKey,
-
       ),
-
-
-
-      builder:(context,snapshot){
-
-  final levelOpen =
-      snapshot.data ?? false;
-
-
-
-        
-
-
-        return GestureDetector(
-
-
-
-          onTap:(){
-
-
-
-            if(!unlocked){
-
-
-              showLockedDialog();
-
-
-              return;
-
-
-            }
-
-
-
-
-            if(levelOpen){
-
-
-              openLevel(level);
-
-
-            }
-
-            else{
-
-
-
-              ScaffoldMessenger.of(context)
-
-                  .showSnackBar(
-
-
-
-                const SnackBar(
-
-
-
-                  content:Text(
-
-                    "أكمل المرحلة السابقة لفتح هذه المرحلة",
-
-                  ),
-
-
-
-                ),
-
-
-
-              );
-
-
-
-            }
-
-
-
-          },
-
-
-
-
-
-          child:AnimatedContainer(
-
-
-
-            duration:
-
-            const Duration(
-
-              milliseconds:250,
-
-            ),
-
-
-
-
-            width:70,
-
-
-            height:70,
-
-
-
-
-
-            decoration:BoxDecoration(
-
-
-
-              color:
-
-              levelOpen
-
-                  ? Colors.white
-
-                  : Colors.white.withOpacity(0.55),
-
-
-
-
-
-              shape:
-
-              BoxShape.circle,
-
-
-
-
-
-              boxShadow:[
-
-
-
-                BoxShadow(
-
-
-
-                  color:
-
-                  Colors.black.withOpacity(0.25),
-
-
-
-                  blurRadius:10,
-
-
-
-                  offset:
-
-                  const Offset(0,5),
-
-
-
-                ),
-
-
-
-              ],
-
-
-
-            ),
-
-
-
-
-
-
-            child:Center(
-
-
-
-              child:
-
-              !unlocked
-
-
-
-                  ? Image.asset(
-
-
-
-                "assets/images/ui/lock.png",
-
-
-
-                width:38,
-
-
-
-                height:38,
-
-
-
-                errorBuilder:
-
-                    (_,__,___){
-
-
-
-                  return const Icon(
-
-                    Icons.lock,
-
-                    size:38,
-
-                  );
-
-
-                },
-
-
-              )
-
-
-
-                  : levelOpen
-
-
-
-                  ? Text(
-
-
-
-                "$level",
-
-
-
-                style:const TextStyle(
-
-
-
-                  fontSize:26,
-
-
-
-                  fontWeight:
-
-                  FontWeight.bold,
-
-
-
-                  color:
-
-                  Colors.blue,
-
-
-
-                ),
-
-
-
-              )
-
-
-
-                  : Image.asset(
-
-
-
-                "assets/images/ui/lock.png",
-
-
-
-                width:35,
-
-
-
-                height:35,
-
-
-
-                errorBuilder:
-
-                    (_,__,___){
-
-
-
-                  return const Icon(
-
-                    Icons.lock,
-
-                    size:35,
-
-                  );
-
-
-                },
-
-
-              ),
-
-
-
-            ),
-
-
-
-          ),
-
-
-
-        );
-
-
-
-      },
-
-
     );
-
-
-
   }
 
   //==================================================
-  // بناء الشاشة
+  // LEVEL BUTTON
   //==================================================
 
+  Widget levelButton(int level) {
+    return GestureDetector(
+      onTap: () {
+        openLevel(level);
+      },
+      child: Container(
+        width: 70,
+        height: 70,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(.25),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            "$level",
+            style: const TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  //==================================================
+  // BUILD
+  //==================================================
 
   @override
-  Widget build(BuildContext context){
-
-
+  Widget build(BuildContext context) {
     return Scaffold(
-
-
-      body:Stack(
-
-
-        children:[
-
-
-
+      body: Stack(
+        children: [
 
           //==================================================
-          // خلفية شاشة الجزيرة
+          // خلفية الجزيرة
           //==================================================
-
 
           Positioned.fill(
-
-
-            child:AnimatedBuilder(
-
-
-              animation:backgroundController,
-
-
-              builder:(context,child){
-
-
-
+            child: AnimatedBuilder(
+              animation: backgroundController,
+              builder: (context, child) {
                 return Transform.scale(
-
-
-
-                  scale:
-
-                  backgroundScale.value,
-
-
-
-
-
-                  child:Transform.translate(
-
-
-
-                    offset:Offset(
-
-
-
+                  scale: backgroundScale.value,
+                  child: Transform.translate(
+                    offset: Offset(
                       backgroundMove.value,
-
-
-
                       0,
-
-
-
                     ),
-
-
-
-                    child:child,
-
-
-
+                    child: child,
                   ),
-
-
-
                 );
-
-
               },
-
-
-
-              child:Opacity(
-
-  opacity:0.40,
-
-  child:Image.asset(
-
-    IslandBackgroundData.getBackground(
-      widget.island.id,
-    ),
-
-    fit:BoxFit.cover,
-
-  ),
-
-),
-
-
-),
+              child: Opacity(
+                opacity: 0.40,
+                child: Image.asset(
+                  IslandBackgroundData.getBackground(
+                    widget.island.id,
+                  ),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
           ),
-
-
-
-
-
 
           // طبقة دمج خفيفة
-
           Container(
-
-
-            color:
-
-            Colors.white.withOpacity(0.15),
-
-
+            color: Colors.white.withOpacity(0.15),
           ),
-
-
-
-
-
-
-
 
           //==================================================
           // الشريط العلوي
           //==================================================
 
-
-          
-Positioned(
-
-  top:0,
-
-  left:0,
-
-  right:0,
-
-
-  child: GameToolbar(
-
-    logo:
-    "assets/images/ui/puzzle_logo.png",
-
-    starKey:
-    starKey,
-
-    onBack:(){
-
-      Navigator.pop(context);
-
-    },
-
-  ),
-
-),
-
-
-
-          //==================================================
-          // الجزيرة الرئيسية 3D
-          //==================================================
-
-
           Positioned(
-
-
-            top:85,
-
-
-            left:0,
-
-
-            right:0,
-
-
-
-            child:AnimatedBuilder(
-
-
-
-              animation:floatAnimation,
-
-
-
-              builder:(context,child){
-
-
-
-                return Transform.translate(
-
-
-
-                  offset:Offset(
-
-
-
-                    0,
-
-
-
-                    floatAnimation.value,
-
-
-
-                  ),
-
-
-
-                  child:child,
-
-
-
-                );
-
-
-
+            top: 0,
+            left: 0,
+            right: 0,
+            child: GameToolbar(
+              logo: "assets/images/ui/puzzle_logo.png",
+              starKey: starKey,
+              onBack: () {
+                Navigator.pop(context);
               },
-
-
-
-
-
-              child:Image.asset(
-
-
-
-                widget.island.image,
-
-
-
-                height:340,
-
-
-
-                fit:BoxFit.contain,
-
-
-
-                errorBuilder:
-
-                    (_,__,___){
-
-
-
-                  return const SizedBox();
-
-
-
-                },
-
-
-
-              ),
-
-
-
             ),
-
-
-
           ),
 
+          //==================================================
+          // صورة الجزيرة
+          //==================================================
 
-
-
-
-
+          Positioned(
+            top: 85,
+            left: 0,
+            right: 0,
+            child: AnimatedBuilder(
+              animation: floatAnimation,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(
+                    0,
+                    floatAnimation.value,
+                  ),
+                  child: child,
+                );
+              },
+              child: Image.asset(
+                widget.island.image,
+                height: 340,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) {
+                  return const SizedBox();
+                },
+              ),
+            ),
+          ),
 
           //==================================================
           // اسم الجزيرة
           //==================================================
 
-
           Positioned(
-
-
-            top:360,
-
-
-            left:20,
-
-
-            right:20,
-
-
-
-            child:Text(
-
-
-
+            top: 360,
+            left: 20,
+            right: 20,
+            child: Text(
               widget.island.title,
-
-
-
-              textAlign:
-
-              TextAlign.center,
-
-
-
-
-
-              style:TextStyle(
-
-
-
-                color:
-
-                islandTitleColor(),
-
-
-
-
-
-                fontSize:30,
-
-
-
-
-
-                fontWeight:
-
-                FontWeight.w900,
-
-
-
-
-
-                shadows:[
-
-
-
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: islandTitleColor(),
+                fontSize: 30,
+                fontWeight: FontWeight.w900,
+                shadows: [
                   Shadow(
-
-
-
-                    color:
-
-                    Colors.black.withOpacity(0.35),
-
-
-
-                    blurRadius:6,
-
-
-
-
-
-                    offset:
-
-                    const Offset(0,3),
-
-
-
+                    color: Colors.black.withOpacity(0.35),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
                   ),
-
-
-
                 ],
-
-
-
               ),
-
-
-
             ),
-
-
-
           ),
-
-
-
-
-
-
 
           //==================================================
           // شبكة المراحل
           //==================================================
 
-
           Positioned(
-
-
-            top:470,
-
-
-            left:20,
-
-
-            right:20,
-
-
-            bottom:20,
-
-
-
-            child:GridView.builder(
-
-
-
-              padding:
-
-              const EdgeInsets.only(
-
-
-
-                top:20,
-
-
-
-                bottom:20,
-
-
-
+            top: 470,
+            left: 20,
+            right: 20,
+            bottom: 20,
+            child: GridView.builder(
+              padding: const EdgeInsets.only(
+                top: 20,
+                bottom: 20,
               ),
-
-
-
-
-
-
               gridDelegate:
-
-              const SliverGridDelegateWithFixedCrossAxisCount(
-
-
-
-                crossAxisCount:4,
-
-
-
-                crossAxisSpacing:22,
-
-
-
-                mainAxisSpacing:22,
-
-
-
+                  const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4,
+                crossAxisSpacing: 22,
+                mainAxisSpacing: 22,
               ),
-
-
-
-
-
-
-              itemCount:
-
-              widget.island.totalLevels,
-
-
-
-
-
-
-
-              itemBuilder:(context,index){
-
-
-
+              itemCount: widget.island.totalLevels,
+              itemBuilder: (context, index) {
                 return levelButton(
-
-
-
                   index + 1,
-
-
-
                 );
-
-
-
               },
-
-
-
             ),
-
-
-
           ),
-
-
-
-
         ],
-
-
       ),
-
-
     );
-
-
   }
 
-
-
-
-
-
-
-
   //==================================================
-  // إغلاق الأنيميشن
+  // DISPOSE
   //==================================================
-
 
   @override
-  void dispose(){
-
-
-
+  void dispose() {
     floatController.dispose();
-
-
-
     backgroundController.dispose();
-
-
-
-
     super.dispose();
-
-
   }
 }
