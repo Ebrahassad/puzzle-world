@@ -235,14 +235,15 @@ class _IslandScreenState
                 );
               },
               child: Opacity(
-  opacity: 0.40,
+  
+  opacity: 0.75,
   child: Image.asset(
     IslandBackgroundData.getBackground(
       widget.island.id,
     ),
     width: double.infinity,
     height: double.infinity,
-    fit: BoxFit.contain,
+    fit: BoxFit.cover,
   ),
 ),
             ),
@@ -250,9 +251,8 @@ class _IslandScreenState
 
           // طبقة دمج خفيفة
           Container(
-            color: Colors.white.withOpacity(0.15),
-          ),
-
+  color: Colors.white.withOpacity(0.05),
+),
           //==================================================
           // الشريط العلوي
           //==================================================
