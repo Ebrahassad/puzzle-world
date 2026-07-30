@@ -149,23 +149,45 @@ class _PuzzleGameScreenState
 
 
 
-    } catch(e){
+    } catch(e, stack){
 
 
-      if(!mounted) return;
+  debugPrint(
+    "PUZZLE ERROR: $e",
+  );
 
 
-      setState((){
-
-        loading = false;
-
-        gameReady = false;
-
-      });
+  debugPrint(
+    stack.toString(),
+  );
 
 
-    }
+  if(!mounted) return;
 
+
+  setState((){
+
+    loading = false;
+
+    gameReady = false;
+
+  });
+
+
+  ScaffoldMessenger.of(context).showSnackBar(
+
+    SnackBar(
+
+      content: Text(
+        "خطأ: $e",
+      ),
+
+    ),
+
+  );
+
+
+}
 
   }
 
