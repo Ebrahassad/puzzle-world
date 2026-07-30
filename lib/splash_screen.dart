@@ -415,7 +415,7 @@ class _SplashScreenState
           Image.asset(
 
 
-            "assets/images/background/splash_background.png",
+            "assets/images/background/splash_background.jpg",
 
 
             fit:
