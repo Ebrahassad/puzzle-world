@@ -19,6 +19,7 @@ class PuzzleGameScreen extends StatefulWidget {
 
   final PuzzleModel puzzle;
 
+
   final PuzzleLevelModel level;
 
 
@@ -47,6 +48,7 @@ class PuzzleGameScreen extends StatefulWidget {
 
 
 
+
 class _PuzzleGameScreenState
 
     extends State<PuzzleGameScreen> {
@@ -55,7 +57,9 @@ class _PuzzleGameScreenState
   late AssetImage puzzleImage;
 
 
+
   ui.Image? image;
+
 
 
   late PuzzleController controller;
@@ -68,17 +72,27 @@ class _PuzzleGameScreenState
 
   bool loading = true;
 
+
+
   bool completed = false;
 
 
 
-  // القطعة التي يتم سحبها حاليا
+  // القطعة أثناء السحب
 
   PuzzlePiece? draggingPiece;
 
 
 
+  // مكان القطعة فوق الشاشة
+
   Offset dragPosition = Offset.zero;
+
+
+
+  // مكان لوحة البازل
+
+  Offset boardPosition = Offset.zero;
 
 
 
@@ -105,14 +119,10 @@ class _PuzzleGameScreenState
 
   double get pieceSize =>
 
+
       boardSize / widget.level.gridSize;
 
-
-
-
-
   @override
-
   void initState() {
 
     super.initState();
@@ -131,6 +141,12 @@ class _PuzzleGameScreenState
 
   }
 
+
+
+
+
+
+
   Future<void> loadGame() async {
 
 
@@ -144,17 +160,25 @@ class _PuzzleGameScreenState
 
     pieces = PuzzleGenerator.generate(
 
-      rows: widget.level.gridSize,
+      rows:
 
-      columns: widget.level.gridSize,
+          widget.level.gridSize,
+
+
+      columns:
+
+          widget.level.gridSize,
+
 
       imageWidth:
 
           image!.width.toDouble(),
 
+
       imageHeight:
 
           image!.height.toDouble(),
+
 
     );
 
@@ -178,7 +202,9 @@ class _PuzzleGameScreenState
 
     setState(() {
 
+
       loading = false;
+
 
     });
 
@@ -236,6 +262,7 @@ class _PuzzleGameScreenState
         }
 
 
+
         stream.removeListener(
 
           listener,
@@ -246,16 +273,17 @@ class _PuzzleGameScreenState
       },
 
 
-      onError: (error, stack) {
+      onError: (error, stackTrace) {
 
 
         completer.completeError(
 
           error,
 
-          stack,
+          stackTrace,
 
         );
+
 
 
         stream.removeListener(
@@ -315,13 +343,47 @@ class _PuzzleGameScreenState
 
   }
 
+  //=========================================
+  // تحديث موقع لوحة البازل
+  //=========================================
+
+  void updateBoardPosition() {
+
+
+    final renderBox =
+
+        boardKey.currentContext
+
+            ?.findRenderObject()
+
+        as RenderBox?;
+
+
+
+    if (renderBox != null) {
+
+
+      boardPosition =
+
+          renderBox.localToGlobal(
+
+            Offset.zero,
+
+          );
+
+
+    }
+
+
+  }
 
 
 
 
 
-
+  //=========================================
   // بداية سحب القطعة
+  //=========================================
 
   void startDrag(
 
@@ -336,18 +398,19 @@ class _PuzzleGameScreenState
 
 
 
+    updateBoardPosition();
+
+
+
     setState(() {
 
 
       draggingPiece = piece;
 
 
+
       dragPosition = globalPosition;
 
-
-      piece.dragOffset =
-
-          globalPosition;
 
 
     });
@@ -359,9 +422,9 @@ class _PuzzleGameScreenState
 
 
 
-
-
-  // تحريك القطعة فوق الشاشة
+  //=========================================
+  // تحريك القطعة
+  //=========================================
 
   void updateDrag(
 
@@ -381,19 +444,23 @@ class _PuzzleGameScreenState
 
 
 
-      draggingPiece!.position =
+      draggingPiece!.position = Offset(
 
-          Offset(
+        dragPosition.dx -
 
-            dragPosition.dx -
+            boardPosition.dx -
 
-                pieceSize / 2,
+            (pieceSize / 2),
 
-            dragPosition.dy -
 
-                pieceSize / 2,
+        dragPosition.dy -
 
-          );
+            boardPosition.dy -
+
+            (pieceSize / 2),
+
+
+      );
 
 
     });
@@ -405,16 +472,14 @@ class _PuzzleGameScreenState
 
 
 
-
-
-  // إنهاء السحب
+  //=========================================
+  // نهاية السحب
+  //=========================================
 
   void endDrag() {
 
 
-    if (draggingPiece == null)
-
-      return;
+    if (draggingPiece == null) return;
 
 
 
@@ -437,24 +502,10 @@ class _PuzzleGameScreenState
     setState(() {
 
 
-      if (correct) {
+      if (!correct) {
 
 
-        piece.lock(
-
-          pieceSize,
-
-        );
-
-
-      } else {
-
-
-        // رجوع للشريط
-
-        piece.position =
-
-            Offset.zero;
+        piece.position = Offset.zero;
 
 
       }
@@ -462,9 +513,6 @@ class _PuzzleGameScreenState
 
 
       draggingPiece = null;
-
-
-      piece.dragOffset = null;
 
 
     });
@@ -475,6 +523,10 @@ class _PuzzleGameScreenState
 
 
   }
+
+
+
+
 
   void checkComplete() {
 
@@ -492,7 +544,7 @@ class _PuzzleGameScreenState
 
         const Duration(
 
-          milliseconds: 400,
+          milliseconds: 500,
 
         ),
 
@@ -508,49 +560,33 @@ class _PuzzleGameScreenState
 
             context: context,
 
-            builder: (_) => AlertDialog(
-
-              title:
-
-                  const Text(
-
-                "🎉 أحسنت",
-
-              ),
+            builder: (_) {
 
 
-              content:
+              return AlertDialog(
 
-                  const Text(
+                title:
 
-                "اكتملت الصورة",
+                    const Text(
 
-              ),
-
-
-              actions: [
-
-                TextButton(
-
-                  onPressed: () {
-
-                    Navigator.pop(context);
-
-                  },
-
-                  child:
-
-                      const Text(
-
-                    "ممتاز",
-
-                  ),
+                  "🎉 أحسنت",
 
                 ),
 
-              ],
 
-            ),
+                content:
+
+                    const Text(
+
+                  "اكتملت الصورة",
+
+                ),
+
+
+              );
+
+
+            },
 
           );
 
@@ -562,23 +598,14 @@ class _PuzzleGameScreenState
 
     }
 
+
   }
-
-
-
-
-
-
-
-
   @override
-
   Widget build(
 
     BuildContext context,
 
   ) {
-
 
 
     if (loading) {
@@ -588,9 +615,7 @@ class _PuzzleGameScreenState
 
         body: Center(
 
-          child:
-
-              CircularProgressIndicator(),
+          child: CircularProgressIndicator(),
 
         ),
 
@@ -631,6 +656,7 @@ class _PuzzleGameScreenState
 
         ),
 
+
       ),
 
 
@@ -653,20 +679,16 @@ class _PuzzleGameScreenState
 
 
 
-
-
-                //==========================
+                //================================
                 // شريط القطع
-                //==========================
+                //================================
 
 
                 SizedBox(
 
-
                   height:
 
                       pieceSize + 35,
-
 
 
                   child:
@@ -709,13 +731,16 @@ class _PuzzleGameScreenState
 
                       if(piece.placed){
 
+
                         return const SizedBox(
 
-                          width: 5,
+                          width: 8,
 
                         );
 
+
                       }
+
 
 
 
@@ -734,6 +759,24 @@ class _PuzzleGameScreenState
                             details.globalPosition,
 
                           );
+
+
+                        },
+
+
+
+                        onPanUpdate:
+
+                            updateDrag,
+
+
+
+                        onPanEnd:
+
+                            (_){
+
+
+                          endDrag();
 
 
                         },
@@ -808,57 +851,39 @@ class _PuzzleGameScreenState
 
 
 
-
-
                 const SizedBox(
 
                   height: 15,
 
                 ),
 
-
-
-
-
-                //==========================
+                //================================
                 // لوحة البازل
-                //==========================
+                //================================
 
 
                 Expanded(
 
 
-                  child:
-
-                      Center(
+                  child: Center(
 
 
-                    child:
-
-                        Container(
+                    child: Container(
 
 
-                      key:
-
-                          boardKey,
+                      key: boardKey,
 
 
 
-                      width:
-
-                          boardSize,
+                      width: boardSize,
 
 
 
-                      height:
-
-                          boardSize,
+                      height: boardSize,
 
 
 
-                      decoration:
-
-                          BoxDecoration(
+                      decoration: BoxDecoration(
 
 
                         color:
@@ -869,15 +894,12 @@ class _PuzzleGameScreenState
 
                         borderRadius:
 
-                            BorderRadius.circular(
-
-                              25,
-
-                            ),
+                            BorderRadius.circular(25),
 
 
 
                         boxShadow: const [
+
 
                           BoxShadow(
 
@@ -885,9 +907,11 @@ class _PuzzleGameScreenState
 
                                 Colors.black45,
 
+
                             blurRadius:
 
                                 25,
+
 
                             offset:
 
@@ -899,7 +923,9 @@ class _PuzzleGameScreenState
 
                             ),
 
+
                           ),
+
 
                         ],
 
@@ -908,9 +934,7 @@ class _PuzzleGameScreenState
 
 
 
-                      child:
-
-                          Stack(
+                      child: Stack(
 
 
                         clipBehavior:
@@ -918,18 +942,16 @@ class _PuzzleGameScreenState
                             Clip.none,
 
 
+
                         children: [
 
-
-
-                          // القطع المثبتة
 
 
                           ...pieces
 
                               .where(
 
-                                (p)=>
+                                (p) =>
 
                                     p.placed,
 
@@ -937,7 +959,7 @@ class _PuzzleGameScreenState
 
                               .map(
 
-                                (piece){
+                                (piece) {
 
 
                               return Positioned(
@@ -948,6 +970,7 @@ class _PuzzleGameScreenState
                                     piece.column *
 
                                         pieceSize,
+
 
 
                                 top:
@@ -968,9 +991,11 @@ class _PuzzleGameScreenState
                                       piece,
 
 
+
                                   image:
 
                                       puzzleImage,
+
 
 
                                   size:
@@ -1010,20 +1035,27 @@ class _PuzzleGameScreenState
 
 
 
-          //==============================
+
+
+
+
+          //================================
           // القطعة أثناء السحب
-          //==============================
+          //================================
 
 
           if(draggingPiece != null)
 
+
             Positioned(
+
 
               left:
 
                   dragPosition.dx -
 
                       pieceSize / 2,
+
 
 
               top:
@@ -1038,67 +1070,88 @@ class _PuzzleGameScreenState
 
                   IgnorePointer(
 
-                    child:
 
-                        AnimatedScale(
+                child:
 
-                      duration:
-
-                          const Duration(
-
-                        milliseconds:150,
-
-                      ),
-
-                      scale:
-
-                          1.15,
-
-                      child:
-
-                          PuzzlePieceWidget(
+                    AnimatedScale(
 
 
-                        piece:
+                  duration:
 
-                            draggingPiece!,
+                      const Duration(
 
-
-
-                        image:
-
-                            puzzleImage,
-
-
-
-                        size:
-
-                            pieceSize,
-
-
-                      ),
-
-                    ),
+                    milliseconds: 150,
 
                   ),
+
+
+
+                  scale:
+
+                      1.15,
+
+
+
+                  child:
+
+                      PuzzlePieceWidget(
+
+
+                    piece:
+
+                        draggingPiece!,
+
+
+
+                    image:
+
+                        puzzleImage,
+
+
+
+                    size:
+
+                        pieceSize,
+
+
+                  ),
+
+
+                ),
+
+
+              ),
+
 
             ),
 
 
+
         ],
+
 
       ),
 
+
     );
 
+
   }
+
+
+
+
+
 
   @override
   void dispose() {
 
+
     draggingPiece = null;
 
+
     super.dispose();
+
 
   }
 
