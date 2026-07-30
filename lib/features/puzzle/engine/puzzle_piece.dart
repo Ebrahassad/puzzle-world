@@ -14,6 +14,7 @@ enum EdgeType {
 
 
 
+
 class PuzzlePiece {
 
 
@@ -44,16 +45,19 @@ class PuzzlePiece {
 
 
 
+  // مكان القطعة داخل الشاشة/اللوحة
+
   Offset position;
 
 
 
-  bool placed;
+  // مكان القطعة أثناء السحب
 
-
-
-  // مكان السحب المؤقت فوق الشاشة
   Offset? dragOffset;
+
+
+
+  bool placed;
 
 
 
@@ -91,32 +95,49 @@ class PuzzlePiece {
 
 
 
+
+
   double get x => position.dx;
+
 
 
   double get y => position.dy;
 
 
 
-  Offset get gridPosition =>
-
-      Offset(
-
-        column.toDouble(),
-
-        row.toDouble(),
-
-      );
 
 
 
 
+  Offset get gridPosition {
+
+
+    return Offset(
+
+      column.toDouble(),
+
+      row.toDouble(),
+
+    );
+
+
+  }
+
+
+
+
+
+
+
+
+  // المكان النهائي داخل لوحة البازل
 
   Offset correctOffset(
 
     double pieceSize,
 
   ) {
+
 
     return Offset(
 
@@ -126,7 +147,14 @@ class PuzzlePiece {
 
     );
 
+
   }
+
+
+
+
+
+
 
   // تحريك القطعة
 
@@ -140,6 +168,7 @@ class PuzzlePiece {
     if (placed) return;
 
 
+
     position = value;
 
 
@@ -151,7 +180,7 @@ class PuzzlePiece {
 
 
 
-  // تحديث مكان القطعة أثناء السحب
+  // تحديث مكان السحب
 
   void setPosition(
 
@@ -177,7 +206,7 @@ class PuzzlePiece {
 
 
 
-  // تثبيت القطعة في مكانها الصحيح
+  // تثبيت القطعة
 
   void lock(
 
@@ -207,7 +236,7 @@ class PuzzlePiece {
 
 
 
-  // فتح القطعة مرة أخرى
+  // فك التثبيت
 
   void unlock() {
 
@@ -245,7 +274,7 @@ class PuzzlePiece {
 
 
 
-  // التحقق من المكان الصحيح
+  // فحص قرب القطعة من مكانها
 
   bool isCorrect(
 
@@ -264,11 +293,13 @@ class PuzzlePiece {
 
 
 
-    return (
+    final distance =
 
-      position - target
+        (position - target).distance;
 
-    ).distance <= tolerance;
+
+
+    return distance <= tolerance;
 
 
   }
@@ -279,7 +310,7 @@ class PuzzlePiece {
 
 
 
-  // نسخ القطعة
+  // نسخة جديدة
 
   PuzzlePiece copyWith({
 
@@ -430,6 +461,8 @@ class PuzzlePiece {
           json["correctPosition"] ?? 0,
 
 
+
+      // يتم إعادة بناء الصورة من الـ Generator
 
       sourceRect:
 
