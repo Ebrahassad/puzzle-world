@@ -13,14 +13,18 @@ class WorldMapScreen extends StatefulWidget {
     super.key,
   });
 
+
   @override
   State<WorldMapScreen> createState() =>
       _WorldMapScreenState();
+
 }
 
 
 
-class _WorldMapScreenState extends State<WorldMapScreen> {
+
+class _WorldMapScreenState
+    extends State<WorldMapScreen> {
 
 
 
@@ -29,165 +33,346 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
 
 
 
+  // أبعاد صورة الخريطة الأصلية
+  static const double mapWidth = 1024;
+
+  static const double mapHeight = 1536;
+
+
+
   late final List<PuzzleModel> islands;
+
 
 
 
   @override
   void initState() {
+
     super.initState();
 
     islands = PuzzleData.puzzles;
+
   }
+
+
+
+
+
+
   @override
   Widget build(BuildContext context) {
-    
+
 
     return Scaffold(
-      body: Stack(
-        children: [
 
-          //==================================================
-          // صورة العالم الثابتة
-          //==================================================
 
-          Positioned.fill(
-            child: Image.asset(
-              mapImage,
-             fit: BoxFit.contain,
+      backgroundColor: Colors.black,
+
+
+
+      body: SafeArea(
+
+
+        child: Center(
+
+
+          child: FittedBox(
+
+            fit: BoxFit.contain,
+
+
+            child: SizedBox(
+
+
+              width: mapWidth,
+
+              height: mapHeight,
+
+
+
+              child: Stack(
+
+
+                clipBehavior: Clip.none,
+
+
+                children: [
+
+
+
+                  //=========================================
+                  // خلفية العالم
+                  //=========================================
+
+                  Positioned.fill(
+
+                    child: Image.asset(
+
+                      mapImage,
+
+                      fit: BoxFit.cover,
+
+                    ),
+
+                  ),
+
+
+
+
+
+                  //=========================================
+                  // جزيرة الفضاء
+                  //=========================================
+
+                  islandButton(
+
+                    rect: const Rect.fromLTWH(
+
+                      274,
+
+                      120,
+
+                      475,
+
+                      470,
+
+                    ),
+
+                    islandId: "space",
+
+                  ),
+
+
+
+
+
+
+                  //=========================================
+                  // جزيرة الحيوانات
+                  //=========================================
+
+                  islandButton(
+
+                    rect: const Rect.fromLTWH(
+
+                      70,
+
+                      510,
+
+                      370,
+
+                      410,
+
+                    ),
+
+                    islandId: "animals",
+
+                  ),
+
+
+
+
+
+
+                  //=========================================
+                  // جزيرة المعالم
+                  //=========================================
+
+                  islandButton(
+
+                    rect: const Rect.fromLTWH(
+
+                      520,
+
+                      515,
+
+                      395,
+
+                      425,
+
+                    ),
+
+                    islandId: "landmarks",
+
+                  ),
+
+
+
+
+
+
+                  //=========================================
+                  // جزيرة السيارات
+                  //=========================================
+
+                  islandButton(
+
+                    rect: const Rect.fromLTWH(
+
+                      80,
+
+                      955,
+
+                      370,
+
+                      405,
+
+                    ),
+
+                    islandId: "cars",
+
+                  ),
+
+
+
+
+
+
+                  //=========================================
+                  // جزيرة الطبيعة
+                  //=========================================
+
+                  islandButton(
+
+                    rect: const Rect.fromLTWH(
+
+                      560,
+
+                      965,
+
+                      380,
+
+                      430,
+
+                    ),
+
+                    islandId: "nature",
+
+                  ),
+
+
+                ],
+
+
+              ),
+
+
             ),
+
+
           ),
 
-          //==================================================
-          // مناطق الضغط على الجزر
-          //==================================================
 
-          islandButton(
-  x:466,
-  y:328,
-  size:90,
-  islandId:"space",
-),
+        ),
 
-islandButton(
-  x:242,
-  y:760,
-  size:110,
-  islandId:"animals",
-),
 
-islandButton(
-  x:750,
-  y:726,
-  size:110,
-  islandId:"landmarks",
-),
-
-islandButton(
-  x:236,
-  y:1212,
-  size:110,
-  islandId:"cars",
-),
-
-islandButton(
-  x:774,
-  y:1228,
-  size:110,
-  islandId:"nature",
-),
-        ],
       ),
+
+
     );
+
   }
+
+
+
+
+
+
 
   Widget islandButton({
-  required double x,
-  required double y,
-  required double size,
-  required String islandId,
-}) {
 
-  final screenSize = MediaQuery.of(context).size;
+    required Rect rect,
 
+    required String islandId,
 
-  // حساب حجم الصورة مع BoxFit.contain
-
-  final imageRatio = 1024 / 1536;
-  final screenRatio = screenSize.width / screenSize.height;
+  }) {
 
 
-  double imageWidth;
-  double imageHeight;
-  double offsetX = 0;
-  double offsetY = 0;
+
+    return Positioned.fromRect(
 
 
-  if (screenRatio > imageRatio) {
-
-    imageHeight = screenSize.height;
-    imageWidth = imageHeight * imageRatio;
-
-    offsetX = (screenSize.width - imageWidth) / 2;
-
-  } else {
-
-    imageWidth = screenSize.width;
-    imageHeight = imageWidth / imageRatio;
-
-    offsetY = (screenSize.height - imageHeight) / 2;
-
-  }
+      rect: rect,
 
 
-  final scaleX = imageWidth / 1024;
-  final scaleY = imageHeight / 1536;
+      child: GestureDetector(
 
 
-  return Positioned(
-
-    left: offsetX + (x * scaleX) - (size / 2),
-
-    top: offsetY + (y * scaleY) - (size / 2),
+        behavior: HitTestBehavior.translucent,
 
 
-    child: GestureDetector(
 
-      behavior: HitTestBehavior.translucent,
+        onTap: () {
 
-      onTap: () {
 
-        final island = islands.firstWhere(
-          (item) => item.id == islandId,
-        );
 
-        openIsland(island);
+          final island =
+              islands.firstWhere(
 
-      },
+                (item) =>
+                    item.id == islandId,
 
-      child: Container(
+              );
 
-        width: size,
 
-        height: size,
 
-        color: Colors.transparent,
+          openIsland(island);
 
-      ),
 
-    ),
+        },
 
-  );
-}
 
-  void openIsland(PuzzleModel island) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => IslandScreen(
-          island: island,
+
+        child: Container(
+
+          color: Colors.transparent,
+
         ),
+
+
+
       ),
+
+
     );
+
+
   }
+
+
+
+
+
+
+
+  void openIsland(
+      PuzzleModel island,
+      ) {
+
+
+    Navigator.push(
+
+
+      context,
+
+
+      MaterialPageRoute(
+
+
+        builder: (_) => IslandScreen(
+
+          island: island,
+
+        ),
+
+
+      ),
+
+
+    );
+
+
+  }
+
+
 }
