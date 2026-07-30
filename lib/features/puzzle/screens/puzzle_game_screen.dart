@@ -22,39 +22,41 @@ class PuzzleGameScreen extends StatefulWidget {
   });
 
   @override
-  State<PuzzleGameScreen> createState() => _PuzzleGameScreenState();
+  State<PuzzleGameScreen> createState() =>
+      _PuzzleGameScreenState();
 }
 
-class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
+class _PuzzleGameScreenState
+    extends State<PuzzleGameScreen> {
+
   String get assetPath => widget.level.image;
 
-  final Random _random = Random();
-
   late PuzzleController controller;
+
   late AssetImage puzzleImage;
 
-  List<PuzzlePiece> pieces = [];
   ui.Image? image;
+
+  List<PuzzlePiece> pieces = [];
 
   bool loading = true;
   bool gameReady = false;
   bool completed = false;
 
-  final double boardSize = 300;
+  PuzzlePiece? selectedPiece;
 
-  double get pieceSize => boardSize / widget.level.gridSize;
+  double boardSize = 0;
 
-  /// المسافة التي نُزحزح بها القطعة بصرياً حتى لا تُقص tabs
-  double get pieceVisualInset => pieceSize * 0.18;
-
-  /// الحجم الفعلي الذي يرسمه PuzzlePieceWidget داخلياً
-  double get pieceWidgetSize => pieceSize + (pieceSize * 0.36);
+  double get pieceSize =>
+      boardSize / widget.level.gridSize;
 
   @override
   void initState() {
     super.initState();
+
     puzzleImage = AssetImage(assetPath);
-loadGame();
+
+    loadGame();
   }
 
   Future<void> loadGame() async {
@@ -72,144 +74,66 @@ loadGame();
         pieces: pieces,
       );
 
-      _scatterPiecesOnTop();
-
       if (!mounted) return;
 
       setState(() {
         loading = false;
         gameReady = true;
       });
-    } catch (e, stack) {
-      debugPrint("PUZZLE ERROR: $e");
-      debugPrint(stack.toString());
-
+    } catch (e) {
       if (!mounted) return;
 
       setState(() {
         loading = false;
-        gameReady = false;
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("خطأ: $e"),
-        ),
-      );
     }
   }
 
-  void _scatterPiecesOnTop() {
-    final maxX = (boardSize - pieceSize).clamp(0.0, boardSize);
-    final topAreaHeight = boardSize * 0.28;
-    final maxY = (topAreaHeight - pieceSize).clamp(0.0, boardSize);
+  Future<ui.Image> loadImage(
+      String path,
+      ) async {
 
-    for (final piece in pieces) {
-      piece.position = Offset(
-        _random.nextDouble() * maxX,
-        _random.nextDouble() * (maxY == 0 ? 1 : maxY),
-      );
-    }
-  }
+    final completer =
+        Completer<ui.Image>();
 
-  Future<ui.Image> loadImage(String path) async {
-    final completer = Completer<ui.Image>();
-
-    final stream = AssetImage(path).resolve(
+    final stream =
+        AssetImage(path).resolve(
       const ImageConfiguration(),
     );
 
     late ImageStreamListener listener;
 
     listener = ImageStreamListener(
-      (ImageInfo info, bool _) {
-        if (!completer.isCompleted) {
-          completer.complete(info.image);
-        }
+
+      (info, _) {
+
+        completer.complete(info.image);
+
         stream.removeListener(listener);
+
       },
+
       onError: (error, stack) {
-        completer.completeError(error, stack);
+
+        completer.completeError(
+          error,
+          stack,
+        );
+
         stream.removeListener(listener);
+
       },
+
     );
 
     stream.addListener(listener);
+
     return completer.future;
-  }
-
-  void movePiece(
-    PuzzlePiece piece,
-    DragUpdateDetails details,
-  ) {
-    if (piece.placed || !gameReady) {
-      return;
-    }
-
-    setState(() {
-      piece.position += details.delta;
-
-      piece.position = Offset(
-        piece.position.dx.clamp(
-          0,
-          boardSize - pieceSize,
-        ),
-        piece.position.dy.clamp(
-          0,
-          boardSize - pieceSize,
-        ),
-      );
-    });
-  }
-
-  void dropPiece(
-    PuzzlePiece piece,
-  ) {
-    if (piece.placed) {
-      return;
-    }
-
-    final correct = controller.checkPiecePosition(
-      piece,
-      pieceSize,
-    );
-
-    if (correct) {
-      setState(() {
-        piece.placed = true;
-      });
-    } else {
-      setState(() {});
-    }
-
-    if (controller.isCompleted && !completed) {
-      completed = true;
-      showWinDialog();
-    }
-  }
-
-  void showWinDialog() {
-    showDialog(
-      context: context,
-      builder: (_) {
-        return AlertDialog(
-          title: const Text("🎉 أحسنت"),
-          content: const Text("أكملت البازل"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text("ممتاز"),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
   Widget build(BuildContext context) {
+
     if (loading) {
       return const Scaffold(
         body: Center(
@@ -227,87 +151,272 @@ loadGame();
     }
 
     return Scaffold(
-      backgroundColor: Colors.blue.shade50,
+      backgroundColor: const Color(0xff0E2A47),
+
       appBar: AppBar(
+        elevation: 0,
+        backgroundColor: const Color(0xff0E2A47),
+        centerTitle: true,
         title: Text(widget.level.title),
       ),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
 
-              // لوحة واحدة فقط: الصورة + القطع + أماكن التركيب في نفس المكان
-              Container(
-                width: boardSize,
-                height: boardSize,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
+      body: SafeArea(
+        child: Column(
+
+          children: [
+
+            const SizedBox(height: 12),
+
+            //==================================
+            // شريط القطع
+            //==================================
+
+            SizedBox(
+              height: pieceWidgetSize + 24,
+
+              child: ListView.builder(
+
+                scrollDirection: Axis.horizontal,
+
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
                 ),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    // صورة الخلفية كمرجع خفيف
-                    Positioned.fill(
-                      child: Opacity(
-                        opacity: 0.22,
-                        child: Image(
-                          image: puzzleImage,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
+
+                itemCount: pieces.length,
+
+                itemBuilder: (context, index) {
+
+                  final piece = pieces[index];
+
+                  if (piece.placed) {
+                    return const SizedBox(width: 6);
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
                     ),
 
-                    // القطع كلها في نفس اللوحة
-                    ...pieces.map((piece) {
-                      final left = piece.position.dx - pieceVisualInset;
-                      final top = piece.position.dy - pieceVisualInset;
+                    child: GestureDetector(
 
-                      return Positioned(
-                        left: left,
-                        top: top,
-                        child: GestureDetector(
-                          onPanUpdate: (details) {
-                            movePiece(piece, details);
-                          },
-                          onPanEnd: (_) {
-                            dropPiece(piece);
-                          },
-                          child: PuzzlePieceWidget(
-                            piece: piece,
-                            image: puzzleImage,
-                            size: pieceSize,
-                          ),
+                      onPanUpdate: (details) {
+                        movePiece(piece, details);
+                      },
+
+                      onPanEnd: (_) {
+                        dropPiece(piece);
+                      },
+
+                      child: AnimatedScale(
+
+                        duration: const Duration(
+                          milliseconds: 180,
                         ),
-                      );
-                    }),
-                  ],
-                ),
+
+                        scale: 1,
+
+                        child: PuzzlePieceWidget(
+
+                          piece: piece,
+
+                          image: puzzleImage,
+
+                          size: pieceSize,
+
+                        ),
+
+                      ),
+
+                    ),
+
+                  );
+
+                },
+
               ),
 
-              const SizedBox(height: 20),
+            ),
 
-              if (controller.isCompleted)
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 20),
-                  child: Text(
-                    "اكتملت الصورة بنجاح",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+            const SizedBox(height: 16),
+
+            Expanded(
+
+              child: Center(
+
+                child: Container(
+
+                  width: boardSize,
+
+                  height: boardSize,
+
+                  decoration: BoxDecoration(
+
+                    color: Colors.white,
+
+                    borderRadius: BorderRadius.circular(24),
+
+                    boxShadow: const [
+
+                      BoxShadow(
+                        blurRadius: 20,
+                        color: Colors.black26,
+                        offset: Offset(0, 8),
+                      ),
+
+                    ],
+
                   ),
+
+                  child: Stack(
+
+                    clipBehavior: Clip.none,
+
+                    children: [
+
+                      Positioned.fill(
+
+                        child: Opacity(
+
+                          opacity: 0.15,
+
+                          child: Image(
+                            image: puzzleImage,
+                            fit: BoxFit.cover,
+                          ),
+
+                        ),
+
+                      ),
+                      //==================================
+                      // القطع التي تم تثبيتها
+                      //==================================
+
+                      ...pieces.where((p) => p.placed).map(
+
+                        (piece) {
+
+                          return Positioned(
+
+                            left: piece.correctPosition.dx,
+
+                            top: piece.correctPosition.dy,
+
+                            child: PuzzlePieceWidget(
+
+                              piece: piece,
+
+                              image: puzzleImage,
+
+                              size: pieceSize,
+
+                            ),
+
+                          );
+
+                        },
+
+                      ),
+
+                      //==================================
+                      // القطعة التي يتم سحبها
+                      //==================================
+
+                      ...pieces.where((p) => !p.placed).map(
+
+                        (piece) {
+
+                          return Positioned(
+
+                            left: piece.position.dx,
+
+                            top: piece.position.dy,
+
+                            child: GestureDetector(
+
+                              onPanUpdate: (details) {
+
+                                movePiece(
+                                  piece,
+                                  details,
+                                );
+
+                              },
+
+                              onPanEnd: (_) {
+
+                                dropPiece(piece);
+
+                              },
+
+                              child: PuzzlePieceWidget(
+
+                                piece: piece,
+
+                                image: puzzleImage,
+
+                                size: pieceSize,
+
+                              ),
+
+                            ),
+
+                          );
+
+                        },
+
+                      ),
+
+                    ],
+
+                  ),
+
                 ),
-            ],
-          ),
+
+              ),
+
+            ),
+
+            if (controller.isCompleted)
+
+              const Padding(
+
+                padding: EdgeInsets.symmetric(
+                  vertical: 20,
+                ),
+
+                child: Text(
+
+                  "🎉 اكتملت الصورة بنجاح",
+
+                  style: TextStyle(
+
+                    color: Colors.white,
+
+                    fontSize: 20,
+
+                    fontWeight: FontWeight.bold,
+
+                  ),
+
+                ),
+
+              ),
+
+          ],
+
         ),
+
       ),
+
     );
+
   }
 
   @override
   void dispose() {
+
     super.dispose();
+
   }
+
 }
