@@ -46,10 +46,12 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/images/
     - assets/images/Puzzle/
+    - assets/images/islands/
+    - assets/images/world/
     - assets/images/background/
     - assets/images/ui/
-    - assets/images/world/
     - assets/images/rewards/
     - assets/icon/
     - assets/audio/
