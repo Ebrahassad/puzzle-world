@@ -12,7 +12,9 @@ class PuzzlePieceWidget extends StatefulWidget {
 
   final PuzzlePiece piece;
 
+
   final ImageProvider image;
+
 
   final double size;
 
@@ -44,6 +46,8 @@ class PuzzlePieceWidget extends StatefulWidget {
 
 
 
+
+
 class _PuzzlePieceWidgetState
 
     extends State<PuzzlePieceWidget> {
@@ -52,23 +56,28 @@ class _PuzzlePieceWidgetState
   ui.Image? cachedImage;
 
 
+
   ImageStream? _imageStream;
+
 
 
   ImageStreamListener? _listener;
 
 
 
+  bool _loaded = false;
 
   @override
   void didChangeDependencies() {
 
-
     super.didChangeDependencies();
 
 
-    _loadImage();
+    if (!_loaded) {
 
+      _loadImage();
+
+    }
 
   }
 
@@ -83,7 +92,6 @@ class _PuzzlePieceWidgetState
 
   ) {
 
-
     super.didUpdateWidget(oldWidget);
 
 
@@ -91,11 +99,16 @@ class _PuzzlePieceWidgetState
     if (oldWidget.image != widget.image) {
 
 
+      _loaded = false;
+
+
+      cachedImage = null;
+
+
       _loadImage();
 
 
     }
-
 
   }
 
@@ -122,7 +135,6 @@ class _PuzzlePieceWidgetState
 
 
 
-
     _imageStream = widget.image.resolve(
 
       createLocalImageConfiguration(
@@ -137,7 +149,6 @@ class _PuzzlePieceWidgetState
 
     _listener = ImageStreamListener(
 
-
       (info, _) {
 
 
@@ -151,11 +162,13 @@ class _PuzzlePieceWidgetState
           cachedImage = info.image;
 
 
+          _loaded = true;
+
+
         });
 
 
       },
-
 
 
       onError: (error, stackTrace) {
@@ -215,8 +228,6 @@ class _PuzzlePieceWidgetState
 
       child: CustomPaint(
 
-
-        // نفس حجم القطعة بدون مساحة إضافية
 
         size: Size(
 
