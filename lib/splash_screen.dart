@@ -17,6 +17,7 @@ class SplashScreen extends StatefulWidget {
 
   @override
   State<SplashScreen> createState() =>
+
       _SplashScreenState();
 
 
@@ -29,12 +30,17 @@ class SplashScreen extends StatefulWidget {
 
 
 class _SplashScreenState
+
     extends State<SplashScreen>
+
     with TickerProviderStateMixin {
 
 
 
   late AnimationController controller;
+
+
+  late AnimationController glowController;
 
 
 
@@ -50,6 +56,9 @@ class _SplashScreenState
   late Animation<double> shakeAnimation;
 
 
+  late Animation<double> glowAnimation;
+
+
 
 
 
@@ -63,12 +72,14 @@ class _SplashScreenState
 
 
 
+
     controller = AnimationController(
 
       vsync: this,
 
 
       duration:
+
       const Duration(
 
         milliseconds: 3000,
@@ -83,34 +94,103 @@ class _SplashScreenState
 
 
 
+    //====================================
+    // حركة اللمعان للشعار
+    //====================================
+
+
+    glowController = AnimationController(
+
+      vsync: this,
+
+
+      duration:
+
+      const Duration(
+
+        seconds: 2,
+
+      ),
+
+
+    )
+
+      ..repeat(
+
+        reverse: true,
+
+      );
+
+
+
+
+
+    glowAnimation = Tween<double>(
+
+      begin: 0.3,
+
+
+      end: 1.0,
+
+
+    ).animate(
+
+
+      CurvedAnimation(
+
+        parent:
+
+        glowController,
+
+
+        curve:
+
+        Curves.easeInOut,
+
+
+      ),
+
+
+    );
+
+
+
+
+
+
+
+    //====================================
     // تكبير الشعار
-
-    scaleAnimation =
-        Tween<double>(
-
-          begin: 0.4,
+    //====================================
 
 
-          end: 1,
+    scaleAnimation = Tween<double>(
+
+      begin: 0.4,
 
 
-        ).animate(
+      end: 1,
 
 
-          CurvedAnimation(
-
-            parent:
-            controller,
+    ).animate(
 
 
-            curve:
-            Curves.elasticOut,
+      CurvedAnimation(
+
+        parent:
+
+        controller,
 
 
-          ),
+        curve:
+
+        Curves.elasticOut,
 
 
-        );
+      ),
+
+
+    );
 
 
 
@@ -118,193 +198,199 @@ class _SplashScreenState
 
 
 
+    //====================================
     // ظهور تدريجي
-
-    fadeAnimation =
-        Tween<double>(
-
-          begin: 0,
+    //====================================
 
 
-          end: 1,
+    fadeAnimation = Tween<double>(
+
+      begin: 0,
 
 
-        ).animate(
+      end: 1,
 
 
-          CurvedAnimation(
-
-            parent:
-            controller,
+    ).animate(
 
 
-            curve:
-            const Interval(
+      CurvedAnimation(
 
-              0,
+        parent:
 
-
-              0.5,
+        controller,
 
 
-              curve:
-              Curves.easeIn,
+        curve:
+
+        const Interval(
+
+          0,
 
 
-            ),
+          0.5,
 
 
-          ),
+          curve:
+
+          Curves.easeIn,
 
 
-        );
+        ),
 
 
+      ),
 
 
+    );
 
-
-
-
+    //====================================
     // حركة الطفو
-
-    floatAnimation =
-        Tween<double>(
-
-          begin: -12,
+    //====================================
 
 
-          end: 12,
+    floatAnimation = Tween<double>(
+
+      begin: -10,
 
 
-        ).animate(
+      end: 10,
 
 
-          CurvedAnimation(
-
-            parent:
-            controller,
+    ).animate(
 
 
-            curve:
-            Curves.easeInOut,
+      CurvedAnimation(
+
+        parent:
+
+        controller,
+
+
+        curve:
+
+        Curves.easeInOut,
+
+
+      ),
+
+
+    );
+
+
+
+
+
+
+
+
+    //====================================
+    // اهتزاز بسيط للشعار
+    //====================================
+
+
+    shakeAnimation = TweenSequence<double>(
+
+
+      [
+
+        TweenSequenceItem(
+
+          tween: Tween(
+
+            begin: 0,
+
+
+            end: 0.025,
 
 
           ),
 
 
-        );
+          weight: 1,
+
+
+        ),
 
 
 
+        TweenSequenceItem(
+
+          tween: Tween(
+
+            begin: 0.025,
 
 
-
-
-
-    // اهتزاز بسيط
-
-    shakeAnimation =
-        TweenSequence<double>(
-
-
-          [
-
-            TweenSequenceItem(
-
-              tween:
-              Tween(
-
-                begin: 0,
-
-
-                end: 0.03,
-
-
-              ),
-
-
-              weight: 1,
-
-
-            ),
-
-
-
-            TweenSequenceItem(
-
-              tween:
-              Tween(
-
-                begin: 0.03,
-
-
-                end: -0.03,
-
-
-              ),
-
-
-              weight: 1,
-
-
-            ),
-
-
-
-            TweenSequenceItem(
-
-              tween:
-              Tween(
-
-                begin: -0.03,
-
-
-                end: 0,
-
-
-              ),
-
-
-              weight: 1,
-
-
-            ),
-
-
-          ],
-
-
-        ).animate(
-
-
-          CurvedAnimation(
-
-            parent:
-            controller,
-
-
-            curve:
-            const Interval(
-
-              0.75,
-
-
-              1,
-
-
-            ),
+            end: -0.025,
 
 
           ),
 
 
-        );
+          weight: 1,
+
+
+        ),
+
+
+
+        TweenSequenceItem(
+
+          tween: Tween(
+
+            begin: -0.025,
+
+
+            end: 0,
+
+
+          ),
+
+
+          weight: 1,
+
+
+        ),
+
+
+      ],
+
+
+    ).animate(
+
+
+      CurvedAnimation(
+
+        parent:
+
+        controller,
+
+
+        curve:
+
+        const Interval(
+
+          0.75,
+
+
+          1,
+
+
+        ),
+
+
+      ),
+
+
+    );
 
 
 
 
 
+
+
+    // تشغيل الحركة
 
 
     controller.forward();
@@ -313,6 +399,10 @@ class _SplashScreenState
 
 
 
+
+
+
+    // الانتقال للخريطة
 
 
     Future.delayed(
@@ -345,9 +435,13 @@ class _SplashScreenState
 
     if(!mounted){
 
+
       return;
 
+
     }
+
+
 
 
 
@@ -373,29 +467,18 @@ class _SplashScreenState
 
   }
 
-
-
-
-
-
-
-
-
-
   @override
   Widget build(BuildContext context){
-
 
 
     return Scaffold(
 
 
-
       body: Stack(
 
 
-
         fit:
+
         StackFit.expand,
 
 
@@ -406,9 +489,8 @@ class _SplashScreenState
 
 
 
-
           //====================================
-          // SPLASH BACKGROUND
+          // خلفية الاسبلش
           //====================================
 
 
@@ -419,6 +501,7 @@ class _SplashScreenState
 
 
             fit:
+
             BoxFit.cover,
 
 
@@ -428,13 +511,15 @@ class _SplashScreenState
 
 
 
-
           Container(
 
 
             color:
+
             Colors.black.withOpacity(
-                0.12
+
+              0.10,
+
             ),
 
 
@@ -447,7 +532,7 @@ class _SplashScreenState
 
 
           //====================================
-          // PUZZLE WORLD LOGO
+          // شعار Puzzle World
           //====================================
 
 
@@ -455,14 +540,19 @@ class _SplashScreenState
 
 
             animation:
+
             controller,
 
 
 
             builder:
+
                 (
+
                 context,
+
                 child,
+
                 ){
 
 
@@ -470,59 +560,160 @@ class _SplashScreenState
               return Positioned(
 
 
-
                 top:
+
                 MediaQuery.of(context)
+
                     .size
+
                     .height *
-                    0.12
+
+                    0.20
+
                     +
+
                     floatAnimation.value,
 
 
 
                 left:
+
                 0,
 
 
+
                 right:
+
                 0,
 
 
 
                 child:
+
                 FadeTransition(
 
 
-
                   opacity:
+
                   fadeAnimation,
 
 
 
                   child:
+
                   Transform.scale(
 
 
-
                     scale:
+
                     scaleAnimation.value,
 
 
 
                     child:
+
                     Transform.rotate(
 
 
-
                       angle:
+
                       shakeAnimation.value,
 
 
 
                       child:
-                      child,
 
+                      AnimatedBuilder(
+
+
+                        animation:
+
+                        glowController,
+
+
+
+                        builder:
+
+                            (
+
+                            context,
+
+                            logo,
+
+                            ){
+
+
+
+                          return Container(
+
+
+                            alignment:
+
+                            Alignment.center,
+
+
+
+                            decoration:
+
+                            BoxDecoration(
+
+
+                              boxShadow: [
+
+
+                                BoxShadow(
+
+
+                                  color:
+
+                                  Colors.white
+
+                                      .withOpacity(
+
+                                    glowAnimation.value *
+
+                                        0.35,
+
+                                  ),
+
+
+                                  blurRadius:
+
+                                  30,
+
+
+                                  spreadRadius:
+
+                                  5,
+
+
+                                ),
+
+
+                              ],
+
+
+                            ),
+
+
+                            child:
+
+                            logo,
+
+
+                          );
+
+
+                        },
+
+
+
+                        child:
+
+                        child,
+
+
+                      ),
 
 
                     ),
@@ -537,25 +728,186 @@ class _SplashScreenState
               );
 
 
-
             },
 
 
 
             child:
-Image.asset(
 
-  "assets/images/ui/puzzle_world_logo.png",
+            Image.asset(
 
-  width: 350,
 
-),
+              "assets/images/ui/puzzle_world_logo.png",
+
+
+
+              width:
+
+              280,
+
+
+            ),
 
 
           ),
 
 
 
+
+
+
+          //====================================
+          // ايقونة التطبيق
+          //====================================
+
+
+          Positioned(
+
+
+            bottom:
+
+            60,
+
+
+
+            left:
+
+            0,
+
+
+
+            right:
+
+            0,
+
+
+
+            child:
+
+            FadeTransition(
+
+
+              opacity:
+
+              fadeAnimation,
+
+
+
+              child:
+
+              AnimatedBuilder(
+
+
+                animation:
+
+                glowController,
+
+
+
+                builder:
+
+                    (
+
+                    context,
+
+                    child,
+
+                    ){
+
+
+
+                  return Container(
+
+
+                    alignment:
+
+                    Alignment.center,
+
+
+
+                    decoration:
+
+                    BoxDecoration(
+
+
+                      boxShadow: [
+
+
+                        BoxShadow(
+
+
+                          color:
+
+                          Colors.white
+
+                              .withOpacity(
+
+                            glowAnimation.value *
+
+                                0.30,
+
+                          ),
+
+
+                          blurRadius:
+
+                          25,
+
+
+                          spreadRadius:
+
+                          4,
+
+
+                        ),
+
+
+                      ],
+
+
+                    ),
+
+
+                    child:
+
+                    child,
+
+
+                  );
+
+
+                },
+
+
+
+                child:
+
+                Image.asset(
+
+
+                  "assets/icon/app_icon.png",
+
+
+                  width:
+
+                  75,
+
+
+                  height:
+
+                  75,
+
+
+                ),
+
+
+              ),
+
+
+            ),
+
+
+          ),
 
 
 
@@ -570,20 +922,15 @@ Image.asset(
 
   }
 
-
-
-
-
-
-
-
-
-
   @override
   void dispose(){
 
 
     controller.dispose();
+
+
+    glowController.dispose();
+
 
 
     super.dispose();
