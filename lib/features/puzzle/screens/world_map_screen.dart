@@ -355,7 +355,7 @@ Widget build(BuildContext context) {
 
 
 
-                      fit:BoxFit.contain,
+                      fit: BoxFit.cover,
 
 
                       width:
