@@ -36,16 +36,14 @@ class PuzzlePieceWidget extends StatefulWidget {
   State<PuzzlePieceWidget> createState() =>
       _PuzzlePieceWidgetState();
 
-
 }
 
 
 
 
 
-
 class _PuzzlePieceWidgetState
-    extends State<PuzzlePieceWidget>{
+    extends State<PuzzlePieceWidget> {
 
 
 
@@ -54,14 +52,11 @@ class _PuzzlePieceWidgetState
 
 
   @override
-  void didChangeDependencies(){
-
+  void didChangeDependencies() {
 
     super.didChangeDependencies();
 
-
     loadImage();
-
 
   }
 
@@ -69,15 +64,12 @@ class _PuzzlePieceWidgetState
 
 
 
-
-  void loadImage(){
+  void loadImage() {
 
 
     final stream = widget.image.resolve(
 
-
       createLocalImageConfiguration(context),
-
 
     );
 
@@ -85,108 +77,77 @@ class _PuzzlePieceWidgetState
 
     stream.addListener(
 
-
       ImageStreamListener(
 
-
-            (info,_){
-
+        (info, _) {
 
 
-          if(mounted){
+          if (mounted) {
 
-
-            setState((){
-
+            setState(() {
 
               image = info.image;
 
-
             });
-
 
           }
 
 
         },
 
-
-
-        onError:(error,stackTrace){
-
+        onError: (error, stackTrace) {
 
           debugPrint(
-
             "Puzzle image error: $error",
-
           );
-
 
         },
 
-
       ),
-
 
     );
 
-
   }
-
-
 
 
 
 
 
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
 
+
+    // مساحة إضافية للبروزات
+    final extraSpace = widget.size * 0.36;
 
 
     return CustomPaint(
 
 
-
       size: Size(
 
+        widget.size + extraSpace,
 
-        widget.size,
-
-
-        widget.size,
-
+        widget.size + extraSpace,
 
       ),
-
 
 
 
       painter: PuzzlePainter(
 
-
-
         piece: widget.piece,
-
-
 
         image: widget.image,
 
-
-
         cachedImage: image,
-
-
 
       ),
 
 
-
     );
 
-
   }
-
 
 
 }
