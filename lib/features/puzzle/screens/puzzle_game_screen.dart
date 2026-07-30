@@ -75,11 +75,9 @@ class _PuzzleGameScreenState
     super.initState();
 
 
-    puzzleImage =
-        AssetImage(
-          widget.level.image,
-        );
-
+    puzzleImage = const AssetImage(
+  "assets/images/Puzzle/animals/level_1.png",
+);
 
     loadGame();
 
@@ -95,10 +93,9 @@ class _PuzzleGameScreenState
     try {
 
 
-      image =
-          await loadImage(
-            widget.level.image,
-          );
+      image = await loadImage(
+  "assets/images/Puzzle/animals/level_1.png",
+);
 
 
 
