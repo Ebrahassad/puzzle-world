@@ -46,6 +46,7 @@ class PuzzleGameScreen extends StatefulWidget {
 
 
 
+
 class _PuzzleGameScreenState
 
     extends State<PuzzleGameScreen> {
@@ -71,11 +72,19 @@ class _PuzzleGameScreenState
 
 
 
-  PuzzlePiece? selectedPiece;
+  // القطعة التي يتم سحبها حاليا
+
+  PuzzlePiece? draggingPiece;
+
+
+
+  Offset dragPosition = Offset.zero;
 
 
 
   final GlobalKey boardKey = GlobalKey();
+
+
 
 
 
@@ -85,25 +94,29 @@ class _PuzzleGameScreenState
     final size = MediaQuery.of(context).size;
 
 
-    return size.width * 0.88;
+    return size.width * 0.90;
 
 
   }
 
 
 
-  double get pieceSize =>
 
+
+  double get pieceSize =>
 
       boardSize / widget.level.gridSize;
 
 
 
 
+
   @override
+
   void initState() {
 
     super.initState();
+
 
 
     puzzleImage = AssetImage(
@@ -113,13 +126,10 @@ class _PuzzleGameScreenState
     );
 
 
+
     loadGame();
 
   }
-
-
-
-
 
   Future<void> loadGame() async {
 
@@ -158,7 +168,7 @@ class _PuzzleGameScreenState
 
 
 
-    _preparePieces();
+    preparePieces();
 
 
 
@@ -168,14 +178,18 @@ class _PuzzleGameScreenState
 
     setState(() {
 
-
       loading = false;
-
 
     });
 
 
   }
+
+
+
+
+
+
 
   Future<ui.Image> loadImage(
 
@@ -275,7 +289,9 @@ class _PuzzleGameScreenState
 
 
 
-  void _preparePieces() {
+
+
+  void preparePieces() {
 
 
     pieces.shuffle();
@@ -291,6 +307,9 @@ class _PuzzleGameScreenState
       piece.placed = false;
 
 
+      piece.dragOffset = null;
+
+
     }
 
 
@@ -300,9 +319,15 @@ class _PuzzleGameScreenState
 
 
 
-  void selectPiece(
+
+
+  // بداية سحب القطعة
+
+  void startDrag(
 
     PuzzlePiece piece,
+
+    Offset globalPosition,
 
   ) {
 
@@ -314,7 +339,15 @@ class _PuzzleGameScreenState
     setState(() {
 
 
-      selectedPiece = piece;
+      draggingPiece = piece;
+
+
+      dragPosition = globalPosition;
+
+
+      piece.dragOffset =
+
+          globalPosition;
 
 
     });
@@ -326,14 +359,66 @@ class _PuzzleGameScreenState
 
 
 
-  void placePiece(
 
-    PuzzlePiece piece,
+
+  // تحريك القطعة فوق الشاشة
+
+  void updateDrag(
+
+    DragUpdateDetails details,
 
   ) {
 
 
-    if (piece.placed) return;
+    if (draggingPiece == null) return;
+
+
+
+    setState(() {
+
+
+      dragPosition += details.delta;
+
+
+
+      draggingPiece!.position =
+
+          Offset(
+
+            dragPosition.dx -
+
+                pieceSize / 2,
+
+            dragPosition.dy -
+
+                pieceSize / 2,
+
+          );
+
+
+    });
+
+
+  }
+
+
+
+
+
+
+
+  // إنهاء السحب
+
+  void endDrag() {
+
+
+    if (draggingPiece == null)
+
+      return;
+
+
+
+    final piece = draggingPiece!;
 
 
 
@@ -349,41 +434,49 @@ class _PuzzleGameScreenState
 
 
 
-    if (correct) {
+    setState(() {
 
 
-      setState(() {
+      if (correct) {
 
 
-        piece.placed = true;
+        piece.lock(
+
+          pieceSize,
+
+        );
 
 
-        selectedPiece = null;
+      } else {
 
 
-      });
+        // رجوع للشريط
+
+        piece.position =
+
+            Offset.zero;
+
+
+      }
 
 
 
-    } else {
+      draggingPiece = null;
 
 
-      // إرجاع القطعة للشريط
-
-      setState(() {
+      piece.dragOffset = null;
 
 
-        piece.position = Offset.zero;
+    });
 
 
-        selectedPiece = null;
+
+    checkComplete();
 
 
-      });
+  }
 
-
-    }
-
+  void checkComplete() {
 
 
     if (controller.isCompleted &&
@@ -394,107 +487,98 @@ class _PuzzleGameScreenState
       completed = true;
 
 
-      showCompleted();
+
+      Future.delayed(
+
+        const Duration(
+
+          milliseconds: 400,
+
+        ),
+
+
+        () {
+
+
+          if (!mounted) return;
+
+
+
+          showDialog(
+
+            context: context,
+
+            builder: (_) => AlertDialog(
+
+              title:
+
+                  const Text(
+
+                "🎉 أحسنت",
+
+              ),
+
+
+              content:
+
+                  const Text(
+
+                "اكتملت الصورة",
+
+              ),
+
+
+              actions: [
+
+                TextButton(
+
+                  onPressed: () {
+
+                    Navigator.pop(context);
+
+                  },
+
+                  child:
+
+                      const Text(
+
+                    "ممتاز",
+
+                  ),
+
+                ),
+
+              ],
+
+            ),
+
+          );
+
+
+        },
+
+      );
 
 
     }
 
-
   }
 
 
 
-
-
-  void showCompleted() {
-
-
-    Future.delayed(
-
-      const Duration(
-
-        milliseconds: 400,
-
-      ),
-
-
-      () {
-
-
-        if (!mounted) return;
-
-
-
-        showDialog(
-
-          context: context,
-
-          builder: (_) => AlertDialog(
-
-            title:
-
-                const Text(
-
-              "🎉 أحسنت",
-
-            ),
-
-
-            content:
-
-                const Text(
-
-              "اكتملت الصورة",
-
-            ),
-
-
-          ),
-
-        );
-
-
-      },
-
-    );
-
-
-  }
-  void movePiece(
-
-    PuzzlePiece piece,
-
-    DragUpdateDetails details,
-
-  ) {
-
-
-    if (piece.placed) return;
-
-
-
-    setState(() {
-
-
-      piece.position += details.delta;
-
-
-
-    });
-
-
-  }
 
 
 
 
 
   @override
+
   Widget build(
 
     BuildContext context,
 
   ) {
+
 
 
     if (loading) {
@@ -514,6 +598,8 @@ class _PuzzleGameScreenState
 
 
     }
+
+
 
 
 
@@ -545,165 +631,428 @@ class _PuzzleGameScreenState
 
         ),
 
-
       ),
 
 
 
 
-      body: SafeArea(
+
+      body: Stack(
 
 
-        child: Column(
+        children: [
 
 
-          children: [
+          SafeArea(
 
 
+            child: Column(
 
 
-
-            //=================================
-            // شريط القطع العلوي
-            //=================================
-
-
-            SizedBox(
-
-
-              height:
-
-                  pieceSize + 30,
+              children: [
 
 
 
-              child:
-
-                  ListView.builder(
 
 
-                scrollDirection:
+                //==========================
+                // شريط القطع
+                //==========================
 
-                    Axis.horizontal,
+
+                SizedBox(
+
+
+                  height:
+
+                      pieceSize + 35,
 
 
 
-                padding:
+                  child:
 
-                    const EdgeInsets.symmetric(
+                      ListView.builder(
 
-                  horizontal: 15,
+
+                    scrollDirection:
+
+                        Axis.horizontal,
+
+
+
+                    padding:
+
+                        const EdgeInsets.symmetric(
+
+                      horizontal: 15,
+
+                    ),
+
+
+
+                    itemCount:
+
+                        pieces.length,
+
+
+
+                    itemBuilder:
+
+                        (context,index){
+
+
+                      final piece =
+
+                          pieces[index];
+
+
+
+                      if(piece.placed){
+
+                        return const SizedBox(
+
+                          width: 5,
+
+                        );
+
+                      }
+
+
+
+                      return GestureDetector(
+
+
+                        onPanStart:
+
+                            (details){
+
+
+                          startDrag(
+
+                            piece,
+
+                            details.globalPosition,
+
+                          );
+
+
+                        },
+
+
+
+                        child:
+
+                            AnimatedScale(
+
+
+                          duration:
+
+                              const Duration(
+
+                            milliseconds: 180,
+
+                          ),
+
+
+
+                          scale:
+
+                              draggingPiece == piece
+
+                                  ? 1.15
+
+                                  : 1,
+
+
+
+                          child:
+
+                              PuzzlePieceWidget(
+
+
+                            piece:
+
+                                piece,
+
+
+
+                            image:
+
+                                puzzleImage,
+
+
+
+                            size:
+
+                                pieceSize,
+
+
+                          ),
+
+
+                        ),
+
+
+                      );
+
+
+                    },
+
+
+                  ),
+
 
                 ),
 
 
 
-                itemCount:
-
-                    pieces.length,
 
 
 
-                itemBuilder:
 
-                    (context, index) {
+                const SizedBox(
 
+                  height: 15,
 
-                  final piece =
-
-                      pieces[index];
+                ),
 
 
 
-                  if (piece.placed) {
 
 
-                    return const SizedBox(
-
-                      width: 5,
-
-                    );
+                //==========================
+                // لوحة البازل
+                //==========================
 
 
-                  }
+                Expanded(
 
 
+                  child:
 
-                  return GestureDetector(
-
-
-                    onTap: () {
-
-
-                      selectPiece(
-
-                        piece,
-
-                      );
-
-
-                    },
-
-
-
-                    onPanUpdate:
-
-                        (details) {
-
-
-                      movePiece(
-
-                        piece,
-
-                        details,
-
-                      );
-
-
-                    },
-
-
-
-                    onPanEnd:
-
-                        (_) {
-
-
-                      placePiece(
-
-                        piece,
-
-                      );
-
-
-                    },
-
+                      Center(
 
 
                     child:
 
-                        AnimatedScale(
+                        Container(
 
 
-                      duration:
+                      key:
 
-                          const Duration(
+                          boardKey,
 
-                        milliseconds: 200,
+
+
+                      width:
+
+                          boardSize,
+
+
+
+                      height:
+
+                          boardSize,
+
+
+
+                      decoration:
+
+                          BoxDecoration(
+
+
+                        color:
+
+                            Colors.black26,
+
+
+
+                        borderRadius:
+
+                            BorderRadius.circular(
+
+                              25,
+
+                            ),
+
+
+
+                        boxShadow: const [
+
+                          BoxShadow(
+
+                            color:
+
+                                Colors.black45,
+
+                            blurRadius:
+
+                                25,
+
+                            offset:
+
+                                Offset(
+
+                              0,
+
+                              12,
+
+                            ),
+
+                          ),
+
+                        ],
+
 
                       ),
 
 
 
+                      child:
+
+                          Stack(
+
+
+                        clipBehavior:
+
+                            Clip.none,
+
+
+                        children: [
+
+
+
+                          // القطع المثبتة
+
+
+                          ...pieces
+
+                              .where(
+
+                                (p)=>
+
+                                    p.placed,
+
+                              )
+
+                              .map(
+
+                                (piece){
+
+
+                              return Positioned(
+
+
+                                left:
+
+                                    piece.column *
+
+                                        pieceSize,
+
+
+                                top:
+
+                                    piece.row *
+
+                                        pieceSize,
+
+
+
+                                child:
+
+                                    PuzzlePieceWidget(
+
+
+                                  piece:
+
+                                      piece,
+
+
+                                  image:
+
+                                      puzzleImage,
+
+
+                                  size:
+
+                                      pieceSize,
+
+
+                                ),
+
+
+                              );
+
+
+                            },
+
+                          ),
+
+
+                        ],
+
+
+                      ),
+
+                    ),
+
+                  ),
+
+                ),
+
+
+              ],
+
+
+            ),
+
+          ),
+
+
+
+          //==============================
+          // القطعة أثناء السحب
+          //==============================
+
+
+          if(draggingPiece != null)
+
+            Positioned(
+
+              left:
+
+                  dragPosition.dx -
+
+                      pieceSize / 2,
+
+
+              top:
+
+                  dragPosition.dy -
+
+                      pieceSize / 2,
+
+
+
+              child:
+
+                  IgnorePointer(
+
+                    child:
+
+                        AnimatedScale(
+
+                      duration:
+
+                          const Duration(
+
+                        milliseconds:150,
+
+                      ),
+
                       scale:
 
-                          selectedPiece == piece
-
-                              ? 1.18
-
-                              : 1,
-
-
+                          1.15,
 
                       child:
 
@@ -712,7 +1061,7 @@ class _PuzzleGameScreenState
 
                         piece:
 
-                            piece,
+                            draggingPiece!,
 
 
 
@@ -727,248 +1076,27 @@ class _PuzzleGameScreenState
                             pieceSize,
 
 
-
                       ),
-
 
                     ),
 
-
-                  );
-
-
-                },
-
-
-              ),
-
-
-            ),
-
-
-
-
-
-            const SizedBox(
-
-              height: 20,
-
-            ),
-
-
-
-
-
-
-            //=================================
-            // لوحة تركيب البازل
-            //=================================
-
-
-            Expanded(
-
-
-              child:
-
-                  Center(
-
-
-                child:
-
-                    Container(
-
-
-                  key:
-
-                      boardKey,
-
-
-
-                  width:
-
-                      boardSize,
-
-
-
-                  height:
-
-                      boardSize,
-
-
-
-                  decoration:
-
-                      BoxDecoration(
-
-
-                    borderRadius:
-
-                        BorderRadius.circular(25),
-
-
-
-                    color:
-
-                        Colors.black26,
-
-
-
-                    boxShadow: const [
-
-
-                      BoxShadow(
-
-
-                        color:
-
-                            Colors.black38,
-
-
-                        blurRadius:
-
-                            20,
-
-
-                        offset:
-
-                            Offset(
-
-                          0,
-
-                          10,
-
-                        ),
-
-
-                      ),
-
-
-                    ],
-
-
                   ),
 
-
-
-                  child:
-
-                      Stack(
-
-
-                    clipBehavior:
-
-                        Clip.none,
-
-
-
-                    children:
-
-                        [
-
-
-                      // القطع المثبتة
-
-
-                      ...pieces
-
-                          .where(
-
-                            (p) =>
-
-                                p.placed,
-
-                          )
-
-                          .map(
-
-
-                            (piece) {
-
-
-                          return Positioned(
-
-
-                            left:
-
-                                piece.column *
-
-                                    pieceSize,
-
-
-
-                            top:
-
-                                piece.row *
-
-                                    pieceSize,
-
-
-
-                            child:
-
-                                PuzzlePieceWidget(
-
-
-                              piece:
-
-                                  piece,
-
-
-
-                              image:
-
-                                  puzzleImage,
-
-
-
-                              size:
-
-                                  pieceSize,
-
-
-                            ),
-
-
-                          );
-
-
-                        },
-
-
-                      ),
-
-
-                    ],
-
-
-                  ),
-
-
-                ),
-
-
-              ),
-
-
             ),
 
 
-
-          ],
-
-
-        ),
-
+        ],
 
       ),
 
-
     );
 
-
   }
+
   @override
   void dispose() {
+
+    draggingPiece = null;
 
     super.dispose();
 
