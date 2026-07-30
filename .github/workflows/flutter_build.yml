@@ -1,45 +1,101 @@
 name: Flutter Android Build
 
+
 on:
+
   push:
+
     branches:
+
       - main
+
 
   workflow_dispatch:
 
 
+
+
 jobs:
+
   build:
+
 
     runs-on: ubuntu-latest
 
+
+
     steps:
+
+
 
       - name: Checkout repository
         uses: actions/checkout@v4
 
 
+
+
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
+
         with:
+
           flutter-version: '3.44.8'
+
           channel: stable
 
 
+
+
+
+      - name: Check pubspec.yaml
+
+        run: |
+
+          pwd
+
+          ls -la
+
+          echo "===================="
+
+          sed -n '1,120p' pubspec.yaml
+
+          echo "===================="
+
+
+
+
+
       - name: Flutter pub get
+
         run: flutter pub get
 
 
+
+
+
       - name: Generate App Icon
+
         run: dart run flutter_launcher_icons
 
 
+
+
+
       - name: Build APK
+
         run: flutter build apk --release
 
 
+
+
+
       - name: Upload APK
+
         uses: actions/upload-artifact@v4
+
         with:
+
           name: puzzle-world-apk
+
           path: build/app/outputs/flutter-apk/app-release.apk
