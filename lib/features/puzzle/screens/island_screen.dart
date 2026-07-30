@@ -132,7 +132,8 @@ class _IslandScreenState
 
     backgroundScale = Tween<double>(
       begin: 1.0,
-      end: 1.03,
+      end: 1.01,
+
     ).animate(
       CurvedAnimation(
         parent: backgroundController,
@@ -234,14 +235,16 @@ class _IslandScreenState
                 );
               },
               child: Opacity(
-                opacity: 0.40,
-                child: Image.asset(
-                  IslandBackgroundData.getBackground(
-                    widget.island.id,
-                  ),
-                  fit: BoxFit.cover,
-                ),
-              ),
+  opacity: 0.40,
+  child: Image.asset(
+    IslandBackgroundData.getBackground(
+      widget.island.id,
+    ),
+    width: double.infinity,
+    height: double.infinity,
+    fit: BoxFit.contain,
+  ),
+),
             ),
           ),
 
