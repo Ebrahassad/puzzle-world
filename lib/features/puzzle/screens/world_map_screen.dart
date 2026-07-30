@@ -59,220 +59,154 @@ class _WorldMapScreenState
 
 
 
-  @override
+    @override
   Widget build(BuildContext context) {
-
 
     return Scaffold(
 
+backgroundColor: const Color(0xff08182b),
 
-      backgroundColor: Colors.black,
+      body: LayoutBuilder(
 
+        builder: (context, constraints) {
 
+          final scaleX =
+              constraints.maxWidth / mapWidth;
 
-      body: SafeArea(
+          final scaleY =
+              constraints.maxHeight / mapHeight;
 
-
-        child: Center(
-
-
-          child: FittedBox(
-
-            fit: BoxFit.contain,
-
-
-            child: SizedBox(
+          final scale =
+              scaleX > scaleY ? scaleX : scaleY;
 
 
-              width: mapWidth,
-
-              height: mapHeight,
-
+          final dx =
+              (constraints.maxWidth - (mapWidth * scale)) / 2;
 
 
-              child: Stack(
-
-
-                clipBehavior: Clip.none,
-
-
-                children: [
+          final dy =
+              (constraints.maxHeight - (mapHeight * scale)) / 2;
 
 
 
-                  //=========================================
-                  // خلفية العالم
-                  //=========================================
+          return Stack(
 
-                  Positioned.fill(
+            children: [
 
-                    child: Image.asset(
+              Positioned(
 
-                      mapImage,
+                left: dx,
 
-                      fit: BoxFit.cover,
+                top: dy,
+
+
+                child: Transform.scale(
+
+                  scale: scale,
+
+                  alignment: Alignment.topLeft,
+
+
+                  child: SizedBox(
+
+                    width: mapWidth,
+
+                    height: mapHeight,
+
+
+                    child: Stack(
+
+                      children: [
+
+                        Positioned.fill(
+
+                          child: Image.asset(
+
+                            mapImage,
+
+                            fit: BoxFit.fill,
+
+                          ),
+
+                        ),
+
+
+                        islandButton(
+                          rect: const Rect.fromLTWH(
+                            274,
+                            120,
+                            475,
+                            470,
+                          ),
+                          islandId: "space",
+                        ),
+
+
+                        islandButton(
+                          rect: const Rect.fromLTWH(
+                            70,
+                            510,
+                            370,
+                            410,
+                          ),
+                          islandId: "animals",
+                        ),
+
+
+                        islandButton(
+                          rect: const Rect.fromLTWH(
+                            520,
+                            515,
+                            395,
+                            425,
+                          ),
+                          islandId: "landmarks",
+                        ),
+
+
+                        islandButton(
+                          rect: const Rect.fromLTWH(
+                            80,
+                            955,
+                            370,
+                            405,
+                          ),
+                          islandId: "cars",
+                        ),
+
+
+                        islandButton(
+                          rect: const Rect.fromLTWH(
+                            560,
+                            965,
+                            380,
+                            430,
+                          ),
+                          islandId: "nature",
+                        ),
+
+
+                      ],
 
                     ),
 
                   ),
 
-
-
-
-
-                  //=========================================
-                  // جزيرة الفضاء
-                  //=========================================
-
-                  islandButton(
-
-                    rect: const Rect.fromLTWH(
-
-                      274,
-
-                      120,
-
-                      475,
-
-                      470,
-
-                    ),
-
-                    islandId: "space",
-
-                  ),
-
-
-
-
-
-
-                  //=========================================
-                  // جزيرة الحيوانات
-                  //=========================================
-
-                  islandButton(
-
-                    rect: const Rect.fromLTWH(
-
-                      70,
-
-                      510,
-
-                      370,
-
-                      410,
-
-                    ),
-
-                    islandId: "animals",
-
-                  ),
-
-
-
-
-
-
-                  //=========================================
-                  // جزيرة المعالم
-                  //=========================================
-
-                  islandButton(
-
-                    rect: const Rect.fromLTWH(
-
-                      520,
-
-                      515,
-
-                      395,
-
-                      425,
-
-                    ),
-
-                    islandId: "landmarks",
-
-                  ),
-
-
-
-
-
-
-                  //=========================================
-                  // جزيرة السيارات
-                  //=========================================
-
-                  islandButton(
-
-                    rect: const Rect.fromLTWH(
-
-                      80,
-
-                      955,
-
-                      370,
-
-                      405,
-
-                    ),
-
-                    islandId: "cars",
-
-                  ),
-
-
-
-
-
-
-                  //=========================================
-                  // جزيرة الطبيعة
-                  //=========================================
-
-                  islandButton(
-
-                    rect: const Rect.fromLTWH(
-
-                      560,
-
-                      965,
-
-                      380,
-
-                      430,
-
-                    ),
-
-                    islandId: "nature",
-
-                  ),
-
-
-                ],
-
+                ),
 
               ),
 
+            ],
 
-            ),
+          );
 
-
-          ),
-
-
-        ),
-
+        },
 
       ),
-
 
     );
 
   }
-
 
 
 
@@ -288,22 +222,23 @@ class _WorldMapScreenState
   }) {
 
 
+    return Positioned(
 
-    return Positioned.fromRect(
+      left: rect.left,
 
+      top: rect.top,
 
-      rect: rect,
+      width: rect.width,
+
+      height: rect.height,
 
 
       child: GestureDetector(
 
-
         behavior: HitTestBehavior.translucent,
 
 
-
         onTap: () {
-
 
 
           final island =
@@ -315,12 +250,10 @@ class _WorldMapScreenState
               );
 
 
-
           openIsland(island);
 
 
         },
-
 
 
         child: Container(
@@ -329,16 +262,11 @@ class _WorldMapScreenState
 
         ),
 
-
-
       ),
-
 
     );
 
-
   }
-
 
 
 
