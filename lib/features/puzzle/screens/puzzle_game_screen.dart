@@ -26,7 +26,7 @@ class PuzzleGameScreen extends StatefulWidget {
 }
 
 class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
-  static const String _assetPath = 'assets/images/Puzzle/animals/level_1.png';
+  String get assetPath => widget.level.image;
 
   final Random _random = Random();
 
@@ -53,13 +53,13 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   @override
   void initState() {
     super.initState();
-    puzzleImage = const AssetImage(_assetPath);
-    loadGame();
+    puzzleImage = AssetImage(assetPath);
+loadGame();
   }
 
   Future<void> loadGame() async {
     try {
-      image = await loadImage(_assetPath);
+      image = await loadImage(assetPath);
 
       pieces = PuzzleGenerator.generate(
         rows: widget.level.gridSize,
