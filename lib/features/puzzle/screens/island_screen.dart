@@ -172,14 +172,17 @@ class _IslandScreenState
   // LEVEL BUTTON
   //==================================================
 
-  Widget levelButton(int level) {
+  Widget levelButton(
+  int level,
+  double size,
+) {
     return GestureDetector(
       onTap: () {
         openLevel(level);
       },
       child: Container(
-        width: 70,
-        height: 70,
+        width: screenWidth * 0.16,
+height: screenWidth * 0.16,
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
@@ -211,6 +214,10 @@ class _IslandScreenState
 
   @override
   Widget build(BuildContext context) {
+
+final screenHeight = MediaQuery.of(context).size.height;
+final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -317,9 +324,9 @@ class _IslandScreenState
           //==================================================
 
           Positioned(
-            top: 85,
-            left: 0,
-            right: 0,
+  top: screenHeight * 0.10,
+  left: 0,
+  right: 0,
             child: AnimatedBuilder(
               animation: floatAnimation,
               builder: (context, child) {
@@ -333,7 +340,7 @@ class _IslandScreenState
               },
               child: Image.asset(
                 widget.island.image,
-                height: 340,
+                height: screenHeight * 0.35,
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) {
                   return const SizedBox();
@@ -347,7 +354,7 @@ class _IslandScreenState
           //==================================================
 
           Positioned(
-            top: 360,
+            top: screenHeight * 0.45,
             left: 20,
             right: 20,
             child: Text(
@@ -373,10 +380,10 @@ class _IslandScreenState
           //==================================================
 
           Positioned(
-            top: 470,
-            left: 20,
-            right: 20,
-            bottom: 20,
+            top: screenHeight * 0.58,
+            left: screenWidth * 0.05,
+right: screenWidth * 0.05,
+bottom: screenHeight * 0.02,
             child: GridView.builder(
               padding: const EdgeInsets.only(
                 top: 20,
@@ -391,8 +398,9 @@ class _IslandScreenState
               itemCount: widget.island.totalLevels,
               itemBuilder: (context, index) {
                 return levelButton(
-                  index + 1,
-                );
+  index + 1,
+  screenWidth * 0.16,
+);
               },
             ),
           ),
