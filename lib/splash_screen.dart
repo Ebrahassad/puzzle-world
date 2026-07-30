@@ -366,20 +366,17 @@ class _SplashScreenState
 
 
     particles = List.generate(
+  35,
+  (index) => _Particle.random(),
+);
 
-      35,
+controller.addStatusListener((status) {
+  if (status == AnimationStatus.completed) {
+    openWorldMap();
+  }
+});
 
-      (index) => _Particle.random(),
-
-    );
-
-
-
-
-
-    // تشغيل حركة الشعار
-
-    controller.forward();
+controller.forward();
 
 
 
@@ -387,17 +384,11 @@ class _SplashScreenState
 
     // الانتقال للعالم
 
-    Future.delayed(
-
-      const Duration(
-
-        milliseconds: 3500,
-
-      ),
-
-      openWorldMap,
-
-    );
+    controller.addStatusListener((status) {
+  if (status == AnimationStatus.completed) {
+    openWorldMap();
+  }
+});
 
 
   }
@@ -886,7 +877,37 @@ class _SplashScreenState
 
           ),
 
+          //====================================
+          // شريط التحميل
+          //====================================
 
+          Positioned(
+            bottom: 20,
+            left: 70,
+            right: 70,
+            child: FadeTransition(
+              opacity: fadeAnimation,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: SizedBox(
+                  height: 8,
+                  child: AnimatedBuilder(
+                    animation: controller,
+                    builder: (context, child) {
+                      return LinearProgressIndicator(
+                        value: controller.value,
+                        minHeight: 8,
+                        backgroundColor: Colors.white.withOpacity(0.18),
+                        valueColor: const AlwaysStoppedAnimation(
+                          Color(0xffFFD54F),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
 
         ],
 
@@ -895,12 +916,18 @@ class _SplashScreenState
 
 
     );
+}
 
-
+    @override
+  void dispose() {
+    controller.dispose();
+    glowController.dispose();
+    weatherController.dispose();
+    super.dispose();
   }
+}
+
 class _Particle {
-
-
   double x;
 
   double y;
@@ -1097,30 +1124,3 @@ class _WeatherPainter extends CustomPainter {
 
 
 
-//====================================
-// نهاية الشاشة
-//====================================
-
-
-@override
-
-void dispose(){
-
-
-  controller.dispose();
-
-
-  glowController.dispose();
-
-
-  weatherController.dispose();
-
-
-
-  super.dispose();
-
-
-}
-
-
-}
