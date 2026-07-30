@@ -3,15 +3,14 @@ import 'package:flutter/material.dart';
 import 'puzzle_piece.dart';
 
 
-
 class PuzzleController {
 
 
   final List<PuzzlePiece> pieces;
 
 
-
   final double boardOffsetX;
+
 
   final double boardOffsetY;
 
@@ -32,9 +31,8 @@ class PuzzleController {
 
 
   //=========================================
-  // تحريك القطعة
+  // تحريك القطعة أثناء السحب
   //=========================================
-
 
   void movePiece(
 
@@ -48,8 +46,11 @@ class PuzzleController {
     if (piece.placed) return;
 
 
+    piece.moveTo(
 
-    piece.position = position;
+      position,
+
+    );
 
 
   }
@@ -59,9 +60,8 @@ class PuzzleController {
 
 
   //=========================================
-  // فحص مكان القطعة
+  // فحص هل القطعة في المكان الصحيح
   //=========================================
-
 
   bool checkPiecePosition(
 
@@ -116,11 +116,13 @@ class PuzzleController {
 
       return true;
 
+
     }
 
 
 
     return false;
+
 
   }
 
@@ -132,7 +134,6 @@ class PuzzleController {
   // تثبيت القطعة
   //=========================================
 
-
   void lockPiece(
 
     PuzzlePiece piece,
@@ -142,25 +143,22 @@ class PuzzleController {
   ) {
 
 
-    piece.position = _targetPosition(
-
-      piece,
+    piece.lock(
 
       pieceSize,
 
     );
 
 
-
-    piece.placed = true;
-
-
   }
 
-  //=========================================
-  // المكان الصحيح للقطعة
-  //=========================================
 
+
+
+
+  //=========================================
+  // حساب مكان القطعة الصحيح
+  //=========================================
 
   Offset _targetPosition(
 
@@ -182,19 +180,15 @@ class PuzzleController {
 
           (piece.row * pieceSize),
 
+
     );
 
 
   }
 
-
-
-
-
   //=========================================
   // تثبيت قطعة بواسطة التلميح
   //=========================================
-
 
   bool applyHint(
 
@@ -236,7 +230,6 @@ class PuzzleController {
   // عدد القطع المكتملة
   //=========================================
 
-
   int get completedPieces {
 
 
@@ -244,7 +237,7 @@ class PuzzleController {
 
         .where(
 
-          (p) => p.placed,
+          (piece) => piece.placed,
 
         )
 
@@ -258,9 +251,8 @@ class PuzzleController {
 
 
   //=========================================
-  // القطع المتبقية
+  // عدد القطع المتبقية
   //=========================================
-
 
   int get remainingPieces {
 
@@ -280,7 +272,6 @@ class PuzzleController {
   // نسبة الإنجاز
   //=========================================
 
-
   double get progress {
 
 
@@ -289,6 +280,7 @@ class PuzzleController {
       return 0;
 
     }
+
 
 
     return completedPieces /
@@ -303,28 +295,36 @@ class PuzzleController {
 
 
   //=========================================
-  // هل انتهى البازل
+  // هل اكتمل البازل
   //=========================================
-
 
   bool get isCompleted {
 
 
-    return pieces.isNotEmpty &&
+    if (pieces.isEmpty) {
 
-        pieces.every(
+      return false;
 
-          (piece) => piece.placed,
+    }
 
-        );
+
+
+    return pieces.every(
+
+      (piece) => piece.placed,
+
+    );
 
 
   }
 
+
+
+
+
   //=========================================
   // إعادة اللعبة
   //=========================================
-
 
   void reset() {
 
@@ -347,7 +347,6 @@ class PuzzleController {
   //=========================================
   // إنهاء البازل كامل
   //=========================================
-
 
   void completeAll(
 
@@ -373,14 +372,9 @@ class PuzzleController {
 
   }
 
-
-
-
-
   //=========================================
   // إلغاء تثبيت قطعة
   //=========================================
-
 
   void unlockPiece(
 
@@ -399,9 +393,8 @@ class PuzzleController {
 
 
   //=========================================
-  // البحث عن قطعة
+  // البحث عن قطعة بواسطة ID
   //=========================================
-
 
   PuzzlePiece? findPiece(
 
@@ -430,6 +423,5 @@ class PuzzleController {
 
 
   }
-
 
 }
