@@ -6,7 +6,7 @@ import '../data/island_background_data.dart';
 import '../models/puzzle_model.dart';
 import '../models/puzzle_level_model.dart';
 
-import '../widgets/game_toolbar.dart';
+
 
 import 'puzzle_game_screen.dart';
 
@@ -37,7 +37,7 @@ class _IslandScreenState
   // TOP TOOLBAR KEY
   //==================================================
 
-  final GlobalKey starKey = GlobalKey();
+  
 
   //==================================================
   // FLOAT ANIMATION
@@ -252,18 +252,63 @@ class _IslandScreenState
           // الشريط العلوي
           //==================================================
 
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: GameToolbar(
-              logo: "assets/images/ui/puzzle_logo.png",
-              starKey: starKey,
-              onBack: () {
-                Navigator.pop(context);
-              },
+          SafeArea(
+  child: Padding(
+    padding: const EdgeInsets.symmetric(
+      horizontal:16,
+      vertical:12,
+    ),
+
+    child: Row(
+      mainAxisAlignment:
+      MainAxisAlignment.spaceBetween,
+
+      children:[
+
+        // الإعدادات يسار
+        CircleAvatar(
+          radius:28,
+          backgroundColor:
+          Colors.black54,
+
+          child:IconButton(
+            icon:const Icon(
+              Icons.settings,
+              color:Colors.white,
             ),
+
+            onPressed:(){
+
+            },
           ),
+        ),
+
+
+
+        // رجوع
+        CircleAvatar(
+          radius:28,
+          backgroundColor:
+          Colors.black54,
+
+          child:IconButton(
+            icon:const Icon(
+              Icons.arrow_back,
+              color:Colors.white,
+            ),
+
+            onPressed:(){
+
+              Navigator.pop(context);
+
+            },
+          ),
+        ),
+
+      ],
+    ),
+  ),
+),
 
           //==================================================
           // صورة الجزيرة
