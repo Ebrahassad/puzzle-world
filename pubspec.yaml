@@ -46,25 +46,17 @@ flutter:
   uses-material-design: true
 
   assets:
-  - assets/images/Puzzle/
-  - 
+    - assets/images/Puzzle/
     - assets/images/background/
     - assets/images/ui/
     - assets/images/world/
-    - assets/images/islands/
     - assets/images/rewards/
     - assets/icon/
     - assets/audio/
 
-
-
-
   fonts:
-
     - family: Cairo
-
       fonts:
-
         - asset: assets/fonts/Cairo-Regular.ttf
           weight: 400
 
@@ -73,8 +65,6 @@ flutter:
 
         - asset: assets/fonts/Cairo-Bold.ttf
           weight: 700
-
-
 
 
 
