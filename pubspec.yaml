@@ -46,14 +46,32 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/
-    - assets/images/Puzzle/
-    - assets/images/islands/
+    # خريطة العالم
     - assets/images/world/
+
+    # الجزر
+    - assets/images/islands/
+
+    # صور مراحل البازل
+    - assets/images/Puzzle/animals/
+    - assets/images/Puzzle/cars/
+    - assets/images/Puzzle/space/
+    - assets/images/Puzzle/nature/
+    - assets/images/Puzzle/landmarks/
+
+    # الخلفيات
     - assets/images/background/
+
+    # واجهة اللعبة
     - assets/images/ui/
+
+    # المكافآت
     - assets/images/rewards/
+
+    # الأيقونات
     - assets/icon/
+
+    # الأصوات
     - assets/audio/
 
   fonts:
