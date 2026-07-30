@@ -41,7 +41,7 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
   }
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    
 
     return Scaffold(
       body: Stack(
@@ -63,72 +63,122 @@ class _WorldMapScreenState extends State<WorldMapScreen> {
           //==================================================
 
           islandButton(
-            left: size.width * 0.23,
-            top: size.height * 0.29,
-            width: size.width * 0.22,
-            islandId: "animals",
-          ),
+  x:466,
+  y:328,
+  size:90,
+  islandId:"space",
+),
 
-          islandButton(
-            left: size.width * 0.43,
-            top: size.height * 0.08,
-            width: size.width * 0.18,
-            islandId: "space",
-          ),
+islandButton(
+  x:242,
+  y:760,
+  size:110,
+  islandId:"animals",
+),
 
-          islandButton(
-            left: size.width * 0.62,
-            top: size.height * 0.30,
-            width: size.width * 0.22,
-            islandId: "landmarks",
-          ),
+islandButton(
+  x:750,
+  y:726,
+  size:110,
+  islandId:"landmarks",
+),
 
-          islandButton(
-            left: size.width * 0.23,
-            top: size.height * 0.56,
-            width: size.width * 0.22,
-            islandId: "cars",
-          ),
+islandButton(
+  x:236,
+  y:1212,
+  size:110,
+  islandId:"cars",
+),
 
-          islandButton(
-            left: size.width * 0.62,
-            top: size.height * 0.56,
-            width: size.width * 0.22,
-            islandId: "nature",
-          ),
+islandButton(
+  x:774,
+  y:1228,
+  size:110,
+  islandId:"nature",
+),
         ],
       ),
     );
   }
 
   Widget islandButton({
-    required double left,
-    required double top,
-    required double width,
-    required String islandId,
-  }) {
-    return Positioned(
-      left: left,
-      top: top,
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: () {
-          final island = islands.firstWhere(
-            (item) => item.id == islandId,
-          );
+  required double x,
+  required double y,
+  required double size,
+  required String islandId,
+}) {
 
-          openIsland(island);
-        },
-        child: Container(
-          width: width,
-          height: width,
-          color: Colors.transparent,
-        ),
-      ),
-    );
+  final screenSize = MediaQuery.of(context).size;
+
+
+  // حساب حجم الصورة مع BoxFit.contain
+
+  final imageRatio = 1024 / 1536;
+  final screenRatio = screenSize.width / screenSize.height;
+
+
+  double imageWidth;
+  double imageHeight;
+  double offsetX = 0;
+  double offsetY = 0;
+
+
+  if (screenRatio > imageRatio) {
+
+    imageHeight = screenSize.height;
+    imageWidth = imageHeight * imageRatio;
+
+    offsetX = (screenSize.width - imageWidth) / 2;
+
+  } else {
+
+    imageWidth = screenSize.width;
+    imageHeight = imageWidth / imageRatio;
+
+    offsetY = (screenSize.height - imageHeight) / 2;
+
   }
 
 
+  final scaleX = imageWidth / 1024;
+  final scaleY = imageHeight / 1536;
+
+
+  return Positioned(
+
+    left: offsetX + (x * scaleX) - (size / 2),
+
+    top: offsetY + (y * scaleY) - (size / 2),
+
+
+    child: GestureDetector(
+
+      behavior: HitTestBehavior.translucent,
+
+      onTap: () {
+
+        final island = islands.firstWhere(
+          (item) => item.id == islandId,
+        );
+
+        openIsland(island);
+
+      },
+
+      child: Container(
+
+        width: size,
+
+        height: size,
+
+        color: Colors.transparent,
+
+      ),
+
+    ),
+
+  );
+}
 
   void openIsland(PuzzleModel island) {
     Navigator.push(
