@@ -543,21 +543,13 @@ class _SplashScreenState
 
 
             child:
-            Image.asset(
+Image.asset(
 
+  "assets/images/ui/puzzle_world_logo.png",
 
+  width: 350,
 
-              "assets/images/ui/puzzle_world_logo.png",
-
-
-
-              width:
-              650,
-
-
-
-            ),
-
+),
 
 
           ),
