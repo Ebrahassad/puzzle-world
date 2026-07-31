@@ -13,487 +13,765 @@ import 'puzzle_game_screen.dart';
 
 
 class IslandScreen extends StatefulWidget {
+
+
   final PuzzleModel island;
 
+
+
   const IslandScreen({
+
     super.key,
+
     required this.island,
+
   });
 
+
+
   @override
-  State<IslandScreen> createState() =>
-      _IslandScreenState();
+  State<IslandScreen> createState()
+
+      => _IslandScreenState();
+
 }
+
+
 
 
 
 
 
 class _IslandScreenState
+
     extends State<IslandScreen>
+
     with TickerProviderStateMixin {
 
 
+
   //==================================================
-  // LEVEL POSITIONS
+  // أماكن المراحل
   //==================================================
+
 
   final List<Offset> levelPositions = const [
 
-    Offset(0.15, 0.00),
-    Offset(0.65, 0.08),
-    Offset(0.25, 0.16),
-    Offset(0.70, 0.24),
-    Offset(0.30, 0.32),
-    Offset(0.65, 0.40),
-    Offset(0.25, 0.48),
-    Offset(0.70, 0.56),
-    Offset(0.35, 0.64),
-    Offset(0.60, 0.72),
+
+    Offset(0.15,0.00),
+
+    Offset(0.65,0.08),
+
+    Offset(0.25,0.16),
+
+    Offset(0.70,0.24),
+
+    Offset(0.30,0.32),
+
+    Offset(0.65,0.40),
+
+    Offset(0.25,0.48),
+
+    Offset(0.70,0.56),
+
+    Offset(0.35,0.64),
+
+    Offset(0.60,0.72),
+
 
   ];
 
-  //==================================================
-  // TOP TOOLBAR KEY
-  //==================================================
 
-  
 
-  //==================================================
-  // FLOAT ANIMATION
-  //==================================================
+
 
   late AnimationController floatController;
+
+
   late Animation<double> floatAnimation;
 
-  //==================================================
-  // BACKGROUND ANIMATION
-  //==================================================
+
 
   late AnimationController backgroundController;
+
+
   late Animation<double> backgroundMove;
+
+
   late Animation<double> backgroundScale;
 
-  //==================================================
-  // TITLE COLOR
-  //==================================================
 
-  Color islandTitleColor() {
-    switch (widget.island.id) {
-      case "animals":
-        return const Color(0xffB87928);
 
-      case "cars":
-        return const Color(0xff2196F3);
 
-      case "space":
-        return const Color(0xff8E44AD);
-
-      case "nature":
-        return const Color(0xff4CAF50);
-
-      case "landmarks":
-        return const Color(0xffD4AF37);
-
-      default:
-        return Colors.white;
-    }
-  }
 
   @override
   void initState() {
+
+
     super.initState();
 
-    //==================================================
-    // FLOAT ANIMATION
-    //==================================================
+
 
     floatController = AnimationController(
+
       vsync: this,
-      duration: const Duration(
-        seconds: 3,
-      ),
-    )..repeat(
-        reverse: true,
-      );
+
+      duration:
+
+      const Duration(seconds:3),
+
+    )
+
+    ..repeat(
+
+      reverse:true,
+
+    );
+
+
+
 
     floatAnimation = Tween<double>(
-      begin: -8,
-      end: 8,
+
+      begin:-6,
+
+      end:6,
+
     ).animate(
+
       CurvedAnimation(
-        parent: floatController,
-        curve: Curves.easeInOut,
+
+        parent:floatController,
+
+        curve:Curves.easeInOut,
+
       ),
+
     );
 
-    //==================================================
-    // BACKGROUND ANIMATION
-    //==================================================
+
+
+
 
     backgroundController = AnimationController(
-      vsync: this,
-      duration: const Duration(
-        seconds: 20,
-      ),
-    )..repeat(
-        reverse: true,
-      );
+
+      vsync:this,
+
+      duration:
+
+      const Duration(seconds:20),
+
+    )
+
+    ..repeat(
+
+      reverse:true,
+
+    );
+
+
+
+
 
     backgroundMove = Tween<double>(
-      begin: -10,
-      end: 10,
+
+      begin:-8,
+
+      end:8,
+
     ).animate(
+
       CurvedAnimation(
-        parent: backgroundController,
-        curve: Curves.easeInOut,
+
+        parent:backgroundController,
+
+        curve:Curves.easeInOut,
+
       ),
+
     );
+
+
+
+
 
     backgroundScale = Tween<double>(
-      begin: 1.0,
-      end: 1.01,
+
+      begin:1.0,
+
+      end:1.02,
 
     ).animate(
+
       CurvedAnimation(
-        parent: backgroundController,
-        curve: Curves.easeInOut,
+
+        parent:backgroundController,
+
+        curve:Curves.easeInOut,
+
       ),
+
     );
+
+
+  }
+
+
+
+
+
+
+  //==================================================
+  // فتح المرحلة
+  //==================================================
+
+
+  void openLevel(int level){
+
+
+    final levels = PuzzleLevelData.getLevels(
+
+      widget.island.id,
+
+    );
+
+
+
+    final selectedLevel = levels[level - 1];
+
+
+
+    Navigator.push(
+
+      context,
+
+      MaterialPageRoute(
+
+        builder:(_)=>PuzzleGameScreen(
+
+          level:selectedLevel,
+
+        ),
+
+      ),
+
+    );
+
+
   }
 
   //==================================================
-  // OPEN LEVEL
-  //==================================================
-
-  void openLevel(int level) {
-
-  final levels = PuzzleLevelData.getLevels(
-    widget.island.id,
-  );
-
-
-  final selectedLevel = levels[level - 1];
-
-
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => PuzzleGameScreen(
-        puzzle: widget.island,
-        level: selectedLevel,
-      ),
-    ),
-  );
-
-}
-
-  //==================================================
-  // LEVEL BUTTON
+  // زر المرحلة
   //==================================================
 
   Widget levelButton({
-  required int level,
-  required bool unlocked,
-  required bool completed,
-}) {
-  return GestureDetector(
-    onTap: unlocked
-        ? () {
-            openLevel(level);
-          }
-        : null,
 
-    child: Stack(
-     alignment: const Alignment(0, 0.05),
-      children: [
+    required int level,
 
-        // قطعة المرحلة
-        Image.asset(
-  "assets/images/ui/level_piece.png",
-  width: 130,
-  height: 130,
-  fit: BoxFit.contain,
-),
+  }) {
 
-        // رقم المرحلة
-        Text(
-          "$level",
-          style: const TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w900,
-            color: Colors.white,
-            shadows: [
-              Shadow(
-                color: Colors.black54,
-                blurRadius: 5,
-                offset: Offset(0, 2),
-              ),
-            ],
+
+    return GestureDetector(
+
+      onTap:(){
+
+        openLevel(level);
+
+      },
+
+
+      child: Stack(
+
+        alignment:Alignment.center,
+
+
+        children:[
+
+
+
+          Image.asset(
+
+            "assets/images/ui/level_piece.png",
+
+            width:95,
+
+            height:95,
+
+            fit:BoxFit.contain,
+
           ),
-        ),
 
 
-        // القفل
-        if (!unlocked)
-          const Positioned(
-            top: 10,
-            child: Icon(
-              Icons.lock,
-              color: Colors.white,
-              size: 28,
+
+
+          Text(
+
+            "$level",
+
+            style:const TextStyle(
+
+              fontSize:26,
+
+              fontWeight:
+
+              FontWeight.w900,
+
+              color:Colors.white,
+
+              shadows:[
+
+                Shadow(
+
+                  color:Colors.black54,
+
+                  blurRadius:5,
+
+                  offset:Offset(0,2),
+
+                ),
+
+              ],
+
             ),
+
           ),
 
 
-        // النجمة عند الإكمال
-        if (completed)
-          const Positioned(
-            top: -5,
-            child: Icon(
-              Icons.star,
-              color: Colors.amber,
-              size: 35,
-            ),
-          ),
+        ],
 
-      ],
-    ),
-  );
-}
+
+      ),
+
+    );
+
+
+  }
+
+
+
+
+
+
+
   //==================================================
   // BUILD
   //==================================================
 
-  @override
-  Widget build(BuildContext context) {
 
-final screenHeight = MediaQuery.of(context).size.height;
-final screenWidth = MediaQuery.of(context).size.width;
+  @override
+  Widget build(BuildContext context){
+
+
+    final screenHeight =
+
+        MediaQuery.of(context).size.height;
+
+
+
+    final screenWidth =
+
+        MediaQuery.of(context).size.width;
+
+
 
     return Scaffold(
-      body: Stack(
-        children: [
+
+
+      body:Stack(
+
+        children:[
+
+
+
 
           //==================================================
           // خلفية الجزيرة
           //==================================================
 
+
           Positioned.fill(
-  child: AnimatedBuilder(
-    animation: backgroundController,
-    builder: (context, child) {
-      return Transform.scale(
-        scale: backgroundScale.value,
-        child: Transform.translate(
-          offset: Offset(
-            backgroundMove.value,
-            0,
-          ),
-          child: child,
-        ),
-      );
-    },
 
-    child: Opacity(
-      opacity: 0.75,
-      child: Image.asset(
-        IslandBackgroundData.getBackground(
-          widget.island.id,
-        ),
-        fit: BoxFit.fill,
-      ),
-    ),
-  ),
-),
-          // طبقة دمج خفيفة
-          Container(
-  color: Colors.white.withOpacity(0.05),
-),
-          //==================================================
-          // الشريط العلوي
-          //==================================================
+            child:AnimatedBuilder(
 
-          SafeArea(
-  child: Padding(
-    padding: const EdgeInsets.symmetric(
-      horizontal:16,
-      vertical:12,
-    ),
+              animation:backgroundController,
 
-    child: Row(
-      mainAxisAlignment:
-      MainAxisAlignment.spaceBetween,
 
-      children:[
+              builder:(context,child){
 
-        // الإعدادات يسار
-        CircleAvatar(
-          radius:28,
-          backgroundColor:
-          Colors.black54,
 
-          child:IconButton(
-            icon:const Icon(
-              Icons.settings,
-              color:Colors.white,
+                return Transform.scale(
+
+                  scale:backgroundScale.value,
+
+
+                  child:Transform.translate(
+
+                    offset:Offset(
+
+                      backgroundMove.value,
+
+                      0,
+
+                    ),
+
+
+                    child:child,
+
+
+                  ),
+
+
+                );
+
+
+              },
+
+
+
+              child:Image.asset(
+
+
+                IslandBackgroundData.getBackground(
+
+                  widget.island.id,
+
+                ),
+
+
+
+                fit:BoxFit.cover,
+
+
+              ),
+
+
             ),
 
-            onPressed:(){
-
-            },
           ),
-        ),
 
 
 
-        // رجوع
-        CircleAvatar(
-          radius:28,
-          backgroundColor:
-          Colors.black54,
 
-          child:IconButton(
-            icon:const Icon(
-              Icons.arrow_back,
-              color:Colors.white,
-            ),
 
-            onPressed:(){
 
-              Navigator.pop(context);
-
-            },
-          ),
-        ),
-
-      ],
-    ),
-  ),
-),
 
           //==================================================
           // صورة الجزيرة
+          // تم تصغيرها
           //==================================================
 
+
           Positioned(
-  top: screenHeight * 0.10,
-  left: 0,
-  right: 0,
 
-  child: AnimatedBuilder(
-    animation: floatAnimation,
-
-    builder: (context, child) {
-      return Transform.translate(
-        offset: Offset(
-          0,
-          floatAnimation.value,
-        ),
-        child: child,
-      );
-    },
-
-    child: Opacity(
-      opacity: 0.85,
-
-      child: Image.asset(
-        widget.island.image,
-
-        height: screenHeight * 0.45,
-
-        fit: BoxFit.contain,
-
-        errorBuilder: (_, __, ___) {
-          return const SizedBox();
-        },
-      ),
-    ),
-  ),
-),
-          
-          
-  //==================================================
-// مسار المراحل + قطع المراحل
-//==================================================
-
-Positioned(
-  top: screenHeight * 0.58,
-  left: 0,
-  right: 0,
-  bottom: screenHeight * 0.02,
-
-  child: Stack(
-    children: [
-
-      //==================================================
-      // الطريق بين المراحل
-      //==================================================
-
-      Positioned.fill(
-        child: CustomPaint(
-          painter: LevelPathPainter(
-            positions: levelPositions,
-          ),
-        ),
-      ),
+            top:screenHeight * 0.08,
 
 
-      //==================================================
-      // قطع المراحل
-      //==================================================
+            left:0,
 
-      ...List.generate(
-        levelPositions.length,
-        (index) {
-
-          final position = levelPositions[index];
-
-          return Positioned(
-
-            left: screenWidth * position.dx,
-
-            top: screenHeight * position.dy,
+            right:0,
 
 
-            child: levelButton(
+            child:AnimatedBuilder(
 
-              level: index + 1,
+              animation:floatAnimation,
 
-              // مؤقتاً المرحلة الأولى مفتوحة
-              // نربطها لاحقاً مع PuzzleProgressManager
-              unlocked: index == 0,
 
-              completed: false,
+              builder:(context,child){
+
+
+                return Transform.translate(
+
+                  offset:Offset(
+
+                    0,
+
+                    floatAnimation.value,
+
+                  ),
+
+
+                  child:child,
+
+
+                );
+
+
+              },
+
+
+
+              child:Image.asset(
+
+
+                widget.island.image,
+
+
+
+                height:
+
+                screenHeight * 0.32,
+
+
+
+                fit:BoxFit.contain,
+
+
+              ),
+
 
             ),
-          );
-        },
-      ),
 
-    ],
-  ),
-),
+          ),
+
+
+
+
+
+
+          //==================================================
+          // أزرار التحكم
+          //==================================================
+
+
+          SafeArea(
+
+            child:Padding(
+
+              padding:
+
+              const EdgeInsets.all(16),
+
+
+              child:Row(
+
+                mainAxisAlignment:
+
+                MainAxisAlignment.spaceBetween,
+
+
+                children:[
+
+
+
+                  CircleAvatar(
+
+                    backgroundColor:
+
+                    Colors.black54,
+
+
+                    child:IconButton(
+
+                      icon:const Icon(
+
+                        Icons.arrow_back,
+
+                        color:Colors.white,
+
+                      ),
+
+
+                      onPressed:(){
+
+                        Navigator.pop(context);
+
+                      },
+
+                    ),
+
+                  ),
+
+
+
+
+                  CircleAvatar(
+
+                    backgroundColor:
+
+                    Colors.black54,
+
+
+                    child:IconButton(
+
+                      icon:const Icon(
+
+                        Icons.settings,
+
+                        color:Colors.white,
+
+                      ),
+
+
+                      onPressed:(){},
+
+
+                    ),
+
+                  ),
+
+
+
+                ],
+
+
+              ),
+
+
+            ),
+
+          ),
+
+
+          //==================================================
+          // مسار المراحل + المراحل
+          //==================================================
+
+
+          Positioned(
+
+            top:screenHeight * 0.48,
+
+
+            left:0,
+
+
+            right:0,
+
+
+            bottom:20,
+
+
+
+            child:Stack(
+
+              children:[
+
+
+
+                // الطريق
+
+                Positioned.fill(
+
+                  child:CustomPaint(
+
+                    painter:LevelPathPainter(
+
+                      positions:
+
+                      levelPositions,
+
+                    ),
+
+                  ),
+
+                ),
+
+
+
+
+
+                // المراحل
+
+                ...List.generate(
+
+                  levelPositions.length,
+
+
+                  (index){
+
+
+
+                    final position =
+
+                    levelPositions[index];
+
+
+
+                    return Positioned(
+
+
+
+                      left:
+
+                      screenWidth *
+
+                      position.dx,
+
+
+
+                      top:
+
+                      screenHeight *
+
+                      position.dy,
+
+
+
+
+                      child:levelButton(
+
+                        level:index + 1,
+
+                      ),
+
+
+                    );
+
+
+                  },
+
+                ),
+
+
+
+              ],
+
+            ),
+
+
+          ),
+
+
+
 
         ],
+
+
       ),
+
+
     );
+
+
   }
 
 
-//==================================================
-// DISPOSE
-//==================================================
 
-@override
-void dispose() {
 
-  floatController.dispose();
 
-  backgroundController.dispose();
 
-  super.dispose();
 
-}
+  //==================================================
+  // DISPOSE
+  //==================================================
+
+
+  @override
+  void dispose(){
+
+
+    floatController.dispose();
+
+
+    backgroundController.dispose();
+
+
+
+    super.dispose();
+
+
+  }
+
+
 
 }
