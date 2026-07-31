@@ -1,186 +1,425 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import 'puzzle_piece.dart';
 
+
+
 class PuzzleGenerator {
+
+
   PuzzleGenerator._();
 
+
+
+  //======================================================
+  // إنشاء قطع البازل
+  //======================================================
+
   static List<PuzzlePiece> generate({
+
     required int rows,
+
     required int columns,
+
     required double imageWidth,
+
     required double imageHeight,
+
     Random? random,
+
   }) {
-    final rng = random ?? Random();
 
-    final pieces = <PuzzlePiece>[];
 
-    final pieceWidth = imageWidth / columns;
-    final pieceHeight = imageHeight / rows;
+    final rng =
+        random ?? Random();
 
-    // حجم إضافي حول القطعة حتى يشمل النتوءات
-    final overlapX = pieceWidth * 0.18;
-    final overlapY = pieceHeight * 0.18;
 
-    final horizontalEdges = _createHorizontalEdges(
-      rows,
-      columns,
-      rng,
-    );
 
-    final verticalEdges = _createVerticalEdges(
-      rows,
-      columns,
-      rng,
-    );
+    final pieces =
+        <PuzzlePiece>[];
+
+
+
+    final pieceWidth =
+        imageWidth / columns;
+
+
+
+    final pieceHeight =
+        imageHeight / rows;
+
+
+
+    final tabSize =
+        min(
+          pieceWidth,
+          pieceHeight,
+        ) * 0.18;
+
+
+
+    // إنشاء الحواف المشتركة
+
+    final horizontalEdges =
+        _createHorizontalEdges(
+          rows,
+          columns,
+          rng,
+        );
+
+
+
+    final verticalEdges =
+        _createVerticalEdges(
+          rows,
+          columns,
+          rng,
+        );
+
+
 
     int index = 0;
 
-    for (int row = 0; row < rows; row++) {
-      for (int column = 0; column < columns; column++) {
 
-        double left = column * pieceWidth;
-        double top = row * pieceHeight;
 
-        double width = pieceWidth;
-        double height = pieceHeight;
+    for(
+      int row = 0;
+      row < rows;
+      row++
+    ) {
 
-        if (column > 0) {
-          left -= overlapX;
-          width += overlapX;
-        }
 
-        if (column < columns - 1) {
-          width += overlapX;
-        }
+      for(
+        int column = 0;
+        column < columns;
+        column++
+      ) {
 
-        if (row > 0) {
-          top -= overlapY;
-          height += overlapY;
-        }
 
-        if (row < rows - 1) {
-          height += overlapY;
-        }
 
-        final sourceRect = Rect.fromLTWH(
-          left.clamp(0.0, imageWidth),
-          top.clamp(0.0, imageHeight),
-          width.clamp(0.0, imageWidth),
-          height.clamp(0.0, imageHeight),
-        );
+        final sourceRect =
+            Rect.fromLTWH(
 
-        final piece = PuzzlePiece(
-          id: "piece_$index",
+              column * pieceWidth,
 
-          row: row,
-          column: column,
+              row * pieceHeight,
 
-          correctPosition: index,
+              pieceWidth,
 
-          sourceRect: sourceRect,
+              pieceHeight,
 
-          top: row == 0
-              ? EdgeType.flat
-              : _reverse(
-                  verticalEdges[row - 1][column],
-                ),
+            );
 
-          bottom: row == rows - 1
-              ? EdgeType.flat
-              : verticalEdges[row][column],
 
-          left: column == 0
-              ? EdgeType.flat
-              : _reverse(
-                  horizontalEdges[row][column - 1],
-                ),
 
-          right: column == columns - 1
-              ? EdgeType.flat
-              : horizontalEdges[row][column],
+        final targetPosition =
+            Offset(
 
-          position: Offset.zero,
-        );
+              column * pieceWidth,
+
+              row * pieceHeight,
+
+            );
+
+
+
+        final piece =
+            PuzzlePiece(
+
+              id:
+                  "piece_$index",
+
+
+
+              row:
+                  row,
+
+
+
+              column:
+                  column,
+
+
+
+              correctIndex:
+                  index,
+
+
+
+              sourceRect:
+                  sourceRect,
+
+
+
+              top:
+                  row == 0
+
+                  ? const PuzzleEdge(
+                      type: EdgeType.flat,
+                      side: EdgeSide.top,
+                    )
+
+                  : PuzzleEdge(
+                      type:
+                          _reverse(
+                            verticalEdges[row - 1][column],
+                          ),
+
+                      side:
+                          EdgeSide.top,
+                    ),
+
+
+
+              right:
+                  column == columns - 1
+
+                  ? const PuzzleEdge(
+                      type: EdgeType.flat,
+                      side: EdgeSide.right,
+                    )
+
+                  : PuzzleEdge(
+                      type:
+                          horizontalEdges[row][column],
+
+                      side:
+                          EdgeSide.right,
+                    ),
+
+
+
+              bottom:
+                  row == rows - 1
+
+                  ? const PuzzleEdge(
+                      type: EdgeType.flat,
+                      side: EdgeSide.bottom,
+                    )
+
+                  : PuzzleEdge(
+                      type:
+                          verticalEdges[row][column],
+
+                      side:
+                          EdgeSide.bottom,
+                    ),
+
+
+
+              left:
+                  column == 0
+
+                  ? const PuzzleEdge(
+                      type: EdgeType.flat,
+                      side: EdgeSide.left,
+                    )
+
+                  : PuzzleEdge(
+                      type:
+                          _reverse(
+                            horizontalEdges[row][column - 1],
+                          ),
+
+                      side:
+                          EdgeSide.left,
+                    ),
+
+
+
+              targetPosition:
+                  targetPosition,
+
+
+
+              size:
+                  Size(
+                    pieceWidth,
+                    pieceHeight,
+                  ),
+
+
+
+              tabSize:
+                  tabSize,
+
+
+
+              position:
+                  Offset.zero,
+
+            );
+
+
 
         pieces.add(piece);
 
+
+
         index++;
+
       }
+
     }
 
-    // خلط أماكن القطع
+    //======================================================
+    // توزيع القطع عشوائياً
+    //======================================================
+
     pieces.shuffle(rng);
 
+
+    // وضع القطع في أماكن عشوائية
+    for (int i = 0; i < pieces.length; i++) {
+
+      pieces[i].position =
+          Offset(
+
+            rng.nextDouble() *
+                (imageWidth - pieceWidth),
+
+            rng.nextDouble() *
+                (imageHeight - pieceHeight),
+
+          );
+
+
+      pieces[i].zIndex = i;
+
+    }
+
+
     return pieces;
+
   }
 
-  //==================================================
+
+
+  //======================================================
   // إنشاء الحواف الأفقية
-  //==================================================
+  //======================================================
 
   static List<List<EdgeType>> _createHorizontalEdges(
+
     int rows,
+
     int columns,
+
     Random random,
+
   ) {
+
+
     return List.generate(
+
       rows,
+
       (_) => List.generate(
+
         columns - 1,
+
         (_) => _randomEdge(random),
+
       ),
+
     );
+
   }
 
-  //==================================================
+
+
+
+  //======================================================
   // إنشاء الحواف الرأسية
-  //==================================================
+  //======================================================
 
   static List<List<EdgeType>> _createVerticalEdges(
+
     int rows,
+
     int columns,
+
     Random random,
+
   ) {
+
+
     return List.generate(
+
       rows - 1,
+
       (_) => List.generate(
+
         columns,
+
         (_) => _randomEdge(random),
+
       ),
+
     );
+
   }
 
-  //==================================================
-  // حافة عشوائية
-  //==================================================
+
+
+
+  //======================================================
+  // إنشاء حافة عشوائية
+  //======================================================
 
   static EdgeType _randomEdge(
+
     Random random,
+
   ) {
+
+
     return random.nextBool()
+
         ? EdgeType.tab
+
         : EdgeType.blank;
+
   }
 
-  //==================================================
-  // عكس الحافة
-  //==================================================
+
+
+
+
+  //======================================================
+  // عكس الحافة المقابلة
+  //======================================================
 
   static EdgeType _reverse(
+
     EdgeType edge,
+
   ) {
-    switch (edge) {
+
+
+    switch(edge) {
+
+
       case EdgeType.tab:
+
         return EdgeType.blank;
 
+
+
       case EdgeType.blank:
+
         return EdgeType.tab;
 
+
+
       case EdgeType.flat:
+
         return EdgeType.flat;
+
     }
+
   }
+
 }
