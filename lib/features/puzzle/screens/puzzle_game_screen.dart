@@ -131,12 +131,13 @@ debugPrint("START LOAD: ${widget.level.image}");
 
   (info, _) {
 
-    image = info.image;
+  image = info.image;
 
-    _calculateBoardPosition();
+  if(mounted){
+    setState(() {});
+  }
 
-  },
-
+},
   onError:(error, stack){
 
     debugPrint(
@@ -176,38 +177,33 @@ debugPrint("START LOAD: ${widget.level.image}");
       return;
     }
 
-
     final context = boardKey.currentContext;
-
 
     if(context == null){
 
-  debugPrint("BOARD NOT READY");
+      debugPrint("BOARD NOT READY");
 
-  Future.delayed(
-    const Duration(milliseconds:100),
-    (){
-      if(mounted){
-        _calculateBoardPosition();
-      }
-    },
-  );
+      Future.delayed(
+        const Duration(milliseconds:100),
+        (){
+          if(mounted){
+            _calculateBoardPosition();
+          }
+        },
+      );
 
-  return;
-
-}
+      return;
+    }
 
     final RenderBox box =
         context.findRenderObject()
         as RenderBox;
 
 
-
     boardOffset =
         box.localToGlobal(
           Offset.zero,
         );
-
 
 
     debugPrint(
@@ -217,12 +213,9 @@ debugPrint("START LOAD: ${widget.level.image}");
 
     _createPuzzle();
 
-
   });
 
 }
-
-
 
 
 
