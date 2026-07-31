@@ -3,76 +3,115 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import 'puzzle_piece.dart';
-import 'puzzle_piece_clipper.dart';
 
 
 
 
+//==================================================
+// رسام قطعة البازل
+//==================================================
 
-class PuzzlePainter extends CustomPainter {
-
-
-
-  final PuzzlePiece piece;
-
-
-  final ui.Image image;
+class PuzzlePiecePainter {
 
 
 
+  static void paint({
 
+    required Canvas canvas,
 
+    required PuzzlePiece piece,
 
+    required ui.Image image,
 
-  PuzzlePainter({
+    required Size pieceSize,
 
-    required this.piece,
+    Offset position = Offset.zero,
 
+    bool shadow = false,
 
-    required this.image,
-
-  });
-
-
-
-
-
-
-
-  @override
-
-  void paint(
-
-    Canvas canvas,
-
-
-    Size size,
-
-  ) {
-
-
-
-    final path =
-
-        PuzzlePieceClipper(
-
-          piece: piece,
-
-        ).getClip(
-
-          size,
-
-        );
-
-
-
-
+  }) {
 
 
 
     canvas.save();
 
 
+
+
+
+    // نقل القطعة لمكانها
+
+    canvas.translate(
+
+      position.dx,
+
+      position.dy,
+
+    );
+
+
+
+
+
+
+
+    final path = piece.path;
+
+
+
+
+
+
+
+
+
+    //==================================================
+    // ظل القطعة
+    //==================================================
+
+    if(shadow) {
+
+
+
+      final shadowPaint = Paint()
+
+        ..color = Colors.black38
+
+        ..maskFilter =
+
+        const MaskFilter.blur(
+
+          BlurStyle.normal,
+
+          6,
+
+        );
+
+
+
+      canvas.drawPath(
+
+        path,
+
+        shadowPaint,
+
+      );
+
+    }
+
+
+
+
+
+
+
+
+
+    //==================================================
+    // قص الصورة داخل شكل القطعة
+    //==================================================
+
+    canvas.save();
 
 
 
@@ -88,47 +127,11 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-    final source = Rect.fromLTWH(
-
-      piece.sourceRect.left,
-
-      piece.sourceRect.top,
-
-      piece.sourceRect.width,
-
-      piece.sourceRect.height,
-
-    );
-
-
-
-
-
-
-
-    final destination = Rect.fromLTWH(
-
-      0,
-
-      0,
-
-      size.width,
-
-      size.height,
-
-    );
-
-
-
-
-
-
-
     final paint = Paint()
 
       ..filterQuality =
 
-          FilterQuality.high;
+      FilterQuality.high;
 
 
 
@@ -140,15 +143,21 @@ class PuzzlePainter extends CustomPainter {
 
       image,
 
+      piece.sourceRect,
 
-      source,
+      Rect.fromLTWH(
 
+        -pieceSize.width * 0.12,
 
-      destination,
+        -pieceSize.height * 0.12,
 
+        pieceSize.width * 1.24,
+
+        pieceSize.height * 1.24,
+
+      ),
 
       paint,
-
 
     );
 
@@ -165,46 +174,22 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-    drawBorder(
-
-      canvas,
-
-      path,
-
-    );
 
 
 
-  }
+    //==================================================
+    // حدود القطعة
+    //==================================================
 
-
-  //==================================================
-  // رسم حدود وظل القطعة
-  //==================================================
-
-  void drawBorder(
-
-    Canvas canvas,
-
-    Path path,
-
-  ) {
-
-
-
-    final paint = Paint()
+    final border = Paint()
 
       ..style = PaintingStyle.stroke
 
+      ..strokeWidth = 1.3
 
-      ..strokeWidth = 1.5
+      ..color = Colors.black26;
 
 
-      ..color = Colors.black.withOpacity(
-
-        0.25,
-
-      );
 
 
 
@@ -214,49 +199,17 @@ class PuzzlePainter extends CustomPainter {
 
       path,
 
-      paint,
+      border,
 
     );
 
 
 
-  }
 
 
 
 
-
-
-
-  //==================================================
-  // إعادة الرسم
-  //==================================================
-
-  @override
-
-  bool shouldRepaint(
-
-    covariant PuzzlePainter oldDelegate,
-
-  ) {
-
-
-
-    return
-
-        oldDelegate.image != image
-
-        ||
-
-        oldDelegate.piece.position !=
-
-            piece.position
-
-        ||
-
-        oldDelegate.piece.placed !=
-
-            piece.placed;
+    canvas.restore();
 
 
 
