@@ -6,13 +6,11 @@ import 'puzzle_piece.dart';
 
 
 
-
 //==================================================
 // رسام قطعة البازل
 //==================================================
 
 class PuzzlePiecePainter {
-
 
 
   static void paint({
@@ -25,9 +23,7 @@ class PuzzlePiecePainter {
 
     required Size pieceSize,
 
-    Offset position = Offset.zero,
-
-    bool shadow = false,
+    bool showShadow = false,
 
   }) {
 
@@ -38,17 +34,15 @@ class PuzzlePiecePainter {
 
 
 
-
-    // نقل القطعة لمكانها
+    // نقل القطعة لمكانها الحالي
 
     canvas.translate(
 
-      position.dx,
+      piece.position.dx,
 
-      position.dy,
+      piece.position.dy,
 
     );
-
 
 
 
@@ -61,31 +55,26 @@ class PuzzlePiecePainter {
 
 
 
-
-
-
-
     //==================================================
     // ظل القطعة
     //==================================================
 
-    if(shadow) {
+    if(showShadow || piece.dragging){
 
 
 
       final shadowPaint = Paint()
 
-        ..color = Colors.black38
+        ..color = Colors.black45
 
-        ..maskFilter =
-
-        const MaskFilter.blur(
+        ..maskFilter = const MaskFilter.blur(
 
           BlurStyle.normal,
 
-          6,
+          8,
 
         );
+
 
 
 
@@ -97,9 +86,8 @@ class PuzzlePiecePainter {
 
       );
 
+
     }
-
-
 
 
 
@@ -110,6 +98,7 @@ class PuzzlePiecePainter {
     //==================================================
     // قص الصورة داخل شكل القطعة
     //==================================================
+
 
     canvas.save();
 
@@ -125,15 +114,9 @@ class PuzzlePiecePainter {
 
 
 
+    final imagePaint = Paint()
 
-
-    final paint = Paint()
-
-      ..filterQuality =
-
-      FilterQuality.high;
-
-
+      ..filterQuality = FilterQuality.high;
 
 
 
@@ -147,21 +130,19 @@ class PuzzlePiecePainter {
 
       Rect.fromLTWH(
 
-        -pieceSize.width * 0.12,
+        0,
 
-        -pieceSize.height * 0.12,
+        0,
 
-        pieceSize.width * 1.24,
+        pieceSize.width,
 
-        pieceSize.height * 1.24,
+        pieceSize.height,
 
       ),
 
-      paint,
+      imagePaint,
 
     );
-
-
 
 
 
@@ -178,18 +159,17 @@ class PuzzlePiecePainter {
 
 
     //==================================================
-    // حدود القطعة
+    // إطار القطعة
     //==================================================
 
-    final border = Paint()
+
+    final borderPaint = Paint()
 
       ..style = PaintingStyle.stroke
 
-      ..strokeWidth = 1.3
+      ..strokeWidth = 1.5
 
       ..color = Colors.black26;
-
-
 
 
 
@@ -199,9 +179,45 @@ class PuzzlePiecePainter {
 
       path,
 
-      border,
+      borderPaint,
 
     );
+
+
+
+
+
+
+    //==================================================
+    // لمعان بسيط للقطعة المثبتة
+    //==================================================
+
+
+    if(piece.state == PieceState.locked){
+
+
+
+      final glow = Paint()
+
+        ..style = PaintingStyle.stroke
+
+        ..strokeWidth = 2
+
+        ..color = Colors.white24;
+
+
+
+
+      canvas.drawPath(
+
+        path,
+
+        glow,
+
+      );
+
+
+    }
 
 
 
@@ -212,9 +228,6 @@ class PuzzlePiecePainter {
     canvas.restore();
 
 
-
   }
-
-
 
 }
