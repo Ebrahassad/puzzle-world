@@ -414,7 +414,7 @@ final screenWidth = MediaQuery.of(context).size.width;
           
           
   //==================================================
-// مسار المراحل
+// مسار المراحل + قطع المراحل
 //==================================================
 
 Positioned(
@@ -426,6 +426,23 @@ Positioned(
   child: Stack(
     children: [
 
+      //==================================================
+      // الطريق بين المراحل
+      //==================================================
+
+      Positioned.fill(
+        child: CustomPaint(
+          painter: LevelPathPainter(
+            positions: levelPositions,
+          ),
+        ),
+      ),
+
+
+      //==================================================
+      // قطع المراحل
+      //==================================================
+
       ...List.generate(
         levelPositions.length,
         (index) {
@@ -433,13 +450,22 @@ Positioned(
           final position = levelPositions[index];
 
           return Positioned(
+
             left: screenWidth * position.dx,
+
             top: screenHeight * position.dy,
 
+
             child: levelButton(
+
               level: index + 1,
+
+              // مؤقتاً المرحلة الأولى مفتوحة
+              // نربطها لاحقاً مع PuzzleProgressManager
               unlocked: index == 0,
+
               completed: false,
+
             ),
           );
         },
@@ -452,16 +478,22 @@ Positioned(
         ],
       ),
     );
-  } 
-
- //==================================================
-  // DISPOSE
-  //==================================================
-
-  @override
-  void dispose() {
-    floatController.dispose();
-    backgroundController.dispose();
-    super.dispose();
   }
+
+
+//==================================================
+// DISPOSE
+//==================================================
+
+@override
+void dispose() {
+
+  floatController.dispose();
+
+  backgroundController.dispose();
+
+  super.dispose();
+
+}
+
 }
