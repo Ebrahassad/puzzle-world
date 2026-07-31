@@ -15,11 +15,9 @@ class PuzzlePainter extends CustomPainter {
   final ui.Image? cachedImage;
 
 
-  // حجم الخلية الحقيقي
   final double pieceSize;
 
 
-  // الهامش الإضافي للنتوءات
   final double padding;
 
 
@@ -50,18 +48,11 @@ class PuzzlePainter extends CustomPainter {
   ) {
 
 
-    final path = createPiecePath(
-
-      size,
-
-    );
+    final path = createPiecePath(size);
 
 
 
-    //==================================================
     // ظل القطعة
-    //==================================================
-
 
     canvas.drawPath(
 
@@ -69,7 +60,7 @@ class PuzzlePainter extends CustomPainter {
 
       Paint()
 
-        ..color = Colors.black.withOpacity(0.22)
+        ..color = Colors.black.withOpacity(0.25)
 
         ..maskFilter = const MaskFilter.blur(
 
@@ -83,12 +74,9 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-    //==================================================
-    // رسم الصورة داخل شكل القطعة
-    //==================================================
+    // صورة القطعة
 
-
-    if (cachedImage != null) {
+    if(cachedImage != null){
 
 
       canvas.save();
@@ -102,15 +90,17 @@ class PuzzlePainter extends CustomPainter {
 
 
 
+      // تمديد الصورة حتى تدخل داخل النتوءات
+
       final destination = Rect.fromLTWH(
 
-        padding,
+        -size.width * 0.15,
 
-        padding,
+        -size.height * 0.15,
 
-        pieceSize,
+        size.width * 1.3,
 
-        pieceSize,
+        size.height * 1.3,
 
       );
 
@@ -133,204 +123,258 @@ class PuzzlePainter extends CustomPainter {
       );
 
 
-
       canvas.restore();
 
-    }
 
-  //=========================================
-  // فحص مكان القطعة
-  //=========================================
-
-  bool checkPiecePosition(
-    PuzzlePiece piece,
-    double pieceSize,
-  ) {
-
-    if (piece.placed) {
-      return true;
     }
 
 
-    final target =
-        _targetPosition(
-          piece,
-          pieceSize,
-        );
+
+    // إطار خفيف
+
+    canvas.drawPath(
+
+      path,
+
+      Paint()
+
+        ..style = PaintingStyle.stroke
+
+        ..strokeWidth = 1
+
+        ..color = Colors.white.withOpacity(0.35),
+
+    );
+
+  }
 
 
-    final distance =
-        (piece.position - target).distance;
-
-
-    // سماحية الإدخال
-    final tolerance =
-        pieceSize * 0.45;
 
 
 
-    if (distance <= tolerance) {
 
-      lockPiece(
-        piece,
-        pieceSize,
+  Path createPiecePath(
+
+    Size size,
+
+  ){
+
+
+    final path = Path();
+
+
+    final w = size.width;
+
+    final h = size.height;
+
+
+
+    final tab =
+
+        w * 0.18;
+
+
+
+    final cx = w / 2;
+
+    final cy = h / 2;
+
+
+
+    path.moveTo(0,0);
+
+
+
+    path.lineTo(
+
+      cx-tab,
+
+      0,
+
+    );
+
+
+    drawTop(
+
+      path,
+
+      piece.top,
+
+      cx,
+
+      0,
+
+      tab,
+
+    );
+
+
+    path.lineTo(
+
+      w,
+
+      0,
+
+    );
+
+
+
+    path.lineTo(
+
+      w,
+
+      cy-tab,
+
+    );
+
+
+    drawRight(
+
+      path,
+
+      piece.right,
+
+      w,
+
+      cy,
+
+      tab,
+
+    );
+
+
+    path.lineTo(
+
+      w,
+
+      h,
+
+    );
+
+
+
+    path.lineTo(
+
+      cx+tab,
+
+      h,
+
+    );
+
+
+    drawBottom(
+
+      path,
+
+      piece.bottom,
+
+      cx,
+
+      h,
+
+      tab,
+
+    );
+
+
+    path.lineTo(
+
+      0,
+
+      h,
+
+    );
+
+
+
+    path.lineTo(
+
+      0,
+
+      cy+tab,
+
+    );
+
+
+    drawLeft(
+
+      path,
+
+      piece.left,
+
+      0,
+
+      cy,
+
+      tab,
+
+    );
+
+
+    path.close();
+
+
+    return path;
+
+  }
+
+
+
+
+
+
+  void drawTop(
+
+    Path path,
+
+    EdgeType type,
+
+    double x,
+
+    double y,
+
+    double tab,
+
+  ){
+
+
+    if(type==EdgeType.tab){
+
+      path.cubicTo(
+
+        x-tab,
+
+        y-tab,
+
+        x+tab,
+
+        y-tab,
+
+        x+tab,
+
+        y,
+
       );
 
-
-      return true;
     }
 
+    else if(type==EdgeType.blank){
 
-    return false;
-  }
+      path.cubicTo(
 
+        x-tab,
 
+        y+tab,
 
-  //=========================================
-  // تثبيت القطعة
-  //=========================================
+        x+tab,
 
-  void lockPiece(
-    PuzzlePiece piece,
-    double pieceSize,
-  ) {
+        y+tab,
 
-    piece.lock(
-      pieceSize,
-    );
+        x+tab,
 
-  }
+        y,
 
-
-
-  //=========================================
-  // مكان القطعة الصحيح
-  //=========================================
-
-  Offset _targetPosition(
-    PuzzlePiece piece,
-    double pieceSize,
-  ) {
-
-    return Offset(
-
-      piece.column *
-          pieceSize,
-
-
-      piece.row *
-          pieceSize,
-
-    );
-
-  }
-
-
-
-
-  //=========================================
-  // التلميح
-  //=========================================
-
-  bool applyHint(
-    PuzzlePiece piece,
-    double pieceSize,
-  ) {
-
-
-    if (piece.placed) {
-      return false;
-    }
-
-
-
-    lockPiece(
-      piece,
-      pieceSize,
-    );
-
-
-    return true;
-
-  }
-
-
-
-  //=========================================
-  // عدد القطع المكتملة
-  //=========================================
-
-  int get completedPieces {
-
-    return pieces
-        .where(
-          (p)=>p.placed,
-        )
-        .length;
-
-  }
-
-
-
-  //=========================================
-  // القطع المتبقية
-  //=========================================
-
-  int get remainingPieces {
-
-    return pieces.length -
-        completedPieces;
-
-  }
-
-
-
-  //=========================================
-  // نسبة الإنجاز
-  //=========================================
-
-  double get progress {
-
-    if(pieces.isEmpty){
-      return 0;
-    }
-
-
-    return completedPieces /
-        pieces.length;
-
-  }
-
-
-
-  //=========================================
-  // هل انتهى البازل
-  //=========================================
-
-  bool get isCompleted {
-
-    if(pieces.isEmpty){
-      return false;
-    }
-
-
-    return pieces.every(
-      (p)=>p.placed,
-    );
-
-  }
-
-
-
-  //=========================================
-  // إعادة اللعبة
-  //=========================================
-
-  void reset(){
-
-    for(final piece in pieces){
-
-      piece.reset();
+      );
 
     }
 
@@ -338,39 +382,205 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-  //=========================================
-  // فك قطعة
-  //=========================================
 
-  void unlockPiece(
-    PuzzlePiece piece,
+
+  void drawBottom(
+
+    Path path,
+
+    EdgeType type,
+
+    double x,
+
+    double y,
+
+    double tab,
+
   ){
 
-    piece.unlock();
 
-  }
+    if(type==EdgeType.tab){
 
+      path.cubicTo(
 
+        x+tab,
 
-  //=========================================
-  // البحث عن قطعة
-  //=========================================
+        y+tab,
 
-  PuzzlePiece? findPiece(
-    String id,
-  ){
+        x-tab,
 
-    for(final piece in pieces){
+        y+tab,
 
-      if(piece.id == id){
-        return piece;
-      }
+        x-tab,
+
+        y,
+
+      );
 
     }
 
-    return null;
+    else if(type==EdgeType.blank){
+
+      path.cubicTo(
+
+        x+tab,
+
+        y-tab,
+
+        x-tab,
+
+        y-tab,
+
+        x-tab,
+
+        y,
+
+      );
+
+    }
 
   }
 
+
+
+
+
+
+  void drawRight(
+
+    Path path,
+
+    EdgeType type,
+
+    double x,
+
+    double y,
+
+    double tab,
+
+  ){
+
+
+    if(type==EdgeType.tab){
+
+      path.cubicTo(
+
+        x+tab,
+
+        y-tab,
+
+        x+tab,
+
+        y+tab,
+
+        x,
+
+        y+tab,
+
+      );
+
+    }
+
+    else if(type==EdgeType.blank){
+
+      path.cubicTo(
+
+        x-tab,
+
+        y-tab,
+
+        x-tab,
+
+        y+tab,
+
+        x,
+
+        y+tab,
+
+      );
+
+    }
+
+  }
+
+
+
+
+
+
+
+  void drawLeft(
+
+    Path path,
+
+    EdgeType type,
+
+    double x,
+
+    double y,
+
+    double tab,
+
+  ){
+
+
+    if(type==EdgeType.tab){
+
+      path.cubicTo(
+
+        x-tab,
+
+        y+tab,
+
+        x-tab,
+
+        y-tab,
+
+        x,
+
+        y-tab,
+
+      );
+
+    }
+
+    else if(type==EdgeType.blank){
+
+      path.cubicTo(
+
+        x+tab,
+
+        y+tab,
+
+        x+tab,
+
+        y-tab,
+
+        x,
+
+        y-tab,
+
+      );
+
+    }
+
+  }
+
+
+
+
+
+  @override
+  bool shouldRepaint(
+
+    covariant PuzzlePainter oldDelegate,
+
+  ){
+
+    return oldDelegate.piece != piece ||
+
+        oldDelegate.cachedImage != cachedImage;
+
+  }
 
 }
