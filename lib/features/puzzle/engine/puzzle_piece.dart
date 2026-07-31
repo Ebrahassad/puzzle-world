@@ -1,4 +1,4 @@
-import 'dart:ui' as ui;
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 
@@ -7,17 +7,21 @@ import 'package:flutter/material.dart';
 //==================================================
 
 enum EdgeType {
-
   flat,
-
-  tab,     // نتوء خارج
-
-  blank,   // فراغ داخل
-
+  tab,
+  blank,
 }
 
 
+//==================================================
+// حالة القطعة
+//==================================================
 
+enum PieceState {
+  tray,       // داخل الشريط
+  board,      // على اللوحة
+  locked,     // مثبتة
+}
 
 
 //==================================================
@@ -27,48 +31,47 @@ enum EdgeType {
 class PuzzlePiece {
 
 
-
   final String id;
 
 
-
-  // مكان القطعة في الشبكة
-
+  // مكانها الأصلي
   final int row;
-
   final int column;
 
 
-
-
-
-  // الجزء الخاص بها من الصورة الأصلية
-
+  // مكانها في الصورة
   final Rect sourceRect;
 
 
-
-
-
   // الحواف
-
   final EdgeType top;
-
   final EdgeType right;
-
   final EdgeType bottom;
-
   final EdgeType left;
 
 
 
+  // مكانها الحالي على الشاشة
+  Offset position;
+
+
+  // مكانها الصحيح في اللوحة
+  late Offset correctPosition;
+
 
 
   // شكل القطعة
-
   late Path path;
 
 
+
+  // الحالة
+  PieceState state;
+
+
+
+  // هل يتم سحبها
+  bool dragging;
 
 
 
@@ -90,7 +93,17 @@ class PuzzlePiece {
 
     required this.left,
 
+
+    required this.position,
+
+
+    this.state = PieceState.tray,
+
+
+    this.dragging = false,
+
   });
+
 
 
 
@@ -105,7 +118,6 @@ class PuzzlePiece {
       Size size,
 
       ) {
-
 
 
     path = PuzzleShapeBuilder.build(
@@ -126,6 +138,161 @@ class PuzzlePiece {
   }
 
 
+
+
+
+
+  //==================================================
+  // تحديد مكانها الصحيح
+  //==================================================
+
+  void setCorrectPosition(
+
+      double pieceSize,
+
+      ) {
+
+
+    correctPosition = Offset(
+
+      column * pieceSize,
+
+      row * pieceSize,
+
+    );
+
+
+  }
+
+
+
+
+
+
+  //==================================================
+  // هل قريبة من المكان الصحيح
+  //==================================================
+
+  bool isCorrect(
+
+      double tolerance,
+
+      ) {
+
+
+    return (
+
+        position -
+
+            correctPosition
+
+    )
+
+        .distance <= tolerance;
+
+
+  }
+
+
+
+
+
+
+
+  //==================================================
+  // تثبيت القطعة
+  //==================================================
+
+  void lock() {
+
+
+    position = correctPosition;
+
+
+    state = PieceState.locked;
+
+
+    dragging = false;
+
+
+  }
+
+
+
+
+
+
+
+  //==================================================
+  // بداية السحب
+  //==================================================
+
+  void startDrag() {
+
+
+    if(state == PieceState.locked) {
+
+      return;
+
+    }
+
+
+    dragging = true;
+
+
+    state = PieceState.board;
+
+
+  }
+
+
+
+
+
+
+
+  //==================================================
+  // تحريك
+  //==================================================
+
+  void move(
+
+      Offset delta,
+
+      ) {
+
+
+    if(state == PieceState.locked) {
+
+      return;
+
+    }
+
+
+    position += delta;
+
+
+  }
+
+
+
+
+
+
+
+  //==================================================
+  // نهاية السحب
+  //==================================================
+
+  void endDrag() {
+
+
+    dragging = false;
+
+
+  }
+
+
 }
 
 
@@ -133,15 +300,11 @@ class PuzzlePiece {
 
 
 
-
-
-
 //==================================================
-// بناء شكل قطعة البازل
+// بناء شكل القطعة
 //==================================================
 
 class PuzzleShapeBuilder {
-
 
 
   static Path build({
@@ -163,113 +326,59 @@ class PuzzleShapeBuilder {
     final path = Path();
 
 
-
     final w = size.width;
 
     final h = size.height;
-
 
 
     final tab = w * 0.22;
 
 
 
+    path.moveTo(0,0);
 
 
-    path.moveTo(
-
-      0,
-
-      0,
-
-    );
-
-
-
-
-
-    // الأعلى
 
     _horizontal(
-
       path,
-
       w,
-
       top,
-
       tab,
-
       true,
-
     );
 
 
-
-
-
-    // اليمين
 
     _vertical(
-
       path,
-
       h,
-
       right,
-
       tab,
-
       true,
-
     );
 
 
-
-
-
-    // الأسفل
 
     _horizontal(
-
       path,
-
       w,
-
       bottom,
-
       tab,
-
       false,
-
     );
 
 
-
-
-
-    // اليسار
 
     _vertical(
-
       path,
-
       h,
-
       left,
-
       tab,
-
       false,
-
     );
-
-
-
 
 
     path.close();
-
 
 
     return path;
@@ -280,13 +389,6 @@ class PuzzleShapeBuilder {
 
 
 
-
-
-
-
-  //==================================================
-  // حافة أفقية
-  //==================================================
 
   static void _horizontal(
 
@@ -303,24 +405,16 @@ class PuzzleShapeBuilder {
       ) {
 
 
-
     final y = top ? 0.0 : length;
 
 
 
-    if(type == EdgeType.flat) {
-
-
+    if(type == EdgeType.flat){
 
       path.lineTo(
-
         length,
-
         y,
-
       );
-
-
 
       return;
 
@@ -328,93 +422,49 @@ class PuzzleShapeBuilder {
 
 
 
-
-
-
-
     final center = length / 2;
 
 
-
-    final direction =
-
-    top ? -1 : 1;
-
+    final direction = top ? -1 : 1;
 
 
     final amount =
-
-    type == EdgeType.tab
-
-        ? direction * tab
-
-        : -direction * tab;
-
-
+        type == EdgeType.tab
+            ? direction * tab
+            : -direction * tab;
 
 
 
     path.lineTo(
-
-      center - tab,
-
+      center-tab,
       y,
-
     );
 
 
-
-
-
     path.cubicTo(
-
-      center - tab,
-
+      center-tab,
       y,
-
-      center - tab / 2,
-
-      y + amount,
-
+      center-tab/2,
+      y+amount,
       center,
-
-      y + amount,
-
+      y+amount,
     );
-
-
-
 
 
     path.cubicTo(
-
-      center + tab / 2,
-
-      y + amount,
-
-      center + tab,
-
+      center+tab/2,
+      y+amount,
+      center+tab,
       y,
-
-      center + tab,
-
+      center+tab,
       y,
-
     );
-
-
-
 
 
     path.lineTo(
-
       length,
-
       y,
-
     );
-
-
 
   }
 
@@ -423,12 +473,6 @@ class PuzzleShapeBuilder {
 
 
 
-
-
-
-  //==================================================
-  // حافة عمودية
-  //==================================================
 
   static void _vertical(
 
@@ -445,24 +489,16 @@ class PuzzleShapeBuilder {
       ) {
 
 
-
     final x = right ? length : 0.0;
 
 
 
-    if(type == EdgeType.flat) {
-
-
+    if(type == EdgeType.flat){
 
       path.lineTo(
-
         x,
-
         length,
-
       );
-
-
 
       return;
 
@@ -470,104 +506,52 @@ class PuzzleShapeBuilder {
 
 
 
+    final center = length/2;
 
 
-
-
-    final center = length / 2;
-
-
-
-    final direction =
-
-    right ? 1 : -1;
-
+    final direction = right ? 1 : -1;
 
 
     final amount =
-
-    type == EdgeType.tab
-
-        ? direction * tab
-
-        : -direction * tab;
-
-
-
-
+        type == EdgeType.tab
+            ? direction*tab
+            : -direction*tab;
 
 
 
     path.lineTo(
-
       x,
-
-      center - tab,
-
+      center-tab,
     );
 
 
 
-
-
-
-
     path.cubicTo(
-
       x,
-
-      center - tab,
-
-      x + amount,
-
-      center - tab / 2,
-
-      x + amount,
-
+      center-tab,
+      x+amount,
+      center-tab/2,
+      x+amount,
       center,
-
     );
-
-
-
-
 
 
 
     path.cubicTo(
-
-      x + amount,
-
-      center + tab / 2,
-
+      x+amount,
+      center+tab/2,
       x,
-
-      center + tab,
-
+      center+tab,
       x,
-
-      center + tab,
-
+      center+tab,
     );
-
-
-
-
-
 
 
     path.lineTo(
-
       x,
-
       length,
-
     );
-
-
 
   }
-
-
 
 }
