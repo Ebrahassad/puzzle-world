@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'puzzle_piece.dart';
 
 
-
 //==================================================
 // متحكم لعبة البازل
 //==================================================
@@ -27,9 +26,16 @@ class PuzzleController {
 
 
 
+  // حدود لوحة البازل
+  final Rect boardRect;
+
+
+
   PuzzleController({
 
     required this.pieces,
+
+    required this.boardRect,
 
     this.snapTolerance = 35,
 
@@ -53,7 +59,7 @@ class PuzzleController {
 
 
 
-    // نبحث من الأعلى للأسفل
+    // البحث من الأعلى للأسفل
 
     for(int i = pieces.length - 1; i >= 0; i--){
 
@@ -75,11 +81,13 @@ class PuzzleController {
 
 
 
+
       final local =
 
           position -
 
               piece.position;
+
 
 
 
@@ -105,7 +113,8 @@ class PuzzleController {
 
 
 
-        // وضعها فوق الجميع
+
+        // وضع القطعة فوق باقي القطع
 
         pieces.remove(piece);
 
@@ -151,6 +160,8 @@ class PuzzleController {
 
 
 
+
+
     final delta =
 
         position -
@@ -180,211 +191,274 @@ class PuzzleController {
 
 
 
+//==================================================
+// رفع الإصبع
+//==================================================
+
+void pointerUp(){
 
 
 
+  if(activePiece == null){
 
-  //==================================================
-  // رفع الإصبع
-  //==================================================
+    return;
 
-  void pointerUp(){
-
-
-
-    if(activePiece == null){
-
-      return;
-
-    }
+  }
 
 
 
-
-
-    final piece = activePiece!;
+  final piece = activePiece!;
 
 
 
 
 
 
-    if(
 
-    piece.isCorrect(
+  // هل القطعة داخل حدود اللوحة
+
+  if(_isInsideBoard(piece)){
+
+
+
+    piece.state = PieceState.board;
+
+
+
+    // هل اقتربت من مكانها الصحيح
+
+    if(piece.isCorrect(
 
       snapTolerance,
 
-    )
-
-    ){
-
+    )){
 
 
       piece.lock();
 
 
+    }else{
 
-    }
 
+      // إذا لم تركب ترجع للشريط
 
-
-
-    piece.endDrag();
-
-
-
-    activePiece = null;
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-  //==================================================
-  // نسبة الإنجاز
-  //==================================================
-
-  double get progress {
-
-
-
-    if(pieces.isEmpty){
-
-      return 0;
-
-    }
-
-
-
-    final completed = pieces
-
-        .where(
-
-          (p)=>
-
-      p.state == PieceState.locked,
-
-    )
-
-        .length;
-
-
-
-
-    return completed / pieces.length;
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-  //==================================================
-  // هل اكتملت اللعبة
-  //==================================================
-
-  bool get isCompleted {
-
-
-
-    if(pieces.isEmpty){
-
-      return false;
-
-    }
-
-
-
-    return pieces.every(
-
-          (piece)=>
-
-      piece.state == PieceState.locked,
-
-    );
-
-
-  }
-
-
-
-
-
-
-
-
-
-  //==================================================
-  // عدد القطع المثبتة
-  //==================================================
-
-  int get completedPieces {
-
-
-
-    return pieces
-
-        .where(
-
-          (piece)=>
-
-      piece.state == PieceState.locked,
-
-    )
-
-        .length;
-
-
-  }
-
-
-
-
-
-
-  //==================================================
-  // إعادة اللعبة
-  //==================================================
-
-  void reset(){
-
-
-
-    for(final piece in pieces){
-
-
-
-      piece.state = PieceState.tray;
-
-
-
-      piece.dragging = false;
-
+      piece.returnToTray();
 
 
     }
 
 
+  }else{
 
-    activePiece = null;
+
+    // خارج اللوحة
+
+    piece.returnToTray();
+
+
+  }
+
+
+
+
+
+
+  piece.endDrag();
+
+
+
+  activePiece = null;
+
+
+
+}
+
+
+
+
+
+
+
+
+
+//==================================================
+// التحقق أن القطعة داخل اللوحة
+//==================================================
+
+bool _isInsideBoard(
+
+    PuzzlePiece piece,
+
+    ){
+
+
+
+  final center = Offset(
+
+    piece.position.dx +
+
+        piece.size.width / 2,
+
+
+    piece.position.dy +
+
+        piece.size.height / 2,
+
+  );
+
+
+
+
+  return boardRect.contains(center);
+
+
+}
+
+
+
+
+
+
+
+
+
+//==================================================
+// نسبة الإنجاز
+//==================================================
+
+double get progress {
+
+
+
+  if(pieces.isEmpty){
+
+    return 0;
+
+  }
+
+
+
+
+  final completed = pieces
+
+      .where(
+
+        (piece)=>
+
+    piece.state == PieceState.locked,
+
+  )
+
+      .length;
+
+
+
+
+  return completed / pieces.length;
+
+
+
+}
+
+
+
+
+
+
+
+
+
+//==================================================
+// هل اكتملت اللعبة
+//==================================================
+
+bool get isCompleted {
+
+
+
+  if(pieces.isEmpty){
+
+    return false;
+
+  }
+
+
+
+  return pieces.every(
+
+        (piece)=>
+
+    piece.state == PieceState.locked,
+
+  );
+
+
+}
+
+
+
+
+
+
+
+
+
+//==================================================
+// عدد القطع المثبتة
+//==================================================
+
+int get completedPieces {
+
+
+
+  return pieces
+
+      .where(
+
+        (piece)=>
+
+    piece.state == PieceState.locked,
+
+  )
+
+      .length;
+
+
+}
+
+
+
+
+
+
+
+
+
+//==================================================
+// إعادة اللعبة
+//==================================================
+
+void reset(){
+
+
+
+  for(final piece in pieces){
+
+
+
+    piece.returnToTray();
 
 
 
   }
+
+
+
+  activePiece = null;
+
+
+
+}
 
 
 
