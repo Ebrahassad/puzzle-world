@@ -266,10 +266,11 @@ class PuzzlePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(
-    covariant PuzzlePainter oldDelegate,
-  ) {
-    return oldDelegate.piece != piece ||
-        oldDelegate.cachedImage != cachedImage;
+bool shouldRepaint(
+  covariant PuzzlePainter oldDelegate,
+) {
+  return oldDelegate.piece != piece ||
+      oldDelegate.cachedImage != cachedImage ||
+      oldDelegate.image != image;
   }
 }
