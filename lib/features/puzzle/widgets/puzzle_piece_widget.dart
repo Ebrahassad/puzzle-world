@@ -2,16 +2,12 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-import 'puzzle_piece.dart';
-
-import 'puzzle_painter.dart';
-
+import '../engine/puzzle_piece.dart';
+import '../engine/puzzle_painter.dart';
 
 
 
-///======================================================
-/// Widget مسؤول عن عرض قطعة البازل والتحكم باللمس
-///======================================================
+
 
 class PuzzlePieceWidget extends StatefulWidget {
 
@@ -28,14 +24,15 @@ class PuzzlePieceWidget extends StatefulWidget {
   final bool active;
 
 
-
   final Function(PuzzlePiece)? onDragStart;
 
 
   final Function(Offset)? onDragUpdate;
 
 
-  final Function()? onDragEnd;
+  final VoidCallback? onDragEnd;
+
+
 
 
 
@@ -64,8 +61,11 @@ class PuzzlePieceWidget extends StatefulWidget {
 
     this.onDragEnd,
 
-
   });
+
+
+
+
 
 
 
@@ -87,10 +87,13 @@ class _PuzzlePieceWidgetState
     extends State<PuzzlePieceWidget> {
 
 
+
   ui.Image? imageCache;
 
 
+
   ImageStream? imageStream;
+
 
 
   ImageStreamListener? listener;
@@ -103,11 +106,13 @@ class _PuzzlePieceWidgetState
 
 
 
+
   @override
   void didChangeDependencies() {
 
 
     super.didChangeDependencies();
+
 
 
     if(!loaded) {
@@ -121,12 +126,9 @@ class _PuzzlePieceWidgetState
   }
 
 
-
-
-
-  //====================================================
-  // تحميل الصورة مرة واحدة
-  //====================================================
+  //==================================================
+  // تحميل الصورة
+  //==================================================
 
   void _loadImage() {
 
@@ -136,6 +138,14 @@ class _PuzzlePieceWidgetState
         createLocalImageConfiguration(
 
           context,
+
+          size: Size(
+
+            widget.size,
+
+            widget.size,
+
+          ),
 
         );
 
@@ -151,9 +161,18 @@ class _PuzzlePieceWidgetState
 
 
 
+
+
     listener = ImageStreamListener(
 
-      (info, synchronousCall) {
+      (
+
+        info,
+
+        synchronousCall,
+
+      ) {
+
 
 
         if(!mounted) return;
@@ -174,7 +193,31 @@ class _PuzzlePieceWidgetState
 
       },
 
+
+      onError:
+
+          (
+
+            error,
+
+            stack,
+
+          ) {
+
+
+        debugPrint(
+
+          "Puzzle image error: $error",
+
+        );
+
+
+      },
+
+
     );
+
+
 
 
 
@@ -184,144 +227,18 @@ class _PuzzlePieceWidgetState
 
     );
 
+
   }
 
 
 
 
 
-  //====================================================
-  // بناء القطعة
-  //====================================================
 
-  @override
-  Widget build(
 
-    BuildContext context,
-
-  ) {
-
-
-    if(imageCache == null) {
-
-
-      return SizedBox(
-
-        width: widget.size,
-
-        height: widget.size,
-
-      );
-
-
-    }
-
-
-
-    return Positioned(
-
-      left: widget.piece.position.dx,
-
-      top: widget.piece.position.dy,
-
-
-      child: GestureDetector(
-
-
-        onPanStart: (details) {
-
-
-          widget.onDragStart?.call(
-
-            widget.piece,
-
-          );
-
-
-        },
-
-
-
-        onPanUpdate: (details) {
-
-
-          widget.onDragUpdate?.call(
-
-            details.globalPosition,
-
-          );
-
-
-        },
-
-
-
-        onPanEnd: (_) {
-
-
-          widget.onDragEnd?.call();
-
-
-        },
-
-
-
-        child: AnimatedScale(
-
-          scale:
-
-              widget.active
-
-              ? 1.05
-
-              : 1.0,
-
-
-          duration:
-
-              const Duration(
-
-                milliseconds:120,
-
-              ),
-
-
-          child: CustomPaint(
-
-            size:
-
-                Size(
-
-                  widget.size,
-
-                  widget.size,
-
-                ),
-
-
-            painter:
-
-                PuzzlePainter(
-
-                  piece: widget.piece,
-
-                  image: imageCache!,
-
-                ),
-
-          ),
-
-        ),
-
-      ),
-
-    );
-
-  }
-
-  //====================================================
-  // تحديث القطعة عند تغير الصورة أو البيانات
-  //====================================================
+  //==================================================
+  // تحديث الصورة
+  //==================================================
 
   @override
   void didUpdateWidget(
@@ -339,7 +256,7 @@ class _PuzzlePieceWidgetState
 
 
 
-    if (
+    if(
 
       oldWidget.image != widget.image
 
@@ -350,7 +267,8 @@ class _PuzzlePieceWidgetState
     ) {
 
 
-      _removeImageListener();
+
+      _removeListener();
 
 
 
@@ -371,14 +289,15 @@ class _PuzzlePieceWidgetState
 
 
 
-  //====================================================
+
+  //==================================================
   // إزالة مستمع الصورة
-  //====================================================
+  //==================================================
 
-  void _removeImageListener() {
+  void _removeListener() {
 
 
-    if (
+    if(
 
       imageStream != null
 
@@ -403,18 +322,217 @@ class _PuzzlePieceWidgetState
   }
 
 
+  //==================================================
+  // بناء القطعة
+  //==================================================
+
+  @override
+  Widget build(
+
+    BuildContext context,
+
+  ) {
 
 
 
-  //====================================================
+    Widget child;
+
+
+
+    if(imageCache == null) {
+
+
+      child = SizedBox(
+
+        width:
+
+            widget.size,
+
+
+        height:
+
+            widget.size,
+
+      );
+
+
+    }
+
+    else {
+
+
+
+      child = CustomPaint(
+
+        size: Size(
+
+          widget.size,
+
+          widget.size,
+
+        ),
+
+
+
+        painter:
+
+            PuzzlePainter(
+
+              piece:
+
+                  widget.piece,
+
+
+              image:
+
+                  imageCache!,
+
+            ),
+
+      );
+
+
+    }
+
+
+
+
+
+
+
+    return Positioned(
+
+      left:
+
+          widget.piece.x,
+
+
+      top:
+
+          widget.piece.y,
+
+
+
+      child: GestureDetector(
+
+        onPanStart:
+
+            (_) {
+
+
+          widget.onDragStart?.call(
+
+            widget.piece,
+
+          );
+
+
+        },
+
+
+
+
+        onPanUpdate:
+
+            (details) {
+
+
+          widget.onDragUpdate?.call(
+
+            details.delta,
+
+          );
+
+
+        },
+
+
+
+
+        onPanEnd:
+
+            (_) {
+
+
+          widget.onDragEnd?.call();
+
+
+        },
+
+
+
+        child: AnimatedScale(
+
+          scale:
+
+              widget.active
+
+                  ? 1.06
+
+                  : 1.0,
+
+
+
+          duration:
+
+              const Duration(
+
+                milliseconds: 150,
+
+              ),
+
+
+
+          child: AnimatedOpacity(
+
+            opacity:
+
+                widget.piece.placed
+
+                    ? 0.95
+
+                    : 1.0,
+
+
+
+            duration:
+
+                const Duration(
+
+                  milliseconds: 120,
+
+                ),
+
+
+
+            child: child,
+
+          ),
+
+        ),
+
+      ),
+
+    );
+
+  }
+
+
+
+
+
+
+
+
+  //==================================================
   // تنظيف الموارد
-  //====================================================
+  //==================================================
 
   @override
   void dispose() {
 
 
-    _removeImageListener();
+    _removeListener();
 
 
     super.dispose();
