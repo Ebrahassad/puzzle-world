@@ -1,118 +1,68 @@
 import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
+
+import '../engine/puzzle_controller.dart';
+import '../engine/puzzle_generator.dart';
+import '../engine/puzzle_painter.dart';
+import '../engine/puzzle_piece.dart';
 
 import '../models/puzzle_level_model.dart';
 
-import '../engine/puzzle_piece.dart';
-import '../engine/puzzle_generator.dart';
-import '../engine/puzzle_controller.dart';
-import '../engine/puzzle_painter.dart';
-
-
-
 class PuzzleGameScreen extends StatefulWidget {
-
 
   final PuzzleLevelModel level;
 
-
-
   const PuzzleGameScreen({
-
     super.key,
-
     required this.level,
-
   });
 
-
-
   @override
-  State<PuzzleGameScreen> createState()
-
-      => _PuzzleGameScreenState();
-
+  State<PuzzleGameScreen> createState() =>
+      _PuzzleGameScreenState();
 
 }
 
-
-
-
-
-
-
 class _PuzzleGameScreenState
-
     extends State<PuzzleGameScreen> {
-
-
 
   ui.Image? image;
 
-
-
   late PuzzleController controller;
-
-
 
   List<PuzzlePiece> pieces = [];
 
-
-
   bool loading = true;
-
-
 
   final double boardSize = 360;
 
+  final double trayHeight = 110;
 
-
-  final double trayHeight = 170;
-
-
-
-
+final GlobalKey boardKey = GlobalKey();
 
 
   @override
-  void initState(){
+  void initState() {
 
     super.initState();
 
-    loadImage();
+    _loadImage();
 
   }
 
+  //==================================================
+  // تحميل الصورة
+  //==================================================
 
-
-
-
-
-
-
-  //==============================================
-  // تحميل صورة المرحلة
-  //==============================================
-
-  Future<void> loadImage() async {
-
+  Future<void> _loadImage() async {
 
     final provider = AssetImage(
-
       widget.level.image,
-
     );
-
-
 
     final stream = provider.resolve(
-
       const ImageConfiguration(),
-
     );
-
-
 
     stream.addListener(
 
@@ -120,14 +70,9 @@ class _PuzzleGameScreenState
 
         (info, _) {
 
-
           image = info.image;
 
-
-
-          createPuzzle();
-
-
+          _createPuzzle();
 
         },
 
@@ -137,39 +82,21 @@ class _PuzzleGameScreenState
 
   }
 
-
-
-
-
-
-
-
-  //==============================================
+  //==================================================
   // إنشاء القطع
-  //==============================================
+  //==================================================
 
-  void createPuzzle(){
-
-
+  void _createPuzzle() {
 
     final pieceSize =
-
         boardSize /
-
-            widget.level.gridSize;
-
-
-
+        widget.level.gridSize;
 
     pieces = PuzzleGenerator.generate(
 
-
       rows: widget.level.gridSize,
 
-
       columns: widget.level.gridSize,
-
-
 
       imageSize: Size(
 
@@ -179,314 +106,190 @@ class _PuzzleGameScreenState
 
       ),
 
-
-
       pieceSize: Size(
-
         pieceSize,
-
         pieceSize,
-
       ),
-
-
 
       traySize: Size(
-
         MediaQuery.of(context).size.width,
-
         trayHeight,
-
       ),
 
-
     );
-
-
-
-
 
     controller = PuzzleController(
-
       pieces: pieces,
-
     );
 
-
-
-
-    setState((){
+    setState(() {
 
       loading = false;
 
     });
 
+  }
+
+  //==================================================
+  // تحقق من الفوز
+  //==================================================
+
+  void checkWin() {
+
+    if (!controller.isCompleted) {
+      return;
+    }
+
+    Future.delayed(
+
+      const Duration(milliseconds: 400),
+
+      () {
+
+        if (mounted) {
+          Navigator.pop(context);
+        }
+
+      },
+
+    );
 
   }
 
-
-
-
-
-
-
-
-
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
 
-
-
-    if(loading || image == null){
-
+    if (loading || image == null) {
 
       return const Scaffold(
 
         body: Center(
-
-          child:CircularProgressIndicator(),
-
+          child: CircularProgressIndicator(),
         ),
 
       );
 
-
     }
 
-
-
-
-
+    final pieceSize =
+        boardSize /
+        widget.level.gridSize;
 
     return Scaffold(
 
-
-      backgroundColor: Colors.transparent,
-
+      backgroundColor: const Color(0xff18354f),
 
       body: SafeArea(
 
-
         child: Column(
-
 
           children: [
 
+            const SizedBox(height: 12),
 
+            //========================================
+            // شريط القطع (سيتم ربطه بالمحرك لاحقاً)
+            //========================================
 
-            //====================================
-            // شريط القطع
-            //====================================
-
-
-            SizedBox(
+            Container(
 
               height: trayHeight,
 
-              width: double.infinity,
+              margin: const EdgeInsets.symmetric(
+                horizontal: 12,
+              ),
 
+              decoration: BoxDecoration(
 
-              child: GestureDetector(
+                color: Colors.black26,
 
+                borderRadius:
+                    BorderRadius.circular(16),
 
-                onPanDown:(d){
-
-
-                  controller.pointerDown(
-
-                    d.localPosition,
-
-                  );
-
-
-                  setState((){});
-
-
-                },
-
-
-
-                onPanUpdate:(d){
-
-
-                  controller.pointerMove(
-
-                    d.localPosition,
-
-                  );
-
-
-                  setState((){});
-
-
-                },
-
-
-
-                onPanEnd:(_){
-
-
-                  controller.pointerUp();
-
-
-                  setState((){});
-
-
-                  checkWin();
-
-
-                },
-
-
-
-                child: CustomPaint(
-
-
-                  painter: PuzzlePainter(
-
-
-                    image:image!,
-
-
-                    pieces:pieces,
-
-
-                    pieceSize:
-
-                    boardSize /
-
-                        widget.level.gridSize,
-
-
-                  ),
-
-
+                border: Border.all(
+                  color: Colors.white24,
                 ),
-
 
               ),
 
             ),
 
+            const SizedBox(height: 20),
 
+            //========================================
+            // لوحة تركيب البازل
+            //========================================
 
+            Expanded(
 
+              child: Center(
 
-            const SizedBox(height:20),
+                child: Container(
+  key: boardKey,
 
+                  width: boardSize,
 
+                  height: boardSize,
 
-            //====================================
-            // لوحة البازل
-            //====================================
+                  decoration: BoxDecoration(
 
+                    color:
+                        Colors.white.withOpacity(0.06),
 
-            SizedBox(
+                    borderRadius:
+                        BorderRadius.circular(18),
 
+                    border: Border.all(
 
-              width:boardSize,
+                      color: Colors.white24,
 
+                      width: 2,
 
-              height:boardSize,
-
-
-
-              child: GestureDetector(
-
-
-                onPanDown:(d){
-
-
-                  controller.pointerDown(
-
-                    d.localPosition,
-
-                  );
-
-
-                  setState((){});
-
-
-                },
-
-
-
-                onPanUpdate:(d){
-
-
-                  controller.pointerMove(
-
-                    d.localPosition,
-
-                  );
-
-
-                  setState((){});
-
-
-                },
-
-
-
-                onPanEnd:(_){
-
-
-                  controller.pointerUp();
-
-
-                  setState((){});
-
-
-                  checkWin();
-
-
-                },
-
-
-
-                child: CustomPaint(
-
-
-                  size:Size(
-
-                    boardSize,
-
-                    boardSize,
+                    ),
 
                   ),
 
+                  child: ClipRRect(
 
+                    borderRadius:
+                        BorderRadius.circular(18),
 
-                  painter:PuzzlePainter(
+                    child: Stack(
 
+                      children: [
 
-                    image:image!,
+                        Opacity(
 
+                          opacity: 0.07,
 
-                    pieces:pieces,
+                          child: Image.asset(
 
+                            widget.level.image,
 
-                    pieceSize:
+                            width: boardSize,
 
-                    boardSize /
+                            height: boardSize,
 
-                        widget.level.gridSize,
+                            fit: BoxFit.cover,
 
+                          ),
+
+                        ),
+
+                        const SizedBox.expand(),
+
+                      ],
+
+                    ),
 
                   ),
-
 
                 ),
 
-
               ),
 
-
             ),
-
-
           ],
-
 
         ),
 
@@ -494,151 +297,6 @@ class _PuzzleGameScreenState
 
     );
 
-
   }
-
-  //==============================================
-  // فحص اكتمال البازل
-  //==============================================
-
-  void checkWin(){
-
-
-    if(controller.isCompleted){
-
-
-      Future.delayed(
-
-        const Duration(milliseconds:500),
-
-            (){
-
-
-          Navigator.pop(context);
-
-
-        },
-
-      );
-
-
-    }
-
-
-  }
-
-
-
-}
-
-
-
-
-
-
-
-
-//==================================================
-// رسام لوحة البازل
-//==================================================
-
-class PuzzlePainter extends CustomPainter {
-
-
-  final ui.Image image;
-
-
-  final List<PuzzlePiece> pieces;
-
-
-  final double pieceSize;
-
-
-
-  PuzzlePainter({
-
-    required this.image,
-
-    required this.pieces,
-
-    required this.pieceSize,
-
-  });
-
-
-
-
-
-
-  @override
-  void paint(
-
-      Canvas canvas,
-
-      Size size,
-
-      ){
-
-
-
-    for(final piece in pieces){
-
-
-
-      PuzzlePiecePainter.paint(
-
-
-        canvas:canvas,
-
-
-        piece:piece,
-
-
-        image:image,
-
-
-        pieceSize:Size(
-
-          pieceSize,
-
-          pieceSize,
-
-        ),
-
-
-        showShadow:
-
-        piece.dragging,
-
-
-      );
-
-
-
-    }
-
-
-
-  }
-
-
-
-
-
-
-  @override
-  bool shouldRepaint(
-
-      covariant CustomPainter oldDelegate,
-
-      ){
-
-
-    return true;
-
-
-  }
-
-
 
 }
