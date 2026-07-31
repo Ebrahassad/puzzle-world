@@ -6,11 +6,11 @@ import 'puzzle_piece.dart';
 import 'puzzle_piece_clipper.dart';
 
 
-///======================================================
-/// رسم صورة قطعة البازل داخل شكلها
-///======================================================
+
+
 
 class PuzzlePainter extends CustomPainter {
+
 
 
   final PuzzlePiece piece;
@@ -20,9 +20,14 @@ class PuzzlePainter extends CustomPainter {
 
 
 
+
+
+
+
   PuzzlePainter({
 
     required this.piece,
+
 
     required this.image,
 
@@ -32,14 +37,19 @@ class PuzzlePainter extends CustomPainter {
 
 
 
+
+
   @override
+
   void paint(
 
     Canvas canvas,
 
+
     Size size,
 
   ) {
+
 
 
     final path =
@@ -57,9 +67,12 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-    // حفظ منطقة القطعة
+
+
 
     canvas.save();
+
+
 
 
 
@@ -72,40 +85,40 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-    //==================================================
-    // حساب مكان الصورة
-    //==================================================
-
-
-    final source =
-
-        Rect.fromLTWH(
-
-          piece.sourceRect.left,
-
-          piece.sourceRect.top,
-
-          piece.sourceRect.width,
-
-          piece.sourceRect.height,
-
-        );
 
 
 
-    final destination =
+    final source = Rect.fromLTWH(
 
-        Rect.fromLTWH(
+      piece.sourceRect.left,
 
-          0,
+      piece.sourceRect.top,
 
-          0,
+      piece.sourceRect.width,
 
-          size.width,
+      piece.sourceRect.height,
 
-          size.height,
+    );
 
-        );
+
+
+
+
+
+
+    final destination = Rect.fromLTWH(
+
+      0,
+
+      0,
+
+      size.width,
+
+      size.height,
+
+    );
+
+
 
 
 
@@ -120,17 +133,28 @@ class PuzzlePainter extends CustomPainter {
 
 
 
+
+
+
     canvas.drawImageRect(
 
       image,
 
+
       source,
+
 
       destination,
 
+
       paint,
 
+
     );
+
+
+
+
 
 
 
@@ -140,93 +164,49 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-    // رسم ظل خفيف حول القطعة
 
-    _drawShadow(
+    drawBorder(
 
       canvas,
 
       path,
 
-      size,
-
     );
+
 
 
   }
 
 
+  //==================================================
+  // رسم حدود وظل القطعة
+  //==================================================
 
-
-  //====================================================
-  // ظل القطعة
-  //====================================================
-
-  void _drawShadow(
-
-    Canvas canvas,
-
-    Path path,
-
-    Size size,
-
-  ) {
-
-
-    final shadowPaint = Paint()
-
-      ..color =
-
-          Colors.black.withOpacity(
-
-            0.18,
-
-          )
-
-      ..style =
-
-          PaintingStyle.stroke
-
-      ..strokeWidth =
-
-          1.5;
-
-
-
-    canvas.drawPath(
-
-      path,
-
-      shadowPaint,
-
-    );
-
-  }
-
-  //====================================================
-  // رسم تأثير عند سحب القطعة
-  //====================================================
-
-  void drawActiveEffect(
+  void drawBorder(
 
     Canvas canvas,
 
     Path path,
 
   ) {
+
 
 
     final paint = Paint()
 
       ..style = PaintingStyle.stroke
 
-      ..strokeWidth = 2.0
 
-      ..color = Colors.white.withOpacity(
+      ..strokeWidth = 1.5
 
-        0.55,
+
+      ..color = Colors.black.withOpacity(
+
+        0.25,
 
       );
+
+
 
 
 
@@ -238,17 +218,22 @@ class PuzzlePainter extends CustomPainter {
 
     );
 
+
+
   }
 
 
 
 
 
-    //====================================================
+
+
+  //==================================================
   // إعادة الرسم
-  //====================================================
+  //==================================================
 
   @override
+
   bool shouldRepaint(
 
     covariant PuzzlePainter oldDelegate,
@@ -256,7 +241,12 @@ class PuzzlePainter extends CustomPainter {
   ) {
 
 
+
     return
+
+        oldDelegate.image != image
+
+        ||
 
         oldDelegate.piece.position !=
 
@@ -266,15 +256,12 @@ class PuzzlePainter extends CustomPainter {
 
         oldDelegate.piece.placed !=
 
-            piece.placed
+            piece.placed;
 
-        ||
 
-        oldDelegate.image !=
-
-            image;
 
   }
 
-}
+
+
 }
