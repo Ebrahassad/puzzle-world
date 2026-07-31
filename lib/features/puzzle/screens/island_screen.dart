@@ -248,10 +248,8 @@ class _IslandScreenState
       MaterialPageRoute(
 
         builder:(_)=>PuzzleGameScreen(
-
-          level:selectedLevel,
-
-        ),
+  puzzle: widget.island,
+),
 
       ),
 
