@@ -1,26 +1,22 @@
 import 'package:flutter/material.dart';
 
+import '../models/puzzle_model.dart';
+
 import '../engine/puzzle_controller.dart';
 import '../engine/puzzle_generator.dart';
 import '../engine/puzzle_piece.dart';
+
 import '../widgets/puzzle_piece_widget.dart';
 
 
 
-///======================================================
-/// شاشة لعبة البازل
-///======================================================
+
 
 class PuzzleGameScreen extends StatefulWidget {
 
 
-  final ImageProvider image;
+  final PuzzleModel puzzle;
 
-
-  final int rows;
-
-
-  final int columns;
 
 
 
@@ -29,15 +25,13 @@ class PuzzleGameScreen extends StatefulWidget {
     super.key,
 
 
-    required this.image,
-
-
-    this.rows = 3,
-
-
-    this.columns = 3,
+    required this.puzzle,
 
   });
+
+
+
+
 
 
 
@@ -53,9 +47,12 @@ class PuzzleGameScreen extends StatefulWidget {
 
 
 
+
+
 class _PuzzleGameScreenState
 
     extends State<PuzzleGameScreen> {
+
 
 
   late PuzzleController controller;
@@ -70,14 +67,12 @@ class _PuzzleGameScreenState
 
 
 
-  bool initialized = false;
+  bool ready = false;
 
 
 
 
-  //====================================================
-  // إنشاء اللعبة
-  //====================================================
+
 
   @override
   void initState() {
@@ -86,7 +81,7 @@ class _PuzzleGameScreenState
     super.initState();
 
 
-    _createGame();
+    createGame();
 
 
   }
@@ -95,30 +90,40 @@ class _PuzzleGameScreenState
 
 
 
-  void _createGame() {
 
+  //==================================================
+  // إنشاء اللعبة
+  //==================================================
 
-    pieceSize =
-
-        boardSize /
-
-            widget.columns;
-
+  void createGame() {
 
 
     final pieces =
 
         PuzzleGenerator.generate(
 
-          rows: widget.rows,
+          rows: 3,
 
-          columns: widget.columns,
 
-          imageWidth: boardSize,
+          columns: 3,
 
-          imageHeight: boardSize,
+
+          imageWidth:
+
+              boardSize,
+
+
+          imageHeight:
+
+              boardSize,
 
         );
+
+
+
+    pieceSize =
+
+        boardSize / 3;
 
 
 
@@ -132,20 +137,17 @@ class _PuzzleGameScreenState
 
 
 
-    initialized = true;
+    ready = true;
 
 
   }
 
 
+  //==================================================
+  // بداية السحب
+  //==================================================
 
-
-
-  //====================================================
-  // بدء السحب
-  //====================================================
-
-  void _onDragStart(
+  void startDrag(
 
     PuzzlePiece piece,
 
@@ -155,16 +157,15 @@ class _PuzzleGameScreenState
     setState(() {
 
 
-      controller.startDrag(
+      controller.startDragging(
 
         piece,
-
-        piece.position,
 
       );
 
 
     });
+
 
   }
 
@@ -172,13 +173,49 @@ class _PuzzleGameScreenState
 
 
 
-  //====================================================
-  // تحديث الحركة
-  //====================================================
 
-  void _onDragUpdate(
 
-    Offset position,
+  //==================================================
+  // حركة السحب
+  //==================================================
+
+  void updateDrag(
+
+    PuzzlePiece piece,
+
+    Offset delta,
+
+  ) {
+
+
+    if(piece.placed) return;
+
+
+
+    setState(() {
+
+
+      piece.position += delta;
+
+
+    });
+
+
+  }
+
+
+
+
+
+
+
+  //==================================================
+  // نهاية السحب
+  //==================================================
+
+  void endDrag(
+
+    PuzzlePiece piece,
 
   ) {
 
@@ -186,34 +223,19 @@ class _PuzzleGameScreenState
     setState(() {
 
 
-      controller.updateDrag(
+      controller.endDragging(
 
-        position,
+        piece,
 
       );
 
 
-    });
 
-  }
+      controller.checkPiecePosition(
 
+        piece,
 
-
-
-
-  //====================================================
-  // نهاية السحب
-  //====================================================
-
-  void _onDragEnd() {
-
-
-    setState(() {
-
-
-      controller.endDrag(
-
-        pieceSize * 0.35,
+        pieceSize,
 
       );
 
@@ -225,7 +247,7 @@ class _PuzzleGameScreenState
     if(controller.isCompleted) {
 
 
-      _showWin();
+      showWin();
 
 
     }
@@ -233,32 +255,17 @@ class _PuzzleGameScreenState
 
   }
 
-  //====================================================
-  // إعادة اللعبة
-  //====================================================
-
-  void _restartGame() {
-
-
-    setState(() {
-
-
-      _createGame();
-
-
-    });
-
-  }
 
 
 
 
 
-  //====================================================
-  // رسالة الفوز
-  //====================================================
 
-  void _showWin() {
+  //==================================================
+  // الفوز
+  //==================================================
+
+  void showWin() {
 
 
     Future.delayed(
@@ -268,6 +275,7 @@ class _PuzzleGameScreenState
         milliseconds: 300,
 
       ),
+
 
       () {
 
@@ -280,82 +288,74 @@ class _PuzzleGameScreenState
 
           context: context,
 
-          builder: (_) {
+
+          builder:
+
+              (_) => AlertDialog(
+
+                title:
+
+                    const Text(
+
+                      "🎉 أحسنت",
+
+                    ),
 
 
-            return AlertDialog(
 
-              title:
+                content:
 
-                  const Text(
+                    const Text(
 
-                    "🎉 أحسنت",
+                      "تم تركيب الصورة بنجاح",
+
+                    ),
+
+
+                actions: [
+
+
+                  TextButton(
+
+                    onPressed: () {
+
+
+                      Navigator.pop(context);
+
+
+                    },
+
+
+                    child:
+
+                        const Text(
+
+                          "موافق",
+
+                        ),
 
                   ),
 
 
-              content:
+                ],
 
-                  const Text(
+              ),
 
-                    "اكتملت الصورة",
-
-                  ),
-
-
-              actions: [
-
-
-                TextButton(
-
-                  onPressed: () {
-
-
-                    Navigator.pop(context);
-
-
-                    _restartGame();
-
-
-                  },
-
-
-                  child:
-
-                      const Text(
-
-                        "لعب مرة أخرى",
-
-                      ),
-
-                ),
-
-
-              ],
-
-            );
-
-
-          },
 
         );
 
 
       },
 
+
     );
 
 
   }
 
-
-
-
-
-
-  //====================================================
+  //==================================================
   // بناء الشاشة
-  //====================================================
+  //==================================================
 
   @override
   Widget build(
@@ -365,7 +365,8 @@ class _PuzzleGameScreenState
   ) {
 
 
-    if(!initialized) {
+
+    if(!ready) {
 
 
       return const Scaffold(
@@ -387,13 +388,16 @@ class _PuzzleGameScreenState
 
 
 
-    final pieces =
-
-        controller.sortedPieces;
 
 
 
     return Scaffold(
+
+      backgroundColor:
+
+          Colors.black12,
+
+
 
       body:
 
@@ -403,30 +407,36 @@ class _PuzzleGameScreenState
 
                 Column(
 
+                  mainAxisAlignment:
+
+                      MainAxisAlignment.center,
+
+
                   children: [
 
 
-                    const SizedBox(
-
-                      height: 20,
-
-                    ),
 
 
 
                     Text(
 
-                      "Puzzle",
+                      widget.puzzle.title,
+
 
                       style:
 
-                          Theme.of(context)
+                          const TextStyle(
 
-                              .textTheme
+                            fontSize: 24,
 
-                              .headlineSmall,
+                            fontWeight:
+
+                                FontWeight.bold,
+
+                          ),
 
                     ),
+
 
 
 
@@ -436,6 +446,7 @@ class _PuzzleGameScreenState
                       height: 20,
 
                     ),
+
 
 
 
@@ -443,15 +454,20 @@ class _PuzzleGameScreenState
 
                     SizedBox(
 
-                      width: boardSize,
+                      width:
 
-                      height: boardSize,
+                          boardSize,
+
+
+                      height:
+
+                          boardSize,
+
 
 
                       child:
 
                           Stack(
-
 
                             clipBehavior:
 
@@ -460,7 +476,7 @@ class _PuzzleGameScreenState
 
                             children:
 
-                                pieces
+                                controller.pieces
 
                                     .map(
 
@@ -469,7 +485,6 @@ class _PuzzleGameScreenState
 
                                         return PuzzlePieceWidget(
 
-
                                           piece:
 
                                               piece,
@@ -477,7 +492,12 @@ class _PuzzleGameScreenState
 
                                           image:
 
-                                              widget.image,
+                                              AssetImage(
+
+                                                widget.puzzle.image,
+
+                                              ),
+
 
 
                                           size:
@@ -485,23 +505,26 @@ class _PuzzleGameScreenState
                                               pieceSize,
 
 
+
                                           active:
 
-                                              piece ==
+                                              controller.draggingPiece ==
 
-                                                  controller.activePiece,
+                                                  piece,
 
 
 
                                           onDragStart:
 
-                                              (_) {
+                                              (p) {
 
-                                                _onDragStart(
 
-                                                  piece,
+                                                startDrag(
+
+                                                  p,
 
                                                 );
+
 
                                               },
 
@@ -509,14 +532,35 @@ class _PuzzleGameScreenState
 
                                           onDragUpdate:
 
-                                              _onDragUpdate,
+                                              (delta) {
+
+
+                                                updateDrag(
+
+                                                  piece,
+
+                                                  delta,
+
+                                                );
+
+
+                                              },
 
 
 
                                           onDragEnd:
 
-                                              _onDragEnd,
+                                              () {
 
+
+                                                endDrag(
+
+                                                  piece,
+
+                                                );
+
+
+                                              },
 
                                         );
 
@@ -527,7 +571,6 @@ class _PuzzleGameScreenState
 
                                     .toList(),
 
-
                           ),
 
                     ),
@@ -536,11 +579,16 @@ class _PuzzleGameScreenState
 
 
 
+
+
                     const SizedBox(
 
-                      height: 30,
+                      height:
+
+                          30,
 
                     ),
+
 
 
 
@@ -548,14 +596,16 @@ class _PuzzleGameScreenState
 
                     Text(
 
-                      "${controller.completedCount}/${controller.pieces.length}",
+                      "${controller.completedPieces}/${controller.pieces.length}",
 
 
                       style:
 
                           const TextStyle(
 
-                            fontSize: 18,
+                            fontSize:
+
+                                18,
 
                           ),
 
@@ -565,9 +615,12 @@ class _PuzzleGameScreenState
 
 
 
+
                     const SizedBox(
 
-                      height: 15,
+                      height:
+
+                          20,
 
                     ),
 
@@ -575,18 +628,29 @@ class _PuzzleGameScreenState
 
 
 
+
                     ElevatedButton(
 
-                      onPressed:
+                      onPressed: () {
 
-                          _restartGame,
+
+                        setState(() {
+
+
+                          createGame();
+
+
+                        });
+
+
+                      },
 
 
                       child:
 
                           const Text(
 
-                            "إعادة",
+                            "إعادة اللعب",
 
                           ),
 
@@ -600,6 +664,7 @@ class _PuzzleGameScreenState
           ),
 
     );
+
 
   }
 
