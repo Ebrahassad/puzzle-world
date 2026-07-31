@@ -442,15 +442,17 @@ class _IslandScreenState
 
               child:Image.asset(
 
-                IslandBackgroundData.getBackground(
+  IslandBackgroundData.getBackground(
 
-                  widget.island.id,
+    widget.island.id,
 
-                ),
+  ),
 
-                fit:BoxFit.cover,
+  fit:BoxFit.contain,
 
-              ),
+  alignment: Alignment.center,
+
+),
 
             ),
 
