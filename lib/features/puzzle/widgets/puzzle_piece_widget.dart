@@ -8,14 +8,18 @@ import '../engine/puzzle_painter.dart';
 
 class PuzzlePieceWidget extends StatefulWidget {
 
+
   final PuzzlePiece piece;
 
+
   final ImageProvider image;
+
 
   final double size;
 
 
   final bool isActive;
+
 
   final double opacity;
 
@@ -41,6 +45,7 @@ class PuzzlePieceWidget extends StatefulWidget {
 
   @override
   State<PuzzlePieceWidget> createState() =>
+
       _PuzzlePieceWidgetState();
 
 }
@@ -59,15 +64,13 @@ class _PuzzlePieceWidgetState
   ui.Image? cachedImage;
 
 
-  ImageStream? _stream;
+  ImageStream? _imageStream;
 
 
   ImageStreamListener? _listener;
 
 
-
-  bool loaded = false;
-
+  bool _loaded = false;
 
 
 
@@ -79,14 +82,13 @@ class _PuzzlePieceWidgetState
     super.didChangeDependencies();
 
 
-    if(!loaded){
+    if (!_loaded) {
 
       _loadImage();
 
     }
 
   }
-
 
 
 
@@ -99,30 +101,33 @@ class _PuzzlePieceWidgetState
 
     covariant PuzzlePieceWidget oldWidget,
 
-  ){
+  ) {
 
     super.didUpdateWidget(oldWidget);
 
 
 
-    if(oldWidget.image != widget.image){
+    if (
+
+      oldWidget.image != widget.image
+
+      ||
+
+      oldWidget.size != widget.size
+
+    ) {
 
 
-      _removeListener();
-
+      _loaded = false;
 
 
       cachedImage = null;
-
-
-      loaded = false;
 
 
       _loadImage();
 
 
     }
-
 
   }
 
@@ -132,9 +137,27 @@ class _PuzzlePieceWidgetState
 
 
 
+  void _loadImage() {
 
 
-  void _loadImage(){
+    if (
+
+      _listener != null &&
+
+      _imageStream != null
+
+    ) {
+
+
+      _imageStream!.removeListener(
+
+        _listener!,
+
+      );
+
+    }
+
+
 
 
 
@@ -156,32 +179,37 @@ class _PuzzlePieceWidgetState
 
 
 
-    _stream = widget.image.resolve(
 
-      configuration,
 
-    );
+    _imageStream =
+
+        widget.image.resolve(
+
+          configuration,
+
+        );
+
 
 
 
 
     _listener = ImageStreamListener(
 
-      (info, synchronousCall){
-
-
-        if(!mounted) return;
+      (info, _) {
 
 
 
-        setState((){
+        if (!mounted) return;
+
+
+
+        setState(() {
 
 
           cachedImage = info.image;
 
 
-          loaded = true;
-
+          _loaded = true;
 
 
         });
@@ -191,12 +219,12 @@ class _PuzzlePieceWidgetState
       },
 
 
-      onError: (error, stackTrace){
+      onError: (error, stackTrace) {
 
 
         debugPrint(
 
-          "Puzzle image loading error: $error",
+          "Puzzle image error: $error",
 
         );
 
@@ -209,7 +237,8 @@ class _PuzzlePieceWidgetState
 
 
 
-    _stream!.addListener(
+
+    _imageStream!.addListener(
 
       _listener!,
 
@@ -226,41 +255,12 @@ class _PuzzlePieceWidgetState
 
 
 
-  void _removeListener(){
-
-
-    if(_listener != null &&
-
-       _stream != null){
-
-
-
-      _stream!.removeListener(
-
-        _listener!,
-
-      );
-
-    }
-
-
-  }
-
-
-
-
-
-
-
-
-
-
   @override
   Widget build(
 
     BuildContext context,
 
-  ){
+  ) {
 
 
 
@@ -268,7 +268,9 @@ class _PuzzlePieceWidgetState
 
 
 
-    if(cachedImage == null){
+
+
+    if (cachedImage == null) {
 
 
 
@@ -282,9 +284,13 @@ class _PuzzlePieceWidgetState
 
 
 
-    }
+    } else {
 
-    else {
+
+
+      final padding =
+
+          widget.size * 0.10;
 
 
 
@@ -316,7 +322,22 @@ class _PuzzlePieceWidgetState
             cachedImage: cachedImage,
 
 
+
+            // التوافق مع Painter الجديد
+
+            pieceSize:
+
+                widget.size,
+
+
+
+            padding:
+
+                padding,
+
+
           ),
+
 
 
         ),
@@ -332,15 +353,18 @@ class _PuzzlePieceWidgetState
 
 
 
+
     return AnimatedScale(
+
 
       scale:
 
           widget.isActive
 
-              ? 1.08
+              ? 1.06
 
               : 1.0,
+
 
 
       duration:
@@ -352,16 +376,22 @@ class _PuzzlePieceWidgetState
           ),
 
 
+
       curve:
 
           Curves.easeOutCubic,
 
 
 
-      child: AnimatedOpacity(
+      child:
+
+          AnimatedOpacity(
 
 
-        opacity: widget.opacity,
+        opacity:
+
+            widget.opacity,
+
 
 
         duration:
@@ -374,9 +404,19 @@ class _PuzzlePieceWidgetState
 
 
 
-        child: child,
+        curve:
+
+            Curves.easeOut,
+
+
+
+        child:
+
+            child,
+
 
       ),
+
 
     );
 
@@ -392,15 +432,33 @@ class _PuzzlePieceWidgetState
 
 
   @override
-  void dispose(){
+  void dispose() {
 
 
-    _removeListener();
+    if (
+
+      _listener != null &&
+
+      _imageStream != null
+
+    ) {
+
+
+      _imageStream!.removeListener(
+
+        _listener!,
+
+      );
+
+    }
+
 
 
     super.dispose();
 
+
   }
+
 
 
 }
