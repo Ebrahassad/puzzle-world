@@ -4,654 +4,272 @@ import 'package:flutter/material.dart';
 
 import 'puzzle_piece.dart';
 
-
-
 class PuzzlePainter extends CustomPainter {
-
-
   final PuzzlePiece piece;
-
   final ImageProvider image;
-
   final ui.Image? cachedImage;
 
-
-
   PuzzlePainter({
-
     required this.piece,
-
     required this.image,
-
     this.cachedImage,
-
   });
-
-
-
-
 
   @override
   void paint(
-
     Canvas canvas,
-
     Size size,
-
   ) {
-
-
     final path = createPiecePath(size);
 
+    final w = size.width;
+    final h = size.height;
 
+    final tab = (w < h ? w : h) * 0.18;
 
-
-
-    //========================================
+    //==================================================
     // ظل القطعة
-    //========================================
-
+    //==================================================
 
     canvas.drawPath(
-
       path,
-
       Paint()
-
-        ..color = Colors.black.withOpacity(0.25)
-
+        ..color = Colors.black.withOpacity(0.22)
         ..maskFilter = const MaskFilter.blur(
-
           BlurStyle.normal,
-
-          4,
-
+          5,
         ),
-
     );
 
-
-
-
-
-    //========================================
-    // رسم صورة القطعة
-    //========================================
-
+    //==================================================
+    // صورة القطعة
+    //==================================================
 
     if (cachedImage != null) {
-
-
       canvas.save();
-
-
-
       canvas.clipPath(path);
-
-
 
       final source = piece.sourceRect;
 
-
-
+      // نمدد الصورة قليلاً حتى تغطي النتوءات بشكل أفضل
       final destination = Rect.fromLTWH(
-
-        0,
-
-        0,
-
-        size.width,
-
-        size.height,
-
+        -tab * 0.18,
+        -tab * 0.18,
+        w + (tab * 0.36),
+        h + (tab * 0.36),
       );
-
-
 
       canvas.drawImageRect(
-
         cachedImage!,
-
         source,
-
         destination,
-
         Paint()
-
-          ..filterQuality =
-
-              FilterQuality.high,
-
+          ..filterQuality = FilterQuality.high
+          ..isAntiAlias = true,
       );
 
-
-
       canvas.restore();
-
-
     }
 
-
-
-
-
-    //========================================
-    // إطار خفيف للقطعة
-    //========================================
-
+    //==================================================
+    // لمعة خفيفة فوق الصورة
+    //==================================================
 
     canvas.drawPath(
-
       path,
-
       Paint()
-
-        ..style = PaintingStyle.stroke
-
-        ..strokeWidth = 0.8
-
-        ..color = Colors.white.withOpacity(0.35),
-
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.white.withOpacity(0.08),
+            Colors.transparent,
+            Colors.black.withOpacity(0.06),
+          ],
+        ).createShader(Offset.zero & size),
     );
 
+    //==================================================
+    // إطار القطعة
+    //==================================================
 
+    canvas.drawPath(
+      path,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0
+        ..isAntiAlias = true
+        ..color = Colors.white.withOpacity(0.35),
+    );
   }
 
   Path createPiecePath(
-
     Size size,
-
   ) {
-
-
     final path = Path();
 
-
-
     final w = size.width;
-
     final h = size.height;
 
-
-
-    // حجم البروز
-
-    final tab =
-
-        (w < h ? w : h) * 0.18;
-
-
+    final tab = (w < h ? w : h) * 0.18;
 
     final centerX = w / 2;
-
     final centerY = h / 2;
 
-
-
-
-
-    // البداية من الزاوية
-
-    path.moveTo(
-
-      0,
-
-      0,
-
-    );
-
-
-
-
+    path.moveTo(0, 0);
 
     //=============================
     // الحافة العلوية
     //=============================
 
-
-    path.lineTo(
-
-      centerX - tab,
-
-      0,
-
-    );
-
-
-
-    drawTop(
-
-      path,
-
-      piece.top,
-
-      centerX,
-
-      0,
-
-      tab,
-
-    );
-
-
-
-    path.lineTo(
-
-      w,
-
-      0,
-
-    );
-
-
-
-
+    path.lineTo(centerX - tab, 0);
+    drawTop(path, piece.top, centerX, 0, tab);
+    path.lineTo(w, 0);
 
     //=============================
     // الحافة اليمنى
     //=============================
 
-
-    path.lineTo(
-
-      w,
-
-      centerY - tab,
-
-    );
-
-
-
-    drawRight(
-
-      path,
-
-      piece.right,
-
-      w,
-
-      centerY,
-
-      tab,
-
-    );
-
-
-
-    path.lineTo(
-
-      w,
-
-      h,
-
-    );
-
-
-
-
+    path.lineTo(w, centerY - tab);
+    drawRight(path, piece.right, w, centerY, tab);
+    path.lineTo(w, h);
 
     //=============================
     // الحافة السفلية
     //=============================
 
-
-    path.lineTo(
-
-      centerX + tab,
-
-      h,
-
-    );
-
-
-
-    drawBottom(
-
-      path,
-
-      piece.bottom,
-
-      centerX,
-
-      h,
-
-      tab,
-
-    );
-
-
-
-    path.lineTo(
-
-      0,
-
-      h,
-
-    );
-
-
-
-
+    path.lineTo(centerX + tab, h);
+    drawBottom(path, piece.bottom, centerX, h, tab);
+    path.lineTo(0, h);
 
     //=============================
     // الحافة اليسرى
     //=============================
 
-
-    path.lineTo(
-
-      0,
-
-      centerY + tab,
-
-    );
-
-
-
-    drawLeft(
-
-      path,
-
-      piece.left,
-
-      0,
-
-      centerY,
-
-      tab,
-
-    );
-
-
+    path.lineTo(0, centerY + tab);
+    drawLeft(path, piece.left, 0, centerY, tab);
 
     path.close();
-
-
-
     return path;
-
-
   }
 
   void drawTop(
-
     Path path,
-
     EdgeType type,
-
     double x,
-
     double y,
-
     double tab,
-
   ) {
-
-
     if (type == EdgeType.tab) {
-
-
       path.cubicTo(
-
         x - tab,
-
         y - tab,
-
         x + tab,
-
         y - tab,
-
         x + tab,
-
         y,
-
       );
-
-
-    }
-
-    else if (type == EdgeType.blank) {
-
-
+    } else if (type == EdgeType.blank) {
       path.cubicTo(
-
         x - tab,
-
         y + tab,
-
         x + tab,
-
         y + tab,
-
         x + tab,
-
         y,
-
       );
-
-
     }
-
-
   }
-
-
-
-
-
 
   void drawBottom(
-
     Path path,
-
     EdgeType type,
-
     double x,
-
     double y,
-
     double tab,
-
   ) {
-
-
     if (type == EdgeType.tab) {
-
-
       path.cubicTo(
-
         x + tab,
-
         y + tab,
-
         x - tab,
-
         y + tab,
-
         x - tab,
-
         y,
-
       );
-
-
-    }
-
-    else if (type == EdgeType.blank) {
-
-
+    } else if (type == EdgeType.blank) {
       path.cubicTo(
-
         x + tab,
-
         y - tab,
-
         x - tab,
-
         y - tab,
-
         x - tab,
-
         y,
-
       );
-
-
     }
-
-
   }
+
   void drawRight(
-
     Path path,
-
     EdgeType type,
-
     double x,
-
     double y,
-
     double tab,
-
   ) {
-
-
     if (type == EdgeType.tab) {
-
-
       path.cubicTo(
-
         x + tab,
-
         y - tab,
-
         x + tab,
-
         y + tab,
-
         x,
-
         y + tab,
-
       );
-
-
-    }
-
-    else if (type == EdgeType.blank) {
-
-
+    } else if (type == EdgeType.blank) {
       path.cubicTo(
-
         x - tab,
-
         y - tab,
-
         x - tab,
-
         y + tab,
-
         x,
-
         y + tab,
-
       );
-
-
     }
-
-
   }
-
-
-
-
-
-
 
   void drawLeft(
-
     Path path,
-
     EdgeType type,
-
     double x,
-
     double y,
-
     double tab,
-
   ) {
-
-
     if (type == EdgeType.tab) {
-
-
       path.cubicTo(
-
         x - tab,
-
         y + tab,
-
         x - tab,
-
         y - tab,
-
         x,
-
         y - tab,
-
       );
-
-
-    }
-
-    else if (type == EdgeType.blank) {
-
-
+    } else if (type == EdgeType.blank) {
       path.cubicTo(
-
         x + tab,
-
         y + tab,
-
         x + tab,
-
         y - tab,
-
         x,
-
         y - tab,
-
       );
-
-
     }
-
-
   }
-
-
-
-
-
-
 
   @override
-
   bool shouldRepaint(
-
     covariant PuzzlePainter oldDelegate,
-
   ) {
-
-
     return oldDelegate.piece != piece ||
-
         oldDelegate.cachedImage != cachedImage;
-
-
   }
-
-
 }
