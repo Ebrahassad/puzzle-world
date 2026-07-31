@@ -4,22 +4,23 @@ import 'puzzle_piece.dart';
 
 
 
-///======================================================
-/// التحكم الكامل بحركة قطع البازل
-///======================================================
+
 
 class PuzzleController {
+
 
 
   final List<PuzzlePiece> pieces;
 
 
 
-  PuzzlePiece? activePiece;
+
+  PuzzlePiece?
+
+      draggingPiece;
 
 
 
-  Offset? pointerPosition;
 
 
 
@@ -33,219 +34,162 @@ class PuzzleController {
 
 
 
-  //====================================================
-  // بدء سحب قطعة
-  //====================================================
 
-  void startDrag(
+  //==================================================
+  // بداية السحب
+  //==================================================
 
-    PuzzlePiece piece,
-
-    Offset position,
-
-  ) {
-
-
-    if (piece.isLocked) return;
-
-
-
-    activePiece = piece;
-
-
-
-    piece.startDrag(
-
-      position,
-
-    );
-
-
-
-    _bringToFront(
-
-      piece,
-
-    );
-
-  }
-
-
-
-
-
-  //====================================================
-  // تحديث السحب
-  //====================================================
-
-  void updateDrag(
-
-    Offset position,
-
-  ) {
-
-
-    final piece = activePiece;
-
-
-
-    if (piece == null) return;
-
-
-
-    pointerPosition = position;
-
-
-
-    piece.updateDrag(
-
-      position,
-
-    );
-
-  }
-
-
-
-
-
-  //====================================================
-  // إنهاء السحب
-  //====================================================
-
-  void endDrag(
-
-    double snapDistance,
-
-  ) {
-
-
-    final piece = activePiece;
-
-
-
-    if (piece == null) return;
-
-
-
-    if (
-
-      piece.canSnap(
-
-        snapDistance,
-
-      )
-
-    ) {
-
-
-      piece.snap();
-
-
-    }
-
-    else {
-
-
-      piece.endDrag();
-
-
-    }
-
-
-
-    activePiece = null;
-
-
-
-    pointerPosition = null;
-
-
-  }
-
-
-
-
-
-  //====================================================
-  // إضافة قطعة فوق البقية
-  //====================================================
-
-  void _bringToFront(
+  void startDragging(
 
     PuzzlePiece piece,
 
   ) {
 
 
-    int maxZ = 0;
+    if(piece.placed) return;
 
 
 
-    for(final item in pieces) {
+    draggingPiece = piece;
 
 
-      if(item.zIndex > maxZ) {
+  }
 
-        maxZ = item.zIndex;
 
-      }
+
+
+
+
+
+  //==================================================
+  // نهاية السحب
+  //==================================================
+
+  void endDragging(
+
+    PuzzlePiece piece,
+
+  ) {
+
+
+    if(draggingPiece == piece) {
+
+
+      draggingPiece = null;
+
+
+    }
+
+
+  }
+
+
+
+
+
+
+
+  //==================================================
+  // فحص مكان القطعة
+  //==================================================
+
+  bool checkPiecePosition(
+
+    PuzzlePiece piece,
+
+    double pieceSize,
+
+  ) {
+
+
+    if(piece.placed) {
+
+
+      return true;
+
 
     }
 
 
 
-    piece.zIndex = maxZ + 1;
 
 
-    piece.isDragging = true;
+    final target =
+
+        piece.correctOffset(
+
+          pieceSize,
+
+        );
+
+
+
+
+
+    final distance =
+
+        (piece.position - target)
+
+            .distance;
+
+
+
+
+
+
+    final tolerance =
+
+        pieceSize * 0.35;
+
+
+
+
+
+    if(distance <= tolerance) {
+
+
+      lockPiece(
+
+        piece,
+
+        pieceSize,
+
+      );
+
+
+
+      return true;
+
+
+    }
+
+
+
+    return false;
 
 
   }
 
-  //====================================================
-  // إنهاء السحب مع إعادة ترتيب الحالة
-  //====================================================
 
-  void cancelDrag() {
-
-
-    final piece = activePiece;
-
-
-    if (piece == null) return;
-
-
-
-    piece.endDrag();
-
-
-
-    activePiece = null;
-
-
-
-    pointerPosition = null;
-
-
-  }
-
-
-
-
-
-  //====================================================
-  // تثبيت قطعة يدوياً
-  //====================================================
+  //==================================================
+  // تثبيت القطعة
+  //==================================================
 
   void lockPiece(
 
     PuzzlePiece piece,
 
+    double pieceSize,
+
   ) {
 
 
-    piece.snap();
+    piece.lock(
+
+      pieceSize,
+
+    );
+
 
   }
 
@@ -253,9 +197,11 @@ class PuzzleController {
 
 
 
-  //====================================================
-  // فك تثبيت قطعة
-  //====================================================
+
+
+  //==================================================
+  // فك التثبيت
+  //==================================================
 
   void unlockPiece(
 
@@ -266,45 +212,52 @@ class PuzzleController {
 
     piece.unlock();
 
+
   }
 
 
 
 
 
-  //====================================================
-  // عدد القطع المكتملة
-  //====================================================
 
-  int get completedCount {
+
+  //==================================================
+  // عدد القطع المكتملة
+  //==================================================
+
+  int get completedPieces {
 
 
     return pieces
 
         .where(
 
-          (piece) => piece.isLocked,
+          (piece) => piece.placed,
 
         )
 
         .length;
 
+
   }
 
 
 
 
 
-  //====================================================
-  // عدد القطع المتبقية
-  //====================================================
 
-  int get remainingCount {
+
+  //==================================================
+  // القطع المتبقية
+  //==================================================
+
+  int get remainingPieces {
 
 
     return pieces.length -
 
-        completedCount;
+        completedPieces;
+
 
   }
 
@@ -312,24 +265,29 @@ class PuzzleController {
 
 
 
-  //====================================================
+
+
+  //==================================================
   // نسبة الإنجاز
-  //====================================================
+  //==================================================
 
   double get progress {
 
 
-    if (pieces.isEmpty) {
+    if(pieces.isEmpty) {
+
 
       return 0;
+
 
     }
 
 
 
-    return completedCount /
+    return completedPieces /
 
         pieces.length;
+
 
   }
 
@@ -337,16 +295,20 @@ class PuzzleController {
 
 
 
-  //====================================================
-  // هل انتهت اللعبة
-  //====================================================
+
+
+  //==================================================
+  // هل اكتملت اللعبة
+  //==================================================
 
   bool get isCompleted {
 
 
-    if (pieces.isEmpty) {
+    if(pieces.isEmpty) {
+
 
       return false;
+
 
     }
 
@@ -354,9 +316,10 @@ class PuzzleController {
 
     return pieces.every(
 
-      (piece) => piece.isLocked,
+      (piece) => piece.placed,
 
     );
+
 
   }
 
@@ -364,32 +327,26 @@ class PuzzleController {
 
 
 
-  //====================================================
+
+
+  //==================================================
   // إعادة اللعبة
-  //====================================================
+  //==================================================
 
   void reset() {
 
 
-    for (final piece in pieces) {
+    for(final piece in pieces) {
 
 
-      piece.reset(
-
-        piece.targetPosition,
-
-      );
+      piece.reset();
 
 
     }
 
 
 
-    activePiece = null;
-
-
-
-    pointerPosition = null;
+    draggingPiece = null;
 
 
   }
@@ -398,15 +355,20 @@ class PuzzleController {
 
 
 
-  //====================================================
-  // إيجاد قطعة بالمعرف
-  //====================================================
 
-  PuzzlePiece? findPiece(
 
-    String id,
+  //==================================================
+  // البحث عن قطعة
+  //==================================================
 
-  ) {
+  PuzzlePiece?
+
+      findPiece(
+
+        String id,
+
+      ) {
+
 
 
     for(final piece in pieces) {
@@ -420,7 +382,9 @@ class PuzzleController {
 
       }
 
+
     }
+
 
 
     return null;
@@ -428,44 +392,6 @@ class PuzzleController {
 
   }
 
-
-
-
-
-  //====================================================
-  // ترتيب القطع للرسم
-  //====================================================
-
-  List<PuzzlePiece> get sortedPieces {
-
-
-    final result =
-
-        List<PuzzlePiece>.from(
-
-          pieces,
-
-        );
-
-
-
-    result.sort(
-
-      (a,b) =>
-
-          a.zIndex.compareTo(
-
-            b.zIndex,
-
-          ),
-
-    );
-
-
-
-    return result;
-
-  }
 
 
 }
