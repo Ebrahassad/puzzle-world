@@ -338,7 +338,7 @@ class _IslandScreenState
 
             child: Text(
 
-              "${level.level}",
+              "${level.levelNumber}",
 
               style: const TextStyle(
 
