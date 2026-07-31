@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 import 'puzzle_piece.dart';
 
 
+
+///======================================================
+/// التحكم الكامل بحركة قطع البازل
+///======================================================
+
 class PuzzleController {
 
 
@@ -10,7 +15,11 @@ class PuzzleController {
 
 
 
-  PuzzlePiece? draggingPiece;
+  PuzzlePiece? activePiece;
+
+
+
+  Offset? pointerPosition;
 
 
 
@@ -24,139 +33,38 @@ class PuzzleController {
 
 
 
-  //=========================================
-  // بداية السحب
-  //=========================================
+  //====================================================
+  // بدء سحب قطعة
+  //====================================================
 
-  void startDragging(
-
-    PuzzlePiece piece,
-
-  ){
-
-    if(piece.placed) return;
-
-
-    draggingPiece = piece;
-
-  }
-
-
-
-
-
-  //=========================================
-  // نهاية السحب
-  //=========================================
-
-  void endDragging(
+  void startDrag(
 
     PuzzlePiece piece,
 
-  ){
+    Offset position,
 
-    if(draggingPiece == piece){
+  ) {
 
-      draggingPiece = null;
 
-    }
-
-  }
+    if (piece.isLocked) return;
 
 
 
-
-
-  //=========================================
-  // فحص مكان القطعة
-  //=========================================
-
-  bool checkPiecePosition(
-
-    PuzzlePiece piece,
-
-    double pieceSize,
-
-  ){
-
-
-    if(piece.placed){
-
-      return true;
-
-    }
+    activePiece = piece;
 
 
 
-    final target =
+    piece.startDrag(
 
-        piece.correctOffset(
+      position,
 
-          pieceSize,
-
-        );
+    );
 
 
 
-    final distance =
+    _bringToFront(
 
-        (piece.position - target)
-
-            .distance;
-
-
-
-    // نسبة السماح بالسحب
-
-    final tolerance =
-
-        pieceSize * 0.35;
-
-
-
-    if(distance <= tolerance){
-
-
-      lockPiece(
-
-        piece,
-
-        pieceSize,
-
-      );
-
-
-      return true;
-
-    }
-
-
-
-    return false;
-
-  }
-
-
-
-
-
-
-  //=========================================
-  // تثبيت قطعة
-  //=========================================
-
-  void lockPiece(
-
-    PuzzlePiece piece,
-
-    double pieceSize,
-
-  ){
-
-
-    piece.lock(
-
-      pieceSize,
+      piece,
 
     );
 
@@ -166,16 +74,195 @@ class PuzzleController {
 
 
 
+  //====================================================
+  // تحديث السحب
+  //====================================================
 
-  //=========================================
-  // فك قطعة
-  //=========================================
+  void updateDrag(
+
+    Offset position,
+
+  ) {
+
+
+    final piece = activePiece;
+
+
+
+    if (piece == null) return;
+
+
+
+    pointerPosition = position;
+
+
+
+    piece.updateDrag(
+
+      position,
+
+    );
+
+  }
+
+
+
+
+
+  //====================================================
+  // إنهاء السحب
+  //====================================================
+
+  void endDrag(
+
+    double snapDistance,
+
+  ) {
+
+
+    final piece = activePiece;
+
+
+
+    if (piece == null) return;
+
+
+
+    if (
+
+      piece.canSnap(
+
+        snapDistance,
+
+      )
+
+    ) {
+
+
+      piece.snap();
+
+
+    }
+
+    else {
+
+
+      piece.endDrag();
+
+
+    }
+
+
+
+    activePiece = null;
+
+
+
+    pointerPosition = null;
+
+
+  }
+
+
+
+
+
+  //====================================================
+  // إضافة قطعة فوق البقية
+  //====================================================
+
+  void _bringToFront(
+
+    PuzzlePiece piece,
+
+  ) {
+
+
+    int maxZ = 0;
+
+
+
+    for(final item in pieces) {
+
+
+      if(item.zIndex > maxZ) {
+
+        maxZ = item.zIndex;
+
+      }
+
+    }
+
+
+
+    piece.zIndex = maxZ + 1;
+
+
+    piece.isDragging = true;
+
+
+  }
+
+  //====================================================
+  // إنهاء السحب مع إعادة ترتيب الحالة
+  //====================================================
+
+  void cancelDrag() {
+
+
+    final piece = activePiece;
+
+
+    if (piece == null) return;
+
+
+
+    piece.endDrag();
+
+
+
+    activePiece = null;
+
+
+
+    pointerPosition = null;
+
+
+  }
+
+
+
+
+
+  //====================================================
+  // تثبيت قطعة يدوياً
+  //====================================================
+
+  void lockPiece(
+
+    PuzzlePiece piece,
+
+  ) {
+
+
+    piece.snap();
+
+  }
+
+
+
+
+
+  //====================================================
+  // فك تثبيت قطعة
+  //====================================================
 
   void unlockPiece(
 
     PuzzlePiece piece,
 
-  ){
+  ) {
+
 
     piece.unlock();
 
@@ -185,19 +272,18 @@ class PuzzleController {
 
 
 
-
-  //=========================================
+  //====================================================
   // عدد القطع المكتملة
-  //=========================================
+  //====================================================
 
-  int get completedPieces{
+  int get completedCount {
 
 
     return pieces
 
         .where(
 
-          (piece)=>piece.placed,
+          (piece) => piece.isLocked,
 
         )
 
@@ -209,17 +295,16 @@ class PuzzleController {
 
 
 
+  //====================================================
+  // عدد القطع المتبقية
+  //====================================================
 
-  //=========================================
-  // القطع المتبقية
-  //=========================================
-
-  int get remainingPieces{
+  int get remainingCount {
 
 
     return pieces.length -
 
-        completedPieces;
+        completedCount;
 
   }
 
@@ -227,22 +312,22 @@ class PuzzleController {
 
 
 
-
-  //=========================================
+  //====================================================
   // نسبة الإنجاز
-  //=========================================
+  //====================================================
 
-  double get progress{
+  double get progress {
 
 
-    if(pieces.isEmpty){
+    if (pieces.isEmpty) {
 
       return 0;
 
     }
 
 
-    return completedPieces /
+
+    return completedCount /
 
         pieces.length;
 
@@ -252,24 +337,24 @@ class PuzzleController {
 
 
 
-
-  //=========================================
+  //====================================================
   // هل انتهت اللعبة
-  //=========================================
+  //====================================================
 
-  bool get isCompleted{
+  bool get isCompleted {
 
 
-    if(pieces.isEmpty){
+    if (pieces.isEmpty) {
 
       return false;
 
     }
 
 
+
     return pieces.every(
 
-      (piece)=>piece.placed,
+      (piece) => piece.isLocked,
 
     );
 
@@ -279,24 +364,33 @@ class PuzzleController {
 
 
 
-
-  //=========================================
+  //====================================================
   // إعادة اللعبة
-  //=========================================
+  //====================================================
 
-  void reset(){
-
-
-    for(final piece in pieces){
+  void reset() {
 
 
-      piece.reset();
+    for (final piece in pieces) {
+
+
+      piece.reset(
+
+        piece.targetPosition,
+
+      );
 
 
     }
 
 
-    draggingPiece = null;
+
+    activePiece = null;
+
+
+
+    pointerPosition = null;
+
 
   }
 
@@ -304,35 +398,74 @@ class PuzzleController {
 
 
 
-
-  //=========================================
-  // إيجاد قطعة
-  //=========================================
+  //====================================================
+  // إيجاد قطعة بالمعرف
+  //====================================================
 
   PuzzlePiece? findPiece(
 
     String id,
 
-  ){
+  ) {
 
 
-    for(final piece in pieces){
+    for(final piece in pieces) {
 
 
-      if(piece.id == id){
+      if(piece.id == id) {
+
 
         return piece;
 
-      }
 
+      }
 
     }
 
 
     return null;
 
+
   }
 
+
+
+
+
+  //====================================================
+  // ترتيب القطع للرسم
+  //====================================================
+
+  List<PuzzlePiece> get sortedPieces {
+
+
+    final result =
+
+        List<PuzzlePiece>.from(
+
+          pieces,
+
+        );
+
+
+
+    result.sort(
+
+      (a,b) =>
+
+          a.zIndex.compareTo(
+
+            b.zIndex,
+
+          ),
+
+    );
+
+
+
+    return result;
+
+  }
 
 
 }
