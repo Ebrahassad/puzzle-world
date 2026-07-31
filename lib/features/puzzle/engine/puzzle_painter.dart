@@ -10,39 +10,73 @@ import 'puzzle_piece.dart';
 // رسام قطعة البازل
 //==================================================
 
-class PuzzlePiecePainter {
+class PuzzlePainter extends CustomPainter {
 
 
-  static void paint({
 
-    required Canvas canvas,
+  final PuzzlePiece piece;
 
-    required PuzzlePiece piece,
 
-    required ui.Image image,
+  final ImageProvider image;
 
-    required Size pieceSize,
 
-    bool showShadow = false,
+  final ui.Image? cachedImage;
 
-  }) {
+
+
+
+
+  PuzzlePainter({
+
+
+
+    required this.piece,
+
+
+
+    required this.image,
+
+
+
+    this.cachedImage,
+
+
+
+  });
+
+
+
+
+
+
+
+
+  @override
+
+  void paint(
+
+      Canvas canvas,
+
+      Size size,
+
+      ) {
+
+
+
+    final img = cachedImage;
+
+
+
+    if(img == null){
+
+      return;
+
+    }
+
 
 
 
     canvas.save();
-
-
-
-
-    // نقل القطعة لمكانها الحالي
-
-    canvas.translate(
-
-      piece.position.dx,
-
-      piece.position.dy,
-
-    );
 
 
 
@@ -55,11 +89,13 @@ class PuzzlePiecePainter {
 
 
 
+
     //==================================================
-    // ظل القطعة
+    // ظل القطعة أثناء السحب
     //==================================================
 
-    if(showShadow || piece.dragging){
+
+    if(piece.dragging){
 
 
 
@@ -114,6 +150,7 @@ class PuzzlePiecePainter {
 
 
 
+
     final imagePaint = Paint()
 
       ..filterQuality = FilterQuality.high;
@@ -124,9 +161,15 @@ class PuzzlePiecePainter {
 
     canvas.drawImageRect(
 
-      image,
+
+
+      img,
+
+
 
       piece.sourceRect,
+
+
 
       Rect.fromLTWH(
 
@@ -134,13 +177,17 @@ class PuzzlePiecePainter {
 
         0,
 
-        pieceSize.width,
+        size.width,
 
-        pieceSize.height,
+        size.height,
 
       ),
 
+
+
       imagePaint,
+
+
 
     );
 
@@ -148,14 +195,8 @@ class PuzzlePiecePainter {
 
 
 
+
     canvas.restore();
-
-
-
-
-
-
-
 
 
     //==================================================
@@ -174,7 +215,6 @@ class PuzzlePiecePainter {
 
 
 
-
     canvas.drawPath(
 
       path,
@@ -188,8 +228,9 @@ class PuzzlePiecePainter {
 
 
 
+
     //==================================================
-    // لمعان بسيط للقطعة المثبتة
+    // لمعان القطعة المثبتة
     //==================================================
 
 
@@ -197,7 +238,7 @@ class PuzzlePiecePainter {
 
 
 
-      final glow = Paint()
+      final glowPaint = Paint()
 
         ..style = PaintingStyle.stroke
 
@@ -212,7 +253,7 @@ class PuzzlePiecePainter {
 
         path,
 
-        glow,
+        glowPaint,
 
       );
 
@@ -224,10 +265,37 @@ class PuzzlePiecePainter {
 
 
 
-
     canvas.restore();
 
 
+
   }
+
+
+
+
+
+
+
+
+
+  @override
+
+  bool shouldRepaint(
+
+      covariant PuzzlePainter oldDelegate,
+
+      ){
+
+
+
+    return oldDelegate.piece != piece ||
+
+        oldDelegate.cachedImage != cachedImage;
+
+
+  }
+
+
 
 }
