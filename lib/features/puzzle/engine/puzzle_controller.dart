@@ -4,29 +4,34 @@ import 'puzzle_piece.dart';
 
 
 
-
+//==================================================
+// متحكم لعبة البازل
+//==================================================
 
 class PuzzleController {
-
 
 
   final List<PuzzlePiece> pieces;
 
 
 
-
-  PuzzlePiece?
-
-      draggingPiece;
+  PuzzlePiece? activePiece;
 
 
 
+  Offset lastPosition = Offset.zero;
+
+
+
+  final double snapTolerance;
 
 
 
   PuzzleController({
 
     required this.pieces,
+
+    this.snapTolerance = 35,
 
   });
 
@@ -35,47 +40,83 @@ class PuzzleController {
 
 
 
-  //==================================================
-  // بداية السحب
-  //==================================================
-
-  void startDragging(
-
-    PuzzlePiece piece,
-
-  ) {
-
-
-    if(piece.placed) return;
-
-
-
-    draggingPiece = piece;
-
-
-  }
-
-
-
-
-
-
 
   //==================================================
-  // نهاية السحب
+  // الضغط على قطعة
   //==================================================
 
-  void endDragging(
+  void pointerDown(
 
-    PuzzlePiece piece,
+      Offset position,
 
-  ) {
-
-
-    if(draggingPiece == piece) {
+      ) {
 
 
-      draggingPiece = null;
+
+    // نبحث من الأعلى للأسفل
+
+    for(int i = pieces.length - 1; i >= 0; i--){
+
+
+
+      final piece = pieces[i];
+
+
+
+
+      if(piece.state == PieceState.locked){
+
+        continue;
+
+      }
+
+
+
+
+
+
+      final local =
+
+          position -
+
+              piece.position;
+
+
+
+
+
+
+      if(piece.path.contains(local)){
+
+
+
+        activePiece = piece;
+
+
+
+        lastPosition = position;
+
+
+
+        piece.startDrag();
+
+
+
+
+
+
+        // وضعها فوق الجميع
+
+        pieces.remove(piece);
+
+        pieces.add(piece);
+
+
+
+
+        break;
+
+      }
 
 
     }
@@ -90,127 +131,49 @@ class PuzzleController {
 
 
   //==================================================
-  // فحص مكان القطعة
+  // تحريك القطعة
   //==================================================
 
-  bool checkPiecePosition(
+  void pointerMove(
 
-    PuzzlePiece piece,
+      Offset position,
 
-    double pieceSize,
-
-  ) {
+      ){
 
 
-    if(piece.placed) {
 
+    if(activePiece == null){
 
-      return true;
-
+      return;
 
     }
 
 
 
 
+    final delta =
 
-    final target =
+        position -
 
-        piece.correctOffset(
-
-          pieceSize,
-
-        );
-
-
-
-
-
-    final distance =
-
-        (piece.position - target)
-
-            .distance;
+            lastPosition;
 
 
 
 
 
 
-    final tolerance =
+    activePiece!.move(
 
-        pieceSize * 0.35;
-
-
-
-
-
-    if(distance <= tolerance) {
-
-
-      lockPiece(
-
-        piece,
-
-        pieceSize,
-
-      );
-
-
-
-      return true;
-
-
-    }
-
-
-
-    return false;
-
-
-  }
-
-
-  //==================================================
-  // تثبيت القطعة
-  //==================================================
-
-  void lockPiece(
-
-    PuzzlePiece piece,
-
-    double pieceSize,
-
-  ) {
-
-
-    piece.lock(
-
-      pieceSize,
+      delta,
 
     );
 
 
-  }
 
 
 
+    lastPosition = position;
 
-
-
-
-  //==================================================
-  // فك التثبيت
-  //==================================================
-
-  void unlockPiece(
-
-    PuzzlePiece piece,
-
-  ) {
-
-
-    piece.unlock();
 
 
   }
@@ -222,44 +185,62 @@ class PuzzleController {
 
 
   //==================================================
-  // عدد القطع المكتملة
+  // رفع الإصبع
   //==================================================
 
-  int get completedPieces {
+  void pointerUp(){
 
 
-    return pieces
 
-        .where(
+    if(activePiece == null){
 
-          (piece) => piece.placed,
+      return;
 
-        )
+    }
 
-        .length;
+
+
+
+
+    final piece = activePiece!;
+
+
+
+
+
+
+    if(
+
+    piece.isCorrect(
+
+      snapTolerance,
+
+    )
+
+    ){
+
+
+
+      piece.lock();
+
+
+
+    }
+
+
+
+
+    piece.endDrag();
+
+
+
+    activePiece = null;
+
 
 
   }
 
 
-
-
-
-
-
-  //==================================================
-  // القطع المتبقية
-  //==================================================
-
-  int get remainingPieces {
-
-
-    return pieces.length -
-
-        completedPieces;
-
-
-  }
 
 
 
@@ -274,22 +255,37 @@ class PuzzleController {
   double get progress {
 
 
-    if(pieces.isEmpty) {
 
+    if(pieces.isEmpty){
 
       return 0;
-
 
     }
 
 
 
-    return completedPieces /
+    final completed = pieces
 
-        pieces.length;
+        .where(
+
+          (p)=>
+
+      p.state == PieceState.locked,
+
+    )
+
+        .length;
+
+
+
+
+    return completed / pieces.length;
+
 
 
   }
+
+
 
 
 
@@ -304,11 +300,10 @@ class PuzzleController {
   bool get isCompleted {
 
 
-    if(pieces.isEmpty) {
 
+    if(pieces.isEmpty){
 
       return false;
-
 
     }
 
@@ -316,7 +311,9 @@ class PuzzleController {
 
     return pieces.every(
 
-      (piece) => piece.placed,
+          (piece)=>
+
+      piece.state == PieceState.locked,
 
     );
 
@@ -329,24 +326,27 @@ class PuzzleController {
 
 
 
+
+
   //==================================================
-  // إعادة اللعبة
+  // عدد القطع المثبتة
   //==================================================
 
-  void reset() {
-
-
-    for(final piece in pieces) {
-
-
-      piece.reset();
-
-
-    }
+  int get completedPieces {
 
 
 
-    draggingPiece = null;
+    return pieces
+
+        .where(
+
+          (piece)=>
+
+      piece.state == PieceState.locked,
+
+    )
+
+        .length;
 
 
   }
@@ -356,38 +356,32 @@ class PuzzleController {
 
 
 
-
   //==================================================
-  // البحث عن قطعة
+  // إعادة اللعبة
   //==================================================
 
-  PuzzlePiece?
-
-      findPiece(
-
-        String id,
-
-      ) {
+  void reset(){
 
 
 
-    for(final piece in pieces) {
+    for(final piece in pieces){
 
 
-      if(piece.id == id) {
+
+      piece.state = PieceState.tray;
 
 
-        return piece;
 
+      piece.dragging = false;
 
-      }
 
 
     }
 
 
 
-    return null;
+    activePiece = null;
+
 
 
   }
