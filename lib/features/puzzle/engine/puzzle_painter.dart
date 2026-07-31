@@ -16,7 +16,7 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-  PuzzlePainter({
+  const PuzzlePainter({
 
     required this.piece,
 
@@ -28,33 +28,21 @@ class PuzzlePainter extends CustomPainter {
 
 
 
+
   @override
   void paint(
-
     Canvas canvas,
-
     Size size,
-
   ) {
 
 
     final path = createPiecePath(size);
 
 
-    final w = size.width;
 
-    final h = size.height;
-
-
-    final tab =
-
-        (w < h ? w : h) * 0.18;
-
-
-
-    //=====================================
+    //==================================================
     // ظل القطعة
-    //=====================================
+    //==================================================
 
     canvas.drawPath(
 
@@ -77,11 +65,12 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-    //=====================================
-    // صورة القطعة
-    //=====================================
 
-    if (cachedImage != null) {
+    //==================================================
+    // صورة القطعة
+    //==================================================
+
+    if(cachedImage != null){
 
 
       canvas.save();
@@ -91,27 +80,23 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-      final destination = Rect.fromLTWH(
-
-        -tab * 0.15,
-
-        -tab * 0.15,
-
-        size.width + tab * 0.30,
-
-        size.height + tab * 0.30,
-
-      );
-
-
-
       canvas.drawImageRect(
 
         cachedImage!,
 
         piece.sourceRect,
 
-        destination,
+        Rect.fromLTWH(
+
+          0,
+
+          0,
+
+          size.width,
+
+          size.height,
+
+        ),
 
         Paint()
 
@@ -122,7 +107,6 @@ class PuzzlePainter extends CustomPainter {
       );
 
 
-
       canvas.restore();
 
     }
@@ -131,9 +115,10 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-    //=====================================
-    // لمعان خفيف
-    //=====================================
+
+    //==================================================
+    // لمعة خفيفة
+    //==================================================
 
     canvas.drawPath(
 
@@ -147,9 +132,9 @@ class PuzzlePainter extends CustomPainter {
 
           end: Alignment.bottomCenter,
 
-          colors: [
+          colors:[
 
-            Colors.white.withOpacity(0.10),
+            Colors.white.withOpacity(0.12),
 
             Colors.transparent,
 
@@ -169,9 +154,9 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-    //=====================================
-    // حدود القطعة
-    //=====================================
+    //==================================================
+    // إطار القطعة
+    //==================================================
 
     canvas.drawPath(
 
@@ -183,9 +168,9 @@ class PuzzlePainter extends CustomPainter {
 
         ..strokeWidth = 1
 
-        ..isAntiAlias = true
+        ..color = Colors.white.withOpacity(0.35)
 
-        ..color = Colors.white.withOpacity(0.35),
+        ..isAntiAlias = true,
 
     );
 
@@ -197,11 +182,14 @@ class PuzzlePainter extends CustomPainter {
 
 
 
+
+
+
   Path createPiecePath(
 
     Size size,
 
-  ) {
+  ){
 
 
     final path = Path();
@@ -226,6 +214,7 @@ class PuzzlePainter extends CustomPainter {
 
 
 
+
     path.moveTo(
 
       0,
@@ -236,7 +225,9 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-    // الأعلى
+
+
+    // أعلى
 
     path.lineTo(
 
@@ -273,7 +264,9 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-    // اليمين
+
+
+    // يمين
 
     path.lineTo(
 
@@ -310,7 +303,9 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-    // الأسفل
+
+
+    // أسفل
 
     path.lineTo(
 
@@ -348,7 +343,8 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-    // اليسار
+
+    // يسار
 
     path.lineTo(
 
@@ -390,6 +386,7 @@ class PuzzlePainter extends CustomPainter {
 
 
 
+
   void drawTop(
 
     Path path,
@@ -402,10 +399,10 @@ class PuzzlePainter extends CustomPainter {
 
     double tab,
 
-  ) {
+  ){
 
 
-    if (type == EdgeType.tab) {
+    if(type == EdgeType.tab){
 
 
       path.cubicTo(
@@ -427,7 +424,7 @@ class PuzzlePainter extends CustomPainter {
 
     }
 
-    else if (type == EdgeType.blank) {
+    else if(type == EdgeType.blank){
 
 
       path.cubicTo(
@@ -450,6 +447,8 @@ class PuzzlePainter extends CustomPainter {
     }
 
   }
+
+
 
 
 
@@ -469,10 +468,10 @@ class PuzzlePainter extends CustomPainter {
 
     double tab,
 
-  ) {
+  ){
 
 
-    if (type == EdgeType.tab) {
+    if(type == EdgeType.tab){
 
 
       path.cubicTo(
@@ -494,7 +493,7 @@ class PuzzlePainter extends CustomPainter {
 
     }
 
-    else if (type == EdgeType.blank) {
+    else if(type == EdgeType.blank){
 
 
       path.cubicTo(
@@ -517,6 +516,8 @@ class PuzzlePainter extends CustomPainter {
     }
 
   }
+
+
 
 
 
@@ -536,10 +537,10 @@ class PuzzlePainter extends CustomPainter {
 
     double tab,
 
-  ) {
+  ){
 
 
-    if (type == EdgeType.tab) {
+    if(type == EdgeType.tab){
 
 
       path.cubicTo(
@@ -561,7 +562,7 @@ class PuzzlePainter extends CustomPainter {
 
     }
 
-    else if (type == EdgeType.blank) {
+    else if(type == EdgeType.blank){
 
 
       path.cubicTo(
@@ -584,6 +585,8 @@ class PuzzlePainter extends CustomPainter {
     }
 
   }
+
+
 
 
 
@@ -603,10 +606,10 @@ class PuzzlePainter extends CustomPainter {
 
     double tab,
 
-  ) {
+  ){
 
 
-    if (type == EdgeType.tab) {
+    if(type == EdgeType.tab){
 
 
       path.cubicTo(
@@ -628,7 +631,7 @@ class PuzzlePainter extends CustomPainter {
 
     }
 
-    else if (type == EdgeType.blank) {
+    else if(type == EdgeType.blank){
 
 
       path.cubicTo(
@@ -651,6 +654,8 @@ class PuzzlePainter extends CustomPainter {
     }
 
   }
+
+
 
 
 
@@ -662,8 +667,7 @@ class PuzzlePainter extends CustomPainter {
 
     covariant PuzzlePainter oldDelegate,
 
-  ) {
-
+  ){
 
     return oldDelegate.piece != piece ||
 
@@ -671,8 +675,6 @@ class PuzzlePainter extends CustomPainter {
 
         oldDelegate.image != image;
 
-
   }
-
 
 }
