@@ -108,11 +108,15 @@ class PuzzleController {
 
         piece.startDrag();
 
+piece.state = PieceState.board;
 
 
-
-
-
+piece.position = position -
+    Offset(
+      piece.size.width / 2,
+      piece.size.height / 2,
+    );
+lastPosition = position;
 
         // وضع القطعة فوق باقي القطع
 
