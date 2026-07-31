@@ -1,16 +1,18 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 
-
-
+//==================================================
+// نوع الحافة
+//==================================================
 
 enum EdgeType {
 
   flat,
 
-  tab,
+  tab,     // نتوء خارج
 
-  blank,
+  blank,   // فراغ داخل
 
 }
 
@@ -18,7 +20,9 @@ enum EdgeType {
 
 
 
-
+//==================================================
+// نموذج قطعة البازل
+//==================================================
 
 class PuzzlePiece {
 
@@ -28,16 +32,17 @@ class PuzzlePiece {
 
 
 
-  final int row;
+  // مكان القطعة في الشبكة
 
+  final int row;
 
   final int column;
 
 
 
-  final int correctPosition;
 
 
+  // الجزء الخاص بها من الصورة الأصلية
 
   final Rect sourceRect;
 
@@ -45,14 +50,13 @@ class PuzzlePiece {
 
 
 
-  final EdgeType top;
+  // الحواف
 
+  final EdgeType top;
 
   final EdgeType right;
 
-
   final EdgeType bottom;
-
 
   final EdgeType left;
 
@@ -60,18 +64,9 @@ class PuzzlePiece {
 
 
 
+  // شكل القطعة
 
-  Offset position;
-
-
-
-  Offset? dragOffset;
-
-
-
-  bool placed;
-
-
+  late Path path;
 
 
 
@@ -81,39 +76,19 @@ class PuzzlePiece {
 
     required this.id,
 
-
     required this.row,
-
 
     required this.column,
 
-
-    required this.correctPosition,
-
-
     required this.sourceRect,
-
 
     required this.top,
 
-
     required this.right,
-
 
     required this.bottom,
 
-
     required this.left,
-
-
-    required this.position,
-
-
-    this.placed = false,
-
-
-    this.dragOffset,
-
 
   });
 
@@ -121,36 +96,29 @@ class PuzzlePiece {
 
 
 
+  //==================================================
+  // إنشاء شكل القطعة
+  //==================================================
 
+  void createShape(
 
-  double get x => position.dx;
+      Size size,
 
-
-
-  double get y => position.dy;
-
-
-
-
-
-
-
-  // المكان الصحيح داخل اللوحة
-
-  Offset correctOffset(
-
-    double pieceSize,
-
-  ) {
+      ) {
 
 
 
-    return Offset(
+    path = PuzzleShapeBuilder.build(
 
-      column * pieceSize,
+      size: size,
 
+      top: top,
 
-      row * pieceSize,
+      right: right,
+
+      bottom: bottom,
+
+      left: left,
 
     );
 
@@ -158,232 +126,154 @@ class PuzzlePiece {
   }
 
 
+}
 
 
 
 
 
-  // تحريك القطعة
 
-  void move(
 
-    Offset delta,
 
-  ) {
 
+//==================================================
+// بناء شكل قطعة البازل
+//==================================================
 
+class PuzzleShapeBuilder {
 
-    if(placed) return;
 
 
+  static Path build({
 
-    position += delta;
+    required Size size,
 
+    required EdgeType top,
 
-  }
+    required EdgeType right,
 
+    required EdgeType bottom,
 
-
-
-
-
-
-  // تثبيت القطعة
-
-  void lock(
-
-    double pieceSize,
-
-  ) {
-
-
-
-    position = correctOffset(
-
-      pieceSize,
-
-    );
-
-
-
-    placed = true;
-
-
-
-    dragOffset = null;
-
-
-  }
-
-  //==================================================
-  // فك التثبيت
-  //==================================================
-
-  void unlock() {
-
-
-    placed = false;
-
-
-  }
-
-
-
-
-
-
-
-  //==================================================
-  // إعادة القطعة
-  //==================================================
-
-  void reset() {
-
-
-    position = Offset.zero;
-
-
-    dragOffset = null;
-
-
-    placed = false;
-
-
-  }
-
-
-
-
-
-
-
-  //==================================================
-  // فحص قرب المكان الصحيح
-  //==================================================
-
-  bool isCorrect(
-
-    double pieceSize,
-
-    double tolerance,
-
-  ) {
-
-
-
-    final target =
-
-        correctOffset(
-
-          pieceSize,
-
-        );
-
-
-
-
-
-    return
-
-        (position - target)
-
-            .distance <= tolerance;
-
-
-  }
-
-
-
-
-
-
-
-  //==================================================
-  // نسخة من القطعة
-  //==================================================
-
-  PuzzlePiece copyWith({
-
-    Offset? position,
-
-
-    bool? placed,
-
-
-    Offset? dragOffset,
-
+    required EdgeType left,
 
   }) {
 
 
 
-    return PuzzlePiece(
-
-
-      id: id,
-
-
-      row: row,
-
-
-      column: column,
-
-
-      correctPosition:
-
-          correctPosition,
+    final path = Path();
 
 
 
-      sourceRect:
+    final w = size.width;
 
-          sourceRect,
-
-
-
-      top:
-
-          top,
+    final h = size.height;
 
 
 
-      right:
-
-          right,
+    final tab = w * 0.22;
 
 
 
-      bottom:
-
-          bottom,
 
 
+    path.moveTo(
 
-      left:
+      0,
 
-          left,
-
-
-
-      position:
-
-          position ?? this.position,
-
-
-
-      placed:
-
-          placed ?? this.placed,
-
-
-
-      dragOffset:
-
-          dragOffset ?? this.dragOffset,
+      0,
 
     );
 
 
+
+
+
+    // الأعلى
+
+    _horizontal(
+
+      path,
+
+      w,
+
+      top,
+
+      tab,
+
+      true,
+
+    );
+
+
+
+
+
+    // اليمين
+
+    _vertical(
+
+      path,
+
+      h,
+
+      right,
+
+      tab,
+
+      true,
+
+    );
+
+
+
+
+
+    // الأسفل
+
+    _horizontal(
+
+      path,
+
+      w,
+
+      bottom,
+
+      tab,
+
+      false,
+
+    );
+
+
+
+
+
+    // اليسار
+
+    _vertical(
+
+      path,
+
+      h,
+
+      left,
+
+      tab,
+
+      false,
+
+    );
+
+
+
+
+
+    path.close();
+
+
+
+    return path;
+
   }
 
 
@@ -392,47 +282,138 @@ class PuzzlePiece {
 
 
 
+
+
   //==================================================
-  // حفظ الحالة
+  // حافة أفقية
   //==================================================
 
-  Map<String,dynamic> toJson() {
+  static void _horizontal(
+
+      Path path,
+
+      double length,
+
+      EdgeType type,
+
+      double tab,
+
+      bool top,
+
+      ) {
 
 
 
-    return {
+    final y = top ? 0.0 : length;
 
 
-      "id": id,
+
+    if(type == EdgeType.flat) {
 
 
-      "row": row,
+
+      path.lineTo(
+
+        length,
+
+        y,
+
+      );
 
 
-      "column": column,
+
+      return;
+
+    }
 
 
-      "correctPosition":
-
-          correctPosition,
 
 
-      "x":
-
-          position.dx,
 
 
-      "y":
 
-          position.dy,
-
-
-      "placed":
-
-          placed,
+    final center = length / 2;
 
 
-    };
+
+    final direction =
+
+    top ? -1 : 1;
+
+
+
+    final amount =
+
+    type == EdgeType.tab
+
+        ? direction * tab
+
+        : -direction * tab;
+
+
+
+
+
+    path.lineTo(
+
+      center - tab,
+
+      y,
+
+    );
+
+
+
+
+
+    path.cubicTo(
+
+      center - tab,
+
+      y,
+
+      center - tab / 2,
+
+      y + amount,
+
+      center,
+
+      y + amount,
+
+    );
+
+
+
+
+
+    path.cubicTo(
+
+      center + tab / 2,
+
+      y + amount,
+
+      center + tab,
+
+      y,
+
+      center + tab,
+
+      y,
+
+    );
+
+
+
+
+
+    path.lineTo(
+
+      length,
+
+      y,
+
+    );
+
 
 
   }
@@ -443,63 +424,146 @@ class PuzzlePiece {
 
 
 
+
+
   //==================================================
-  // مقارنة القطع
+  // حافة عمودية
   //==================================================
 
-  @override
+  static void _vertical(
 
-  bool operator ==(
+      Path path,
 
-    Object other,
+      double length,
 
-  ) {
+      EdgeType type,
 
+      double tab,
 
+      bool right,
 
-    return identical(
-
-      this,
-
-      other,
-
-    )
-
-    ||
-
-    other is PuzzlePiece
-
-    &&
-
-    other.id == id;
-
-
-  }
+      ) {
 
 
 
+    final x = right ? length : 0.0;
 
 
 
+    if(type == EdgeType.flat) {
 
-  @override
 
-  int get hashCode => id.hashCode;
 
+      path.lineTo(
+
+        x,
+
+        length,
+
+      );
+
+
+
+      return;
+
+    }
 
 
 
 
 
 
-  @override
 
-  String toString() {
+    final center = length / 2;
 
 
-    return
 
-        "PuzzlePiece(id:$id,row:$row,column:$column,placed:$placed)";
+    final direction =
+
+    right ? 1 : -1;
+
+
+
+    final amount =
+
+    type == EdgeType.tab
+
+        ? direction * tab
+
+        : -direction * tab;
+
+
+
+
+
+
+
+    path.lineTo(
+
+      x,
+
+      center - tab,
+
+    );
+
+
+
+
+
+
+
+    path.cubicTo(
+
+      x,
+
+      center - tab,
+
+      x + amount,
+
+      center - tab / 2,
+
+      x + amount,
+
+      center,
+
+    );
+
+
+
+
+
+
+
+    path.cubicTo(
+
+      x + amount,
+
+      center + tab / 2,
+
+      x,
+
+      center + tab,
+
+      x,
+
+      center + tab,
+
+    );
+
+
+
+
+
+
+
+    path.lineTo(
+
+      x,
+
+      length,
+
+    );
+
 
 
   }
