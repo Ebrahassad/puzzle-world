@@ -170,38 +170,46 @@ class _PuzzleGameScreenState
   void _calculateBoardPosition(){
 
 
-
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) {
-
+  WidgetsBinding.instance
+      .addPostFrameCallback((_) {
 
 
-      final RenderBox box =
+    if(boardKey.currentContext == null){
 
-          boardKey.currentContext!
-              .findRenderObject()
-          as RenderBox;
+      _calculateBoardPosition();
 
+      return;
 
-
-      boardOffset =
-
-          box.localToGlobal(
-            Offset.zero,
-          );
+    }
 
 
 
-      _createPuzzle();
+    final RenderBox box =
+
+        boardKey.currentContext!
+            .findRenderObject()
+        as RenderBox;
 
 
 
-    });
+
+    boardOffset =
+
+        box.localToGlobal(
+          Offset.zero,
+        );
 
 
 
-  }
 
+    _createPuzzle();
+
+
+
+  });
+
+
+}
 
 
 
