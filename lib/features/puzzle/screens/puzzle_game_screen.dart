@@ -182,12 +182,20 @@ class _PuzzleGameScreenState
 
     if(context == null){
 
-      debugPrint("BOARD NOT READY");
+  debugPrint("BOARD NOT READY");
 
-      return;
+  Future.delayed(
+    const Duration(milliseconds:100),
+    (){
+      if(mounted){
+        _calculateBoardPosition();
+      }
+    },
+  );
 
-    }
+  return;
 
+}
 
     final RenderBox box =
         context.findRenderObject()
