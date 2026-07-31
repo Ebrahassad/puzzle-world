@@ -6,7 +6,6 @@ import '../data/puzzle_level_data.dart';
 import '../models/puzzle_model.dart';
 import '../models/puzzle_level_model.dart';
 
-import '../widgets/level_path_painter.dart';
 
 import 'puzzle_game_screen.dart';
 
@@ -270,9 +269,9 @@ class _IslandScreenState
       },
 
 
-      child:Stack(
+      child: Stack(
 
-        alignment:Alignment.center,
+        alignment: Alignment.center,
 
         children:[
 
@@ -294,45 +293,74 @@ class _IslandScreenState
 
 
 
-          ClipRRect(
 
-            borderRadius:
+          Container(
 
-            BorderRadius.circular(12),
+            width:58,
 
-            child:Image.asset(
+            height:58,
 
-              level.image,
+            decoration: BoxDecoration(
 
-              width:58,
+              shape: BoxShape.circle,
 
-              height:58,
+              color: Colors.black.withOpacity(0.35),
 
-              fit:BoxFit.cover,
+              border: Border.all(
 
-              errorBuilder:
+                color: Colors.white70,
 
-                  (context,error,stack){
+                width: 2,
 
-                return Container(
+              ),
 
-                  width:58,
+              boxShadow:[
 
-                  height:58,
+                BoxShadow(
 
-                  color:Colors.black26,
+                  color: Colors.black45,
 
-                  child:const Icon(
+                  blurRadius: 8,
 
-                    Icons.image_not_supported,
+                  offset: Offset(0,4),
 
-                    color:Colors.white,
+                ),
+
+              ],
+
+            ),
+
+
+
+            alignment: Alignment.center,
+
+
+
+            child: Text(
+
+              "${level.level}",
+
+              style: const TextStyle(
+
+                color: Colors.white,
+
+                fontSize: 28,
+
+                fontWeight: FontWeight.bold,
+
+                shadows:[
+
+                  Shadow(
+
+                    color: Colors.black,
+
+                    blurRadius: 4,
 
                   ),
 
-                );
+                ],
 
-              },
+              ),
 
             ),
 
@@ -347,8 +375,6 @@ class _IslandScreenState
     );
 
   }
-
-
 
 
 
@@ -614,24 +640,7 @@ class _IslandScreenState
 
 
 
-                        Positioned.fill(
-
-                          child:CustomPaint(
-
-                            painter:
-
-                            LevelPathPainter(
-
-                              positions:
-
-                              levelPositions,
-
-                            ),
-
-                          ),
-
-                        ),
-
+                        
 
 
 
