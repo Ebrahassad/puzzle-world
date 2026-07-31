@@ -5,292 +5,119 @@ import 'package:flutter/material.dart';
 import '../engine/puzzle_piece.dart';
 import '../engine/puzzle_painter.dart';
 
-
-
 class PuzzlePieceWidget extends StatefulWidget {
-
-
   final PuzzlePiece piece;
-
-
   final ImageProvider image;
-
-
   final double size;
 
-
+  final bool isActive;
+  final double opacity;
 
   const PuzzlePieceWidget({
-
     super.key,
-
     required this.piece,
-
     required this.image,
-
     required this.size,
-
+    this.isActive = false,
+    this.opacity = 1.0,
   });
 
-
-
   @override
-  State<PuzzlePieceWidget> createState() =>
-
-      _PuzzlePieceWidgetState();
-
-
+  State<PuzzlePieceWidget> createState() => _PuzzlePieceWidgetState();
 }
 
-
-
-
-
-
-
-class _PuzzlePieceWidgetState
-
-    extends State<PuzzlePieceWidget> {
-
-
+class _PuzzlePieceWidgetState extends State<PuzzlePieceWidget> {
   ui.Image? cachedImage;
-
-
-
   ImageStream? _imageStream;
-
-
-
   ImageStreamListener? _listener;
-
-
-
   bool _loaded = false;
 
   @override
   void didChangeDependencies() {
-
     super.didChangeDependencies();
 
-
     if (!_loaded) {
-
       _loadImage();
-
     }
-
   }
 
-
-
-
-
   @override
-  void didUpdateWidget(
-
-    covariant PuzzlePieceWidget oldWidget,
-
-  ) {
-
+  void didUpdateWidget(covariant PuzzlePieceWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-
-
     if (oldWidget.image != widget.image) {
-
-
       _loaded = false;
-
-
       cachedImage = null;
-
-
       _loadImage();
-
-
     }
-
   }
 
-
-
-
-
   void _loadImage() {
-
-
-    if (_listener != null &&
-
-        _imageStream != null) {
-
-
-      _imageStream!.removeListener(
-
-        _listener!,
-
-      );
-
-
+    if (_listener != null && _imageStream != null) {
+      _imageStream!.removeListener(_listener!);
     }
 
-
-
-    _imageStream = widget.image.resolve(
-
-      createLocalImageConfiguration(
-
-        context,
-
-      ),
-
+    final configuration = createLocalImageConfiguration(
+      context,
+      size: Size(widget.size, widget.size),
     );
 
-
+    _imageStream = widget.image.resolve(configuration);
 
     _listener = ImageStreamListener(
-
       (info, _) {
-
-
         if (!mounted) return;
 
-
-
         setState(() {
-
-
           cachedImage = info.image;
-
-
           _loaded = true;
-
-
         });
-
-
       },
-
-
       onError: (error, stackTrace) {
-
-
-        debugPrint(
-
-          "Puzzle image error: $error",
-
-        );
-
-
+        debugPrint("Puzzle image error: $error");
       },
-
-
     );
 
-
-
-    _imageStream!.addListener(
-
-      _listener!,
-
-    );
-
-
+    _imageStream!.addListener(_listener!);
   }
 
   @override
-  Widget build(
+  Widget build(BuildContext context) {
+    final piece = cachedImage == null
+        ? SizedBox(
+            width: widget.size,
+            height: widget.size,
+          )
+        : RepaintBoundary(
+            child: CustomPaint(
+              size: Size(widget.size, widget.size),
+              painter: PuzzlePainter(
+                piece: widget.piece,
+                image: widget.image,
+                cachedImage: cachedImage,
+              ),
+            ),
+          );
 
-    BuildContext context,
-
-  ) {
-
-
-    if (cachedImage == null) {
-
-
-      return SizedBox(
-
-        width: widget.size,
-
-        height: widget.size,
-
-      );
-
-
-    }
-
-
-
-
-
-    return RepaintBoundary(
-
-
-      child: CustomPaint(
-
-
-        size: Size(
-
-          widget.size,
-
-          widget.size,
-
-        ),
-
-
-
-        painter: PuzzlePainter(
-
-
-          piece: widget.piece,
-
-
-          image: widget.image,
-
-
-          cachedImage: cachedImage,
-
-
-        ),
-
-
-
+    return AnimatedScale(
+      scale: widget.isActive ? 1.06 : 1.0,
+      duration: const Duration(milliseconds: 140),
+      curve: Curves.easeOutCubic,
+      child: AnimatedOpacity(
+        opacity: widget.opacity,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: piece,
       ),
-
-
     );
-
-
   }
-
-
-
-
 
   @override
   void dispose() {
-
-
-    if (_listener != null &&
-
-        _imageStream != null) {
-
-
-      _imageStream!.removeListener(
-
-        _listener!,
-
-      );
-
-
+    if (_listener != null && _imageStream != null) {
+      _imageStream!.removeListener(_listener!);
     }
 
-
-
     super.dispose();
-
-
   }
-
-
 }
