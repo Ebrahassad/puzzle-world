@@ -1,22 +1,20 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 
-import '../models/puzzle_model.dart';
+import '../models/puzzle_level_model.dart';
 
-import '../engine/puzzle_controller.dart';
-import '../engine/puzzle_generator.dart';
 import '../engine/puzzle_piece.dart';
-
-import '../widgets/puzzle_piece_widget.dart';
-
-
+import '../engine/puzzle_generator.dart';
+import '../engine/puzzle_controller.dart';
+import '../engine/puzzle_painter.dart';
 
 
 
 class PuzzleGameScreen extends StatefulWidget {
 
 
-  final PuzzleModel puzzle;
-
+  final PuzzleLevelModel level;
 
 
 
@@ -24,12 +22,9 @@ class PuzzleGameScreen extends StatefulWidget {
 
     super.key,
 
-
-    required this.puzzle,
+    required this.level,
 
   });
-
-
 
 
 
@@ -40,8 +35,8 @@ class PuzzleGameScreen extends StatefulWidget {
 
       => _PuzzleGameScreenState();
 
-}
 
+}
 
 
 
@@ -55,19 +50,28 @@ class _PuzzleGameScreenState
 
 
 
+  ui.Image? image;
+
+
+
   late PuzzleController controller;
 
 
 
-  final double boardSize = 350;
+  List<PuzzlePiece> pieces = [];
 
 
 
-  late double pieceSize;
+  final double boardSize = 360;
 
 
 
-  bool ready = false;
+  final double trayHeight = 120;
+
+
+
+  bool loading = true;
+
 
 
 
@@ -75,96 +79,13 @@ class _PuzzleGameScreenState
 
 
   @override
-  void initState() {
+  void initState(){
 
 
     super.initState();
 
 
-    createGame();
-
-
-  }
-
-
-
-
-
-
-  //==================================================
-  // إنشاء اللعبة
-  //==================================================
-
-  void createGame() {
-
-
-    final pieces =
-
-        PuzzleGenerator.generate(
-
-          rows: 3,
-
-
-          columns: 3,
-
-
-          imageWidth:
-
-              boardSize,
-
-
-          imageHeight:
-
-              boardSize,
-
-        );
-
-
-
-    pieceSize =
-
-        boardSize / 3;
-
-
-
-    controller =
-
-        PuzzleController(
-
-          pieces: pieces,
-
-        );
-
-
-
-    ready = true;
-
-
-  }
-
-
-  //==================================================
-  // بداية السحب
-  //==================================================
-
-  void startDrag(
-
-    PuzzlePiece piece,
-
-  ) {
-
-
-    setState(() {
-
-
-      controller.startDragging(
-
-        piece,
-
-      );
-
-
-    });
+    loadImage();
 
 
   }
@@ -175,30 +96,61 @@ class _PuzzleGameScreenState
 
 
 
+
   //==================================================
-  // حركة السحب
+  // تحميل صورة المرحلة
   //==================================================
 
-  void updateDrag(
-
-    PuzzlePiece piece,
-
-    Offset delta,
-
-  ) {
-
-
-    if(piece.placed) return;
+  Future<void> loadImage() async {
 
 
 
-    setState(() {
+    final provider =
+
+    AssetImage(
+
+      widget.level.image,
+
+    );
 
 
-      piece.position += delta;
+
+    final stream =
+
+    provider.resolve(
+
+      const ImageConfiguration(),
+
+    );
 
 
-    });
+
+    late ImageStreamListener listener;
+
+
+
+    listener = ImageStreamListener(
+
+            (info, _) async {
+
+
+
+          image = info.image;
+
+
+
+          createPuzzle();
+
+
+
+        }
+
+    );
+
+
+
+    stream.addListener(listener);
+
 
 
   }
@@ -209,177 +161,114 @@ class _PuzzleGameScreenState
 
 
 
-  //==================================================
-  // نهاية السحب
-  //==================================================
-
-  void endDrag(
-
-    PuzzlePiece piece,
-
-  ) {
-
-
-    setState(() {
-
-
-      controller.endDragging(
-
-        piece,
-
-      );
-
-
-
-      controller.checkPiecePosition(
-
-        piece,
-
-        pieceSize,
-
-      );
-
-
-    });
-
-
-
-    if(controller.isCompleted) {
-
-
-      showWin();
-
-
-    }
-
-
-  }
-
-
-
-
-
 
 
   //==================================================
-  // الفوز
+  // إنشاء البازل
   //==================================================
 
-  void showWin() {
+  void createPuzzle(){
 
 
-    Future.delayed(
 
-      const Duration(
+    final size = Size(
 
-        milliseconds: 300,
+      boardSize,
+
+      boardSize,
+
+    );
+
+
+
+    pieces = PuzzleGenerator.generate(
+
+
+      rows: widget.level.gridSize,
+
+
+      columns: widget.level.gridSize,
+
+
+      imageSize: Size(
+
+        image!.width.toDouble(),
+
+        image!.height.toDouble(),
 
       ),
 
 
-      () {
+      pieceSize: Size(
+
+        boardSize / widget.level.gridSize,
+
+        boardSize / widget.level.gridSize,
+
+      ),
 
 
-        if(!mounted) return;
+      traySize: Size(
 
+        MediaQuery.of(context).size.width,
 
+        trayHeight,
 
-        showDialog(
+      ),
 
-          context: context,
-
-
-          builder:
-
-              (_) => AlertDialog(
-
-                title:
-
-                    const Text(
-
-                      "🎉 أحسنت",
-
-                    ),
-
-
-
-                content:
-
-                    const Text(
-
-                      "تم تركيب الصورة بنجاح",
-
-                    ),
-
-
-                actions: [
-
-
-                  TextButton(
-
-                    onPressed: () {
-
-
-                      Navigator.pop(context);
-
-
-                    },
-
-
-                    child:
-
-                        const Text(
-
-                          "موافق",
-
-                        ),
-
-                  ),
-
-
-                ],
-
-              ),
-
-
-        );
-
-
-      },
 
 
     );
 
 
+
+
+    controller = PuzzleController(
+
+      pieces: pieces,
+
+    );
+
+
+
+
+    setState((){
+
+
+      loading = false;
+
+
+    });
+
+
+
   }
 
-  //==================================================
-  // بناء الشاشة
-  //==================================================
+
+
+
+
+
+
+
 
   @override
-  Widget build(
-
-    BuildContext context,
-
-  ) {
+  Widget build(BuildContext context){
 
 
 
-    if(!ready) {
+    if(loading || image == null){
 
 
       return const Scaffold(
 
-        body:
+        backgroundColor: Colors.black,
 
-            Center(
+        body: Center(
 
-              child:
+          child: CircularProgressIndicator(),
 
-                  CircularProgressIndicator(),
-
-            ),
+        ),
 
       );
 
@@ -393,277 +282,508 @@ class _PuzzleGameScreenState
 
     return Scaffold(
 
-      backgroundColor:
 
-          Colors.black12,
+      backgroundColor: Colors.transparent,
 
 
 
-      body:
+      body: SafeArea(
 
-          SafeArea(
 
-            child:
 
-                Column(
+        child: Column(
 
-                  mainAxisAlignment:
 
-                      MainAxisAlignment.center,
 
+          children: [
 
-                  children: [
 
 
 
 
 
-                    Text(
 
-                      widget.puzzle.title,
+            //==========================================
+            // شريط القطع العلوي
+            //==========================================
 
 
-                      style:
+            SizedBox(
 
-                          const TextStyle(
 
-                            fontSize: 24,
+              height: trayHeight,
 
-                            fontWeight:
 
-                                FontWeight.bold,
+              width: double.infinity,
 
-                          ),
 
-                    ),
 
+              child: GestureDetector(
 
 
 
+                onPanDown: (d){
 
-                    const SizedBox(
 
-                      height: 20,
 
-                    ),
+                  controller.pointerDown(
 
+                    d.localPosition,
 
+                  );
 
 
 
+                  setState((){});
 
-                    SizedBox(
 
-                      width:
 
-                          boardSize,
+                },
 
 
-                      height:
 
-                          boardSize,
 
+                onPanUpdate: (d){
 
 
-                      child:
 
-                          Stack(
+                  controller.pointerMove(
 
-                            clipBehavior:
+                    d.localPosition,
 
-                                Clip.none,
+                  );
 
 
-                            children:
 
-                                controller.pieces
+                  setState((){});
 
-                                    .map(
 
-                                      (piece) {
 
+                },
 
-                                        return PuzzlePieceWidget(
 
-                                          piece:
 
-                                              piece,
 
+                onPanEnd: (_){
 
-                                          image:
 
-                                              AssetImage(
 
-                                                widget.puzzle.image,
+                  controller.pointerUp();
 
-                                              ),
 
 
+                  checkWin();
 
-                                          size:
 
-                                              pieceSize,
 
+                },
 
 
-                                          active:
 
-                                              controller.draggingPiece ==
+                child: CustomPaint(
 
-                                                  piece,
 
 
+                  painter:
 
-                                          onDragStart:
+                  PuzzleBoardPainter(
 
-                                              (p) {
 
+                    image: image!,
 
-                                                startDrag(
 
-                                                  p,
+                    pieces: pieces,
 
-                                                );
 
+                    pieceSize:
 
-                                              },
+                    boardSize /
 
+                        widget.level.gridSize,
 
 
-                                          onDragUpdate:
 
-                                              (delta) {
+                    showReference: false,
 
 
-                                                updateDrag(
 
-                                                  piece,
+                  ),
 
-                                                  delta,
 
-                                                );
-
-
-                                              },
-
-
-
-                                          onDragEnd:
-
-                                              () {
-
-
-                                                endDrag(
-
-                                                  piece,
-
-                                                );
-
-
-                                              },
-
-                                        );
-
-
-                                      },
-
-                                    )
-
-                                    .toList(),
-
-                          ),
-
-                    ),
-
-
-
-
-
-
-
-                    const SizedBox(
-
-                      height:
-
-                          30,
-
-                    ),
-
-
-
-
-
-
-                    Text(
-
-                      "${controller.completedPieces}/${controller.pieces.length}",
-
-
-                      style:
-
-                          const TextStyle(
-
-                            fontSize:
-
-                                18,
-
-                          ),
-
-                    ),
-
-
-
-
-
-
-                    const SizedBox(
-
-                      height:
-
-                          20,
-
-                    ),
-
-
-
-
-
-
-                    ElevatedButton(
-
-                      onPressed: () {
-
-
-                        setState(() {
-
-
-                          createGame();
-
-
-                        });
-
-
-                      },
-
-
-                      child:
-
-                          const Text(
-
-                            "إعادة اللعب",
-
-                          ),
-
-                    ),
-
-
-                  ],
 
                 ),
 
-          ),
+
+              ),
+
+
+            ),
+
+
+
+
+
+
+
+            const SizedBox(
+
+              height: 20,
+
+            ),
+
+
+
+
+
+
+
+
+            //==========================================
+            // لوحة البازل
+            //==========================================
+
+
+            SizedBox(
+
+
+              width: boardSize,
+
+
+              height: boardSize,
+
+
+
+              child: Stack(
+
+
+
+                children: [
+
+
+
+
+
+                  // الصورة الشفافة الخلفية
+
+                  Opacity(
+
+
+                    opacity: 0.15,
+
+
+                    child: Image.asset(
+
+
+                      widget.level.image,
+
+
+                      width: boardSize,
+
+
+                      height: boardSize,
+
+
+                      fit: BoxFit.cover,
+
+
+                    ),
+
+
+                  ),
+
+
+
+
+
+
+
+                  GestureDetector(
+
+
+
+                    onPanDown: (d){
+
+
+
+                      controller.pointerDown(
+
+                        d.localPosition,
+
+                      );
+
+
+
+                      setState((){});
+
+
+                    },
+
+
+
+                    onPanUpdate: (d){
+
+
+
+                      controller.pointerMove(
+
+                        d.localPosition,
+
+                      );
+
+
+
+                      setState((){});
+
+
+
+                    },
+
+
+
+                    onPanEnd: (_){
+
+
+
+                      controller.pointerUp();
+
+
+
+                      checkWin();
+
+
+
+                    },
+
+
+
+                    child: CustomPaint(
+
+
+
+                      size: Size(
+
+                        boardSize,
+
+                        boardSize,
+
+                      ),
+
+
+
+                      painter:
+
+                      PuzzleBoardPainter(
+
+
+                        image: image!,
+
+
+                        pieces: pieces,
+
+
+                        pieceSize:
+
+                        boardSize /
+
+                            widget.level.gridSize,
+
+
+                        showReference: true,
+
+
+                      ),
+
+
+
+                    ),
+
+
+
+                  ),
+
+
+                ],
+
+
+              ),
+
+
+
+            ),
+
+
+
+
+          ],
+
+
+        ),
+
+
+      ),
+
 
     );
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+  void checkWin(){
+
+
+
+    if(controller.isCompleted){
+
+
+
+      Future.delayed(
+
+        const Duration(milliseconds: 600),
+
+            (){
+
+
+          Navigator.pop(context);
+
+
+
+        },
+
+      );
+
+
+    }
+
+
+  }
+
+
+}
+
+
+
+
+
+
+//==================================================
+// رسام اللوحة
+//==================================================
+
+class PuzzleBoardPainter extends CustomPainter {
+
+
+
+  final ui.Image image;
+
+
+  final List<PuzzlePiece> pieces;
+
+
+  final double pieceSize;
+
+
+  final bool showReference;
+
+
+
+
+
+  PuzzleBoardPainter({
+
+
+    required this.image,
+
+
+    required this.pieces,
+
+
+    required this.pieceSize,
+
+
+    this.showReference = false,
+
+
+  });
+
+
+
+
+
+
+
+  @override
+  void paint(
+
+      Canvas canvas,
+
+      Size size,
+
+      ){
+
+
+
+    // رسم القطع
+
+    for(final piece in pieces){
+
+
+
+      PuzzlePiecePainter.paint(
+
+
+        canvas: canvas,
+
+
+        piece: piece,
+
+
+        image: image,
+
+
+        pieceSize: Size(
+
+          pieceSize,
+
+          pieceSize,
+
+        ),
+
+
+        showShadow: piece.dragging,
+
+
+      );
+
+
+    }
+
+
+  }
+
+
+
+
+
+
+  @override
+
+  bool shouldRepaint(
+
+      covariant CustomPainter oldDelegate,
+
+      ){
+
+
+    return true;
 
 
   }
