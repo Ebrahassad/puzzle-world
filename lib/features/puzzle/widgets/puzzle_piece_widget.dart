@@ -2,9 +2,16 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-import '../engine/puzzle_piece.dart';
-import '../engine/puzzle_painter.dart';
+import 'puzzle_piece.dart';
 
+import 'puzzle_painter.dart';
+
+
+
+
+///======================================================
+/// Widget مسؤول عن عرض قطعة البازل والتحكم باللمس
+///======================================================
 
 class PuzzlePieceWidget extends StatefulWidget {
 
@@ -18,10 +25,17 @@ class PuzzlePieceWidget extends StatefulWidget {
   final double size;
 
 
-  final bool isActive;
+  final bool active;
 
 
-  final double opacity;
+
+  final Function(PuzzlePiece)? onDragStart;
+
+
+  final Function(Offset)? onDragUpdate;
+
+
+  final Function()? onDragEnd;
 
 
 
@@ -29,26 +43,39 @@ class PuzzlePieceWidget extends StatefulWidget {
 
     super.key,
 
+
     required this.piece,
+
 
     required this.image,
 
+
     required this.size,
 
-    this.isActive = false,
 
-    this.opacity = 1.0,
+    this.active = false,
+
+
+    this.onDragStart,
+
+
+    this.onDragUpdate,
+
+
+    this.onDragEnd,
+
 
   });
 
 
 
   @override
-  State<PuzzlePieceWidget> createState() =>
+  State<PuzzlePieceWidget> createState()
 
-      _PuzzlePieceWidgetState();
+      => _PuzzlePieceWidgetState();
 
 }
+
 
 
 
@@ -60,33 +87,34 @@ class _PuzzlePieceWidgetState
     extends State<PuzzlePieceWidget> {
 
 
-  ui.Image? cachedImage;
+  ui.Image? imageCache;
 
 
-  ImageStream? _imageStream;
+  ImageStream? imageStream;
 
 
-  ImageStreamListener? _listener;
+  ImageStreamListener? listener;
 
 
-  bool _loaded = false;
 
+  bool loaded = false;
 
 
 
 
 
   @override
-  void didChangeDependencies(){
+  void didChangeDependencies() {
 
 
     super.didChangeDependencies();
 
 
+    if(!loaded) {
 
-    if(!_loaded){
 
       _loadImage();
+
 
     }
 
@@ -96,57 +124,11 @@ class _PuzzlePieceWidgetState
 
 
 
+  //====================================================
+  // تحميل الصورة مرة واحدة
+  //====================================================
 
-
-  @override
-  void didUpdateWidget(
-
-    covariant PuzzlePieceWidget oldWidget,
-
-  ){
-
-
-    super.didUpdateWidget(oldWidget);
-
-
-
-    if(
-
-      oldWidget.image != widget.image
-
-      ||
-
-      oldWidget.size != widget.size
-
-    ){
-
-
-      _removeListener();
-
-
-
-      _loaded = false;
-
-
-      cachedImage = null;
-
-
-      _loadImage();
-
-
-    }
-
-
-  }
-
-
-
-
-
-
-
-
-  void _loadImage(){
+  void _loadImage() {
 
 
     final configuration =
@@ -155,19 +137,11 @@ class _PuzzlePieceWidgetState
 
           context,
 
-          size: Size(
-
-            widget.size,
-
-            widget.size,
-
-          ),
-
         );
 
 
 
-    _imageStream =
+    imageStream =
 
         widget.image.resolve(
 
@@ -177,24 +151,22 @@ class _PuzzlePieceWidgetState
 
 
 
+    listener = ImageStreamListener(
 
-    _listener = ImageStreamListener(
-
-      (info, synchronousCall){
-
+      (info, synchronousCall) {
 
 
         if(!mounted) return;
 
 
 
-        setState((){
+        setState(() {
 
 
-          cachedImage = info.image;
+          imageCache = info.image;
 
 
-          _loaded = true;
+          loaded = true;
 
 
         });
@@ -202,29 +174,15 @@ class _PuzzlePieceWidgetState
 
       },
 
-
-      onError:(error,stackTrace){
-
-
-        debugPrint(
-
-          "Puzzle image error: $error",
-
-        );
-
-
-      },
-
     );
 
 
 
-    _imageStream!.addListener(
+    imageStream!.addListener(
 
-      _listener!,
+      listener!,
 
     );
-
 
   }
 
@@ -232,60 +190,22 @@ class _PuzzlePieceWidgetState
 
 
 
-
-
-
-  void _removeListener(){
-
-
-    if(
-
-      _listener != null &&
-
-      _imageStream != null
-
-    ){
-
-
-      _imageStream!
-
-          .removeListener(
-
-            _listener!,
-
-          );
-
-
-    }
-
-
-  }
-
-
-
-
-
-
-
-
+  //====================================================
+  // بناء القطعة
+  //====================================================
 
   @override
   Widget build(
 
     BuildContext context,
 
-  ){
+  ) {
 
 
-    Widget child;
+    if(imageCache == null) {
 
 
-
-
-    if(cachedImage == null){
-
-
-      child = SizedBox(
+      return SizedBox(
 
         width: widget.size,
 
@@ -296,100 +216,102 @@ class _PuzzlePieceWidgetState
 
     }
 
-    else{
 
 
-      child = RepaintBoundary(
+    return Positioned(
+
+      left: widget.piece.position.dx,
+
+      top: widget.piece.position.dy,
 
 
-        child: CustomPaint(
+      child: GestureDetector(
 
 
-          size: Size(
+        onPanStart: (details) {
 
-            widget.size,
 
-            widget.size,
+          widget.onDragStart?.call(
+
+            widget.piece,
+
+          );
+
+
+        },
+
+
+
+        onPanUpdate: (details) {
+
+
+          widget.onDragUpdate?.call(
+
+            details.globalPosition,
+
+          );
+
+
+        },
+
+
+
+        onPanEnd: (_) {
+
+
+          widget.onDragEnd?.call();
+
+
+        },
+
+
+
+        child: AnimatedScale(
+
+          scale:
+
+              widget.active
+
+              ? 1.05
+
+              : 1.0,
+
+
+          duration:
+
+              const Duration(
+
+                milliseconds:120,
+
+              ),
+
+
+          child: CustomPaint(
+
+            size:
+
+                Size(
+
+                  widget.size,
+
+                  widget.size,
+
+                ),
+
+
+            painter:
+
+                PuzzlePainter(
+
+                  piece: widget.piece,
+
+                  image: imageCache!,
+
+                ),
 
           ),
-
-
-
-          painter: PuzzlePainter(
-
-
-            piece: widget.piece,
-
-
-            image: widget.image,
-
-
-            cachedImage: cachedImage,
-
-
-          ),
-
 
         ),
-
-
-      );
-
-
-    }
-
-
-
-
-
-
-    return AnimatedScale(
-
-      scale:
-
-          widget.isActive
-
-          ? 1.06
-
-          : 1.0,
-
-
-      duration:
-
-          const Duration(
-
-            milliseconds:140,
-
-          ),
-
-
-      curve:
-
-          Curves.easeOutCubic,
-
-
-
-      child:
-
-      AnimatedOpacity(
-
-
-        opacity:
-
-            widget.opacity,
-
-
-        duration:
-
-            const Duration(
-
-              milliseconds:120,
-
-            ),
-
-
-        child: child,
-
 
       ),
 
@@ -397,19 +319,102 @@ class _PuzzlePieceWidgetState
 
   }
 
-
-
-
-
-
-
-
+  //====================================================
+  // تحديث القطعة عند تغير الصورة أو البيانات
+  //====================================================
 
   @override
-  void dispose(){
+  void didUpdateWidget(
+
+    covariant PuzzlePieceWidget oldWidget,
+
+  ) {
 
 
-    _removeListener();
+    super.didUpdateWidget(
+
+      oldWidget,
+
+    );
+
+
+
+    if (
+
+      oldWidget.image != widget.image
+
+      ||
+
+      oldWidget.size != widget.size
+
+    ) {
+
+
+      _removeImageListener();
+
+
+
+      imageCache = null;
+
+
+      loaded = false;
+
+
+      _loadImage();
+
+
+    }
+
+  }
+
+
+
+
+
+  //====================================================
+  // إزالة مستمع الصورة
+  //====================================================
+
+  void _removeImageListener() {
+
+
+    if (
+
+      imageStream != null
+
+      &&
+
+      listener != null
+
+    ) {
+
+
+      imageStream!
+
+          .removeListener(
+
+            listener!,
+
+          );
+
+
+    }
+
+  }
+
+
+
+
+
+  //====================================================
+  // تنظيف الموارد
+  //====================================================
+
+  @override
+  void dispose() {
+
+
+    _removeImageListener();
 
 
     super.dispose();
