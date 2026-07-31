@@ -74,7 +74,18 @@ class _IslandScreenState
   ];
 
 
-
+final List<int> levelOrder = const [
+  0, // 1
+  9, // 10
+  1, // 2
+  8, // 9
+  2, // 3
+  7, // 8
+  3, // 4
+  6, // 7
+  4, // 5
+  5, // 6
+];
 
 
   late AnimationController floatController;
@@ -255,128 +266,74 @@ class _IslandScreenState
   }
 
   Widget levelButton(
+  PuzzleLevelModel level,
+){
 
-    PuzzleLevelModel level,
+  return GestureDetector(
 
-  ){
+    onTap:(){
+      openLevel(level);
+    },
 
-    return GestureDetector(
+    child: Stack(
 
-      onTap:(){
+      alignment: Alignment.center,
 
-        openLevel(level);
-
-      },
-
-
-      child: Stack(
-
-        alignment: Alignment.center,
-
-        children:[
+      children:[
 
 
+        Image.asset(
 
-          Image.asset(
+          "assets/images/ui/level_piece.png",
 
-            "assets/images/ui/level_piece.png",
+          width:95,
 
-            width:95,
+          height:95,
 
-            height:95,
+          fit:BoxFit.contain,
 
-            fit:BoxFit.contain,
-
-          ),
+        ),
 
 
 
+        Text(
 
+          "${level.levelNumber}",
 
+          style: const TextStyle(
 
-          Container(
+            color: Colors.white,
 
-            width:58,
+            fontSize: 32,
 
-            height:58,
+            fontWeight: FontWeight.bold,
 
-            decoration: BoxDecoration(
+            shadows:[
 
-              shape: BoxShape.circle,
+              Shadow(
 
-              color: Colors.black.withOpacity(0.35),
+                color: Colors.black,
 
-              border: Border.all(
+                blurRadius:5,
 
-                color: Colors.white70,
-
-                width: 2,
+                offset: Offset(0,3),
 
               ),
 
-              boxShadow:[
-
-                BoxShadow(
-
-                  color: Colors.black45,
-
-                  blurRadius: 8,
-
-                  offset: Offset(0,4),
-
-                ),
-
-              ],
-
-            ),
-
-
-
-            alignment: Alignment.center,
-
-
-
-            child: Text(
-
-              "${level.levelNumber}",
-
-              style: const TextStyle(
-
-                color: Colors.white,
-
-                fontSize: 28,
-
-                fontWeight: FontWeight.bold,
-
-                shadows:[
-
-                  Shadow(
-
-                    color: Colors.black,
-
-                    blurRadius: 4,
-
-                  ),
-
-                ],
-
-              ),
-
-            ),
+            ],
 
           ),
 
+        ),
 
 
-        ],
+      ],
 
-      ),
+    ),
 
-    );
+  );
 
-  }
-
-
+}
 
 
 
@@ -440,23 +397,21 @@ class _IslandScreenState
               },
 
 
-              child:Image.asset(
+              child:Transform.scale(
+  scale: 1.25,
+  child: Image.asset(
+    IslandBackgroundData.getBackground(
+      widget.island.id,
+    ),
+    fit: BoxFit.contain,
+     alignment: Alignment.center,
+        ),
 
-  IslandBackgroundData.getBackground(
+     ),
 
-    widget.island.id,
+   ),
 
-  ),
-
-  fit:BoxFit.contain,
-
-  alignment: Alignment.center,
-
-),
-
-            ),
-
-          ),
+ ),
 
 
 
@@ -579,7 +534,7 @@ class _IslandScreenState
 
                 height:
 
-                height * 0.30,
+                height * 0.36,
 
 
                 child:AnimatedBuilder(
@@ -677,13 +632,9 @@ class _IslandScreenState
 
 
                               child:
-
-                              levelButton(
-
-                                levels[index],
-
-                              ),
-
+levelButton(
+  levels[levelOrder[index]],
+),
 
                             );
 
