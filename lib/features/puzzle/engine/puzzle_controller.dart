@@ -244,4 +244,27 @@ class PuzzleController {
 
     return null;
   }
+
+//=========================================
+// بداية السحب
+//=========================================
+
+void startDragging(
+  PuzzlePiece piece,
+) {
+  if (piece.placed) return;
+
+  pieces.remove(piece);
+  pieces.add(piece);
+}
+
+//=========================================
+// نهاية السحب
+//=========================================
+
+void endDragging(
+  PuzzlePiece piece,
+) {
+  // محجوز للتطوير لاحقاً
+}
 }
