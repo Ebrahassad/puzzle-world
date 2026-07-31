@@ -23,7 +23,6 @@ class WorldMapScreen extends StatefulWidget {
 
       _WorldMapScreenState();
 
-
 }
 
 
@@ -40,11 +39,9 @@ class _WorldMapScreenState
 
 
 
-
-  //=========================================
-  // صورة الخريطة
-  //=========================================
-
+  //==================================================
+  // صورة العالم
+  //==================================================
 
   static const String mapImage =
 
@@ -53,12 +50,12 @@ class _WorldMapScreenState
 
 
 
-
-  // الحجم الافتراضي للعالم
+  // الحجم الأساسي للخريطة
 
   static const double worldWidth = 896;
 
-  static const double worldHeight = 1200;
+
+  static const double worldHeight = 1350;
 
 
 
@@ -70,10 +67,9 @@ class _WorldMapScreenState
 
 
 
-  //=========================================
-  // حركة العالم البسيطة
-  //=========================================
-
+  //==================================================
+  // حركة العالم
+  //==================================================
 
   late AnimationController worldController;
 
@@ -84,10 +80,9 @@ class _WorldMapScreenState
 
 
 
-  //=========================================
+  //==================================================
   // حركة الجزر
-  //=========================================
-
+  //==================================================
 
   late AnimationController islandController;
 
@@ -98,10 +93,9 @@ class _WorldMapScreenState
 
 
 
-  //=========================================
+  //==================================================
   // حركة السحب
-  //=========================================
-
+  //==================================================
 
   late AnimationController cloudController;
 
@@ -114,8 +108,10 @@ class _WorldMapScreenState
 
 
 
+
   @override
   void initState() {
+
 
     super.initState();
 
@@ -126,12 +122,7 @@ class _WorldMapScreenState
 
 
 
-
-    //=========================================
-    // حركة إحساس العالم
-    // بدون تحريك الخريطة
-    //=========================================
-
+    // حركة بسيطة للخريطة
 
     worldController = AnimationController(
 
@@ -139,11 +130,11 @@ class _WorldMapScreenState
 
       duration:
 
-      const Duration(
+          const Duration(
 
-        seconds: 18,
+            seconds: 18,
 
-      ),
+          ),
 
     )
 
@@ -155,6 +146,7 @@ class _WorldMapScreenState
 
 
 
+
     worldScale = Tween<double>(
 
       begin: 1.0,
@@ -162,7 +154,6 @@ class _WorldMapScreenState
       end: 1.015,
 
     ).animate(
-
 
       CurvedAnimation(
 
@@ -179,12 +170,7 @@ class _WorldMapScreenState
 
 
 
-
-
-    //=========================================
     // طفو الجزر
-    //=========================================
-
 
     islandController = AnimationController(
 
@@ -192,11 +178,11 @@ class _WorldMapScreenState
 
       duration:
 
-      const Duration(
+          const Duration(
 
-        seconds: 5,
+            seconds: 5,
 
-      ),
+          ),
 
     )
 
@@ -208,14 +194,14 @@ class _WorldMapScreenState
 
 
 
+
     islandFloat = Tween<double>(
 
-      begin: -3,
+      begin: -4,
 
-      end: 3,
+      end: 4,
 
     ).animate(
-
 
       CurvedAnimation(
 
@@ -232,12 +218,7 @@ class _WorldMapScreenState
 
 
 
-
-
-    //=========================================
-    // حركة السحب المستقلة
-    //=========================================
-
+    // حركة السحب
 
     cloudController = AnimationController(
 
@@ -245,11 +226,11 @@ class _WorldMapScreenState
 
       duration:
 
-      const Duration(
+          const Duration(
 
-        seconds: 45,
+            seconds: 45,
 
-      ),
+          ),
 
     )
 
@@ -260,12 +241,11 @@ class _WorldMapScreenState
 
     cloudMove = Tween<double>(
 
-      begin: 1000,
+      begin: 1100,
 
       end: -500,
 
     ).animate(
-
 
       CurvedAnimation(
 
@@ -277,13 +257,7 @@ class _WorldMapScreenState
 
     );
 
-
   }
-
-
-
-
-
 
 
   @override
@@ -304,10 +278,14 @@ class _WorldMapScreenState
 
   }
 
-  //=========================================
-  // جلب الجزيرة
-  //=========================================
 
+
+
+
+
+  //==================================================
+  // جلب الجزيرة
+  //==================================================
 
   PuzzleModel getIsland(
 
@@ -331,7 +309,9 @@ class _WorldMapScreenState
 
 
 
-
+  //==================================================
+  // بناء الخريطة
+  //==================================================
 
   @override
   Widget build(
@@ -343,16 +323,21 @@ class _WorldMapScreenState
 
     return Scaffold(
 
-
       backgroundColor:
 
-      const Color(0xff08182b),
+          const Color(0xff08182b),
 
 
 
       body: LayoutBuilder(
 
-        builder: (context, constraints) {
+        builder: (
+
+          context,
+
+          constraints,
+
+        ) {
 
 
 
@@ -372,9 +357,6 @@ class _WorldMapScreenState
 
 
 
-
-          // يمنع الزووم
-
           final scale =
 
               scaleX < scaleY
@@ -387,475 +369,641 @@ class _WorldMapScreenState
 
 
 
-          final offsetX =
+          final mapWidth =
 
-              (constraints.maxWidth -
+              worldWidth * scale;
 
-                  (worldWidth * scale)) /
 
-                  2;
 
+          final mapHeight =
 
+              worldHeight * scale;
 
-          final offsetY =
 
-              (constraints.maxHeight -
 
-                  (worldHeight * scale)) /
 
-                  2;
 
+          return Center(
 
+            child:
 
+                SizedBox(
 
+                  width: mapWidth,
 
+                  height: mapHeight,
 
 
-          return Stack(
 
-            children: [
+                  child:
 
+                      Transform.scale(
 
+                        scale: 1.0,
 
 
 
-              Positioned(
+                        child:
 
-                left: offsetX,
+                            AnimatedBuilder(
 
-                top: offsetY,
+                              animation:
 
+                                  worldController,
 
 
-                child: AnimatedBuilder(
 
-                  animation:
+                              builder:
 
-                  worldController,
+                                  (
 
+                                    context,
 
+                                    child,
 
-                  builder:
+                                  ) {
 
-                      (context, child) {
 
+                                return Transform.scale(
 
+                                  scale:
 
-                    return Transform.scale(
+                                      worldScale.value,
 
-                      scale:
 
-                      worldScale.value,
 
+                                  alignment:
 
-                      alignment:
+                                      Alignment.center,
 
-                      Alignment.center,
 
 
+                                  child: child,
 
-                      child: child,
+                                );
 
-                    );
 
+                              },
 
-                  },
-
-
-
-                  child: SizedBox(
-
-
-                    width:
-
-                    worldWidth,
-
-
-                    height:
-
-                    worldHeight,
-
-
-
-                    child: Stack(
-
-
-                      clipBehavior:
-
-                      Clip.none,
-
-
-
-                      children: [
-
-
-
-
-
-
-                        //=================================
-                        // خلفية العالم
-                        // ثابتة بدون حركة
-                        //=================================
-
-
-                        Positioned.fill(
-
-
-                          child: Image.asset(
-
-                            mapImage,
-
-
-                            fit:
-
-                            BoxFit.cover,
-
-
-                          ),
-
-
-                        ),
-
-
-
-
-
-
-
-                        //=================================
-                        // إضاءة البحر
-                        //=================================
-
-
-                        Positioned.fill(
-
-
-                          child: IgnorePointer(
-
-
-                            child: Container(
-
-
-                              decoration:
-
-                              BoxDecoration(
-
-
-                                gradient:
-
-                                LinearGradient(
-
-
-                                  begin:
-
-                                  Alignment.topCenter,
-
-
-
-                                  end:
-
-                                  Alignment.bottomCenter,
-
-
-
-                                  colors: [
-
-
-                                    Colors.white
-
-                                        .withOpacity(
-
-                                        0.05),
-
-
-
-                                    Colors.blue
-
-                                        .withOpacity(
-
-                                        0.12),
-
-
-
-                                  ],
-
-
-                                ),
-
-
-                              ),
-
-
-                            ),
-
-
-                          ),
-
-
-                        ),
-
-
-
-
-
-
-
-                        //=================================
-                        // السحابة الأولى
-                        // تمر وتعيد نفسها
-                        //=================================
-
-
-                        AnimatedBuilder(
-
-                          animation:
-
-                          cloudController,
-
-
-                          builder:
-
-                              (context, child) {
-
-
-                            return Positioned(
-
-
-                              top: 80,
-
-
-                              left:
-
-                              cloudMove.value,
-
-
-
-                              child: child!,
-
-
-                            );
-
-
-                          },
-
-
-                          child: Opacity(
-
-
-                            opacity:
-
-                            0.20,
-
-
-
-                            child: Image.asset(
-
-                              "assets/images/background/clouds.png",
-
-
-                              width:
-
-                              320,
-
-
-                            ),
-
-
-                          ),
-
-
-                        ),
-
-
-
-
-
-
-
-                        //=================================
-                        // السحابة الثانية
-                        // سرعة مختلفة
-                        //=================================
-
-
-                        AnimatedBuilder(
-
-                          animation:
-
-                          cloudController,
-
-
-                          builder:
-
-                              (context, child) {
-
-
-                            return Positioned(
-
-
-                              top:
-
-                              300,
-
-
-                              left:
-
-                              cloudMove.value * 0.65,
 
 
                               child:
 
-                              child!,
+                                  SizedBox(
 
+                                    width:
 
-                            );
-
-
-                          },
-
-
-                          child: Opacity(
-
-
-                            opacity:
-
-                            0.12,
+                                        worldWidth,
 
 
 
-                            child: Image.asset(
+                                    height:
 
-                              "assets/images/background/clouds.png",
+                                        worldHeight,
 
 
-                              width:
 
-                              250,
+                                    child:
 
+                                        Transform.scale(
+
+                                          scale: scale,
+
+                                          alignment:
+
+                                              Alignment.topLeft,
+
+
+
+                                          child:
+
+                                              Stack(
+
+                                                clipBehavior:
+
+                                                    Clip.none,
+
+
+                                                children: [
+
+
+                                                  //==================================
+                                                  // خلفية العالم
+                                                  //==================================
+
+
+                                                  Positioned.fill(
+
+
+                                                    child:
+
+                                                        Image.asset(
+
+                                                          mapImage,
+
+
+                                                          fit:
+
+                                                              BoxFit.fill,
+
+                                                        ),
+
+                                                  ),
+
+
+
+
+                                                  //==================================
+                                                  // تأثير البحر
+                                                  //==================================
+
+
+                                                  Positioned.fill(
+
+
+                                                    child:
+
+                                                        IgnorePointer(
+
+
+                                                          child:
+
+                                                              Container(
+
+                                                                decoration:
+
+                                                                    BoxDecoration(
+
+                                                                      gradient:
+
+                                                                          LinearGradient(
+
+                                                                            begin:
+
+                                                                                Alignment.topCenter,
+
+
+                                                                            end:
+
+                                                                                Alignment.bottomCenter,
+
+
+                                                                            colors: [
+
+
+                                                                              Colors.white.withOpacity(0.04),
+
+
+                                                                              Colors.blue.withOpacity(0.12),
+
+
+                                                                            ],
+
+                                                                          ),
+
+                                                                    ),
+
+                                                              ),
+
+                                                        ),
+
+                                                  ),
+
+
+                                                  //==================================
+                                                  // السحابة الأولى
+                                                  //==================================
+
+                                                  AnimatedBuilder(
+
+                                                    animation:
+
+                                                        cloudController,
+
+
+                                                    builder:
+
+                                                        (
+
+                                                          context,
+
+                                                          child,
+
+                                                        ) {
+
+
+                                                      return Positioned(
+
+                                                        left:
+
+                                                            cloudMove.value,
+
+
+                                                        top:
+
+                                                            90,
+
+
+                                                        child:
+
+                                                            child!,
+
+                                                      );
+
+
+                                                    },
+
+
+                                                    child:
+
+                                                        Opacity(
+
+                                                          opacity:
+
+                                                              0.18,
+
+
+                                                          child:
+
+                                                              Image.asset(
+
+                                                                "assets/images/background/clouds.png",
+
+
+                                                                width:
+
+                                                                    320,
+
+                                                              ),
+
+                                                        ),
+
+                                                  ),
+
+
+
+
+
+                                                  //==================================
+                                                  // السحابة الثانية
+                                                  //==================================
+
+
+                                                  AnimatedBuilder(
+
+                                                    animation:
+
+                                                        cloudController,
+
+
+                                                    builder:
+
+                                                        (
+
+                                                          context,
+
+                                                          child,
+
+                                                        ) {
+
+
+                                                      return Positioned(
+
+                                                        left:
+
+                                                            cloudMove.value * 0.65,
+
+
+                                                        top:
+
+                                                            330,
+
+
+                                                        child:
+
+                                                            child!,
+
+                                                      );
+
+
+                                                    },
+
+
+                                                    child:
+
+                                                        Opacity(
+
+                                                          opacity:
+
+                                                              0.12,
+
+
+                                                          child:
+
+                                                              Image.asset(
+
+                                                                "assets/images/background/clouds.png",
+
+
+                                                                width:
+
+                                                                    250,
+
+                                                              ),
+
+                                                        ),
+
+                                                  ),
+
+
+
+
+
+
+
+                                                  //==================================
+                                                  // الجزر
+                                                  //==================================
+
+
+                                                  islandImage(
+
+                                                    id: "space",
+
+                                                    left: 300,
+
+                                                    top: 40,
+
+                                                    width: 260,
+
+                                                    height: 330,
+
+                                                  ),
+
+
+
+                                                  islandImage(
+
+                                                    id: "landmarks",
+
+                                                    left: 50,
+
+                                                    top: 330,
+
+                                                    width: 260,
+
+                                                    height: 330,
+
+                                                  ),
+
+
+
+                                                  islandImage(
+
+                                                    id: "cars",
+
+                                                    left: 585,
+
+                                                    top: 330,
+
+                                                    width: 260,
+
+                                                    height: 330,
+
+                                                  ),
+
+
+
+                                                  islandImage(
+
+                                                    id: "nature",
+
+                                                    left: 300,
+
+                                                    top: 650,
+
+                                                    width: 260,
+
+                                                    height: 330,
+
+                                                  ),
+
+
+
+                                                  islandImage(
+
+                                                    id: "animals",
+
+                                                    left: 300,
+
+                                                    top: 980,
+
+                                                    width: 260,
+
+                                                    height: 330,
+
+                                                  ),
+
+
+
+                                                ],
+
+                                              ),
+
+                                        ),
+
+                                  ),
+
+                            ),
+
+                ),
+
+          );
+
+        },
+
+      ),
+
+    );
+
+  }
+
+  //==================================================
+  // رسم الجزيرة
+  //==================================================
+
+  Widget islandImage({
+
+    required String id,
+
+    required double left,
+
+    required double top,
+
+    required double width,
+
+    required double height,
+
+  }) {
+
+
+
+    final island = getIsland(id);
+
+
+
+
+    return AnimatedBuilder(
+
+      animation: islandController,
+
+
+
+      builder:
+
+          (
+
+            context,
+
+            child,
+
+          ) {
+
+
+
+        return Positioned(
+
+          left: left,
+
+          top:
+
+              top + islandFloat.value,
+
+          width: width,
+
+          height: height,
+
+
+
+          child: GestureDetector(
+
+            behavior:
+
+                HitTestBehavior.translucent,
+
+
+
+            onTap: () {
+
+
+              openIsland(island);
+
+
+            },
+
+
+
+            child: Stack(
+
+              alignment:
+
+                  Alignment.center,
+
+
+
+              children: [
+
+
+
+                // توهج الجزيرة
+
+                Container(
+
+                  width:
+
+                      width * 0.85,
+
+
+                  height:
+
+                      height * 0.55,
+
+
+
+                  decoration:
+
+                      BoxDecoration(
+
+
+                    shape:
+
+                        BoxShape.circle,
+
+
+
+                    boxShadow: [
+
+
+                      BoxShadow(
+
+                        color:
+
+                            Colors.white.withOpacity(
+
+                              0.14,
 
                             ),
 
 
-                          ),
+                        blurRadius:
+
+                            35,
 
 
-                        ),
+                        spreadRadius:
 
-//=========================================
-// الجزر فوق الخريطة
-//=========================================
+                            10,
 
-
-                        islandImage(
-
-                          id: "space",
-
-                          left: 300,
-
-                          top: 40,
-
-                          width: 300,
-
-                          height: 400,
-
-                        ),
+                      ),
 
 
-
-                        islandImage(
-
-                          id: "landmarks",
-
-                          left: 40,
-
-                          top: 350,
-
-                          width: 300,
-
-                          height: 400,
-
-                        ),
-
-
-
-                        islandImage(
-
-                          id: "cars",
-
-                          left: 550,
-
-                          top: 350,
-
-                          width: 300,
-
-                          height: 400,
-
-                        ),
-
-
-
-                        islandImage(
-
-                          id: "nature",
-
-                          left: 300,
-
-                          top: 680,
-
-                          width: 300,
-
-                          height: 400,
-
-                        ),
-
-
-
-                        islandImage(
-
-                          id: "animals",
-
-                          left: 300,
-
-                          top: 950,
-
-                          width: 300,
-
-                          height: 400,
-
-                        ),
-
-
-
-                      ],
-
-
-                    ),
-
+                    ],
 
                   ),
-
 
                 ),
 
 
-              ),
 
 
-            ],
+
+                // صورة الجزيرة
+
+                Image.asset(
+
+                  island.image,
 
 
-          );
+                  fit:
+
+                      BoxFit.contain,
+
+                ),
 
 
-        },
+
+              ],
+
+            ),
+
+          ),
+
+        );
 
 
-      ),
-
+      },
 
     );
-
 
   }
 
@@ -864,256 +1012,38 @@ class _WorldMapScreenState
 
 
 
-
-
-
-//=========================================
-// رسم الجزيرة
-//=========================================
-
-
-Widget islandImage({
-
-
-  required String id,
-
-
-  required double left,
-
-
-  required double top,
-
-
-  required double width,
-
-
-  required double height,
-
-
-}) {
-
-
-
-  final island = getIsland(id);
-
-
-
-
-  return AnimatedBuilder(
-
-
-    animation: islandController,
-
-
-
-    builder: (context, child) {
-
-
-
-      return Positioned(
-
-
-        left: left,
-
-
-        top:
-
-            top + islandFloat.value,
-
-
-
-        width: width,
-
-
-        height: height,
-
-
-
-        child: GestureDetector(
-
-
-          behavior:
-
-          HitTestBehavior.translucent,
-
-
-
-          onTap: () {
-
-
-            openIsland(island);
-
-
-          },
-
-
-
-          child: Stack(
-
-
-            alignment:
-
-            Alignment.center,
-
-
-
-            children: [
-
-
-
-
-
-              // توهج الجزيرة
-
-
-              Container(
-
-
-                width:
-
-                width * 0.80,
-
-
-
-                height:
-
-                height * 0.55,
-
-
-
-                decoration:
-
-                BoxDecoration(
-
-
-                  shape:
-
-                  BoxShape.circle,
-
-
-
-                  boxShadow: [
-
-
-                    BoxShadow(
-
-
-                      color:
-
-                      Colors.white.withOpacity(
-
-                          0.12),
-
-
-                      blurRadius:
-
-                      35,
-
-
-                      spreadRadius:
-
-                      8,
-
-
-                    ),
-
-
-                  ],
-
-
-                ),
-
-
-              ),
-
-
-
-
-
-              // صورة الجزيرة
-
-
-              Image.asset(
-
-
-                island.image,
-
-
-                fit:
-
-                BoxFit.contain,
-
-
-              ),
-
-
-
-            ],
-
-
-          ),
-
-
-        ),
-
-
-      );
-
-
-    },
-
-
-  );
-
-
-}
-
-
-
-
-
-
-
-
-
-//=========================================
-// فتح شاشة الجزيرة
-//=========================================
-
-
-void openIsland(
+  //==================================================
+  // فتح شاشة الجزيرة
+  //==================================================
+
+  void openIsland(
 
     PuzzleModel island,
 
-    ) {
+  ) {
 
 
 
-  Navigator.push(
+    Navigator.push(
 
+      context,
 
-    context,
+      MaterialPageRoute(
 
+        builder: (_) =>
 
-    MaterialPageRoute(
+            IslandScreen(
 
+              island: island,
 
-      builder: (_) => IslandScreen(
-
-
-        island: island,
-
+            ),
 
       ),
 
-
-    ),
-
-
-  );
+    );
 
 
-}
+  }
 
 
 }
