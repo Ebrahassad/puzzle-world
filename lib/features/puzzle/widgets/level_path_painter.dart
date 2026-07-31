@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 class LevelPathPainter extends CustomPainter {
 
-
   final List<Offset> positions;
 
 
@@ -12,59 +11,44 @@ class LevelPathPainter extends CustomPainter {
   });
 
 
-
   @override
   void paint(
     Canvas canvas,
     Size size,
   ) {
 
-
     final paint = Paint()
-
-      ..color = Colors.white.withOpacity(0.65)
-
+      ..color = Colors.white.withOpacity(0.6)
       ..strokeWidth = 8
-
       ..style = PaintingStyle.stroke
-
       ..strokeCap = StrokeCap.round;
-
 
 
     final path = Path();
 
 
-
     if (positions.isEmpty) return;
 
 
-
     path.moveTo(
-      size.width * positions[0].dx + 65,
-      size.height * (0.58 + positions[0].dy) + 65,
+      size.width * positions.first.dx,
+      size.height * positions.first.dy,
     );
 
 
+    for (int i = 1; i < positions.length; i++) {
 
-    for(int i = 1; i < positions.length; i++) {
-
+      final point = positions[i];
 
       path.quadraticBezierTo(
+        size.width * ((positions[i - 1].dx + point.dx) / 2),
+        size.height * ((positions[i - 1].dy + point.dy) / 2),
 
-        size.width * positions[i].dx + 65,
-
-        size.height * (0.58 + positions[i].dy) + 20,
-
-        size.width * positions[i].dx + 65,
-
-        size.height * (0.58 + positions[i].dy) + 65,
-
+        size.width * point.dx,
+        size.height * point.dy,
       );
 
-
     }
-
 
 
     canvas.drawPath(
@@ -75,13 +59,12 @@ class LevelPathPainter extends CustomPainter {
   }
 
 
-
   @override
   bool shouldRepaint(
-    CustomPainter oldDelegate,
+    LevelPathPainter oldDelegate,
   ) {
 
-    return true;
+    return oldDelegate.positions != positions;
 
   }
 
