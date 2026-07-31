@@ -13,19 +13,38 @@ import 'puzzle_piece.dart';
 class PuzzleGenerator {
 
 
+
   static List<PuzzlePiece> generate({
+
+
 
     required int rows,
 
+
+
     required int columns,
+
+
 
     required Size imageSize,
 
+
+
     required Size pieceSize,
+
+
 
     required Size traySize,
 
+
+
+    required Offset boardOffset,
+
+
+
     Random? random,
+
+
 
   }) {
 
@@ -34,38 +53,59 @@ class PuzzleGenerator {
     final rng = random ?? Random();
 
 
+
     final pieces = <PuzzlePiece>[];
 
 
 
     final imagePieceWidth =
+
         imageSize.width / columns;
 
 
+
     final imagePieceHeight =
+
         imageSize.height / rows;
 
 
 
 
 
-    // الحواف المشتركة
+
+
+    // إنشاء الحواف المشتركة
 
     final horizontalEdges =
+
         _createHorizontalEdges(
+
           rows,
+
           columns,
+
           rng,
+
         );
+
+
 
 
 
     final verticalEdges =
+
         _createVerticalEdges(
+
           rows,
+
           columns,
+
           rng,
+
         );
+
+
+
 
 
 
@@ -74,7 +114,12 @@ class PuzzleGenerator {
 
 
 
+
+
+
+
     for(int row = 0; row < rows; row++){
+
 
 
       for(int column = 0; column < columns; column++){
@@ -83,13 +128,23 @@ class PuzzleGenerator {
 
         final sourceRect = Rect.fromLTWH(
 
+
+
           column * imagePieceWidth,
+
+
 
           row * imagePieceHeight,
 
+
+
           imagePieceWidth,
 
+
+
           imagePieceHeight,
+
+
 
         );
 
@@ -97,7 +152,10 @@ class PuzzleGenerator {
 
 
 
+
+
         final piece = PuzzlePiece(
+
 
 
           id: "piece_$index",
@@ -124,16 +182,18 @@ class PuzzleGenerator {
 
               : _reverse(
 
-              verticalEdges[row-1][column]
+              verticalEdges[row - 1][column]
 
           ),
 
 
 
 
+
+
           right:
 
-          column == columns-1
+          column == columns - 1
 
               ? EdgeType.flat
 
@@ -142,13 +202,17 @@ class PuzzleGenerator {
 
 
 
+
+
           bottom:
 
-          row == rows-1
+          row == rows - 1
 
               ? EdgeType.flat
 
               : verticalEdges[row][column],
+
+
 
 
 
@@ -161,24 +225,22 @@ class PuzzleGenerator {
 
               : _reverse(
 
-              horizontalEdges[row][column-1]
+              horizontalEdges[row][column - 1]
 
           ),
 
 
 
 
-          // البداية داخل الشريط
+
+
+          // البداية في الشريط
 
           position:
 
-          _trayPosition(
+          Offset.zero,
 
-            index,
 
-            traySize,
-
-          ),
 
         );
 
@@ -187,8 +249,7 @@ class PuzzleGenerator {
 
 
 
-
-        // إنشاء الشكل
+        // إنشاء شكل القطعة
 
         piece.createShape(
 
@@ -201,15 +262,36 @@ class PuzzleGenerator {
 
 
 
-        // تحديد مكانها الصحيح
+        // تحديد مكانها الصحيح في اللوحة
 
         piece.setCorrectPosition(
 
           pieceSize.width,
 
+          boardOffset,
+
         );
 
 
+        // تحديد مكان القطعة داخل الشريط الأفقي
+
+        final trayPosition = _trayPosition(
+
+          index,
+
+          pieceSize,
+
+          traySize,
+
+        );
+
+
+
+        piece.setTrayPosition(
+
+          trayPosition,
+
+        );
 
 
 
@@ -220,14 +302,15 @@ class PuzzleGenerator {
         index++;
 
 
+
       }
 
     }
 
 
 
-
     return pieces;
+
 
 
   }
@@ -238,50 +321,45 @@ class PuzzleGenerator {
 
 
 
+
+
 //==================================================
-// مكان القطعة في الشريط العلوي
+// مكان القطعة داخل الشريط الأفقي
 //==================================================
 
 static Offset _trayPosition(
 
+
+
     int index,
 
+
+
+    Size pieceSize,
+
+
+
     Size traySize,
+
+
 
     ){
 
 
 
-  const double itemSize = 70;
-
-  const double space = 8;
 
 
+  const double spacing = 12;
 
-  final columns =
-
-      max(
-
-        1,
-
-        (traySize.width /
-
-            (itemSize+space))
-
-            .floor(),
-
-      );
 
 
 
 
   final x =
 
-      (index % columns)
+      index *
 
-          *
-
-      (itemSize+space);
+      (pieceSize.width + spacing);
 
 
 
@@ -289,11 +367,13 @@ static Offset _trayPosition(
 
   final y =
 
-      (index ~/ columns)
+      (traySize.height -
 
-          *
+          pieceSize.height) /
 
-      (itemSize+space);
+          2;
+
+
 
 
 
@@ -306,6 +386,7 @@ static Offset _trayPosition(
     y,
 
   );
+
 
 
 }
@@ -326,29 +407,52 @@ static List<List<EdgeType>>
 
 _createHorizontalEdges(
 
+
+
     int rows,
+
+
 
     int columns,
 
+
+
     Random random,
+
+
 
     ){
 
 
 
+
+
   return List.generate(
+
+
 
     rows,
 
+
+
         (_) => List.generate(
 
-      columns-1,
+
+
+      columns - 1,
+
+
 
           (_) => _randomEdge(random),
 
+
+
     ),
 
+
+
   );
+
 
 
 }
@@ -369,39 +473,55 @@ static List<List<EdgeType>>
 
 _createVerticalEdges(
 
+
+
     int rows,
+
+
 
     int columns,
 
+
+
     Random random,
+
+
 
     ){
 
 
 
+
+
   return List.generate(
 
-    rows-1,
+
+
+    rows - 1,
+
+
 
         (_) => List.generate(
 
+
+
       columns,
+
+
 
           (_) => _randomEdge(random),
 
+
+
     ),
+
+
 
   );
 
 
+
 }
-
-
-
-
-
-
-
 
 
 //==================================================
@@ -413,7 +533,6 @@ static EdgeType _randomEdge(
     Random random,
 
     ){
-
 
 
   return random.nextBool()
@@ -448,25 +567,37 @@ static EdgeType _reverse(
   switch(edge){
 
 
+
     case EdgeType.tab:
+
 
       return EdgeType.blank;
 
 
+
+
+
     case EdgeType.blank:
+
 
       return EdgeType.tab;
 
 
+
+
+
     case EdgeType.flat:
 
+
       return EdgeType.flat;
+
 
 
   }
 
 
 }
+
 
 
 }
