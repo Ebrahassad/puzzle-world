@@ -1,90 +1,63 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 
-import '../engine/puzzle_piece.dart';
-import '../engine/puzzle_painter.dart';
+import 'puzzle_piece.dart';
 
 
-class PuzzlePieceWidget extends StatefulWidget {
+class PuzzleController {
 
 
-  final PuzzlePiece piece;
-
-
-  final ImageProvider image;
-
-
-  final double size;
-
-
-  final bool isActive;
-
-
-  final double opacity;
+  final List<PuzzlePiece> pieces;
 
 
 
-  const PuzzlePieceWidget({
+  PuzzlePiece? draggingPiece;
 
-    super.key,
 
-    required this.piece,
 
-    required this.image,
+  PuzzleController({
 
-    required this.size,
-
-    this.isActive = false,
-
-    this.opacity = 1.0,
+    required this.pieces,
 
   });
 
 
 
-  @override
-  State<PuzzlePieceWidget> createState() =>
-
-      _PuzzlePieceWidgetState();
-
-}
 
 
+  //=========================================
+  // بداية السحب
+  //=========================================
+
+  void startDragging(
+
+    PuzzlePiece piece,
+
+  ){
+
+    if(piece.placed) return;
 
 
+    draggingPiece = piece;
 
-
-class _PuzzlePieceWidgetState
-
-    extends State<PuzzlePieceWidget> {
-
-
-
-  ui.Image? cachedImage;
-
-
-  ImageStream? _imageStream;
-
-
-  ImageStreamListener? _listener;
-
-
-  bool _loaded = false;
+  }
 
 
 
 
 
-  @override
-  void didChangeDependencies() {
+  //=========================================
+  // نهاية السحب
+  //=========================================
 
-    super.didChangeDependencies();
+  void endDragging(
 
+    PuzzlePiece piece,
 
-    if (!_loaded) {
+  ){
 
-      _loadImage();
+    if(draggingPiece == piece){
+
+      draggingPiece = null;
 
     }
 
@@ -94,156 +67,72 @@ class _PuzzlePieceWidgetState
 
 
 
+  //=========================================
+  // فحص مكان القطعة
+  //=========================================
+
+  bool checkPiecePosition(
+
+    PuzzlePiece piece,
+
+    double pieceSize,
+
+  ){
 
 
-  @override
-  void didUpdateWidget(
+    if(piece.placed){
 
-    covariant PuzzlePieceWidget oldWidget,
-
-  ) {
-
-    super.didUpdateWidget(oldWidget);
-
-
-
-    if (
-
-      oldWidget.image != widget.image
-
-      ||
-
-      oldWidget.size != widget.size
-
-    ) {
-
-
-      _loaded = false;
-
-
-      cachedImage = null;
-
-
-      _loadImage();
-
-
-    }
-
-  }
-
-
-
-
-
-
-
-  void _loadImage() {
-
-
-    if (
-
-      _listener != null &&
-
-      _imageStream != null
-
-    ) {
-
-
-      _imageStream!.removeListener(
-
-        _listener!,
-
-      );
+      return true;
 
     }
 
 
 
+    final target =
 
+        piece.correctOffset(
 
-    final configuration =
-
-        createLocalImageConfiguration(
-
-          context,
-
-          size: Size(
-
-            widget.size,
-
-            widget.size,
-
-          ),
+          pieceSize,
 
         );
 
 
 
+    final distance =
 
+        (piece.position - target)
 
-    _imageStream =
-
-        widget.image.resolve(
-
-          configuration,
-
-        );
+            .distance;
 
 
 
+    // نسبة السماح بالسحب
 
+    final tolerance =
 
-    _listener = ImageStreamListener(
-
-      (info, _) {
-
-
-
-        if (!mounted) return;
+        pieceSize * 0.35;
 
 
 
-        setState(() {
+    if(distance <= tolerance){
 
 
-          cachedImage = info.image;
+      lockPiece(
+
+        piece,
+
+        pieceSize,
+
+      );
 
 
-          _loaded = true;
+      return true;
 
-
-        });
-
-
-
-      },
-
-
-      onError: (error, stackTrace) {
-
-
-        debugPrint(
-
-          "Puzzle image error: $error",
-
-        );
-
-
-      },
-
-
-    );
+    }
 
 
 
-
-
-    _imageStream!.addListener(
-
-      _listener!,
-
-    );
-
+    return false;
 
   }
 
@@ -252,174 +141,24 @@ class _PuzzlePieceWidgetState
 
 
 
+  //=========================================
+  // تثبيت قطعة
+  //=========================================
 
+  void lockPiece(
 
+    PuzzlePiece piece,
 
-  @override
-  Widget build(
+    double pieceSize,
 
-    BuildContext context,
+  ){
 
-  ) {
 
+    piece.lock(
 
-
-    Widget child;
-
-
-
-
-
-    if (cachedImage == null) {
-
-
-
-      child = SizedBox(
-
-        width: widget.size,
-
-        height: widget.size,
-
-      );
-
-
-
-    } else {
-
-
-
-      final padding =
-
-          widget.size * 0.10;
-
-
-
-      child = RepaintBoundary(
-
-
-        child: CustomPaint(
-
-
-          size: Size(
-
-            widget.size,
-
-            widget.size,
-
-          ),
-
-
-
-          painter: PuzzlePainter(
-
-
-            piece: widget.piece,
-
-
-            image: widget.image,
-
-
-            cachedImage: cachedImage,
-
-
-
-            // التوافق مع Painter الجديد
-
-            pieceSize:
-
-                widget.size,
-
-
-
-            padding:
-
-                padding,
-
-
-          ),
-
-
-
-        ),
-
-
-      );
-
-
-    }
-
-
-
-
-
-
-
-    return AnimatedScale(
-
-
-      scale:
-
-          widget.isActive
-
-              ? 1.06
-
-              : 1.0,
-
-
-
-      duration:
-
-          const Duration(
-
-            milliseconds: 140,
-
-          ),
-
-
-
-      curve:
-
-          Curves.easeOutCubic,
-
-
-
-      child:
-
-          AnimatedOpacity(
-
-
-        opacity:
-
-            widget.opacity,
-
-
-
-        duration:
-
-            const Duration(
-
-              milliseconds: 120,
-
-            ),
-
-
-
-        curve:
-
-            Curves.easeOut,
-
-
-
-        child:
-
-            child,
-
-
-      ),
-
+      pieceSize,
 
     );
-
 
   }
 
@@ -428,34 +167,169 @@ class _PuzzlePieceWidgetState
 
 
 
+  //=========================================
+  // فك قطعة
+  //=========================================
+
+  void unlockPiece(
+
+    PuzzlePiece piece,
+
+  ){
+
+    piece.unlock();
+
+  }
 
 
 
-  @override
-  void dispose() {
 
 
-    if (
 
-      _listener != null &&
+  //=========================================
+  // عدد القطع المكتملة
+  //=========================================
 
-      _imageStream != null
-
-    ) {
+  int get completedPieces{
 
 
-      _imageStream!.removeListener(
+    return pieces
 
-        _listener!,
+        .where(
 
-      );
+          (piece)=>piece.placed,
+
+        )
+
+        .length;
+
+  }
+
+
+
+
+
+
+  //=========================================
+  // القطع المتبقية
+  //=========================================
+
+  int get remainingPieces{
+
+
+    return pieces.length -
+
+        completedPieces;
+
+  }
+
+
+
+
+
+
+  //=========================================
+  // نسبة الإنجاز
+  //=========================================
+
+  double get progress{
+
+
+    if(pieces.isEmpty){
+
+      return 0;
 
     }
 
 
+    return completedPieces /
 
-    super.dispose();
+        pieces.length;
 
+  }
+
+
+
+
+
+
+  //=========================================
+  // هل انتهت اللعبة
+  //=========================================
+
+  bool get isCompleted{
+
+
+    if(pieces.isEmpty){
+
+      return false;
+
+    }
+
+
+    return pieces.every(
+
+      (piece)=>piece.placed,
+
+    );
+
+  }
+
+
+
+
+
+
+  //=========================================
+  // إعادة اللعبة
+  //=========================================
+
+  void reset(){
+
+
+    for(final piece in pieces){
+
+
+      piece.reset();
+
+
+    }
+
+
+    draggingPiece = null;
+
+  }
+
+
+
+
+
+
+  //=========================================
+  // إيجاد قطعة
+  //=========================================
+
+  PuzzlePiece? findPiece(
+
+    String id,
+
+  ){
+
+
+    for(final piece in pieces){
+
+
+      if(piece.id == id){
+
+        return piece;
+
+      }
+
+
+    }
+
+
+    return null;
 
   }
 
