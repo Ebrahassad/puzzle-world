@@ -33,6 +33,26 @@ class _IslandScreenState
     extends State<IslandScreen>
     with TickerProviderStateMixin {
 
+
+  //==================================================
+  // LEVEL POSITIONS
+  //==================================================
+
+  final List<Offset> levelPositions = const [
+
+    Offset(0.15, 0.00),
+    Offset(0.65, 0.08),
+    Offset(0.25, 0.16),
+    Offset(0.70, 0.24),
+    Offset(0.30, 0.32),
+    Offset(0.65, 0.40),
+    Offset(0.25, 0.48),
+    Offset(0.70, 0.56),
+    Offset(0.35, 0.64),
+    Offset(0.60, 0.72),
+
+  ];
+
   //==================================================
   // TOP TOOLBAR KEY
   //==================================================
@@ -393,69 +413,48 @@ final screenWidth = MediaQuery.of(context).size.width;
 ),
           
           
-          //==================================================
+  //==================================================
 // مسار المراحل
 //==================================================
-CustomPaint(
-  size: Size(
-    screenWidth,
-    screenHeight,
-  ),
 
-  painter: LevelPathPainter(),
-),
+Positioned(
+  top: screenHeight * 0.58,
+  left: 0,
+  right: 0,
+  bottom: screenHeight * 0.02,
 
+  child: Stack(
+    children: [
 
-          Positioned(
-            top: screenHeight * 0.58,
-            left: 0,
-            right: 0,
-            bottom: screenHeight * 0.02,
+      ...List.generate(
+        levelPositions.length,
+        (index) {
 
-            child: Stack(
-              children: [
+          final position = levelPositions[index];
 
-                Positioned(
-                  left: screenWidth * 0.15,
-                  top: 0,
-                  child: levelButton(
-                    level: 1,
-                    unlocked: true,
-                    completed: false,
-                  ),
-                ),
+          return Positioned(
+            left: screenWidth * position.dx,
+            top: screenHeight * position.dy,
 
-                Positioned(
-                  right: screenWidth * 0.15,
-                  top: screenHeight * 0.10,
-                  child: levelButton(
-                    level: 2,
-                    unlocked: true,
-                    completed: false,
-                  ),
-                ),
-
-                Positioned(
-                  left: screenWidth * 0.15,
-                  top: screenHeight * 0.20,
-                  child: levelButton(
-                    level: 3,
-                    unlocked: true,
-                    completed: false,
-                  ),
-                ),
-
-              ],
+            child: levelButton(
+              level: index + 1,
+              unlocked: index == 0,
+              completed: false,
             ),
-          ),
+          );
+        },
+      ),
+
+    ],
+  ),
+),
 
         ],
       ),
     );
-  }
+  } 
 
-
-  //==================================================
+ //==================================================
   // DISPOSE
   //==================================================
 
