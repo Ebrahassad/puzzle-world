@@ -6,16 +6,19 @@ import 'puzzle_piece.dart';
 
 
 
+
+
 class PuzzleGenerator {
+
 
 
   PuzzleGenerator._();
 
 
 
-  //======================================================
-  // إنشاء قطع البازل
-  //======================================================
+
+
+
 
   static List<PuzzlePiece> generate({
 
@@ -27,56 +30,70 @@ class PuzzleGenerator {
 
     required double imageHeight,
 
+
     Random? random,
 
   }) {
 
 
-    final rng =
-        random ?? Random();
+
+    final rng = random ?? Random();
 
 
 
-    final pieces =
-        <PuzzlePiece>[];
+
+    final pieces = <PuzzlePiece>[];
 
 
 
     final pieceWidth =
+
         imageWidth / columns;
 
 
 
     final pieceHeight =
+
         imageHeight / rows;
 
 
 
-    final tabSize =
-        min(
-          pieceWidth,
-          pieceHeight,
-        ) * 0.18;
 
 
 
-    // إنشاء الحواف المشتركة
 
     final horizontalEdges =
+
         _createHorizontalEdges(
+
           rows,
+
           columns,
+
           rng,
+
         );
+
+
+
 
 
 
     final verticalEdges =
+
         _createVerticalEdges(
+
           rows,
+
           columns,
+
           rng,
+
         );
+
+
+
+
 
 
 
@@ -84,173 +101,157 @@ class PuzzleGenerator {
 
 
 
-    for(
-      int row = 0;
-      row < rows;
-      row++
-    ) {
 
 
-      for(
-        int column = 0;
-        column < columns;
-        column++
-      ) {
+    for(int row = 0;
+
+        row < rows;
+
+        row++) {
 
 
 
-        final sourceRect =
-            Rect.fromLTWH(
+      for(int column = 0;
 
-              column * pieceWidth,
+          column < columns;
 
-              row * pieceHeight,
-
-              pieceWidth,
-
-              pieceHeight,
-
-            );
+          column++) {
 
 
 
-        final targetPosition =
-            Offset(
-
-              column * pieceWidth,
-
-              row * pieceHeight,
-
-            );
+        final source = Rect.fromLTWH(
 
 
-
-        final piece =
-            PuzzlePiece(
-
-              id:
-                  "piece_$index",
+          column * pieceWidth,
 
 
+          row * pieceHeight,
 
-              row:
-                  row,
+
+          pieceWidth,
+
+
+          pieceHeight,
+
+
+        );
 
 
 
-              column:
-                  column,
 
 
 
-              correctIndex:
-                  index,
+
+        final piece = PuzzlePiece(
+
+
+          id:
+
+              "piece_$index",
 
 
 
-              sourceRect:
-                  sourceRect,
+
+          row:
+
+              row,
 
 
 
-              top:
-                  row == 0
 
-                  ? const PuzzleEdge(
-                      type: EdgeType.flat,
-                      side: EdgeSide.top,
-                    )
+          column:
 
-                  : PuzzleEdge(
-                      type:
-                          _reverse(
-                            verticalEdges[row - 1][column],
-                          ),
+              column,
 
-                      side:
-                          EdgeSide.top,
+
+
+
+          correctPosition:
+
+              index,
+
+
+
+
+          sourceRect:
+
+              source,
+
+
+
+
+
+          top:
+
+              row == 0
+
+                  ? EdgeType.flat
+
+                  : _reverse(
+
+                      verticalEdges[row - 1][column],
+
                     ),
 
 
 
-              right:
-                  column == columns - 1
 
-                  ? const PuzzleEdge(
-                      type: EdgeType.flat,
-                      side: EdgeSide.right,
-                    )
 
-                  : PuzzleEdge(
-                      type:
-                          horizontalEdges[row][column],
 
-                      side:
-                          EdgeSide.right,
+          right:
+
+              column == columns - 1
+
+                  ? EdgeType.flat
+
+                  : horizontalEdges[row][column],
+
+
+
+
+
+
+          bottom:
+
+              row == rows - 1
+
+                  ? EdgeType.flat
+
+                  : verticalEdges[row][column],
+
+
+
+
+
+
+          left:
+
+              column == 0
+
+                  ? EdgeType.flat
+
+                  : _reverse(
+
+                      horizontalEdges[row][column - 1],
+
                     ),
 
 
 
-              bottom:
-                  row == rows - 1
-
-                  ? const PuzzleEdge(
-                      type: EdgeType.flat,
-                      side: EdgeSide.bottom,
-                    )
-
-                  : PuzzleEdge(
-                      type:
-                          verticalEdges[row][column],
-
-                      side:
-                          EdgeSide.bottom,
-                    ),
 
 
+          position:
 
-              left:
-                  column == 0
+              _randomPosition(
 
-                  ? const PuzzleEdge(
-                      type: EdgeType.flat,
-                      side: EdgeSide.left,
-                    )
+                index,
 
-                  : PuzzleEdge(
-                      type:
-                          _reverse(
-                            horizontalEdges[row][column - 1],
-                          ),
+                rng,
 
-                      side:
-                          EdgeSide.left,
-                    ),
+              ),
 
 
-
-              targetPosition:
-                  targetPosition,
-
-
-
-              size:
-                  Size(
-                    pieceWidth,
-                    pieceHeight,
-                  ),
-
-
-
-              tabSize:
-                  tabSize,
-
-
-
-              position:
-                  Offset.zero,
-
-            );
+        );
 
 
 
@@ -260,48 +261,74 @@ class PuzzleGenerator {
 
         index++;
 
+
       }
 
-    }
-
-    //======================================================
-    // توزيع القطع عشوائياً
-    //======================================================
-
-    pieces.shuffle(rng);
-
-
-    // وضع القطع في أماكن عشوائية
-    for (int i = 0; i < pieces.length; i++) {
-
-      pieces[i].position =
-          Offset(
-
-            rng.nextDouble() *
-                (imageWidth - pieceWidth),
-
-            rng.nextDouble() *
-                (imageHeight - pieceHeight),
-
-          );
-
-
-      pieces[i].zIndex = i;
 
     }
+
+
 
 
     return pieces;
+
+
+  }
+
+
+  //==================================================
+  // مكان بداية عشوائي للقطع
+  //==================================================
+
+  static Offset _randomPosition(
+
+    int index,
+
+    Random random,
+
+  ) {
+
+
+
+    final x =
+
+        20 +
+
+        random.nextDouble() * 220;
+
+
+
+    final y =
+
+        20 +
+
+        random.nextDouble() * 520;
+
+
+
+    return Offset(
+
+      x,
+
+      y,
+
+    );
 
   }
 
 
 
-  //======================================================
-  // إنشاء الحواف الأفقية
-  //======================================================
 
-  static List<List<EdgeType>> _createHorizontalEdges(
+
+
+
+  //==================================================
+  // إنشاء الحواف الأفقية
+  //==================================================
+
+  static List<List<EdgeType>>
+
+      _createHorizontalEdges(
 
     int rows,
 
@@ -310,6 +337,7 @@ class PuzzleGenerator {
     Random random,
 
   ) {
+
 
 
     return List.generate(
@@ -320,22 +348,32 @@ class PuzzleGenerator {
 
         columns - 1,
 
-        (_) => _randomEdge(random),
+        (_) => _randomEdge(
+
+          random,
+
+        ),
 
       ),
 
     );
+
 
   }
 
 
 
 
-  //======================================================
-  // إنشاء الحواف الرأسية
-  //======================================================
 
-  static List<List<EdgeType>> _createVerticalEdges(
+
+
+  //==================================================
+  // إنشاء الحواف الرأسية
+  //==================================================
+
+  static List<List<EdgeType>>
+
+      _createVerticalEdges(
 
     int rows,
 
@@ -346,6 +384,7 @@ class PuzzleGenerator {
   ) {
 
 
+
     return List.generate(
 
       rows - 1,
@@ -354,20 +393,28 @@ class PuzzleGenerator {
 
         columns,
 
-        (_) => _randomEdge(random),
+        (_) => _randomEdge(
+
+          random,
+
+        ),
 
       ),
 
     );
+
 
   }
 
 
 
 
-  //======================================================
-  // إنشاء حافة عشوائية
-  //======================================================
+
+
+
+  //==================================================
+  // اختيار شكل الحافة
+  //==================================================
 
   static EdgeType _randomEdge(
 
@@ -376,11 +423,13 @@ class PuzzleGenerator {
   ) {
 
 
+
     return random.nextBool()
 
         ? EdgeType.tab
 
         : EdgeType.blank;
+
 
   }
 
@@ -388,9 +437,11 @@ class PuzzleGenerator {
 
 
 
-  //======================================================
+
+
+  //==================================================
   // عكس الحافة المقابلة
-  //======================================================
+  //==================================================
 
   static EdgeType _reverse(
 
@@ -399,27 +450,39 @@ class PuzzleGenerator {
   ) {
 
 
+
     switch(edge) {
 
 
+
       case EdgeType.tab:
+
 
         return EdgeType.blank;
 
 
 
+
       case EdgeType.blank:
+
 
         return EdgeType.tab;
 
 
 
+
       case EdgeType.flat:
+
 
         return EdgeType.flat;
 
+
+
     }
 
+
   }
+
+
 
 }
