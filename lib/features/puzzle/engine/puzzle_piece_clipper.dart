@@ -3,18 +3,20 @@ import 'package:flutter/material.dart';
 import 'puzzle_piece.dart';
 
 
-///======================================================
-/// مسؤول عن رسم شكل قطعة البازل
-/// (نتوءات + تجاويف + حواف مستقيمة)
-///======================================================
+
+
 
 class PuzzlePieceClipper extends CustomClipper<Path> {
+
 
 
   final PuzzlePiece piece;
 
 
-  const PuzzlePieceClipper({
+
+
+
+  PuzzlePieceClipper({
 
     required this.piece,
 
@@ -23,119 +25,329 @@ class PuzzlePieceClipper extends CustomClipper<Path> {
 
 
 
+
+
+
   @override
+
   Path getClip(
+
     Size size,
+
   ) {
 
 
-    final path =
-        Path();
 
-
-
-    final w =
-        size.width;
-
-
-
-    final h =
-        size.height;
-
-
-
-    final tab =
-        piece.tabSize;
+    final path = Path();
 
 
 
 
-    // البداية من أعلى اليسار
+
+    final w = size.width;
+
+
+    final h = size.height;
+
+
+
+
+
+
+    const double tabSize = 0.18;
+
+
+
+
 
     path.moveTo(
+
       0,
+
       0,
+
     );
 
 
 
-    //==================================================
+
+
+
+
+    //==================================
     // الحافة العلوية
-    //==================================================
-
-    _drawTopEdge(
-
-      path,
-
-      w,
-
-      h,
-
-      tab,
-
-      piece.top.type,
-
-    );
+    //==================================
 
 
+    if(piece.top == EdgeType.flat) {
 
-    //==================================================
+
+      path.lineTo(
+
+        w,
+
+        0,
+
+      );
+
+
+    }
+
+    else {
+
+
+      path.lineTo(
+
+        w * 0.35,
+
+        0,
+
+      );
+
+
+
+      path.cubicTo(
+
+        w * 0.35,
+
+        h * -tabSize,
+
+
+
+        w * 0.65,
+
+        h * -tabSize,
+
+
+
+        w * 0.65,
+
+        0,
+
+      );
+
+
+
+      path.lineTo(
+
+        w,
+
+        0,
+
+      );
+
+
+    }
+
+
+
+
+
+
+
+    //==================================
     // الحافة اليمنى
-    //==================================================
-
-    _drawRightEdge(
-
-      path,
-
-      w,
-
-      h,
-
-      tab,
-
-      piece.right.type,
-
-    );
+    //==================================
 
 
+    if(piece.right == EdgeType.flat) {
 
-    //==================================================
+
+      path.lineTo(
+
+        w,
+
+        h,
+
+      );
+
+
+    }
+
+    else {
+
+
+      path.lineTo(
+
+        w,
+
+        h * 0.35,
+
+      );
+
+
+
+      path.cubicTo(
+
+        w + w * tabSize,
+
+        h * 0.35,
+
+
+
+        w + w * tabSize,
+
+        h * 0.65,
+
+
+
+        w,
+
+        h * 0.65,
+
+      );
+
+
+
+      path.lineTo(
+
+        w,
+
+        h,
+
+      );
+
+
+    }
+
+    //==================================
     // الحافة السفلية
-    //==================================================
-
-    _drawBottomEdge(
-
-      path,
-
-      w,
-
-      h,
-
-      tab,
-
-      piece.bottom.type,
-
-    );
+    //==================================
 
 
+    if(piece.bottom == EdgeType.flat) {
 
-    //==================================================
+
+      path.lineTo(
+
+        0,
+
+        h,
+
+      );
+
+
+    }
+
+    else {
+
+
+      path.lineTo(
+
+        w * 0.65,
+
+        h,
+
+      );
+
+
+
+      path.cubicTo(
+
+        w * 0.65,
+
+        h + h * tabSize,
+
+
+
+        w * 0.35,
+
+        h + h * tabSize,
+
+
+
+        w * 0.35,
+
+        h,
+
+      );
+
+
+
+      path.lineTo(
+
+        0,
+
+        h,
+
+      );
+
+
+    }
+
+
+
+
+
+
+
+    //==================================
     // الحافة اليسرى
-    //==================================================
+    //==================================
 
-    _drawLeftEdge(
 
-      path,
+    if(piece.left == EdgeType.flat) {
 
-      w,
 
-      h,
+      path.lineTo(
 
-      tab,
+        0,
 
-      piece.left.type,
+        0,
 
-    );
+      );
+
+
+    }
+
+    else {
+
+
+      path.lineTo(
+
+        0,
+
+        h * 0.65,
+
+      );
+
+
+
+      path.cubicTo(
+
+        w * -tabSize,
+
+        h * 0.65,
+
+
+
+        w * -tabSize,
+
+        h * 0.35,
+
+
+
+        0,
+
+        h * 0.35,
+
+      );
+
+
+
+      path.lineTo(
+
+        0,
+
+        0,
+
+      );
+
+
+    }
+
+
+
 
 
 
@@ -143,441 +355,47 @@ class PuzzlePieceClipper extends CustomClipper<Path> {
 
 
 
+
+
     return path;
 
-  }
-
-
-
-  //====================================================
-  // رسم الحافة العلوية
-  //====================================================
-
-  void _drawTopEdge(
-
-    Path path,
-
-    double w,
-
-    double h,
-
-    double tab,
-
-    EdgeType type,
-
-  ) {
-
-
-    switch(type) {
-
-
-      case EdgeType.flat:
-
-        path.lineTo(
-          w,
-          0,
-        );
-
-        break;
-
-
-
-      case EdgeType.tab:
-
-        path.lineTo(
-          w * 0.35,
-          0,
-        );
-
-
-        path.cubicTo(
-
-          w * 0.35,
-
-          -tab,
-
-          w * 0.65,
-
-          -tab,
-
-          w * 0.65,
-
-          0,
-
-        );
-
-
-        path.lineTo(
-          w,
-          0,
-        );
-
-        break;
-
-
-
-      case EdgeType.blank:
-
-        path.lineTo(
-          w * 0.35,
-          0,
-        );
-
-
-        path.cubicTo(
-
-          w * 0.35,
-
-          tab,
-
-          w * 0.65,
-
-          tab,
-
-          w * 0.65,
-
-          0,
-
-        );
-
-
-        path.lineTo(
-          w,
-          0,
-        );
-
-        break;
-
-    }
 
   }
 
-  //====================================================
-  // رسم الحافة اليمنى
-  //====================================================
 
-  void _drawRightEdge(
-
-    Path path,
-
-    double w,
-
-    double h,
-
-    double tab,
-
-    EdgeType type,
-
-  ) {
-
-
-    switch(type) {
-
-
-      case EdgeType.flat:
-
-        path.lineTo(
-          w,
-          h,
-        );
-
-        break;
-
-
-
-      case EdgeType.tab:
-
-        path.lineTo(
-          w,
-          h * 0.35,
-        );
-
-
-        path.cubicTo(
-
-          w + tab,
-
-          h * 0.35,
-
-          w + tab,
-
-          h * 0.65,
-
-          w,
-
-          h * 0.65,
-
-        );
-
-
-        path.lineTo(
-          w,
-          h,
-        );
-
-        break;
-
-
-
-      case EdgeType.blank:
-
-        path.lineTo(
-          w,
-          h * 0.35,
-        );
-
-
-        path.cubicTo(
-
-          w - tab,
-
-          h * 0.35,
-
-          w - tab,
-
-          h * 0.65,
-
-          w,
-
-          h * 0.65,
-
-        );
-
-
-        path.lineTo(
-          w,
-          h,
-        );
-
-        break;
-
-    }
-
-  }
-
-
-
-
-  //====================================================
-  // رسم الحافة السفلية
-  //====================================================
-
-  void _drawBottomEdge(
-
-    Path path,
-
-    double w,
-
-    double h,
-
-    double tab,
-
-    EdgeType type,
-
-  ) {
-
-
-    switch(type) {
-
-
-      case EdgeType.flat:
-
-        path.lineTo(
-          0,
-          h,
-        );
-
-        break;
-
-
-
-      case EdgeType.tab:
-
-        path.lineTo(
-          w * 0.65,
-          h,
-        );
-
-
-        path.cubicTo(
-
-          w * 0.65,
-
-          h + tab,
-
-          w * 0.35,
-
-          h + tab,
-
-          w * 0.35,
-
-          h,
-
-        );
-
-
-        path.lineTo(
-          0,
-          h,
-        );
-
-        break;
-
-
-
-      case EdgeType.blank:
-
-        path.lineTo(
-          w * 0.65,
-          h,
-        );
-
-
-        path.cubicTo(
-
-          w * 0.65,
-
-          h - tab,
-
-          w * 0.35,
-
-          h - tab,
-
-          w * 0.35,
-
-          h,
-
-        );
-
-
-        path.lineTo(
-          0,
-          h,
-        );
-
-        break;
-
-    }
-
-  }
-
-
-
-
-  //====================================================
-  // رسم الحافة اليسرى
-  //====================================================
-
-  void _drawLeftEdge(
-
-    Path path,
-
-    double w,
-
-    double h,
-
-    double tab,
-
-    EdgeType type,
-
-  ) {
-
-
-    switch(type) {
-
-
-      case EdgeType.flat:
-
-        path.lineTo(
-          0,
-          0,
-        );
-
-        break;
-
-
-
-      case EdgeType.tab:
-
-        path.lineTo(
-          0,
-          h * 0.65,
-        );
-
-
-        path.cubicTo(
-
-          -tab,
-
-          h * 0.65,
-
-          -tab,
-
-          h * 0.35,
-
-          0,
-
-          h * 0.35,
-
-        );
-
-
-        path.lineTo(
-          0,
-          0,
-        );
-
-        break;
-
-
-
-      case EdgeType.blank:
-
-        path.lineTo(
-          0,
-          h * 0.65,
-        );
-
-
-        path.cubicTo(
-
-          tab,
-
-          h * 0.65,
-
-          tab,
-
-          h * 0.35,
-
-          0,
-
-          h * 0.35,
-
-        );
-
-
-        path.lineTo(
-          0,
-          0,
-        );
-
-        break;
-
-    }
-
-  }
 
 
 
 
 
   @override
+
   bool shouldReclip(
+
     covariant PuzzlePieceClipper oldClipper,
+
   ) {
 
-    return oldClipper.piece != piece;
+
+    return
+
+        oldClipper.piece.top != piece.top
+
+        ||
+
+        oldClipper.piece.right != piece.right
+
+        ||
+
+        oldClipper.piece.bottom != piece.bottom
+
+        ||
+
+        oldClipper.piece.left != piece.left;
+
 
   }
+
+
 
 }
