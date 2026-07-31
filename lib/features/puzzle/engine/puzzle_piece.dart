@@ -1,65 +1,127 @@
 import 'package:flutter/material.dart';
 
-
+/// نوع شكل حافة قطعة البازل
 enum EdgeType {
-
   flat,
-
   tab,
-
   blank,
+}
+
+/// اتجاه الحافة
+enum EdgeSide {
+  top,
+  right,
+  bottom,
+  left,
+}
+
+
+/// تعريف حافة واحدة
+class PuzzleEdge {
+
+  final EdgeType type;
+
+  final EdgeSide side;
+
+
+  const PuzzleEdge({
+    required this.type,
+    required this.side,
+  });
+
+
+  bool get isFlat =>
+      type == EdgeType.flat;
+
+
+  bool get isTab =>
+      type == EdgeType.tab;
+
+
+  bool get isBlank =>
+      type == EdgeType.blank;
 
 }
 
 
-
-
-
+/// نموذج قطعة البازل
 class PuzzlePiece {
 
 
   final String id;
 
 
+  /// مكان القطعة في الشبكة
   final int row;
 
   final int column;
 
 
-  final int correctPosition;
+  /// رقمها الصحيح
+  final int correctIndex;
 
 
+  /// الجزء الذي تأخذه من الصورة الأصلية
   final Rect sourceRect;
 
 
+  /// الحواف الأربعة
 
-  final EdgeType top;
+  final PuzzleEdge top;
 
-  final EdgeType right;
+  final PuzzleEdge right;
 
-  final EdgeType bottom;
+  final PuzzleEdge bottom;
 
-  final EdgeType left;
-
-
-
+  final PuzzleEdge left;
 
 
-  // مكان القطعة داخل الشاشة/اللوحة
+
+  /// مكانها الصحيح في اللوحة
+
+  final Offset targetPosition;
+
+
+
+  /// حجم القطعة
+
+  final Size size;
+
+
+
+  /// مقدار النتوء
+
+  final double tabSize;
+
+
+
+  /// الموقع الحالي
 
   Offset position;
 
 
 
-  // مكان القطعة أثناء السحب
+  /// أثناء السحب
 
-  Offset? dragOffset;
-
-
-
-  bool placed;
+  Offset dragOffset;
 
 
+
+  /// هل يتم سحبها
+
+  bool isDragging;
+
+
+
+  /// هل ثبتت في مكانها
+
+  bool isLocked;
+
+
+
+  /// ترتيب الرسم فوق القطع
+
+  int zIndex;
 
 
 
@@ -71,7 +133,7 @@ class PuzzlePiece {
 
     required this.column,
 
-    required this.correctPosition,
+    required this.correctIndex,
 
     required this.sourceRect,
 
@@ -83,508 +145,456 @@ class PuzzlePiece {
 
     required this.left,
 
+    required this.targetPosition,
+
+    required this.size,
+
+    required this.tabSize,
+
     required this.position,
 
-    this.placed = false,
 
-    this.dragOffset,
+    this.dragOffset = Offset.zero,
+
+    this.isDragging = false,
+
+    this.isLocked = false,
+
+    this.zIndex = 0,
 
   });
 
 
 
+  double get x =>
+      position.dx;
+
+
+  double get y =>
+      position.dy;
 
 
 
+  Rect get rect =>
+      Rect.fromLTWH(
+        position.dx,
+        position.dy,
+        size.width,
+        size.height,
+      );
 
-  double get x => position.dx;
+  //======================================================
+  // بدء السحب
+  //======================================================
+
+  void startDrag(Offset touchPosition) {
+
+    if (isLocked) return;
 
 
-
-  double get y => position.dy;
-
+    isDragging = true;
 
 
+    dragOffset =
+        touchPosition - position;
 
 
-
-
-  Offset get gridPosition {
-
-
-    return Offset(
-
-      column.toDouble(),
-
-      row.toDouble(),
-
-    );
-
+    zIndex = 999;
 
   }
 
 
 
+  //======================================================
+  // تحديث مكان القطعة أثناء السحب
+  //======================================================
+
+  void updateDrag(Offset touchPosition) {
+
+    if (isLocked) return;
+
+
+    position =
+        touchPosition - dragOffset;
+
+  }
 
 
 
+  //======================================================
+  // إنهاء السحب
+  //======================================================
+
+  void endDrag() {
+
+    isDragging = false;
+
+    zIndex = 0;
+
+  }
 
 
-  // المكان النهائي داخل لوحة البازل
 
-  Offset correctOffset(
+  //======================================================
+  // تحريك مباشر
+  //======================================================
 
-    double pieceSize,
+  void moveTo(Offset newPosition) {
 
+    if (isLocked) return;
+
+
+    position = newPosition;
+
+  }
+
+
+
+  //======================================================
+  // حساب المسافة من مكانها الصحيح
+  //======================================================
+
+  double distanceToTarget() {
+
+    return
+        (position - targetPosition)
+            .distance;
+
+  }
+
+
+
+  //======================================================
+  // فحص الاقتراب
+  //======================================================
+
+  bool canSnap(
+    double tolerance,
   ) {
 
-
-    return Offset(
-
-      column * pieceSize,
-
-      row * pieceSize,
-
-    );
-
+    return distanceToTarget()
+        <= tolerance;
 
   }
 
 
 
-
-
-
-
-  // تحريك القطعة
-
-  void moveTo(
-
-    Offset value,
-
-  ) {
-
-
-    if (placed) return;
-
-
-
-    position = value;
-
-
-  }
-
-
-
-
-
-
-
-  // تحديث مكان السحب
-
-  void setPosition(
-
-    Offset value,
-
-  ) {
-
-
-    if (!placed) {
-
-
-      position = value;
-
-
-    }
-
-
-  }
-
-
-
-
-
-
-
+  //======================================================
   // تثبيت القطعة
+  //======================================================
 
-  void lock(
+  void snap() {
 
-    double pieceSize,
-
-  ) {
-
-
-    position = correctOffset(
-
-      pieceSize,
-
-    );
+    position =
+        targetPosition;
 
 
-    placed = true;
+    isLocked = true;
 
 
-    dragOffset = null;
+    isDragging = false;
 
+
+    dragOffset =
+        Offset.zero;
 
   }
 
 
 
-
-
-
-
-  // فك التثبيت
+  //======================================================
+  // إلغاء التثبيت
+  //======================================================
 
   void unlock() {
 
-
-    placed = false;
-
+    isLocked = false;
 
   }
 
 
 
+  //======================================================
+  // إعادة القطعة لحالة البداية
+  //======================================================
 
-
-
-
-  // إعادة القطعة
-
-  void reset() {
-
-
-    position = Offset.zero;
-
-
-    dragOffset = null;
-
-
-    placed = false;
-
-
-  }
-
-
-
-
-
-
-
-  // فحص قرب القطعة من مكانها
-
-  bool isCorrect(
-
-    double pieceSize,
-
-    double tolerance,
-
+  void reset(
+    Offset startPosition,
   ) {
 
+    position =
+        startPosition;
 
-    final target = correctOffset(
 
-      pieceSize,
+    dragOffset =
+        Offset.zero;
+
+
+    isDragging =
+        false;
+
+
+    isLocked =
+        false;
+
+
+    zIndex =
+        0;
+
+  }
+
+
+
+  //======================================================
+  // حفظ البيانات
+  //======================================================
+
+  Map<String, dynamic> toJson() {
+
+    return {
+
+      "id": id,
+
+      "row": row,
+
+      "column": column,
+
+      "correctIndex":
+          correctIndex,
+
+      "x":
+          position.dx,
+
+      "y":
+          position.dy,
+
+      "locked":
+          isLocked,
+
+    };
+
+  }
+
+  //======================================================
+  // استرجاع البيانات
+  //======================================================
+
+  factory PuzzlePiece.fromJson(
+    Map<String, dynamic> json,
+  ) {
+
+    return PuzzlePiece(
+
+      id:
+          json["id"]?.toString() ?? "",
+
+
+      row:
+          json["row"] ?? 0,
+
+
+      column:
+          json["column"] ?? 0,
+
+
+      correctIndex:
+          json["correctIndex"] ?? 0,
+
+
+      sourceRect:
+          Rect.zero,
+
+
+      top:
+          const PuzzleEdge(
+            type: EdgeType.flat,
+            side: EdgeSide.top,
+          ),
+
+
+      right:
+          const PuzzleEdge(
+            type: EdgeType.flat,
+            side: EdgeSide.right,
+          ),
+
+
+      bottom:
+          const PuzzleEdge(
+            type: EdgeType.flat,
+            side: EdgeSide.bottom,
+          ),
+
+
+      left:
+          const PuzzleEdge(
+            type: EdgeType.flat,
+            side: EdgeSide.left,
+          ),
+
+
+      targetPosition:
+          Offset.zero,
+
+
+      size:
+          Size.zero,
+
+
+      tabSize:
+          0,
+
+
+      position:
+          Offset(
+            (json["x"] ?? 0).toDouble(),
+            (json["y"] ?? 0).toDouble(),
+          ),
+
+
+      isLocked:
+          json["locked"] ?? false,
 
     );
 
-
-
-    final distance =
-
-        (position - target).distance;
-
-
-
-    return distance <= tolerance;
-
-
   }
 
 
 
-
-
-
-
-  // نسخة جديدة
+  //======================================================
+  // نسخة جديدة من القطعة
+  //======================================================
 
   PuzzlePiece copyWith({
 
     Offset? position,
 
-    bool? placed,
+    bool? isLocked,
 
-    Offset? dragOffset,
+    bool? isDragging,
+
+    int? zIndex,
 
   }) {
 
-
     return PuzzlePiece(
 
-
-      id: id,
-
-
-      row: row,
+      id:
+          id,
 
 
-      column: column,
+      row:
+          row,
 
 
-      correctPosition:
+      column:
+          column,
 
-          correctPosition,
+
+      correctIndex:
+          correctIndex,
 
 
       sourceRect:
-
           sourceRect,
 
 
       top:
-
           top,
 
 
       right:
-
           right,
 
 
       bottom:
-
           bottom,
 
 
       left:
-
           left,
 
 
-      position:
+      targetPosition:
+          targetPosition,
 
+
+      size:
+          size,
+
+
+      tabSize:
+          tabSize,
+
+
+      position:
           position ?? this.position,
 
 
-      placed:
-
-          placed ?? this.placed,
-
-
       dragOffset:
+          dragOffset,
 
-          dragOffset ?? this.dragOffset,
 
+      isDragging:
+          isDragging ?? this.isDragging,
+
+
+      isLocked:
+          isLocked ?? this.isLocked,
+
+
+      zIndex:
+          zIndex ?? this.zIndex,
 
     );
 
-
-  }
-
-  // حفظ حالة القطعة
-
-  Map<String, dynamic> toJson() {
-
-
-    return {
-
-
-      "id": id,
-
-
-      "row": row,
-
-
-      "column": column,
-
-
-      "correctPosition":
-          correctPosition,
-
-
-      "x":
-          position.dx,
-
-
-      "y":
-          position.dy,
-
-
-      "placed":
-          placed,
-
-
-    };
-
-
   }
 
 
 
-
-
-
-
-  // استرجاع حالة القطعة
-
-  factory PuzzlePiece.fromJson(
-
-    Map<String, dynamic> json,
-
-  ) {
-
-
-    return PuzzlePiece(
-
-
-      id:
-
-          json["id"]?.toString() ?? "",
-
-
-      row:
-
-          json["row"] ?? 0,
-
-
-      column:
-
-          json["column"] ?? 0,
-
-
-      correctPosition:
-
-          json["correctPosition"] ?? 0,
-
-
-
-      // يتم إعادة بناء الصورة من الـ Generator
-
-      sourceRect:
-
-          Rect.zero,
-
-
-
-      top:
-
-          EdgeType.flat,
-
-
-      right:
-
-          EdgeType.flat,
-
-
-      bottom:
-
-          EdgeType.flat,
-
-
-      left:
-
-          EdgeType.flat,
-
-
-
-      position:
-
-          Offset(
-
-            (json["x"] ?? 0).toDouble(),
-
-            (json["y"] ?? 0).toDouble(),
-
-          ),
-
-
-
-      placed:
-
-          json["placed"] ?? false,
-
-
-    );
-
-
-  }
-
-
-
-
-
-
+  //======================================================
+  // مقارنة القطع
+  //======================================================
 
   @override
-
   bool operator ==(
-
     Object other,
-
   ) {
-
 
     return identical(
-
       this,
-
       other,
-
     ) ||
 
-
-        other is PuzzlePiece &&
-
+    other is PuzzlePiece &&
         other.id == id;
-
 
   }
 
 
 
-
-
-
-
   @override
-
   int get hashCode =>
-
       id.hashCode;
 
 
 
-
-
-
+  //======================================================
+  // طباعة معلومات القطعة
+  //======================================================
 
   @override
-
   String toString() {
 
-
     return
-
-    "PuzzlePiece("
-
-    "id:$id, "
-
-    "row:$row, "
-
-    "column:$column, "
-
-    "position:$position, "
-
-    "placed:$placed"
-
-    ")";
-
+      "PuzzlePiece("
+      "id:$id, "
+      "row:$row, "
+      "column:$column, "
+      "position:$position, "
+      "locked:$isLocked"
+      ")";
 
   }
-
 
 }
