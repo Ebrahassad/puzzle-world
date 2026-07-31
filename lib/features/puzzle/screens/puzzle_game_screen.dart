@@ -28,8 +28,6 @@ class PuzzleGameScreen extends StatefulWidget {
 
 
 
-
-
   @override
   State<PuzzleGameScreen> createState()
 
@@ -62,16 +60,15 @@ class _PuzzleGameScreenState
 
 
 
+  bool loading = true;
+
+
+
   final double boardSize = 360;
 
 
 
-  final double trayHeight = 120;
-
-
-
-  bool loading = true;
-
+  final double trayHeight = 170;
 
 
 
@@ -81,12 +78,9 @@ class _PuzzleGameScreenState
   @override
   void initState(){
 
-
     super.initState();
 
-
     loadImage();
-
 
   }
 
@@ -97,17 +91,14 @@ class _PuzzleGameScreenState
 
 
 
-  //==================================================
+  //==============================================
   // تحميل صورة المرحلة
-  //==================================================
+  //==============================================
 
   Future<void> loadImage() async {
 
 
-
-    final provider =
-
-    AssetImage(
+    final provider = AssetImage(
 
       widget.level.image,
 
@@ -115,9 +106,7 @@ class _PuzzleGameScreenState
 
 
 
-    final stream =
-
-    provider.resolve(
+    final stream = provider.resolve(
 
       const ImageConfiguration(),
 
@@ -125,14 +114,11 @@ class _PuzzleGameScreenState
 
 
 
-    late ImageStreamListener listener;
+    stream.addListener(
 
+      ImageStreamListener(
 
-
-    listener = ImageStreamListener(
-
-            (info, _) async {
-
+        (info, _) {
 
 
           image = info.image;
@@ -143,15 +129,11 @@ class _PuzzleGameScreenState
 
 
 
-        }
+        },
+
+      ),
 
     );
-
-
-
-    stream.addListener(listener);
-
-
 
   }
 
@@ -162,22 +144,20 @@ class _PuzzleGameScreenState
 
 
 
-
-  //==================================================
-  // إنشاء البازل
-  //==================================================
+  //==============================================
+  // إنشاء القطع
+  //==============================================
 
   void createPuzzle(){
 
 
 
-    final size = Size(
+    final pieceSize =
 
-      boardSize,
+        boardSize /
 
-      boardSize,
+            widget.level.gridSize;
 
-    );
 
 
 
@@ -190,6 +170,7 @@ class _PuzzleGameScreenState
       columns: widget.level.gridSize,
 
 
+
       imageSize: Size(
 
         image!.width.toDouble(),
@@ -199,13 +180,15 @@ class _PuzzleGameScreenState
       ),
 
 
+
       pieceSize: Size(
 
-        boardSize / widget.level.gridSize,
+        pieceSize,
 
-        boardSize / widget.level.gridSize,
+        pieceSize,
 
       ),
+
 
 
       traySize: Size(
@@ -217,8 +200,8 @@ class _PuzzleGameScreenState
       ),
 
 
-
     );
+
 
 
 
@@ -234,12 +217,9 @@ class _PuzzleGameScreenState
 
     setState((){
 
-
       loading = false;
 
-
     });
-
 
 
   }
@@ -262,11 +242,9 @@ class _PuzzleGameScreenState
 
       return const Scaffold(
 
-        backgroundColor: Colors.black,
-
         body: Center(
 
-          child: CircularProgressIndicator(),
+          child:CircularProgressIndicator(),
 
         ),
 
@@ -286,44 +264,32 @@ class _PuzzleGameScreenState
       backgroundColor: Colors.transparent,
 
 
-
       body: SafeArea(
 
 
-
         child: Column(
-
 
 
           children: [
 
 
 
-
-
-
-
-            //==========================================
-            // شريط القطع العلوي
-            //==========================================
+            //====================================
+            // شريط القطع
+            //====================================
 
 
             SizedBox(
 
-
               height: trayHeight,
 
-
               width: double.infinity,
-
 
 
               child: GestureDetector(
 
 
-
-                onPanDown: (d){
-
+                onPanDown:(d){
 
 
                   controller.pointerDown(
@@ -333,18 +299,14 @@ class _PuzzleGameScreenState
                   );
 
 
-
                   setState((){});
-
 
 
                 },
 
 
 
-
-                onPanUpdate: (d){
-
+                onPanUpdate:(d){
 
 
                   controller.pointerMove(
@@ -354,26 +316,23 @@ class _PuzzleGameScreenState
                   );
 
 
-
                   setState((){});
-
 
 
                 },
 
 
 
-
-                onPanEnd: (_){
-
+                onPanEnd:(_){
 
 
                   controller.pointerUp();
 
 
+                  setState((){});
+
 
                   checkWin();
-
 
 
                 },
@@ -383,16 +342,13 @@ class _PuzzleGameScreenState
                 child: CustomPaint(
 
 
-
-                  painter:
-
-                  PuzzleBoardPainter(
+                  painter: PuzzlePainter(
 
 
-                    image: image!,
+                    image:image!,
 
 
-                    pieces: pieces,
+                    pieces:pieces,
 
 
                     pieceSize:
@@ -402,13 +358,122 @@ class _PuzzleGameScreenState
                         widget.level.gridSize,
 
 
+                  ),
 
-                    showReference: false,
+
+                ),
 
 
+              ),
+
+            ),
+
+
+
+
+
+            const SizedBox(height:20),
+
+
+
+            //====================================
+            // لوحة البازل
+            //====================================
+
+
+            SizedBox(
+
+
+              width:boardSize,
+
+
+              height:boardSize,
+
+
+
+              child: GestureDetector(
+
+
+                onPanDown:(d){
+
+
+                  controller.pointerDown(
+
+                    d.localPosition,
+
+                  );
+
+
+                  setState((){});
+
+
+                },
+
+
+
+                onPanUpdate:(d){
+
+
+                  controller.pointerMove(
+
+                    d.localPosition,
+
+                  );
+
+
+                  setState((){});
+
+
+                },
+
+
+
+                onPanEnd:(_){
+
+
+                  controller.pointerUp();
+
+
+                  setState((){});
+
+
+                  checkWin();
+
+
+                },
+
+
+
+                child: CustomPaint(
+
+
+                  size:Size(
+
+                    boardSize,
+
+                    boardSize,
 
                   ),
 
+
+
+                  painter:PuzzlePainter(
+
+
+                    image:image!,
+
+
+                    pieces:pieces,
+
+
+                    pieceSize:
+
+                    boardSize /
+
+                        widget.level.gridSize,
+
+
+                  ),
 
 
                 ),
@@ -420,240 +485,36 @@ class _PuzzleGameScreenState
             ),
 
 
-
-
-
-
-
-            const SizedBox(
-
-              height: 20,
-
-            ),
-
-
-
-
-
-
-
-
-            //==========================================
-            // لوحة البازل
-            //==========================================
-
-
-            SizedBox(
-
-
-              width: boardSize,
-
-
-              height: boardSize,
-
-
-
-              child: Stack(
-
-
-
-                children: [
-
-
-
-
-
-                  // الصورة الشفافة الخلفية
-
-                  Opacity(
-
-
-                    opacity: 0.15,
-
-
-                    child: Image.asset(
-
-
-                      widget.level.image,
-
-
-                      width: boardSize,
-
-
-                      height: boardSize,
-
-
-                      fit: BoxFit.cover,
-
-
-                    ),
-
-
-                  ),
-
-
-
-
-
-
-
-                  GestureDetector(
-
-
-
-                    onPanDown: (d){
-
-
-
-                      controller.pointerDown(
-
-                        d.localPosition,
-
-                      );
-
-
-
-                      setState((){});
-
-
-                    },
-
-
-
-                    onPanUpdate: (d){
-
-
-
-                      controller.pointerMove(
-
-                        d.localPosition,
-
-                      );
-
-
-
-                      setState((){});
-
-
-
-                    },
-
-
-
-                    onPanEnd: (_){
-
-
-
-                      controller.pointerUp();
-
-
-
-                      checkWin();
-
-
-
-                    },
-
-
-
-                    child: CustomPaint(
-
-
-
-                      size: Size(
-
-                        boardSize,
-
-                        boardSize,
-
-                      ),
-
-
-
-                      painter:
-
-                      PuzzleBoardPainter(
-
-
-                        image: image!,
-
-
-                        pieces: pieces,
-
-
-                        pieceSize:
-
-                        boardSize /
-
-                            widget.level.gridSize,
-
-
-                        showReference: true,
-
-
-                      ),
-
-
-
-                    ),
-
-
-
-                  ),
-
-
-                ],
-
-
-              ),
-
-
-
-            ),
-
-
-
-
           ],
 
 
         ),
 
-
       ),
-
 
     );
 
 
-
   }
 
-
-
-
-
-
-
-
+  //==============================================
+  // فحص اكتمال البازل
+  //==============================================
 
   void checkWin(){
-
 
 
     if(controller.isCompleted){
 
 
-
       Future.delayed(
 
-        const Duration(milliseconds: 600),
+        const Duration(milliseconds:500),
 
             (){
 
 
           Navigator.pop(context);
-
 
 
         },
@@ -667,6 +528,7 @@ class _PuzzleGameScreenState
   }
 
 
+
 }
 
 
@@ -674,12 +536,13 @@ class _PuzzleGameScreenState
 
 
 
+
+
 //==================================================
-// رسام اللوحة
+// رسام لوحة البازل
 //==================================================
 
-class PuzzleBoardPainter extends CustomPainter {
-
+class PuzzlePainter extends CustomPainter {
 
 
   final ui.Image image;
@@ -691,29 +554,16 @@ class PuzzleBoardPainter extends CustomPainter {
   final double pieceSize;
 
 
-  final bool showReference;
 
-
-
-
-
-  PuzzleBoardPainter({
-
+  PuzzlePainter({
 
     required this.image,
 
-
     required this.pieces,
-
 
     required this.pieceSize,
 
-
-    this.showReference = false,
-
-
   });
-
 
 
 
@@ -731,8 +581,6 @@ class PuzzleBoardPainter extends CustomPainter {
 
 
 
-    // رسم القطع
-
     for(final piece in pieces){
 
 
@@ -740,16 +588,16 @@ class PuzzleBoardPainter extends CustomPainter {
       PuzzlePiecePainter.paint(
 
 
-        canvas: canvas,
+        canvas:canvas,
 
 
-        piece: piece,
+        piece:piece,
 
 
-        image: image,
+        image:image,
 
 
-        pieceSize: Size(
+        pieceSize:Size(
 
           pieceSize,
 
@@ -758,13 +606,17 @@ class PuzzleBoardPainter extends CustomPainter {
         ),
 
 
-        showShadow: piece.dragging,
+        showShadow:
+
+        piece.dragging,
 
 
       );
 
 
+
     }
+
 
 
   }
@@ -775,7 +627,6 @@ class PuzzleBoardPainter extends CustomPainter {
 
 
   @override
-
   bool shouldRepaint(
 
       covariant CustomPainter oldDelegate,
@@ -787,6 +638,7 @@ class PuzzleBoardPainter extends CustomPainter {
 
 
   }
+
 
 
 }
