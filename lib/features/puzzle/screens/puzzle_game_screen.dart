@@ -129,26 +129,27 @@ class _PuzzleGameScreenState
 
       ImageStreamListener(
 
+  (info, _) {
 
+    image = info.image;
 
-        (info, _) {
+    _calculateBoardPosition();
 
+  },
 
+  onError:(error, stack){
 
-          image = info.image;
+    debugPrint(
+      "IMAGE ERROR: ${widget.level.image}"
+    );
 
+    setState(() {
+      loading = false;
+    });
 
+  },
 
-          _calculateBoardPosition();
-
-
-
-        },
-
-
-
-      ),
-
+),
 
 
     );
@@ -169,49 +170,49 @@ class _PuzzleGameScreenState
 
   void _calculateBoardPosition(){
 
+  WidgetsBinding.instance.addPostFrameCallback((_) {
 
-  WidgetsBinding.instance
-      .addPostFrameCallback((_) {
+    if(!mounted){
+      return;
+    }
 
 
-    if(boardKey.currentContext == null){
+    final context = boardKey.currentContext;
 
-      _calculateBoardPosition();
+
+    if(context == null){
+
+      debugPrint("BOARD NOT READY");
 
       return;
 
     }
 
 
-
     final RenderBox box =
-
-        boardKey.currentContext!
-            .findRenderObject()
+        context.findRenderObject()
         as RenderBox;
 
 
 
-
     boardOffset =
-
         box.localToGlobal(
           Offset.zero,
         );
 
 
 
+    debugPrint(
+      "BOARD OFFSET = $boardOffset"
+    );
+
 
     _createPuzzle();
 
 
-
   });
 
-
 }
-
-
 
 
 
@@ -223,6 +224,9 @@ class _PuzzleGameScreenState
 
   void _createPuzzle(){
 
+  if(image == null){
+    return;
+  }
 
 
     final pieceSize =
@@ -307,7 +311,9 @@ class _PuzzleGameScreenState
 
     );
 
-
+debugPrint(
+  "PUZZLE PIECES = ${pieces.length}"
+);
 
     setState(() {
 
