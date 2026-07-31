@@ -3,88 +3,97 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import 'puzzle_piece.dart';
+import 'puzzle_piece_clipper.dart';
 
+
+///======================================================
+/// رسم صورة قطعة البازل داخل شكلها
+///======================================================
 
 class PuzzlePainter extends CustomPainter {
 
 
   final PuzzlePiece piece;
 
-  final ImageProvider image;
 
-  final ui.Image? cachedImage;
-
+  final ui.Image image;
 
 
-  const PuzzlePainter({
+
+  PuzzlePainter({
 
     required this.piece,
 
     required this.image,
-
-    this.cachedImage,
 
   });
 
 
 
 
+
   @override
   void paint(
+
     Canvas canvas,
+
     Size size,
+
   ) {
 
 
-    final path = createPiecePath(size);
+    final path =
+
+        PuzzlePieceClipper(
+
+          piece: piece,
+
+        ).getClip(
+
+          size,
+
+        );
 
 
 
-    //==================================================
-    // ظل القطعة
-    //==================================================
 
-    canvas.drawPath(
+    // حفظ منطقة القطعة
+
+    canvas.save();
+
+
+
+    canvas.clipPath(
 
       path,
-
-      Paint()
-
-        ..color = Colors.black.withOpacity(0.25)
-
-        ..maskFilter = const MaskFilter.blur(
-
-          BlurStyle.normal,
-
-          5,
-
-        ),
 
     );
 
 
 
 
-
     //==================================================
-    // صورة القطعة
+    // حساب مكان الصورة
     //==================================================
 
-    if(cachedImage != null){
+
+    final source =
+
+        Rect.fromLTWH(
+
+          piece.sourceRect.left,
+
+          piece.sourceRect.top,
+
+          piece.sourceRect.width,
+
+          piece.sourceRect.height,
+
+        );
 
 
-      canvas.save();
 
-
-      canvas.clipPath(path);
-
-
-
-      canvas.drawImageRect(
-
-        cachedImage!,
-
-        piece.sourceRect,
+    final destination =
 
         Rect.fromLTWH(
 
@@ -96,81 +105,50 @@ class PuzzlePainter extends CustomPainter {
 
           size.height,
 
-        ),
-
-        Paint()
-
-          ..filterQuality = FilterQuality.high
-
-          ..isAntiAlias = true,
-
-      );
-
-
-      canvas.restore();
-
-    }
+        );
 
 
 
 
 
+    final paint = Paint()
 
-    //==================================================
-    // لمعة خفيفة
-    //==================================================
+      ..filterQuality =
 
-    canvas.drawPath(
+          FilterQuality.high;
 
-      path,
 
-      Paint()
 
-        ..shader = LinearGradient(
 
-          begin: Alignment.topCenter,
+    canvas.drawImageRect(
 
-          end: Alignment.bottomCenter,
+      image,
 
-          colors:[
+      source,
 
-            Colors.white.withOpacity(0.12),
+      destination,
 
-            Colors.transparent,
-
-            Colors.black.withOpacity(0.08),
-
-          ],
-
-        ).createShader(
-
-          Offset.zero & size,
-
-        ),
+      paint,
 
     );
 
 
 
+    canvas.restore();
 
 
-    //==================================================
-    // إطار القطعة
-    //==================================================
 
-    canvas.drawPath(
+
+
+    // رسم ظل خفيف حول القطعة
+
+    _drawShadow(
+
+      canvas,
 
       path,
 
-      Paint()
-
-        ..style = PaintingStyle.stroke
-
-        ..strokeWidth = 1
-
-        ..color = Colors.white.withOpacity(0.35)
-
-        ..isAntiAlias = true,
+      size,
 
     );
 
@@ -180,202 +158,85 @@ class PuzzlePainter extends CustomPainter {
 
 
 
+  //====================================================
+  // ظل القطعة
+  //====================================================
 
+  void _drawShadow(
 
+    Canvas canvas,
 
-
-
-  Path createPiecePath(
+    Path path,
 
     Size size,
 
-  ){
+  ) {
 
 
-    final path = Path();
+    final shadowPaint = Paint()
 
+      ..color =
 
+          Colors.black.withOpacity(
 
-    final w = size.width;
+            0.18,
 
-    final h = size.height;
+          )
 
+      ..style =
 
+          PaintingStyle.stroke
 
-    final tab =
+      ..strokeWidth =
 
-        (w < h ? w : h) * 0.18;
-
-
-
-    final centerX = w / 2;
-
-    final centerY = h / 2;
-
+          1.5;
 
 
 
-    path.moveTo(
-
-      0,
-
-      0,
-
-    );
-
-
-
-
-
-    // أعلى
-
-    path.lineTo(
-
-      centerX - tab,
-
-      0,
-
-    );
-
-
-    drawTop(
+    canvas.drawPath(
 
       path,
 
-      piece.top,
-
-      centerX,
-
-      0,
-
-      tab,
+      shadowPaint,
 
     );
 
+  }
 
-    path.lineTo(
+  //====================================================
+  // رسم تأثير عند سحب القطعة
+  //====================================================
 
-      w,
+  void drawActiveEffect(
 
-      0,
+    Canvas canvas,
 
-    );
+    Path path,
 
-
-
-
-
-
-    // يمين
-
-    path.lineTo(
-
-      w,
-
-      centerY - tab,
-
-    );
+  ) {
 
 
-    drawRight(
+    final paint = Paint()
+
+      ..style = PaintingStyle.stroke
+
+      ..strokeWidth = 2.0
+
+      ..color = Colors.white.withOpacity(
+
+        0.55,
+
+      );
+
+
+
+    canvas.drawPath(
 
       path,
 
-      piece.right,
-
-      w,
-
-      centerY,
-
-      tab,
+      paint,
 
     );
-
-
-    path.lineTo(
-
-      w,
-
-      h,
-
-    );
-
-
-
-
-
-
-    // أسفل
-
-    path.lineTo(
-
-      centerX + tab,
-
-      h,
-
-    );
-
-
-    drawBottom(
-
-      path,
-
-      piece.bottom,
-
-      centerX,
-
-      h,
-
-      tab,
-
-    );
-
-
-    path.lineTo(
-
-      0,
-
-      h,
-
-    );
-
-
-
-
-
-
-    // يسار
-
-    path.lineTo(
-
-      0,
-
-      centerY + tab,
-
-    );
-
-
-    drawLeft(
-
-      path,
-
-      piece.left,
-
-      0,
-
-      centerY,
-
-      tab,
-
-    );
-
-
-
-    path.close();
-
-
-
-    return path;
 
   }
 
@@ -383,297 +244,35 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-
-
-
-
-  void drawTop(
-
-    Path path,
-
-    EdgeType type,
-
-    double x,
-
-    double y,
-
-    double tab,
-
-  ){
-
-
-    if(type == EdgeType.tab){
-
-
-      path.cubicTo(
-
-        x - tab,
-
-        y - tab,
-
-        x + tab,
-
-        y - tab,
-
-        x + tab,
-
-        y,
-
-      );
-
-
-    }
-
-    else if(type == EdgeType.blank){
-
-
-      path.cubicTo(
-
-        x - tab,
-
-        y + tab,
-
-        x + tab,
-
-        y + tab,
-
-        x + tab,
-
-        y,
-
-      );
-
-
-    }
-
-  }
-
-
-
-
-
-
-
-
-
-  void drawBottom(
-
-    Path path,
-
-    EdgeType type,
-
-    double x,
-
-    double y,
-
-    double tab,
-
-  ){
-
-
-    if(type == EdgeType.tab){
-
-
-      path.cubicTo(
-
-        x + tab,
-
-        y + tab,
-
-        x - tab,
-
-        y + tab,
-
-        x - tab,
-
-        y,
-
-      );
-
-
-    }
-
-    else if(type == EdgeType.blank){
-
-
-      path.cubicTo(
-
-        x + tab,
-
-        y - tab,
-
-        x - tab,
-
-        y - tab,
-
-        x - tab,
-
-        y,
-
-      );
-
-
-    }
-
-  }
-
-
-
-
-
-
-
-
-
-  void drawRight(
-
-    Path path,
-
-    EdgeType type,
-
-    double x,
-
-    double y,
-
-    double tab,
-
-  ){
-
-
-    if(type == EdgeType.tab){
-
-
-      path.cubicTo(
-
-        x + tab,
-
-        y - tab,
-
-        x + tab,
-
-        y + tab,
-
-        x,
-
-        y + tab,
-
-      );
-
-
-    }
-
-    else if(type == EdgeType.blank){
-
-
-      path.cubicTo(
-
-        x - tab,
-
-        y - tab,
-
-        x - tab,
-
-        y + tab,
-
-        x,
-
-        y + tab,
-
-      );
-
-
-    }
-
-  }
-
-
-
-
-
-
-
-
-
-  void drawLeft(
-
-    Path path,
-
-    EdgeType type,
-
-    double x,
-
-    double y,
-
-    double tab,
-
-  ){
-
-
-    if(type == EdgeType.tab){
-
-
-      path.cubicTo(
-
-        x - tab,
-
-        y + tab,
-
-        x - tab,
-
-        y - tab,
-
-        x,
-
-        y - tab,
-
-      );
-
-
-    }
-
-    else if(type == EdgeType.blank){
-
-
-      path.cubicTo(
-
-        x + tab,
-
-        y + tab,
-
-        x + tab,
-
-        y - tab,
-
-        x,
-
-        y - tab,
-
-      );
-
-
-    }
-
-  }
-
-
-
-
-
-
-
+  //====================================================
+  // إعادة الرسم
+  //====================================================
 
   @override
   bool shouldRepaint(
 
     covariant PuzzlePainter oldDelegate,
 
-  ){
+  ) {
 
-    return oldDelegate.piece != piece ||
 
-        oldDelegate.cachedImage != cachedImage ||
+    return
 
-        oldDelegate.image != image;
+        oldDelegate.piece.position !=
+
+            piece.position
+
+        ||
+
+        oldDelegate.piece.isDragging !=
+
+            piece.isDragging
+
+        ||
+
+        oldDelegate.image !=
+
+            image;
 
   }
 
