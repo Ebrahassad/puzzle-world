@@ -18,9 +18,13 @@ enum EdgeType {
 //==================================================
 
 enum PieceState {
+
   tray,       // داخل الشريط
-  board,      // على اللوحة
+
+  board,      // خرجت للوحة
+
   locked,     // مثبتة
+
 }
 
 
@@ -34,13 +38,14 @@ class PuzzlePiece {
   final String id;
 
 
-  // مكانها الأصلي
+  // مكانها في الشبكة
   final int row;
   final int column;
 
 
-  // مكانها في الصورة
+  // الجزء المقصوص من الصورة
   final Rect sourceRect;
+
 
 
   // الحواف
@@ -51,12 +56,23 @@ class PuzzlePiece {
 
 
 
-  // مكانها الحالي على الشاشة
+  // مكانها الحالي
   Offset position;
 
 
-  // مكانها الصحيح في اللوحة
+
+  // مكانها داخل الشريط
+  late Offset trayPosition;
+
+
+
+  // مكانها الصحيح داخل اللوحة
   late Offset correctPosition;
+
+
+
+  // حجم القطعة
+  late Size size;
 
 
 
@@ -70,7 +86,7 @@ class PuzzlePiece {
 
 
 
-  // هل يتم سحبها
+  // أثناء السحب
   bool dragging;
 
 
@@ -93,7 +109,6 @@ class PuzzlePiece {
 
     required this.left,
 
-
     required this.position,
 
 
@@ -107,8 +122,6 @@ class PuzzlePiece {
 
 
 
-
-
   //==================================================
   // إنشاء شكل القطعة
   //==================================================
@@ -118,6 +131,9 @@ class PuzzlePiece {
       Size size,
 
       ) {
+
+
+    this.size = size;
 
 
     path = PuzzleShapeBuilder.build(
@@ -137,27 +153,29 @@ class PuzzlePiece {
 
   }
 
-
-
-
-
-
   //==================================================
-  // تحديد مكانها الصحيح
+  // تحديد مكانها الصحيح في اللوحة
   //==================================================
 
   void setCorrectPosition(
 
       double pieceSize,
 
+      Offset boardOffset,
+
       ) {
 
 
     correctPosition = Offset(
 
-      column * pieceSize,
+      boardOffset.dx +
 
-      row * pieceSize,
+          (column * pieceSize),
+
+
+      boardOffset.dy +
+
+          (row * pieceSize),
 
     );
 
@@ -169,8 +187,38 @@ class PuzzlePiece {
 
 
 
+
   //==================================================
-  // هل قريبة من المكان الصحيح
+  // تحديد مكانها في الشريط المتحرك
+  //==================================================
+
+  void setTrayPosition(
+
+      Offset position,
+
+      ) {
+
+
+    trayPosition = position;
+
+
+    this.position = position;
+
+
+    state = PieceState.tray;
+
+
+  }
+
+
+
+
+
+
+
+
+  //==================================================
+  // هل القطعة قريبة من مكانها
   //==================================================
 
   bool isCorrect(
@@ -182,9 +230,9 @@ class PuzzlePiece {
 
     return (
 
-        position -
+      position -
 
-            correctPosition
+          correctPosition
 
     )
 
@@ -199,11 +247,117 @@ class PuzzlePiece {
 
 
 
+
+  //==================================================
+  // بدء السحب
+  //==================================================
+
+  void startDrag(){
+
+
+    if(state == PieceState.locked){
+
+      return;
+
+    }
+
+
+    dragging = true;
+
+
+  }
+
+
+
+
+
+
+
+
+  //==================================================
+  // نقل القطعة
+  //==================================================
+
+  void move(
+
+      Offset delta,
+
+      ) {
+
+
+    if(state == PieceState.locked){
+
+      return;
+
+    }
+
+
+    position += delta;
+
+
+  }
+
+
+
+
+
+
+
+
+  //==================================================
+  // نقل لمكان مباشر
+  //==================================================
+
+  void moveTo(
+
+      Offset newPosition,
+
+      ){
+
+
+    if(state == PieceState.locked){
+
+      return;
+
+    }
+
+
+    position = newPosition;
+
+
+  }
+
+
+
+
+
+
+
+
+  //==================================================
+  // عند ترك القطعة
+  //==================================================
+
+  void endDrag(){
+
+
+    dragging = false;
+
+
+  }
+
+
+
+
+
+
+
+
   //==================================================
   // تثبيت القطعة
   //==================================================
 
-  void lock() {
+  void lock(){
 
 
     position = correctPosition;
@@ -223,68 +377,18 @@ class PuzzlePiece {
 
 
 
-  //==================================================
-  // بداية السحب
-  //==================================================
-
-  void startDrag() {
-
-
-    if(state == PieceState.locked) {
-
-      return;
-
-    }
-
-
-    dragging = true;
-
-
-    state = PieceState.board;
-
-
-  }
-
-
-
-
-
-
 
   //==================================================
-  // تحريك
+  // إعادة القطعة للشريط
   //==================================================
 
-  void move(
-
-      Offset delta,
-
-      ) {
+  void returnToTray(){
 
 
-    if(state == PieceState.locked) {
-
-      return;
-
-    }
+    position = trayPosition;
 
 
-    position += delta;
-
-
-  }
-
-
-
-
-
-
-
-  //==================================================
-  // نهاية السحب
-  //==================================================
-
-  void endDrag() {
+    state = PieceState.tray;
 
 
     dragging = false;
@@ -293,15 +397,12 @@ class PuzzlePiece {
   }
 
 
+
 }
 
 
-
-
-
-
 //==================================================
-// بناء شكل القطعة
+// بناء شكل قطعة البازل
 //==================================================
 
 class PuzzleShapeBuilder {
@@ -322,7 +423,6 @@ class PuzzleShapeBuilder {
   }) {
 
 
-
     final path = Path();
 
 
@@ -335,50 +435,80 @@ class PuzzleShapeBuilder {
 
 
 
-    path.moveTo(0,0);
+    path.moveTo(0, 0);
 
 
 
+    // أعلى
     _horizontal(
+
       path,
+
       w,
+
       top,
+
       tab,
+
       true,
+
     );
 
 
 
+    // يمين
     _vertical(
+
       path,
+
       h,
+
       right,
+
       tab,
+
       true,
+
     );
 
 
 
+    // أسفل
     _horizontal(
+
       path,
+
       w,
+
       bottom,
+
       tab,
+
       false,
+
     );
 
 
 
+    // يسار
     _vertical(
+
       path,
+
       h,
+
       left,
+
       tab,
+
       false,
+
     );
+
 
 
     path.close();
+
 
 
     return path;
@@ -389,6 +519,12 @@ class PuzzleShapeBuilder {
 
 
 
+
+
+
+  //==================================================
+  // الحواف الأفقية
+  //==================================================
 
   static void _horizontal(
 
@@ -405,16 +541,22 @@ class PuzzleShapeBuilder {
       ) {
 
 
+
     final y = top ? 0.0 : length;
 
 
 
     if(type == EdgeType.flat){
 
+
       path.lineTo(
+
         length,
+
         y,
+
       );
+
 
       return;
 
@@ -428,43 +570,73 @@ class PuzzleShapeBuilder {
     final direction = top ? -1 : 1;
 
 
+
     final amount =
+
         type == EdgeType.tab
+
             ? direction * tab
+
             : -direction * tab;
 
 
 
+
+
     path.lineTo(
-      center-tab,
+
+      center - tab,
+
       y,
+
     );
 
 
+
     path.cubicTo(
-      center-tab,
+
+      center - tab,
+
       y,
-      center-tab/2,
-      y+amount,
+
+      center - tab / 2,
+
+      y + amount,
+
       center,
-      y+amount,
+
+      y + amount,
+
     );
+
 
 
     path.cubicTo(
-      center+tab/2,
-      y+amount,
-      center+tab,
+
+      center + tab / 2,
+
+      y + amount,
+
+      center + tab,
+
       y,
-      center+tab,
+
+      center + tab,
+
       y,
+
     );
+
 
 
     path.lineTo(
+
       length,
+
       y,
+
     );
+
 
   }
 
@@ -473,6 +645,11 @@ class PuzzleShapeBuilder {
 
 
 
+
+
+  //==================================================
+  // الحواف العمودية
+  //==================================================
 
   static void _vertical(
 
@@ -489,16 +666,22 @@ class PuzzleShapeBuilder {
       ) {
 
 
+
     final x = right ? length : 0.0;
 
 
 
     if(type == EdgeType.flat){
 
+
       path.lineTo(
+
         x,
+
         length,
+
       );
+
 
       return;
 
@@ -506,52 +689,88 @@ class PuzzleShapeBuilder {
 
 
 
-    final center = length/2;
+
+    final center = length / 2;
 
 
     final direction = right ? 1 : -1;
 
 
+
     final amount =
+
         type == EdgeType.tab
-            ? direction*tab
-            : -direction*tab;
+
+            ? direction * tab
+
+            : -direction * tab;
+
+
 
 
 
     path.lineTo(
+
       x,
-      center-tab,
+
+      center - tab,
+
     );
 
 
 
+
+
     path.cubicTo(
+
       x,
-      center-tab,
-      x+amount,
-      center-tab/2,
-      x+amount,
+
+      center - tab,
+
+      x + amount,
+
+      center - tab / 2,
+
+      x + amount,
+
       center,
+
     );
+
+
 
 
 
     path.cubicTo(
-      x+amount,
-      center+tab/2,
+
+      x + amount,
+
+      center + tab / 2,
+
       x,
-      center+tab,
+
+      center + tab,
+
       x,
-      center+tab,
+
+      center + tab,
+
     );
+
+
+
 
 
     path.lineTo(
+
       x,
+
       length,
+
     );
+
 
   }
+
 
 }
