@@ -33,7 +33,10 @@ class IslandScreen extends StatefulWidget {
 
       => _IslandScreenState();
 
+
 }
+
+
 
 
 
@@ -50,17 +53,28 @@ class _IslandScreenState
   final List<Offset> levelPositions = const [
 
     Offset(0.15,0.00),
+
     Offset(0.65,0.08),
+
     Offset(0.25,0.16),
+
     Offset(0.70,0.24),
+
     Offset(0.30,0.32),
+
     Offset(0.65,0.40),
+
     Offset(0.25,0.48),
+
     Offset(0.70,0.56),
+
     Offset(0.35,0.64),
+
     Offset(0.60,0.72),
 
   ];
+
+
 
 
 
@@ -78,7 +92,6 @@ class _IslandScreenState
 
 
 
-
   late List<PuzzleLevelModel> levels;
 
 
@@ -86,13 +99,12 @@ class _IslandScreenState
 
 
   @override
+
   void initState() {
 
     super.initState();
 
 
-
-    // جلب مراحل الجزيرة
 
     levels = PuzzleLevelData.getLevels(
 
@@ -106,13 +118,15 @@ class _IslandScreenState
 
     floatController = AnimationController(
 
-      vsync: this,
+      vsync:this,
 
-      duration: const Duration(seconds:3),
+      duration:const Duration(seconds:3),
 
     )
 
-    ..repeat(reverse:true);
+      ..repeat(reverse:true);
+
+
 
 
 
@@ -126,9 +140,9 @@ class _IslandScreenState
 
       CurvedAnimation(
 
-        parent: floatController,
+        parent:floatController,
 
-        curve: Curves.easeInOut,
+        curve:Curves.easeInOut,
 
       ),
 
@@ -138,15 +152,16 @@ class _IslandScreenState
 
 
 
+
     backgroundController = AnimationController(
 
       vsync:this,
 
-      duration: const Duration(seconds:20),
+      duration:const Duration(seconds:20),
 
     )
 
-    ..repeat(reverse:true);
+      ..repeat(reverse:true);
 
 
 
@@ -193,16 +208,14 @@ class _IslandScreenState
     );
 
 
-
   }
 
 
 
 
 
-
-
   @override
+
   void dispose(){
 
     floatController.dispose();
@@ -218,15 +231,11 @@ class _IslandScreenState
 
 
 
-
   void openLevel(
 
       PuzzleLevelModel level,
 
       ){
-
-
-
 
     Navigator.push(
 
@@ -234,36 +243,23 @@ class _IslandScreenState
 
       MaterialPageRoute(
 
-        builder:(_)=>
+        builder:(_)=>PuzzleGameScreen(
 
-            PuzzleGameScreen(
+          level:level,
 
-              level:level,
-
-            ),
+        ),
 
       ),
 
     );
 
-
   }
-
-
-
-
-
-
-
 
   Widget levelButton(
 
-      PuzzleLevelModel level,
+    PuzzleLevelModel level,
 
-      ){
-
-
-
+  ){
 
     return GestureDetector(
 
@@ -272,6 +268,7 @@ class _IslandScreenState
         openLevel(level);
 
       },
+
 
       child:Stack(
 
@@ -289,36 +286,53 @@ class _IslandScreenState
 
             height:95,
 
+            fit:BoxFit.contain,
+
           ),
 
 
 
 
-          Text(
 
-            "${level.levelNumber}",
+          ClipRRect(
 
-            style:const TextStyle(
+            borderRadius:
 
-              fontSize:26,
+            BorderRadius.circular(12),
 
-              fontWeight:FontWeight.w900,
+            child:Image.asset(
 
-              color:Colors.white,
+              level.image,
 
-              shadows:[
+              width:58,
 
-                Shadow(
+              height:58,
 
-                  color:Colors.black54,
+              fit:BoxFit.cover,
 
-                  blurRadius:5,
+              errorBuilder:
 
-                  offset:Offset(0,2),
+                  (context,error,stack){
 
-                ),
+                return Container(
 
-              ],
+                  width:58,
+
+                  height:58,
+
+                  color:Colors.black26,
+
+                  child:const Icon(
+
+                    Icons.image_not_supported,
+
+                    color:Colors.white,
+
+                  ),
+
+                );
+
+              },
 
             ),
 
@@ -332,7 +346,6 @@ class _IslandScreenState
 
     );
 
-
   }
 
 
@@ -341,18 +354,20 @@ class _IslandScreenState
 
 
 
-
-
   @override
+
   Widget build(BuildContext context){
 
 
     final height =
+
         MediaQuery.of(context).size.height;
 
 
     final width =
+
         MediaQuery.of(context).size.width;
+
 
 
 
@@ -374,6 +389,7 @@ class _IslandScreenState
 
               builder:(context,child){
 
+
                 return Transform.scale(
 
                   scale:backgroundScale.value,
@@ -393,6 +409,7 @@ class _IslandScreenState
                   ),
 
                 );
+
 
               },
 
@@ -418,12 +435,13 @@ class _IslandScreenState
 
 
 
-
           Positioned.fill(
 
             child:Container(
 
-              color:Colors.black.withOpacity(0.05),
+              color:
+
+              Colors.black.withOpacity(0.05),
 
             ),
 
@@ -439,7 +457,10 @@ class _IslandScreenState
 
             child:Padding(
 
-              padding:const EdgeInsets.all(12),
+              padding:
+
+              const EdgeInsets.all(12),
+
 
               child:Row(
 
@@ -449,6 +470,7 @@ class _IslandScreenState
 
 
                 children:[
+
 
 
                   CircleAvatar(
@@ -477,6 +499,7 @@ class _IslandScreenState
                     ),
 
                   ),
+
 
 
 
@@ -518,24 +541,26 @@ class _IslandScreenState
 
 
 
-
-
           Column(
 
             children:[
 
 
 
-
               SizedBox(
 
-                height:height*0.30,
+                height:
+
+                height * 0.30,
+
 
                 child:AnimatedBuilder(
 
                   animation:floatAnimation,
 
+
                   builder:(context,child){
+
 
                     return Transform.translate(
 
@@ -550,6 +575,7 @@ class _IslandScreenState
                       child:child,
 
                     );
+
 
                   },
 
@@ -570,8 +596,6 @@ class _IslandScreenState
 
 
 
-
-
               Expanded(
 
                 child:LayoutBuilder(
@@ -580,6 +604,11 @@ class _IslandScreenState
 
 
                     return Stack(
+
+                      clipBehavior:
+
+                      Clip.none,
+
 
                       children:[
 
@@ -606,15 +635,12 @@ class _IslandScreenState
 
 
 
-
-
-
                         ...List.generate(
 
                           levels.length,
 
-                              (index){
 
+                              (index){
 
 
                             final pos =
@@ -627,17 +653,16 @@ class _IslandScreenState
 
                               left:
 
-                              box.maxWidth*
+                              box.maxWidth *
 
                                   pos.dx,
 
 
                               top:
 
-                              box.maxHeight*
+                              box.maxHeight *
 
                                   pos.dy,
-
 
 
                               child:
@@ -648,7 +673,9 @@ class _IslandScreenState
 
                               ),
 
+
                             );
+
 
                           },
 
@@ -669,11 +696,9 @@ class _IslandScreenState
 
 
 
-
             ],
 
           ),
-
 
 
 
