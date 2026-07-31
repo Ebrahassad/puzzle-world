@@ -244,7 +244,7 @@ class PuzzlePainter extends CustomPainter {
 
 
 
-  //====================================================
+    //====================================================
   // إعادة الرسم
   //====================================================
 
@@ -264,9 +264,9 @@ class PuzzlePainter extends CustomPainter {
 
         ||
 
-        oldDelegate.piece.isDragging !=
+        oldDelegate.piece.placed !=
 
-            piece.isDragging
+            piece.placed
 
         ||
 
@@ -276,4 +276,5 @@ class PuzzlePainter extends CustomPainter {
 
   }
 
+}
 }
