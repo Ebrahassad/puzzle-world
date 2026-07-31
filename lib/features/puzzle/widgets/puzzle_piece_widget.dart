@@ -8,21 +8,15 @@ import '../engine/puzzle_painter.dart';
 
 class PuzzlePieceWidget extends StatefulWidget {
 
-
   final PuzzlePiece piece;
-
 
   final ImageProvider image;
 
-
   final double size;
-
 
   final bool isActive;
 
-
   final double opacity;
-
 
 
   const PuzzlePieceWidget({
@@ -42,37 +36,25 @@ class PuzzlePieceWidget extends StatefulWidget {
   });
 
 
-
   @override
   State<PuzzlePieceWidget> createState() =>
-
       _PuzzlePieceWidgetState();
 
 }
 
 
 
-
-
-
 class _PuzzlePieceWidgetState
-
     extends State<PuzzlePieceWidget> {
-
 
 
   ui.Image? cachedImage;
 
-
   ImageStream? _imageStream;
-
 
   ImageStreamListener? _listener;
 
-
   bool _loaded = false;
-
-
 
 
 
@@ -92,47 +74,28 @@ class _PuzzlePieceWidgetState
 
 
 
-
-
-
-
   @override
   void didUpdateWidget(
-
     covariant PuzzlePieceWidget oldWidget,
-
   ) {
 
     super.didUpdateWidget(oldWidget);
 
 
-
     if (
-
-      oldWidget.image != widget.image
-
-      ||
-
+      oldWidget.image != widget.image ||
       oldWidget.size != widget.size
-
     ) {
-
 
       _loaded = false;
 
-
       cachedImage = null;
 
-
       _loadImage();
-
 
     }
 
   }
-
-
-
 
 
 
@@ -141,55 +104,33 @@ class _PuzzlePieceWidgetState
 
 
     if (
-
       _listener != null &&
-
       _imageStream != null
-
     ) {
 
-
       _imageStream!.removeListener(
-
         _listener!,
-
       );
 
     }
 
 
 
-
-
     final configuration =
-
         createLocalImageConfiguration(
-
           context,
-
           size: Size(
-
             widget.size,
-
             widget.size,
-
           ),
-
         );
-
-
 
 
 
     _imageStream =
-
         widget.image.resolve(
-
           configuration,
-
         );
-
-
 
 
 
@@ -197,81 +138,52 @@ class _PuzzlePieceWidgetState
 
       (info, _) {
 
-
-
         if (!mounted) return;
-
 
 
         setState(() {
 
-
           cachedImage = info.image;
-
 
           _loaded = true;
 
-
         });
-
-
 
       },
 
 
       onError: (error, stackTrace) {
 
-
         debugPrint(
-
           "Puzzle image error: $error",
-
         );
-
 
       },
 
-
     );
-
-
 
 
 
     _imageStream!.addListener(
-
       _listener!,
-
     );
-
 
   }
 
 
 
 
-
-
-
-
-
   @override
   Widget build(
-
     BuildContext context,
-
   ) {
-
 
 
     Widget child;
 
 
 
-
-
     if (cachedImage == null) {
-
 
 
       child = SizedBox(
@@ -283,150 +195,85 @@ class _PuzzlePieceWidgetState
       );
 
 
-
     } else {
-
-
-
-      final padding =
-
-          widget.size * 0.10;
-
 
 
       child = RepaintBoundary(
 
-
         child: CustomPaint(
 
-
           size: Size(
-
             widget.size,
-
             widget.size,
-
           ),
-
 
 
           painter: PuzzlePainter(
 
-
             piece: widget.piece,
 
-
             image: widget.image,
-
 
             cachedImage: cachedImage,
 
 
+            // مهم للـ Painter الجديد
 
-            // التوافق مع Painter الجديد
-
-            pieceSize:
-
-                widget.size,
+            pieceSize: widget.size,
 
 
+            // مساحة النتوءات
 
-            padding:
-
-                padding,
-
+            padding: widget.size * 0.10,
 
           ),
 
-
-
         ),
 
-
       );
-
 
     }
 
 
 
-
-
-
-
     return AnimatedScale(
 
-
-      scale:
-
-          widget.isActive
-
-              ? 1.06
-
-              : 1.0,
-
+      scale: widget.isActive
+          ? 1.06
+          : 1.0,
 
 
       duration:
-
           const Duration(
-
             milliseconds: 140,
-
           ),
 
 
-
       curve:
-
           Curves.easeOutCubic,
 
 
+      child: AnimatedOpacity(
 
-      child:
-
-          AnimatedOpacity(
-
-
-        opacity:
-
-            widget.opacity,
-
+        opacity: widget.opacity,
 
 
         duration:
-
             const Duration(
-
               milliseconds: 120,
-
             ),
 
 
-
-        curve:
-
-            Curves.easeOut,
+        curve: Curves.easeOut,
 
 
-
-        child:
-
-            child,
-
+        child: child,
 
       ),
 
-
     );
 
-
   }
-
-
-
-
-
 
 
 
@@ -436,29 +283,19 @@ class _PuzzlePieceWidgetState
 
 
     if (
-
       _listener != null &&
-
       _imageStream != null
-
     ) {
 
-
       _imageStream!.removeListener(
-
         _listener!,
-
       );
 
     }
 
 
-
     super.dispose();
 
-
   }
-
-
 
 }
