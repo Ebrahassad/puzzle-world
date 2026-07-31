@@ -1,27 +1,26 @@
-import 'dart:async';
-import 'dart:math' as math;
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 
 import '../engine/puzzle_controller.dart';
 import '../engine/puzzle_generator.dart';
 import '../engine/puzzle_piece.dart';
-
-import '../models/puzzle_level_model.dart';
-import '../models/puzzle_model.dart';
-
 import '../widgets/puzzle_piece_widget.dart';
 
 
 
+///======================================================
+/// شاشة لعبة البازل
+///======================================================
+
 class PuzzleGameScreen extends StatefulWidget {
 
 
-  final PuzzleModel puzzle;
+  final ImageProvider image;
 
 
-  final PuzzleLevelModel level;
+  final int rows;
+
+
+  final int columns;
 
 
 
@@ -29,18 +28,23 @@ class PuzzleGameScreen extends StatefulWidget {
 
     super.key,
 
-    required this.puzzle,
 
-    required this.level,
+    required this.image,
+
+
+    this.rows = 3,
+
+
+    this.columns = 3,
 
   });
 
 
 
   @override
-  State<PuzzleGameScreen> createState() =>
+  State<PuzzleGameScreen> createState()
 
-      _PuzzleGameScreenState();
+      => _PuzzleGameScreenState();
 
 }
 
@@ -54,144 +58,35 @@ class _PuzzleGameScreenState
     extends State<PuzzleGameScreen> {
 
 
-
-  late AssetImage puzzleImage;
-
-
-
-  ui.Image? image;
-
-
-
   late PuzzleController controller;
 
 
 
-  List<PuzzlePiece> pieces = [];
+  final double boardSize = 350;
 
 
 
-  bool loading = true;
+  late double pieceSize;
 
 
 
-  bool completed = false;
+  bool initialized = false;
 
 
 
 
-
-  PuzzlePiece? draggingPiece;
-
-
-
-  Offset dragPosition = Offset.zero;
-
-
-
-  Offset dragAnchor = Offset.zero;
-
-
-
-  Offset boardPosition = Offset.zero;
-
-
-
-  final GlobalKey boardKey = GlobalKey();
-
-
-
-  bool boardReady = false;
-
-
-
-
-
-
-  double get boardSize {
-
-
-    return MediaQuery.of(context).size.width * 0.90;
-
-
-  }
-
-
-
-
-
-
-  double get pieceSize {
-
-
-    return boardSize /
-
-        widget.level.gridSize;
-
-
-  }
-
-
-
-
-
-
-  double get trayPieceSize {
-
-
-    return math.max(
-
-      95,
-
-      math.min(
-
-        120,
-
-        boardSize * 0.28,
-
-      ),
-
-    );
-
-
-  }
-
-
-
-
-
-
-  double get trayHeight {
-
-
-    return trayPieceSize + 35;
-
-
-  }
-
-
-
-
-
-
+  //====================================================
+  // إنشاء اللعبة
+  //====================================================
 
   @override
-  void initState(){
+  void initState() {
 
 
     super.initState();
 
 
-
-    puzzleImage = AssetImage(
-
-      widget.level.image,
-
-    );
-
-
-
-    loadGame();
+    _createGame();
 
 
   }
@@ -200,190 +95,44 @@ class _PuzzleGameScreenState
 
 
 
+  void _createGame() {
 
 
-  Future<void> loadGame() async {
+    pieceSize =
 
+        boardSize /
 
-
-    image = await loadImage(
-
-      widget.level.image,
-
-    );
+            widget.columns;
 
 
 
-    pieces = PuzzleGenerator.generate(
+    final pieces =
 
-      rows: widget.level.gridSize,
+        PuzzleGenerator.generate(
 
-      columns: widget.level.gridSize,
+          rows: widget.rows,
 
-      imageWidth:
+          columns: widget.columns,
 
-          image!.width.toDouble(),
+          imageWidth: boardSize,
 
-      imageHeight:
-
-          image!.height.toDouble(),
-
-    );
-
-
-
-    controller = PuzzleController(
-
-      pieces: pieces,
-
-    );
-
-
-
-    preparePieces();
-
-
-
-    if(!mounted) return;
-
-
-
-    setState((){
-
-
-      loading = false;
-
-
-    });
-
-
-
-    WidgetsBinding.instance
-
-        .addPostFrameCallback((_){
-
-
-      updateBoardPosition();
-
-
-    });
-
-
-  }
-
-
-
-
-
-
-
-  Future<ui.Image> loadImage(
-
-    String path,
-
-  ) async {
-
-
-    final completer =
-
-        Completer<ui.Image>();
-
-
-
-    final stream = AssetImage(path)
-
-        .resolve(
-
-          const ImageConfiguration(),
+          imageHeight: boardSize,
 
         );
 
 
 
-    late ImageStreamListener listener;
+    controller =
 
+        PuzzleController(
 
-
-    listener = ImageStreamListener(
-
-      (info, _) {
-
-
-
-        if(!completer.isCompleted){
-
-
-          completer.complete(
-
-            info.image,
-
-          );
-
-
-        }
-
-
-
-        stream.removeListener(
-
-          listener,
+          pieces: pieces,
 
         );
 
 
-      },
 
-
-      onError:(error,stackTrace){
-
-
-        completer.completeError(
-
-          error,
-
-          stackTrace,
-
-        );
-
-
-      },
-
-    );
-
-
-
-    stream.addListener(
-
-      listener,
-
-    );
-
-
-
-    return completer.future;
-
-  }
-
-
-
-
-
-
-
-  void preparePieces(){
-
-
-    pieces.shuffle();
-
-
-
-    for(final piece in pieces){
-
-
-      piece.reset();
-
-
-    }
+    initialized = true;
 
 
   }
@@ -392,307 +141,112 @@ class _PuzzleGameScreenState
 
 
 
+  //====================================================
+  // بدء السحب
+  //====================================================
 
-  void updateBoardPosition(){
+  void _onDragStart(
 
-
-    final box =
-
-        boardKey.currentContext
-
-        ?.findRenderObject()
-
-        as RenderBox?;
-
-
-
-    if(box != null){
-
-
-      boardPosition =
-
-          box.localToGlobal(
-
-            Offset.zero,
-
-          );
-
-
-
-      boardReady = true;
-
-
-    }
-
-
-  }
-
-  //=====================================
-  // بداية السحب
-  //=====================================
-
-  void startDrag(
     PuzzlePiece piece,
-    Offset globalPosition,
+
   ) {
 
-    if(piece.placed) return;
 
+    setState(() {
 
-    updateBoardPosition();
 
+      controller.startDrag(
 
+        piece,
 
-    final currentSize =
-        piece.position == Offset.zero
-            ? trayPieceSize
-            : pieceSize;
-
-
-
-    if(piece.position == Offset.zero){
-
-      dragAnchor = Offset(
-        currentSize / 2,
-        currentSize / 2,
-      );
-
-    } else {
-
-      dragAnchor =
-          globalPosition -
-          (boardPosition + piece.position);
-
-    }
-
-
-
-    setState((){
-
-      draggingPiece = piece;
-
-      dragPosition = globalPosition;
-
-    });
-
-
-  }
-
-
-
-
-
-
-
-  //=====================================
-  // تحريك القطعة
-  //=====================================
-
-  void updateDrag(
-    DragUpdateDetails details,
-  ){
-
-    if(draggingPiece == null) return;
-
-
-
-    setState((){
-
-
-      dragPosition += details.delta;
-
-
-
-      final topLeft =
-          dragPosition - dragAnchor;
-
-
-
-      draggingPiece!.position =
-          topLeft - boardPosition;
-
-
-
-    });
-
-
-  }
-
-
-
-
-
-
-
-  //=====================================
-  // إنهاء السحب
-  //=====================================
-
-  void endDrag(){
-
-
-    if(draggingPiece == null) return;
-
-
-
-    final piece = draggingPiece!;
-
-
-
-    final correct =
-        controller.checkPiecePosition(
-          piece,
-          pieceSize,
-        );
-
-
-
-    if(!correct){
-
-
-      final center =
-
-          boardPosition +
-
-          piece.position +
-
-          Offset(
-            trayPieceSize / 2,
-            trayPieceSize / 2,
-          );
-
-
-
-      if(center.dy < trayHeight){
-
-
-        piece.position =
-            Offset.zero;
-
-
-      }
-
-
-    }
-
-
-
-    controller.endDragging(piece);
-
-
-
-    setState((){
-
-
-      draggingPiece = null;
-
-
-    });
-
-
-
-    checkComplete();
-
-
-  }
-
-
-
-
-
-
-
-  //=====================================
-  // فحص الفوز
-  //=====================================
-
-  void checkComplete(){
-
-
-    if(
-      controller.isCompleted &&
-      !completed
-    ){
-
-
-      completed = true;
-
-
-
-      Future.delayed(
-
-        const Duration(
-          milliseconds:500,
-        ),
-
-        (){
-
-
-          if(!mounted) return;
-
-
-
-          showDialog(
-
-            context: context,
-
-            builder:(_){
-
-
-              return AlertDialog(
-
-                title:
-
-                    const Text(
-                      "🎉 أحسنت",
-                    ),
-
-
-                content:
-
-                    const Text(
-                      "اكتملت الصورة",
-                    ),
-
-              );
-
-
-            },
-
-          );
-
-
-        },
+        piece.position,
 
       );
 
 
+    });
+
+  }
+
+
+
+
+
+  //====================================================
+  // تحديث الحركة
+  //====================================================
+
+  void _onDragUpdate(
+
+    Offset position,
+
+  ) {
+
+
+    setState(() {
+
+
+      controller.updateDrag(
+
+        position,
+
+      );
+
+
+    });
+
+  }
+
+
+
+
+
+  //====================================================
+  // نهاية السحب
+  //====================================================
+
+  void _onDragEnd() {
+
+
+    setState(() {
+
+
+      controller.endDrag(
+
+        pieceSize * 0.35,
+
+      );
+
+
+    });
+
+
+
+    if(controller.isCompleted) {
+
+
+      _showWin();
+
+
     }
 
 
   }
 
+  //====================================================
+  // إعادة اللعبة
+  //====================================================
+
+  void _restartGame() {
 
 
+    setState(() {
 
 
+      _createGame();
 
 
-  //=====================================
-  // القطع التي خرجت من الشريط
-  //=====================================
-
-  bool isFloatingPiece(
-    PuzzlePiece piece,
-  ){
-
-    return
-
-        !piece.placed &&
-
-        piece.position != Offset.zero &&
-
-        piece != draggingPiece;
+    });
 
   }
 
@@ -700,713 +254,94 @@ class _PuzzleGameScreenState
 
 
 
+  //====================================================
+  // رسالة الفوز
+  //====================================================
+
+  void _showWin() {
 
 
-  //=====================================
-  // قطعة الشريط
-  //=====================================
+    Future.delayed(
 
-  Widget buildTrayPiece(
-    PuzzlePiece piece,
-  ){
+      const Duration(
 
-    return GestureDetector(
-
-      behavior:
-          HitTestBehavior.translucent,
-
-
-      onPanStart:(details){
-
-        startDrag(
-
-          piece,
-
-          details.globalPosition,
-
-        );
-
-      },
-
-
-      onPanUpdate:
-
-          updateDrag,
-
-
-      onPanEnd:(_){
-
-        endDrag();
-
-      },
-
-
-      child:
-
-      PuzzlePieceWidget(
-
-        piece:piece,
-
-        image:puzzleImage,
-
-        size:trayPieceSize,
-
-        isActive:
-
-            draggingPiece == piece,
+        milliseconds: 300,
 
       ),
 
-    );
+      () {
 
 
-  }
+        if(!mounted) return;
 
 
 
+        showDialog(
 
+          context: context,
 
+          builder: (_) {
 
 
-  //=====================================
-  // قطعة حرة فوق اللوحة
-  //=====================================
+            return AlertDialog(
 
-  Widget buildFloatingPiece(
-    PuzzlePiece piece,
-  ){
+              title:
 
-    return Positioned(
+                  const Text(
 
-      left:
+                    "🎉 أحسنت",
 
-          boardPosition.dx +
+                  ),
 
-          piece.position.dx,
 
+              content:
 
-      top:
+                  const Text(
 
-          boardPosition.dy +
+                    "اكتملت الصورة",
 
-          piece.position.dy,
+                  ),
 
 
-      child:
+              actions: [
 
-      GestureDetector(
 
-        behavior:
+                TextButton(
 
-            HitTestBehavior.translucent,
+                  onPressed: () {
 
 
-        onPanStart:(details){
+                    Navigator.pop(context);
 
-          startDrag(
 
-            piece,
+                    _restartGame();
 
-            details.globalPosition,
 
-          );
-
-        },
-
-
-        onPanUpdate:
-
-            updateDrag,
-
-
-        onPanEnd:(_){
-
-          endDrag();
-
-        },
-
-
-        child:
-
-        PuzzlePieceWidget(
-
-          piece:piece,
-
-          image:puzzleImage,
-
-          size:trayPieceSize,
-
-          isActive:
-
-              draggingPiece == piece,
-
-        ),
-
-      ),
-
-    );
-
-
-  }
-
-  //=====================================
-  // القطع المثبتة داخل اللوحة
-  //=====================================
-
-  Widget buildPlacedPiece(
-    PuzzlePiece piece,
-  ){
-
-    return Positioned(
-
-      left:
-
-          piece.column * pieceSize,
-
-
-      top:
-
-          piece.row * pieceSize,
-
-
-      child:
-
-      PuzzlePieceWidget(
-
-        piece:piece,
-
-        image:puzzleImage,
-
-        size:pieceSize,
-
-      ),
-
-    );
-
-
-  }
-
-
-
-
-
-
-
-  //=====================================
-  // لوحة البازل
-  //=====================================
-
-  Widget buildBoard(){
-
-
-    return Container(
-
-      key:boardKey,
-
-
-      width:boardSize,
-
-
-      height:boardSize,
-
-
-
-      decoration:BoxDecoration(
-
-        color:
-
-            Colors.black.withOpacity(0.25),
-
-
-        borderRadius:
-
-            BorderRadius.circular(25),
-
-
-        boxShadow:[
-
-
-          BoxShadow(
-
-            color:
-
-                Colors.black.withOpacity(0.45),
-
-
-            blurRadius:25,
-
-
-            offset:
-
-                const Offset(0,12),
-
-          ),
-
-
-        ],
-
-      ),
-
-
-
-      child:
-
-      ClipRRect(
-
-        borderRadius:
-
-            BorderRadius.circular(25),
-
-
-
-        child:
-
-        Stack(
-
-          clipBehavior:
-
-              Clip.none,
-
-
-          children:[
-
-
-
-            Positioned.fill(
-
-              child:
-
-              IgnorePointer(
-
-                child:
-
-                Opacity(
-
-                  opacity:0.08,
+                  },
 
 
                   child:
 
-                  Image.asset(
+                      const Text(
 
-                    widget.level.image,
+                        "لعب مرة أخرى",
 
-                    fit:BoxFit.cover,
-
-                  ),
-
-                ),
-
-              ),
-
-            ),
-
-
-
-
-
-            ...pieces
-
-                .where(
-
-                  (p)=>p.placed,
-
-                )
-
-                .map(
-
-                  buildPlacedPiece,
-
-                ),
-
-
-
-          ],
-
-        ),
-
-      ),
-
-    );
-
-
-  }
-
-
-
-
-
-
-
-  //=====================================
-  // شريط القطع
-  //=====================================
-
-  Widget buildTray(){
-
-
-
-    final trayPieces =
-
-        pieces.where(
-
-          (p)=>
-
-          !p.placed &&
-
-          p.position == Offset.zero &&
-
-          p != draggingPiece,
-
-        ).toList();
-
-
-
-
-
-    return Container(
-
-      height:
-
-          trayHeight,
-
-
-      margin:
-
-          const EdgeInsets.symmetric(
-
-            horizontal:12,
-
-          ),
-
-
-      padding:
-
-          const EdgeInsets.symmetric(
-
-            vertical:8,
-
-          ),
-
-
-
-      decoration:BoxDecoration(
-
-        color:
-
-            Colors.white.withOpacity(0.06),
-
-
-        borderRadius:
-
-            BorderRadius.circular(22),
-
-      ),
-
-
-
-      child:
-
-      ListView.separated(
-
-        scrollDirection:
-
-            Axis.horizontal,
-
-
-        padding:
-
-            const EdgeInsets.symmetric(
-
-              horizontal:12,
-
-            ),
-
-
-
-        itemCount:
-
-            trayPieces.length,
-
-
-
-        separatorBuilder:
-
-            (_,__) =>
-
-            const SizedBox(
-
-              width:12,
-
-            ),
-
-
-
-        itemBuilder:
-
-            (context,index){
-
-
-
-          return SizedBox(
-
-            width:
-
-                trayPieceSize,
-
-
-            child:
-
-            Center(
-
-              child:
-
-              buildTrayPiece(
-
-                trayPieces[index],
-
-              ),
-
-            ),
-
-          );
-
-
-        },
-
-
-      ),
-
-
-    );
-
-
-  }
-
-
-
-
-
-
-
-
-  //=====================================
-  // القطعة أثناء السحب
-  //=====================================
-
-  Widget buildDraggingPiece(){
-
-
-    final piece = draggingPiece!;
-
-
-
-    return Positioned(
-
-      left:
-
-          dragPosition.dx -
-
-          dragAnchor.dx,
-
-
-      top:
-
-          dragPosition.dy -
-
-          dragAnchor.dy,
-
-
-
-      child:
-
-      IgnorePointer(
-
-        child:
-
-        AnimatedScale(
-
-          scale:1.08,
-
-
-          duration:
-
-              const Duration(
-
-                milliseconds:120,
-
-              ),
-
-
-
-          child:
-
-          PuzzlePieceWidget(
-
-            piece:piece,
-
-            image:puzzleImage,
-
-            size:trayPieceSize,
-
-            isActive:true,
-
-          ),
-
-        ),
-
-      ),
-
-    );
-
-
-  }
-
-
-
-
-
-
-
-  @override
-  Widget build(
-    BuildContext context,
-  ){
-
-
-    if(loading){
-
-
-      return const Scaffold(
-
-        body:
-
-        Center(
-
-          child:
-
-          CircularProgressIndicator(),
-
-        ),
-
-      );
-
-
-    }
-
-
-
-
-
-    if(!boardReady){
-
-
-      WidgetsBinding.instance
-
-          .addPostFrameCallback((_){
-
-        updateBoardPosition();
-
-      });
-
-
-    }
-
-
-
-
-
-
-    return Scaffold(
-
-      backgroundColor:
-
-          const Color(0xff10233d),
-
-
-
-      body:
-
-      SafeArea(
-
-        child:
-
-        Stack(
-
-          children:[
-
-
-
-            Column(
-
-              children:[
-
-
-                buildTray(),
-
-
-
-                const SizedBox(
-
-                  height:15,
-
-                ),
-
-
-
-                Expanded(
-
-                  child:
-
-                  Center(
-
-                    child:
-
-                    buildBoard(),
-
-                  ),
+                      ),
 
                 ),
 
 
               ],
 
-            ),
+            );
 
 
+          },
+
+        );
 
 
-
-
-            ...pieces
-
-                .where(
-
-                  isFloatingPiece,
-
-                )
-
-                .map(
-
-                  buildFloatingPiece,
-
-                ),
-
-
-
-
-
-            if(draggingPiece != null)
-
-              buildDraggingPiece(),
-
-
-
-          ],
-
-        ),
-
-      ),
+      },
 
     );
 
@@ -1418,20 +353,255 @@ class _PuzzleGameScreenState
 
 
 
-
+  //====================================================
+  // بناء الشاشة
+  //====================================================
 
   @override
-  void dispose(){
+  Widget build(
+
+    BuildContext context,
+
+  ) {
 
 
-    draggingPiece = null;
+    if(!initialized) {
 
 
-    super.dispose();
+      return const Scaffold(
 
+        body:
+
+            Center(
+
+              child:
+
+                  CircularProgressIndicator(),
+
+            ),
+
+      );
+
+
+    }
+
+
+
+    final pieces =
+
+        controller.sortedPieces;
+
+
+
+    return Scaffold(
+
+      body:
+
+          SafeArea(
+
+            child:
+
+                Column(
+
+                  children: [
+
+
+                    const SizedBox(
+
+                      height: 20,
+
+                    ),
+
+
+
+                    Text(
+
+                      "Puzzle",
+
+                      style:
+
+                          Theme.of(context)
+
+                              .textTheme
+
+                              .headlineSmall,
+
+                    ),
+
+
+
+
+                    const SizedBox(
+
+                      height: 20,
+
+                    ),
+
+
+
+
+
+                    SizedBox(
+
+                      width: boardSize,
+
+                      height: boardSize,
+
+
+                      child:
+
+                          Stack(
+
+
+                            clipBehavior:
+
+                                Clip.none,
+
+
+                            children:
+
+                                pieces
+
+                                    .map(
+
+                                      (piece) {
+
+
+                                        return PuzzlePieceWidget(
+
+
+                                          piece:
+
+                                              piece,
+
+
+                                          image:
+
+                                              widget.image,
+
+
+                                          size:
+
+                                              pieceSize,
+
+
+                                          active:
+
+                                              piece ==
+
+                                                  controller.activePiece,
+
+
+
+                                          onDragStart:
+
+                                              (_) {
+
+                                                _onDragStart(
+
+                                                  piece,
+
+                                                );
+
+                                              },
+
+
+
+                                          onDragUpdate:
+
+                                              _onDragUpdate,
+
+
+
+                                          onDragEnd:
+
+                                              _onDragEnd,
+
+
+                                        );
+
+
+                                      },
+
+                                    )
+
+                                    .toList(),
+
+
+                          ),
+
+                    ),
+
+
+
+
+
+                    const SizedBox(
+
+                      height: 30,
+
+                    ),
+
+
+
+
+
+                    Text(
+
+                      "${controller.completedCount}/${controller.pieces.length}",
+
+
+                      style:
+
+                          const TextStyle(
+
+                            fontSize: 18,
+
+                          ),
+
+                    ),
+
+
+
+
+
+                    const SizedBox(
+
+                      height: 15,
+
+                    ),
+
+
+
+
+
+                    ElevatedButton(
+
+                      onPressed:
+
+                          _restartGame,
+
+
+                      child:
+
+                          const Text(
+
+                            "إعادة",
+
+                          ),
+
+                    ),
+
+
+                  ],
+
+                ),
+
+          ),
+
+    );
 
   }
-
 
 
 }
