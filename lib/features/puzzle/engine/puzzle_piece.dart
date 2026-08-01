@@ -1,776 +1,97 @@
 import 'dart:ui';
-import 'package:flutter/material.dart';
 
+/// The shape of one side of a puzzle piece.
+///
+/// - [flat]  the side lies on the outer border of the image — a straight
+///   line, because there is no neighbouring piece on that side.
+/// - [tab]   the side bulges *outward* ("male" connector), growing into the
+///   neighbouring piece's cell.
+/// - [blank] the side is carved *inward* ("female" connector) so the
+///   neighbour's tab has somewhere to nest.
+enum EdgeShape { flat, tab, blank }
 
-//==================================================
-// نوع الحافة
-//==================================================
-
-enum EdgeType {
-  flat,
-  tab,
-  blank,
-}
-
-
-//==================================================
-// حالة القطعة
-//==================================================
-
-enum PieceState {
-
-  tray,       // داخل الشريط
-
-  board,      // خرجت للوحة
-
-  locked,     // مثبتة
-
-}
-
-
-//==================================================
-// نموذج قطعة البازل
-//==================================================
-
+/// A single interlocking jigsaw puzzle piece.
+///
+/// This class is intentionally a plain data + geometry holder with no
+/// Flutter widget dependencies, which makes it trivial to unit test. It
+/// knows:
+///  * where it *should* sit when solved ([correctPosition]),
+///  * where it *currently* sits on screen ([currentPosition]),
+///  * the exact outline ([path]) used both to clip the source image when
+///    painting and to do pixel-accurate hit testing while dragging.
 class PuzzlePiece {
-
-
-  final String id;
-
-
-  // مكانها في الشبكة
-  final int row;
-  final int column;
-
-
-  // الجزء المقصوص من الصورة
-  final Rect sourceRect;
-
-
-
-  // الحواف
-  final EdgeType top;
-  final EdgeType right;
-  final EdgeType bottom;
-  final EdgeType left;
-
-
-
-  // مكانها الحالي
-  Offset position;
-
-
-
-  // مكانها داخل الشريط
-  late Offset trayPosition;
-
-
-
-  // مكانها الصحيح داخل اللوحة
-  late Offset correctPosition;
-
-
-
-  // حجم القطعة
-  late Size size;
-
-
-
-  // شكل القطعة
-  late Path path;
-
-
-
-  // الحالة
-  PieceState state;
-
-
-
-  // أثناء السحب
-  bool dragging;
-
-
-
   PuzzlePiece({
-
     required this.id,
-
     required this.row,
+    required this.col,
+    required this.path,
+    required this.localBounds,
+    required this.correctPosition,
+    required Offset initialPosition,
+    this.top = EdgeShape.flat,
+    this.right = EdgeShape.flat,
+    this.bottom = EdgeShape.flat,
+    this.left = EdgeShape.flat,
+  }) : currentPosition = initialPosition;
 
-    required this.column,
+  /// Stable identifier, `row * cols + col`.
+  final int id;
 
-    required this.sourceRect,
+  /// Row/column of this piece inside the grid (0-based).
+  final int row;
+  final int col;
 
-    required this.top,
+  /// The piece outline in *local* coordinates, i.e. relative to the piece's
+  /// own cell top-left corner (0,0). The path extends outside the nominal
+  /// `pieceWidth x pieceHeight` rectangle wherever a [tab] bulges into a
+  /// neighbouring cell — that overshoot is what makes the interlock work.
+  final Path path;
 
-    required this.right,
+  /// A cheap bounding rectangle (local space) that fully contains [path].
+  /// Used for shadow/layout math only — hit testing always uses the exact
+  /// [path], never this box, so tapping a "notch" cut out by a neighbouring
+  /// blank correctly misses the piece.
+  final Rect localBounds;
 
-    required this.bottom,
+  /// Where this piece's local origin (0,0) must be, in board/canvas
+  /// coordinates, for the puzzle to be solved.
+  final Offset correctPosition;
 
-    required this.left,
+  /// Where this piece's local origin (0,0) currently is, in board/canvas
+  /// coordinates. Mutated every frame while dragging.
+  Offset currentPosition;
 
-    required this.position,
+  /// Shape of each of the four sides — informational, the real geometry
+  /// already lives in [path]. Handy for debugging or alternate renderers.
+  final EdgeShape top;
+  final EdgeShape right;
+  final EdgeShape bottom;
+  final EdgeShape left;
 
+  /// True once the piece has snapped to [correctPosition] and been locked
+  /// in place (locked pieces are no longer draggable — see
+  /// [PuzzleController.onPanStart]).
+  bool isPlaced = false;
 
-    this.state = PieceState.tray,
+  /// True while the pointer is currently dragging this piece. Used by the
+  /// painter to draw a drop shadow under it.
+  bool isDragging = false;
 
+  /// Paint/hit-test order. Higher draws on top. Bumped every time the piece
+  /// is picked up so the active piece always renders above its neighbours.
+  int zOrder = 0;
 
-    this.dragging = false,
-
-  });
-
-
-
-
-  //==================================================
-  // إنشاء شكل القطعة
-  //==================================================
-
-  void createShape(
-
-      Size size,
-
-      ) {
-
-
-    this.size = size;
-
-
-    path = PuzzleShapeBuilder.build(
-
-      size: size,
-
-      top: top,
-
-      right: right,
-
-      bottom: bottom,
-
-      left: left,
-
-    );
-
-
+  /// Returns true if [globalPoint] (board/canvas coordinates) falls inside
+  /// this piece's exact silhouette.
+  bool containsPoint(Offset globalPoint) {
+    final local = globalPoint - currentPosition;
+    return path.contains(local);
   }
 
-  //==================================================
-  // تحديد مكانها الصحيح في اللوحة
-  //==================================================
-
-  void setCorrectPosition(
-
-      double pieceSize,
-
-      Offset boardOffset,
-
-      ) {
-
-
-    correctPosition = Offset(
-
-      boardOffset.dx +
-
-          (column * pieceSize),
-
-
-      boardOffset.dy +
-
-          (row * pieceSize),
-
-    );
-
-
-  }
-
-
-
-
-
-
-
-  //==================================================
-  // تحديد مكانها في الشريط المتحرك
-  //==================================================
-
-  void setTrayPosition(
-
-      Offset position,
-
-      ) {
-
-
-    trayPosition = position;
-
-
-    this.position = position;
-
-
-    state = PieceState.tray;
-
-
-  }
-
-
-
-
-
-
-
-
-  //==================================================
-  // هل القطعة قريبة من مكانها
-  //==================================================
-
-  bool isCorrect(
-
-      double tolerance,
-
-      ) {
-
-
-    return (
-
-      position -
-
-          correctPosition
-
-    )
-
-        .distance <= tolerance;
-
-
-  }
-
-
-
-
-
-
-
-
-  //==================================================
-  // بدء السحب
-  //==================================================
-
-  void startDrag(){
-
-
-    if(state == PieceState.locked){
-
-      return;
-
-    }
-
-
-    dragging = true;
-
-
-  }
-
-
-
-
-
-
-
-
-  //==================================================
-  // نقل القطعة
-  //==================================================
-
-  void move(
-
-      Offset delta,
-
-      ) {
-
-
-    if(state == PieceState.locked){
-
-      return;
-
-    }
-
-
-    position += delta;
-
-
-  }
-
-
-
-
-
-
-
-
-  //==================================================
-  // نقل لمكان مباشر
-  //==================================================
-
-  void moveTo(
-
-      Offset newPosition,
-
-      ){
-
-
-    if(state == PieceState.locked){
-
-      return;
-
-    }
-
-
-    position = newPosition;
-
-
-  }
-
-
-
-
-
-
-
-
-  //==================================================
-  // عند ترك القطعة
-  //==================================================
-
-  void endDrag(){
-
-
-    dragging = false;
-
-
-  }
-
-
-
-
-
-
-
-
-  //==================================================
-  // تثبيت القطعة
-  //==================================================
-
-  void lock(){
-
-
-    position = correctPosition;
-
-
-    state = PieceState.locked;
-
-
-    dragging = false;
-
-
-  }
-
-
-
-
-
-
-
-
-  //==================================================
-  // إعادة القطعة للشريط
-  //==================================================
-
-  void returnToTray(){
-
-
-    position = trayPosition;
-
-
-    state = PieceState.tray;
-
-
-    dragging = false;
-
-
-  }
-
-
-
-}
-
-
-//==================================================
-// بناء شكل قطعة البازل
-//==================================================
-
-class PuzzleShapeBuilder {
-
-
-  static Path build({
-
-    required Size size,
-
-    required EdgeType top,
-
-    required EdgeType right,
-
-    required EdgeType bottom,
-
-    required EdgeType left,
-
-  }) {
-
-
-    final path = Path();
-
-
-    final w = size.width;
-
-    final h = size.height;
-
-
-    final tab = w * 0.22;
-
-
-
-    path.moveTo(0, 0);
-
-
-
-    // أعلى
-    _horizontal(
-
-      path,
-
-      w,
-
-      top,
-
-      tab,
-
-      true,
-
-    );
-
-
-
-    // يمين
-    _vertical(
-
-      path,
-
-      h,
-
-      right,
-
-      tab,
-
-      true,
-
-    );
-
-
-
-    // أسفل
-    _horizontal(
-
-      path,
-
-      w,
-
-      bottom,
-
-      tab,
-
-      false,
-
-    );
-
-
-
-    // يسار
-    _vertical(
-
-      path,
-
-      h,
-
-      left,
-
-      tab,
-
-      false,
-
-    );
-
-
-
-    path.close();
-
-
-
-    return path;
-
-  }
-
-
-
-
-
-
-
-
-  //==================================================
-  // الحواف الأفقية
-  //==================================================
-
-  static void _horizontal(
-
-      Path path,
-
-      double length,
-
-      EdgeType type,
-
-      double tab,
-
-      bool top,
-
-      ) {
-
-
-
-    final y = top ? 0.0 : length;
-
-
-
-    if(type == EdgeType.flat){
-
-
-      path.lineTo(
-
-        length,
-
-        y,
-
-      );
-
-
-      return;
-
-    }
-
-
-
-    final center = length / 2;
-
-
-    final direction = top ? -1 : 1;
-
-
-
-    final amount =
-
-        type == EdgeType.tab
-
-            ? direction * tab
-
-            : -direction * tab;
-
-
-
-
-
-    path.lineTo(
-
-      center - tab,
-
-      y,
-
-    );
-
-
-
-    path.cubicTo(
-
-      center - tab,
-
-      y,
-
-      center - tab / 2,
-
-      y + amount,
-
-      center,
-
-      y + amount,
-
-    );
-
-
-
-    path.cubicTo(
-
-      center + tab / 2,
-
-      y + amount,
-
-      center + tab,
-
-      y,
-
-      center + tab,
-
-      y,
-
-    );
-
-
-
-    path.lineTo(
-
-      length,
-
-      y,
-
-    );
-
-
-  }
-
-
-
-
-
-
-
-
-  //==================================================
-  // الحواف العمودية
-  //==================================================
-
-  static void _vertical(
-
-      Path path,
-
-      double length,
-
-      EdgeType type,
-
-      double tab,
-
-      bool right,
-
-      ) {
-
-
-
-    final x = right ? length : 0.0;
-
-
-
-    if(type == EdgeType.flat){
-
-
-      path.lineTo(
-
-        x,
-
-        length,
-
-      );
-
-
-      return;
-
-    }
-
-
-
-
-    final center = length / 2;
-
-
-    final direction = right ? 1 : -1;
-
-
-
-    final amount =
-
-        type == EdgeType.tab
-
-            ? direction * tab
-
-            : -direction * tab;
-
-
-
-
-
-    path.lineTo(
-
-      x,
-
-      center - tab,
-
-    );
-
-
-
-
-
-    path.cubicTo(
-
-      x,
-
-      center - tab,
-
-      x + amount,
-
-      center - tab / 2,
-
-      x + amount,
-
-      center,
-
-    );
-
-
-
-
-
-    path.cubicTo(
-
-      x + amount,
-
-      center + tab / 2,
-
-      x,
-
-      center + tab,
-
-      x,
-
-      center + tab,
-
-    );
-
-
-
-
-
-    path.lineTo(
-
-      x,
-
-      length,
-
-    );
-
-
-  }
-
-
+  /// Distance between where the piece currently is and where it belongs.
+  /// The controller snaps the piece home when this is small enough.
+  double get distanceToCorrect => (currentPosition - correctPosition).distance;
+
+  @override
+  String toString() => 'PuzzlePiece(#$id r$row c$col placed:$isPlaced)';
 }
