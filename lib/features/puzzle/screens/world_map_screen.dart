@@ -68,8 +68,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // لوحة العالم الأصلية.
   // كل العناصر محسوبة داخل هذه المساحة فقط.
   static const double worldWidth = 896;
-  static const double worldHeight = 1350;
-
+static const double worldHeight = 1400;
 
 
   late final List<PuzzleModel> islands;
@@ -122,12 +121,12 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
 
     _RelativeRect(
-      id: "animals",
-      left: 285 / worldWidth,
-      top: 980 / worldHeight,
-      width: 320 / worldWidth,
-      height: 390 / worldHeight,
-    ),
+  id: "animals",
+  left: 285 / worldWidth,
+  top: 1010 / worldHeight,
+  width: 320 / worldWidth,
+  height: 390 / worldHeight,
+),
 
   ];
 
@@ -438,6 +437,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
     );
 
+    }
 
   }
 
@@ -548,17 +548,13 @@ class _CloudLayer extends StatelessWidget {
 /// طبقة جزيرة واحدة
 class _IslandLayer extends StatelessWidget {
 
-
   final _RelativeRect rect;
-
   final PuzzleModel island;
 
   final double worldWidth;
-
   final double worldHeight;
 
   final ValueChanged<PuzzleModel> onTap;
-
 
 
   const _IslandLayer({
@@ -598,7 +594,6 @@ class _IslandLayer extends StatelessWidget {
 
 
 
-
     return Positioned(
 
       left: left,
@@ -610,25 +605,16 @@ class _IslandLayer extends StatelessWidget {
       height: height,
 
 
-
       child: GestureDetector(
 
-        behavior:
-            HitTestBehavior.opaque,
-
-
-        onTap: () =>
-            onTap(island),
-
+        onTap: () => onTap(island),
 
 
         child: Image.asset(
 
           island.image,
 
-
           fit: BoxFit.contain,
-
 
         ),
 
@@ -636,7 +622,7 @@ class _IslandLayer extends StatelessWidget {
 
     );
 
-
   }
 
 }
+
