@@ -6,8 +6,6 @@ import '../models/puzzle_model.dart';
 import 'island_screen.dart';
 
 /// موقع/حجم جزيرة كنسبة (0.0 - 1.0) من أبعاد صورة الخريطة الأصلية.
-/// هذا هو نظام "الإحداثيات المرجعية" الذي يجعل كل جزيرة تبقى فوق
-/// مكانها الصحيح بغض النظر عن حجم الشاشة.
 class _RelativeRect {
   final String id;
   final double left;
@@ -54,21 +52,21 @@ class _WorldMapScreenState extends State<WorldMapScreen>
     with TickerProviderStateMixin {
   static const String mapImage = "assets/images/world/world_map.png";
 
-  // لوحة إحداثيات مرجعية ثابتة (نسبة أبعاد صورة الخريطة الأصلية).
-  // لا تُستخدم كحجم فعلي على الشاشة، بل كمساحة نسبية يُحسب عليها
-  // موقع كل عنصر، ثم FittedBox يتكفل بعرضها على أي جهاز دون قص.
+  // Canvas مرجعي لأبعاد صورة الخريطة الأصلية. هذا ليس حجم العرض على
+  // الشاشة، بل مساحة إحداثيات ثابتة تُحسب عليها كل المواقع (جزر + سحب).
   static const double worldWidth = 896;
   static const double worldHeight = 1350;
 
+  // هامش أمان صغير فوق قيمة الـ cover المحسوبة، حتى لا تظهر أي شعرة
+  // فراغ عند أطراف الشاشة بسبب فروقات التقريب أو حركة التنفس.
+  static const double _safetyMargin = 1.02;
+
   late final List<PuzzleModel> islands;
 
-  // AnimationController واحد فقط لحركة "العالم" كاملاً (تنفس/zoom خفيف).
-  // هذا هو المتحكم الوحيد الذي يحرّك الخريطة والجزر معاً كطبقة واحدة.
+  // AnimationController واحد فقط لحركة "التنفس" الخفيفة للعالم كاملاً.
   late final AnimationController worldController;
-  late final Animation<double> worldScale;
+  late final Animation<double> breathingScale;
 
-  // مواقع الجزر كنسب من أبعاد الخريطة الأصلية (نفس القيم القديمة
-  // بالبكسل، محوّلة إلى نسبة 0.0 - 1.0).
   static final List<_RelativeRect> _islandRects = [
     _RelativeRect(
       id: "space",
@@ -107,7 +105,6 @@ class _WorldMapScreenState extends State<WorldMapScreen>
     ),
   ];
 
-  // إعدادات السحب كنسب أيضاً (نفس القيم القديمة، نفس الشفافية والسرعات).
   static final List<_RelativeCloud> _clouds = [
     _RelativeCloud(
       image: "assets/images/background/cloud_01.png",
@@ -139,10 +136,6 @@ class _WorldMapScreenState extends State<WorldMapScreen>
     ),
   ];
 
-  // متحكمات درفت السحب: كل سحابة تحافظ على سرعتها الخاصة، لكنها
-  // مرسومة داخل نفس Stack/child الذي يحمله worldController، لذلك
-  // أي scale على العالم ينعكس عليها تلقائياً (حركة تفاعلية وليست
-  // مستقلة عن العالم).
   late final List<AnimationController> cloudControllers;
 
   @override
@@ -156,9 +149,8 @@ class _WorldMapScreenState extends State<WorldMapScreen>
       duration: const Duration(seconds: 18),
     )..repeat(reverse: true);
 
-    // تأثير تنفس خفيف جداً (1.0 -> 1.012) حتى لا يظهر أي zoom زائد
-    // أو قص لأطراف الخريطة.
-    worldScale = Tween<double>(
+    // تنفس خفيف جداً فوق الـ base scale المحسوب ديناميكياً.
+    breathingScale = Tween<double>(
       begin: 1.0,
       end: 1.012,
     ).animate(
@@ -193,73 +185,6 @@ class _WorldMapScreenState extends State<WorldMapScreen>
     return islands.firstWhere((item) => item.id == id);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xff08182b),
-
-      // FittedBox(contain) يعرض الخريطة كاملة دون أي قص مع الحفاظ على
-      // نسبة أبعادها الأصلية، ويتوسط تلقائياً على أي حجم شاشة
-      // (هاتف صغير / هاتف طويل / تابلت) دون الاعتماد على أرقام
-      // MediaQuery ثابتة لوضع الجزر.
-      body: SizedBox.expand(
-        child: FittedBox(
-          fit: BoxFit.contain,
-          alignment: Alignment.center,
-          child: SizedBox(
-            width: worldWidth,
-            height: worldHeight,
-            // RepaintBoundary يعزل إعادة الرسم داخل طبقة العالم فقط،
-            // بحيث لا تُعاد إعادة بناء/رسم بقية الشاشة مع كل نبضة حركة.
-            child: RepaintBoundary(
-              child: AnimatedBuilder(
-                animation: worldController,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: worldScale.value,
-                    alignment: Alignment.center,
-                    child: child,
-                  );
-                },
-                // كل شيء (خريطة + سحب + جزر) هو child واحد مشترك يُبنى
-                // مرة واحدة فقط؛ AnimatedBuilder يعيد بناء الـ Transform
-                // حوله فقط في كل تِك، وليس الشجرة الكاملة.
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Positioned.fill(
-                      child: Image.asset(
-                        mapImage,
-                        fit: BoxFit.fill,
-                      ),
-                    ),
-
-                    for (int i = 0; i < _clouds.length; i++)
-                      _CloudLayer(
-                        cloud: _clouds[i],
-                        controller: cloudControllers[i],
-                        worldWidth: worldWidth,
-                        worldHeight: worldHeight,
-                      ),
-
-                    for (final rect in _islandRects)
-                      _IslandLayer(
-                        rect: rect,
-                        island: getIsland(rect.id),
-                        worldWidth: worldWidth,
-                        worldHeight: worldHeight,
-                        onTap: openIsland,
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   void openIsland(PuzzleModel island) {
     Navigator.push(
       context,
@@ -270,10 +195,96 @@ class _WorldMapScreenState extends State<WorldMapScreen>
       ),
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xff08182b),
+      body: SizedBox.expand(
+        // LayoutBuilder يعطينا أبعاد الشاشة الفعلية (هاتف صغير/كبير/
+        // تابلت) لحساب نسبة تحجيم ديناميكية بدل الاعتماد على
+        // BoxFit.contain (يترك فراغات) أو BoxFit.cover المباشر
+        // (يقص بلا تحكم).
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final double screenWidth = constraints.maxWidth;
+            final double screenHeight = constraints.maxHeight;
+
+            // نفس منطق "cover" لكن محسوب يدوياً: نختار أكبر نسبة بين
+            // (عرض الشاشة / عرض الخريطة) و (ارتفاع الشاشة / ارتفاع
+            // الخريطة) بحيث تغطي الخريطة الشاشة بالكامل دون أي فراغ،
+            // مع هامش أمان بسيط يمنع ظهور أي شعرة فراغ عند الحواف.
+            final double coverScale = [
+              screenWidth / worldWidth,
+              screenHeight / worldHeight,
+            ].reduce((a, b) => a > b ? a : b);
+
+            final double baseScale = coverScale * _safetyMargin;
+
+            return ClipRect(
+              child: Center(
+                child: AnimatedBuilder(
+                  animation: worldController,
+                  builder: (context, child) {
+                    // الـ scale النهائي = تغطية الشاشة (ديناميكي حسب
+                    // الجهاز) × تنفس العالم الخفيف. كل عنصر داخل هذه
+                    // الطبقة (خريطة + سحب + جزر) يتحرك بنفس القيمة
+                    // معاً، فلا يوجد قص واضح ولا فراغات سوداء على أي
+                    // حجم شاشة.
+                    final double finalScale =
+                        baseScale * breathingScale.value;
+
+                    return Transform.scale(
+                      scale: finalScale,
+                      alignment: Alignment.center,
+                      child: child,
+                    );
+                  },
+                  child: SizedBox(
+                    width: worldWidth,
+                    height: worldHeight,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Positioned.fill(
+                          child: Image.asset(
+                            mapImage,
+                            fit: BoxFit.fill,
+                          ),
+                        ),
+
+                        for (int i = 0; i < _clouds.length; i++)
+                          _CloudLayer(
+                            cloud: _clouds[i],
+                            controller: cloudControllers[i],
+                            worldWidth: worldWidth,
+                            worldHeight: worldHeight,
+                          ),
+
+                        for (final rect in _islandRects)
+                          _IslandLayer(
+                            rect: rect,
+                            island: getIsland(rect.id),
+                            worldWidth: worldWidth,
+                            worldHeight: worldHeight,
+                            onTap: openIsland,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
 }
 
-/// سحابة واحدة تتحرك أفقياً بسرعتها الخاصة، لكنها ترسم داخل طبقة
-/// العالم نفسها فتتأثر تلقائياً بأي scale يُطبَّق على العالم كله.
+/// سحابة واحدة تتحرك أفقياً بسرعتها الخاصة داخل نفس طبقة العالم،
+/// فتتأثر تلقائياً بأي scale يُطبَّق على العالم كله (تغطية الشاشة +
+/// التنفس معاً).
 class _CloudLayer extends StatelessWidget {
   final _RelativeCloud cloud;
   final AnimationController controller;
@@ -315,9 +326,9 @@ class _CloudLayer extends StatelessWidget {
   }
 }
 
-/// جزيرة واحدة مثبتة بإحداثيات نسبية ثابتة ضمن لوحة العالم.
-/// لا تملك أي AnimationController خاص بها؛ حركتها بالكامل نتيجة
-/// Transform.scale المشترك القادم من worldController في الشاشة الأم.
+/// جزيرة واحدة مثبتة بإحداثيات نسبية ثابتة ضمن لوحة العالم، بلا أي
+/// AnimationController خاص بها - حركتها بالكامل نتيجة الـ Transform
+/// المشترك في الشاشة الأم.
 class _IslandLayer extends StatelessWidget {
   final _RelativeRect rect;
   final PuzzleModel island;
