@@ -53,7 +53,7 @@ class WorldMapScreen extends StatefulWidget {
 
 class _WorldMapScreenState extends State<WorldMapScreen>
     with TickerProviderStateMixin {
-  static const String mapImage = "assets/images/world/world_map.png";
+  static const String mapImage = "assets/images/world/world_map.jpg";
 
   // الأبعاد الأصلية لصورة الخريطة (تُستخدم فقط كمرجع نسبة أبعاد،
   // وليست حجماً ثابتاً يُفرض على الشاشة).
