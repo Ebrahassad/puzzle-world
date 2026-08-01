@@ -131,8 +131,8 @@ void onPanEnd() {
       piece.distanceToCorrect <= snapTolerance;
 
   // مركز القطعة للتأكد أنها داخل لوحة الحل
-  final Offset pieceCenter =
-      piece.currentPosition + piece.path.getBounds().center;
+  final ui.Offset pieceCenter =
+    piece.currentPosition + piece.path.getBounds().center;
 
   final bool insideBoard =
       _boardRect.contains(pieceCenter);
