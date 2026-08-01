@@ -11,6 +11,7 @@ import '../models/puzzle_level_model.dart';
 import 'puzzle_game_screen.dart';
 
 
+
 class IslandScreen extends StatefulWidget {
 
   final PuzzleModel island;
@@ -34,28 +35,38 @@ class _IslandScreenState extends State<IslandScreen>
     with TickerProviderStateMixin {
 
 
-  // لوحة العالم المرجعية
+
+  // مقاس التصميم الأساسي
   static const double worldWidth = 1080;
+
   static const double worldHeight = 1920;
 
 
-  // مساحة الجزيرة أصبحت أكبر
-  static const double islandAreaHeightFraction = 0.70;
+
+  // مساحة الجزيرة داخل التصميم
+  static const double islandTop = 70;
+
+  static const double islandHeight =
+      1650;
 
 
 
   final List<Offset> levelPositions = const [
 
-    Offset(0.15, 0.05),
-    Offset(0.65, 0.13),
-    Offset(0.25, 0.22),
-    Offset(0.70, 0.31),
-    Offset(0.30, 0.40),
-    Offset(0.65, 0.49),
-    Offset(0.25, 0.58),
-    Offset(0.70, 0.67),
-    Offset(0.35, 0.76),
-    Offset(0.60, 0.85),
+    Offset(0.18,0.08),
+    Offset(0.65,0.15),
+
+    Offset(0.25,0.25),
+    Offset(0.70,0.34),
+
+    Offset(0.32,0.43),
+    Offset(0.65,0.52),
+
+    Offset(0.25,0.62),
+    Offset(0.70,0.70),
+
+    Offset(0.35,0.80),
+    Offset(0.60,0.88),
 
   ];
 
@@ -63,26 +74,18 @@ class _IslandScreenState extends State<IslandScreen>
 
   final List<int> levelOrder = const [
 
-    0,
-    9,
-    1,
-    8,
-    2,
-    7,
-    3,
-    6,
-    4,
-    5,
+    0,9,1,8,2,
+    7,3,6,4,5
 
   ];
 
 
 
-  late final AnimationController worldController;
+  late AnimationController worldController;
 
-  late final Animation<double> worldScale;
 
-  late final Animation<double> worldTranslate;
+
+  late Animation<double> worldScale;
 
 
 
@@ -91,64 +94,53 @@ class _IslandScreenState extends State<IslandScreen>
 
 
   @override
-  void initState() {
+  void initState(){
 
     super.initState();
 
 
-    levels = PuzzleLevelData.getLevels(
-      widget.island.id,
-    );
+
+    levels =
+        PuzzleLevelData.getLevels(
+          widget.island.id,
+        );
 
 
 
-    worldController = AnimationController(
+    worldController =
+        AnimationController(
 
-      vsync: this,
+          vsync:this,
 
-      duration: const Duration(seconds:20),
+          duration:
+          const Duration(seconds:20),
 
-    )..repeat(reverse:true);
-
-
-
-    worldScale = Tween<double>(
-
-      begin: 1.0,
-
-      end: 1.015,
-
-    ).animate(
-
-      CurvedAnimation(
-
-        parent: worldController,
-
-        curve: Curves.easeInOut,
-
-      ),
-
-    );
+        )..repeat(
+          reverse:true,
+        );
 
 
 
-    worldTranslate = Tween<double>(
+    worldScale =
+        Tween<double>(
 
-      begin: -5,
+          begin:1.0,
 
-      end: 5,
+          end:1.01,
 
-    ).animate(
+        ).animate(
 
-      CurvedAnimation(
+          CurvedAnimation(
 
-        parent: worldController,
+            parent:
+            worldController,
 
-        curve: Curves.easeInOut,
+            curve:
+            Curves.easeInOut,
 
-      ),
+          ),
 
-    );
+        );
 
 
   }
@@ -164,10 +156,9 @@ class _IslandScreenState extends State<IslandScreen>
 
   }
 
-
   void openLevel(
-      PuzzleLevelModel level,
-      ){
+    PuzzleLevelModel level,
+  ){
 
     Navigator.push(
 
@@ -189,11 +180,17 @@ class _IslandScreenState extends State<IslandScreen>
 
 
 
+
+
   Widget levelButton(
-      PuzzleLevelModel level,
-      ){
+    PuzzleLevelModel level,
+  ){
 
     return GestureDetector(
+
+      behavior:
+      HitTestBehavior.opaque,
+
 
       onTap: (){
 
@@ -202,59 +199,78 @@ class _IslandScreenState extends State<IslandScreen>
       },
 
 
-      child: Stack(
+      child: SizedBox(
 
-        alignment: Alignment.center,
+        width:
+        worldWidth * 0.11,
 
-        children:[
-
-
-          Image.asset(
-
-            "assets/images/ui/level_piece.png",
-
-            width:130,
-
-            height:130,
-
-            fit:BoxFit.contain,
-
-          ),
+        height:
+        worldWidth * 0.11,
 
 
+        child: Stack(
 
-          Text(
+          alignment:
+          Alignment.center,
 
-            "${level.levelNumber}",
 
-            style: const TextStyle(
+          children:[
 
-              color:Colors.white,
 
-              fontSize:42,
+            Image.asset(
 
-              fontWeight:FontWeight.bold,
+              "assets/images/ui/level_piece.png",
 
-              shadows:[
-
-                Shadow(
-
-                  color:Colors.black,
-
-                  blurRadius:5,
-
-                  offset:Offset(0,3),
-
-                ),
-
-              ],
+              fit:
+              BoxFit.contain,
 
             ),
 
-          ),
 
 
-        ],
+            Text(
+
+              "${level.levelNumber}",
+
+
+              style:
+              const TextStyle(
+
+                color:
+                Colors.white,
+
+                fontSize:
+                38,
+
+                fontWeight:
+                FontWeight.bold,
+
+
+                shadows:[
+
+                  Shadow(
+
+                    color:
+                    Colors.black,
+
+                    blurRadius:
+                    6,
+
+                    offset:
+                    Offset(0,3),
+
+                  ),
+
+                ],
+
+              ),
+
+            ),
+
+
+          ],
+
+        ),
 
       ),
 
@@ -263,142 +279,295 @@ class _IslandScreenState extends State<IslandScreen>
   }
 
 
+
+
+
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ){
 
     return Scaffold(
 
-      body: Stack(
+      body:
 
-        children: [
+      LayoutBuilder(
 
-          // خلفية فضاء + بحر
-          Positioned.fill(
+        builder:
+        (context,constraints){
 
-            child: Container(
 
-              decoration: const BoxDecoration(
 
-                gradient: LinearGradient(
+          final screenWidth =
+              constraints.maxWidth;
 
-                  begin: Alignment.topCenter,
 
-                  end: Alignment.bottomCenter,
 
-                  colors: [
+          final screenHeight =
+              constraints.maxHeight;
 
-                    Color(0xff020b24),
-                    Color(0xff06345a),
-                    Color(0xff006994),
 
-                  ],
 
-                ),
+          // نحافظ على كامل العالم داخل الشاشة
+          final scale = math.min(
 
-              ),
+            screenWidth /
+            worldWidth,
 
-            ),
 
-          ),
+            screenHeight /
+            worldHeight,
 
+          );
 
 
-          Positioned.fill(
 
-            child: LayoutBuilder(
+          final worldRenderWidth =
+              worldWidth * scale;
 
-              builder: (context, constraints) {
 
 
-                final double screenWidth =
-                    constraints.maxWidth;
+          final worldRenderHeight =
+              worldHeight * scale;
 
 
-                final double screenHeight =
-                    constraints.maxHeight;
 
+          final offsetX =
+              (screenWidth -
+                  worldRenderWidth) / 2;
 
 
-                final double scale = math.max(
 
-                  screenWidth / worldWidth,
+          final offsetY =
+              (screenHeight -
+                  worldRenderHeight) / 2;
 
-                  screenHeight / worldHeight,
 
-                );
 
+          return Container(
 
+            color:
+            const Color(0xff020b24),
 
-                final double scaledWidth =
-                    worldWidth * scale;
 
+            child:
+            Stack(
 
-                final double scaledHeight =
-                    worldHeight * scale;
+              children:[
 
 
+                Positioned(
 
-                final double dx =
-                    (screenWidth - scaledWidth) / 2;
+                  left:
+                  offsetX,
 
 
-                final double dy =
-                    (screenHeight - scaledHeight) / 2;
+                  top:
+                  offsetY,
 
 
+                  width:
+                  worldRenderWidth,
 
-                return ClipRect(
 
-                  child: Stack(
+                  height:
+                  worldRenderHeight,
 
-                    children: [
 
-                      Positioned(
+                  child:
 
-                        left: dx,
+                  Transform.scale(
 
-                        top: dy,
+                    scale:
+                    scale,
 
 
-                        child: Transform.scale(
+                    alignment:
+                    Alignment.topLeft,
 
-                          scale: scale,
 
-                          alignment: Alignment.topLeft,
+                    child:
 
+                    SizedBox(
 
-                          child: SizedBox(
+                      width:
+                      worldWidth,
 
-                            width: worldWidth,
 
-                            height: worldHeight,
+                      height:
+                      worldHeight,
 
 
-                            child: AnimatedBuilder(
+                      child:
 
-                              animation: worldController,
+                      AnimatedBuilder(
 
+                        animation:
+                        worldController,
 
-                              builder: (context, child) {
 
+                        builder:
+                        (context,child){
 
-                                return Transform.scale(
 
-                                  scale: worldScale.value,
+                          return Transform.scale(
 
-                                  alignment: Alignment.center,
+                            scale:
+                            worldScale.value,
 
 
-                                  child: Transform.translate(
+                            alignment:
+                            Alignment.center,
 
-                                    offset: Offset(
-                                      worldTranslate.value,
-                                      0,
+
+                            child:
+                            child,
+
+
+                          );
+
+
+                        },
+
+
+                        child:
+
+                        Stack(
+
+                          clipBehavior:
+                          Clip.none,
+
+
+                          children:[
+
+                            // خلفية العالم
+                            Positioned.fill(
+
+                              child: Image.asset(
+
+                                IslandBackgroundData
+                                    .getBackground(
+                                      widget.island.id,
                                     ),
 
-                                    child: child,
 
+                                fit:
+                                BoxFit.fill,
+
+
+                              ),
+
+                            ),
+
+
+
+
+
+
+                            // الجزيرة الرئيسية
+                            Positioned(
+
+                              left:0,
+
+
+                              top:
+                              islandTop,
+
+
+                              width:
+                              worldWidth,
+
+
+                              height:
+                              islandHeight,
+
+
+                              child: Image.asset(
+
+                                widget.island.image,
+
+
+                                fit:
+                                BoxFit.contain,
+
+
+                                alignment:
+                                Alignment.topCenter,
+
+
+                              ),
+
+                            ),
+
+
+
+
+
+
+                            // المراحل
+                            ...List.generate(
+
+                              levels.length,
+
+
+                              (index){
+
+
+                                final int realIndex =
+
+                                index <
+                                    levelOrder.length
+
+                                    ?
+
+                                levelOrder[index]
+
+                                    :
+
+                                index;
+
+
+
+                                final level =
+                                    levels[realIndex];
+
+
+
+                                final pos =
+                                    levelPositions[index];
+
+
+
+                                return Positioned(
+
+                                  left:
+
+                                  worldWidth *
+                                  pos.dx
+                                  -
+                                  (worldWidth *
+                                      0.055),
+
+
+
+                                  top:
+
+                                  islandTop +
+
+                                  (
+                                    islandHeight *
+                                    pos.dy
                                   ),
+
+
+
+                                  child:
+
+                                  levelButton(
+                                    level,
+                                  ),
+
 
                                 );
 
@@ -406,230 +575,150 @@ class _IslandScreenState extends State<IslandScreen>
                               },
 
 
-                              child: Stack(
-
-                                clipBehavior:
-                                    Clip.none,
-
-
-                                children: [
-
-
-                                  // خلفية الجزيرة
-                                  Positioned.fill(
-
-                                    child: Image.asset(
-
-                                      IslandBackgroundData
-                                          .getBackground(
-                                        widget.island.id,
-                                      ),
-
-                                      fit: BoxFit.cover,
-
-                                      alignment:
-                                          Alignment.center,
-
-                                    ),
-
-                                  ),
+                            ),
 
 
 
-                                  // الجزيرة
-                                  Positioned(
+                          ],
 
-                                    left: 0,
-
-                                    top: 80,
-
-                                    width: worldWidth,
-
-                                    height:
-                                        worldHeight *
-                                        islandAreaHeightFraction,
+                        ),
 
 
-                                    child: Image.asset(
-
-                                      widget.island.image,
-
-                                      fit: BoxFit.contain,
-
-                                      alignment:
-                                          Alignment.topCenter,
-
-                                    ),
-
-                                  ),
+                      ),
 
 
-
-                                  // المراحل
-                                  ...List.generate(
-
-                                    levels.length,
+                    ),
 
 
-                                    (index) {
+                  ),
 
 
-                                      final pos =
-                                          levelPositions[index];
+                ),
+
+                // طبقة دمج خفيفة
+                Positioned.fill(
+
+                  child: Container(
+
+                    color:
+                    Colors.black.withOpacity(0.03),
+
+                  ),
+
+                ),
 
 
-                                      return Positioned(
-
-                                        left:
-                                            worldWidth *
-                                            pos.dx,
 
 
-                                        top:
-                                            worldHeight *
-                                            pos.dy,
 
 
-                                        child: levelButton(
+                // أزرار التحكم
+                SafeArea(
 
-                                          levels[
-                                            levelOrder[index]
-                                          ],
+                  child: Padding(
 
-                                        ),
-
-                                      );
+                    padding:
+                    const EdgeInsets.all(12),
 
 
-                                    },
+                    child: Row(
 
-                                  ),
+                      mainAxisAlignment:
+                      MainAxisAlignment.spaceBetween,
 
 
-                                ],
+                      children:[
 
-                              ),
+
+
+                        CircleAvatar(
+
+                          backgroundColor:
+                          Colors.black54,
+
+
+                          child:
+                          IconButton(
+
+                            icon:
+                            const Icon(
+
+                              Icons.arrow_back,
+
+                              color:
+                              Colors.white,
 
                             ),
+
+
+                            onPressed:(){
+
+                              Navigator.pop(
+                                context,
+                              );
+
+                            },
 
                           ),
 
                         ),
 
-                      ),
-
-                    ],
-
-                  ),
-
-                );
-
-
-              },
-
-            ),
-
-          ),
 
 
 
-          // طبقة دمج خفيفة
-          Positioned.fill(
-
-            child: Container(
-
-              color:
-                  Colors.black.withOpacity(0.04),
-
-            ),
-
-          ),
 
 
+                        CircleAvatar(
 
-          // الأزرار العلوية
-          SafeArea(
-
-            child: Padding(
-
-              padding:
-                  const EdgeInsets.all(12),
+                          backgroundColor:
+                          Colors.black54,
 
 
-              child: Row(
+                          child:
+                          IconButton(
 
-                mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween,
+                            icon:
+                            const Icon(
 
+                              Icons.settings,
 
-                children: [
+                              color:
+                              Colors.white,
 
-
-                  CircleAvatar(
-
-                    backgroundColor:
-                        Colors.black54,
-
-
-                    child: IconButton(
-
-                      icon: const Icon(
-
-                        Icons.arrow_back,
-
-                        color: Colors.white,
-
-                      ),
+                            ),
 
 
-                      onPressed: () {
+                            onPressed:(){},
 
-                        Navigator.pop(context);
+                          ),
 
-                      },
+                        ),
+
+
+
+                      ],
 
                     ),
 
                   ),
 
+                ),
 
 
-                  CircleAvatar(
 
-                    backgroundColor:
-                        Colors.black54,
-
-
-                    child: IconButton(
-
-                      icon: const Icon(
-
-                        Icons.settings,
-
-                        color: Colors.white,
-
-                      ),
-
-
-                      onPressed: () {},
-
-                    ),
-
-                  ),
-
-
-                ],
-
-              ),
+              ],
 
             ),
 
-          ),
+
+          );
 
 
-        ],
+        },
+
 
       ),
+
 
     );
 
