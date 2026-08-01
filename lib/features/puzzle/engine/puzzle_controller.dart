@@ -119,54 +119,38 @@ class PuzzleController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Call from `GestureDetector.onPanEnd`/`onPanCancel`. Snaps the active
-  /// piece exactly onto [PuzzlePiece.correctPosition] and marks it placed
-  /// if it's within [snapTolerance]; otherwise the piece simply stays
-  /// wherever the player released it.
-   /// Call from `GestureDetector.onPanEnd`/`onPanCancel`.
-  ///
-  /// If the piece is released near its correct position AND inside the board,
-  /// it snaps into place.
-  ///
-  /// If the piece is wrong:
-  /// - it stays exactly where the player dropped it.
-  /// - it does NOT return to the tray.
+void onPanEnd() {
+  final piece = _dragging;
 
-  void onPanEnd() {
-    final piece = _dragging;
+  if (piece == null) return;
 
-    if (piece == null) return;
+  piece.isDragging = false;
 
-    piece.isDragging = false;
+  // المسافة بين القطعة ومكانها الصحيح
+  final bool nearCorrectPosition =
+      piece.distanceToCorrect <= snapTolerance;
 
-    // هل القطعة قريبة من مكانها الصحيح؟
-    final bool nearCorrectPosition =
-        piece.distanceToCorrect <= snapTolerance;
+  // مركز القطعة للتأكد أنها داخل لوحة الحل
+  final Offset pieceCenter =
+      piece.currentPosition + piece.path.getBounds().center;
 
-    // هل القطعة داخل حدود لوحة الحل؟
-    final bool insideBoard =
-        _boardRect.contains(
-          piece.currentPosition +
-              Offset(
-                piece.localBounds.width / 2,
-                piece.localBounds.height / 2,
-              ),
-        );
+  final bool insideBoard =
+      _boardRect.contains(pieceCenter);
 
-    // التثبيت يعمل فقط إذا:
-    // 1- القطعة قريبة من مكانها الصحيح
-    // 2- القطعة داخل البورد
-    if (nearCorrectPosition && insideBoard) {
-      piece.currentPosition = piece.correctPosition;
-      piece.isPlaced = true;
-    }
-
-    // القطعة الخاطئة تبقى مكانها
-    // لا ترجع إلى الشريط
-    _dragging = null;
-
-    notifyListeners();
+  // التثبيت يحدث فقط إذا:
+  // 1- القطعة قريبة من مكانها الصحيح
+  // 2- القطعة داخل البورد
+  if (nearCorrectPosition && insideBoard) {
+    piece.currentPosition = piece.correctPosition;
+    piece.isPlaced = true;
   }
+
+  // إذا كانت القطعة خاطئة:
+  // تبقى في مكانها ولا ترجع للشريط
+  _dragging = null;
+
+  notifyListeners();
+}
 
   /// Reshuffles all pieces into fresh random positions inside the last-used
   /// scatter area (or [scatterArea] if provided) and clears every placed
