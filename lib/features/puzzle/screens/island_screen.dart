@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../data/island_background_data.dart';
@@ -24,12 +26,15 @@ class _IslandScreenState extends State<IslandScreen>
     with TickerProviderStateMixin {
   // لوحة إحداثيات مرجعية ثابتة لكل "عالم الجزيرة".
   // كل شيء (خلفية + جزيرة + أزرار) يُوضع بإحداثيات ضمن هذه اللوحة،
-  // ثم FittedBox هو من يتكفل بتحجيمها لتناسب أي شاشة دون أي قص.
+  // ثم يُحسب Scale حقيقي من حجم الشاشة (LayoutBuilder) يجعل اللوحة
+  // تغطي الشاشة بالكامل دون أي فراغ أسود ودون تصغيرها كما كان
+  // يحدث سابقاً مع FittedBox(BoxFit.contain).
   static const double worldWidth = 1080;
   static const double worldHeight = 1920;
 
-  // نسبة المساحة العلوية المخصصة لصورة الجزيرة (نفس القيمة القديمة 0.36).
-  static const double islandAreaHeightFraction = 0.36;
+  // نسبة المساحة العلوية المخصصة لصورة الجزيرة. تم رفعها من 0.36
+  // إلى 0.55 لتصبح الجزيرة أكبر وتستغل مساحة الشاشة بشكل أفضل.
+  static const double islandAreaHeightFraction = 0.55;
 
   final List<Offset> levelPositions = const [
     Offset(0.15, 0.00),
@@ -131,15 +136,15 @@ class _IslandScreenState extends State<IslandScreen>
         children: [
           Image.asset(
             "assets/images/ui/level_piece.png",
-            width: 95,
-            height: 95,
+            width: 130,
+            height: 130,
             fit: BoxFit.contain,
           ),
           Text(
             "${level.levelNumber}",
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 32,
+              fontSize: 42,
               fontWeight: FontWeight.bold,
               shadows: [
                 Shadow(
@@ -161,88 +166,120 @@ class _IslandScreenState extends State<IslandScreen>
       body: Stack(
         children: [
           // طبقة العالم الواحدة: خلفية + جزيرة + أزرار المراحل معاً.
-          // FittedBox(contain) يعرض اللوحة كاملة بدون أي قص وبنفس
-          // نسبة أبعادها على الهواتف الصغيرة والكبيرة والتابلت،
-          // ويتوسط تلقائياً داخل الشاشة.
+          // بدل FittedBox(contain) — الذي كان يصغّر اللوحة كاملة
+          // ويترك فراغاً أسود حول الحواف — نقيس حجم الشاشة الحقيقي
+          // عبر LayoutBuilder، ونحسب أكبر Scale من (العرض، الارتفاع)
+          // بحيث تغطي لوحة العالم الشاشة بالكامل في كلا الاتجاهين
+          // (نفس فكرة BoxFit.cover لكن محسوبة يدوياً)، ثم نوسّطها
+          // ونقصّ الفائض بالتساوي من الجانبين عبر ClipRect. النتيجة:
+          // الجزيرة تبقى كبيرة وفي المنتصف، وكل العناصر (خلفية +
+          // جزيرة + أزرار) ما زالت تتحرك معاً كعالم واحد بنفس التحويل.
           Positioned.fill(
-            child: FittedBox(
-              fit: BoxFit.contain,
-              alignment: Alignment.center,
-              child: SizedBox(
-                width: worldWidth,
-                height: worldHeight,
-                child: AnimatedBuilder(
-                  animation: worldController,
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: worldScale.value,
-                      alignment: Alignment.center,
-                      child: Transform.translate(
-                        offset: Offset(worldTranslate.value, 0),
-                        child: child,
-                      ),
-                    );
-                  },
-                  // كل العناصر التالية هي child واحد مشترك، لذلك أي
-                  // scale/translate على العالم ينعكس عليها معاً وبنفس
-                  // النسبة، دون أي حركة مستقلة لأي عنصر بمفرده.
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final double screenWidth = constraints.maxWidth;
+                final double screenHeight = constraints.maxHeight;
+
+                final double scale = math.max(
+                  screenWidth / worldWidth,
+                  screenHeight / worldHeight,
+                );
+
+                final double scaledWidth = worldWidth * scale;
+                final double scaledHeight = worldHeight * scale;
+
+                final double dx = (screenWidth - scaledWidth) / 2;
+                final double dy = (screenHeight - scaledHeight) / 2;
+
+                return ClipRect(
                   child: Stack(
-                    clipBehavior: Clip.none,
                     children: [
-                      // خلفية الجزيرة: تملأ لوحة العالم بالكامل دون
-                      // أي قص وبنفس نسبة أبعادها الأصلية.
-                      Positioned.fill(
-                        child: Image.asset(
-                          IslandBackgroundData.getBackground(
-                            widget.island.id,
-                          ),
-                          fit: BoxFit.contain,
-                          alignment: Alignment.center,
-                        ),
-                      ),
-
-                      // صورة الجزيرة: مثبتة فوق الخلفية بإحداثيات
-                      // ثابتة داخل لوحة العالم (وليست عائمة بحركة
-                      // مستقلة عن العالم).
                       Positioned(
-                        left: 0,
-                        top: 0,
-                        width: worldWidth,
-                        height: worldHeight * islandAreaHeightFraction,
-                        child: Image.asset(
-                          widget.island.image,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
+                        left: dx,
+                        top: dy,
+                        child: Transform.scale(
+                          scale: scale,
+                          alignment: Alignment.topLeft,
+                          child: SizedBox(
+                            width: worldWidth,
+                            height: worldHeight,
+                            child: AnimatedBuilder(
+                              animation: worldController,
+                              builder: (context, child) {
+                                return Transform.scale(
+                                  scale: worldScale.value,
+                                  alignment: Alignment.center,
+                                  child: Transform.translate(
+                                    offset: Offset(worldTranslate.value, 0),
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              // كل العناصر التالية هي child واحد مشترك، لذلك أي
+                              // scale/translate على العالم ينعكس عليها معاً وبنفس
+                              // النسبة، دون أي حركة مستقلة لأي عنصر بمفرده.
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  // خلفية الجزيرة: تملأ لوحة العالم بالكامل.
+                                  // BoxFit.contain هنا (وليس cover) حتى تبقى
+                                  // الخلفية كاملة ومرئية بدون أي قص لأطرافها؛
+                                  // ClipRect + Scale في الطبقة الخارجية هما
+                                  // من يتكفلان بملء الشاشة دون فراغ أسود.
+                                  Positioned.fill(
+                                    child: Image.asset(
+                                      IslandBackgroundData.getBackground(
+                                        widget.island.id,
+                                      ),
+                                      fit: BoxFit.contain,
+                                      alignment: Alignment.center,
+                                    ),
+                                  ),
 
-                      // أزرار المراحل: إحداثيات نسبية ضمن مساحة
-                      // الجزيرة (world/island coordinates)، وليست
-                      // نسبة من حجم الشاشة مباشرة. بهذا تبقى كل
-                      // مرحلة فوق نفس نقطتها على الجزيرة مهما تغيّر
-                      // حجم الهاتف.
-                      ...List.generate(
-                        levels.length,
-                        (index) {
-                          final pos = levelPositions[index];
+                                  // صورة الجزيرة: مثبتة فوق الخلفية بإحداثيات
+                                  // ثابتة داخل لوحة العالم (وليست عائمة بحركة
+                                  // مستقلة عن العالم).
+                                  Positioned(
+                                    left: 0,
+                                    top: 0,
+                                    width: worldWidth,
+                                    height: worldHeight * islandAreaHeightFraction,
+                                    child: Image.asset(
+                                      widget.island.image,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
 
-                          final double areaTop =
-                              worldHeight * islandAreaHeightFraction;
-                          final double areaHeight =
-                              worldHeight * (1 - islandAreaHeightFraction);
+                                  // أزرار المراحل: إحداثيات نسبية ضمن لوحة
+                                  // العالم الكاملة مباشرة (world/full-canvas
+                                  // coordinates)، وليست نسبة من منطقة سفلية
+                                  // منفصلة كما كان سابقاً. بهذا تبقى كل مرحلة
+                                  // فوق نفس نقطتها الصحيحة على الجزيرة مهما
+                                  // تغيّر حجم الهاتف.
+                                  ...List.generate(
+                                    levels.length,
+                                    (index) {
+                                      final pos = levelPositions[index];
 
-                          return Positioned(
-                            left: worldWidth * pos.dx,
-                            top: areaTop + (areaHeight * pos.dy),
-                            child: levelButton(
-                              levels[levelOrder[index]],
+                                      return Positioned(
+                                        left: worldWidth * pos.dx,
+                                        top: worldHeight * pos.dy,
+                                        child: levelButton(
+                                          levels[levelOrder[index]],
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
-                          );
-                        },
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ),
 
