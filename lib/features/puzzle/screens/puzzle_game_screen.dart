@@ -12,9 +12,7 @@ import '../models/puzzle_level_model.dart';
 
 class PuzzleGameScreen extends StatefulWidget {
 
-
   final PuzzleLevelModel level;
-
 
 
   const PuzzleGameScreen({
@@ -26,14 +24,11 @@ class PuzzleGameScreen extends StatefulWidget {
   });
 
 
-
   @override
   State<PuzzleGameScreen> createState() =>
       _PuzzleGameScreenState();
 
-
 }
-
 
 
 
@@ -46,29 +41,26 @@ class _PuzzleGameScreenState
   ui.Image? image;
 
 
-
   late PuzzleController controller;
-
 
 
   List<PuzzlePiece> pieces = [];
 
 
-
   bool loading = true;
+
+
+  bool puzzleCreated = false;
 
 
 
   final double boardSize = 360;
 
 
-
   final double trayHeight = 110;
 
 
-
   final GlobalKey boardKey = GlobalKey();
-
 
 
   final ScrollController trayController =
@@ -80,19 +72,16 @@ class _PuzzleGameScreenState
 
 
 
+
+
   @override
   void initState() {
 
-
     super.initState();
-
-
 
     _loadImage();
 
-
   }
-
 
 
 
@@ -100,69 +89,85 @@ class _PuzzleGameScreenState
 
 
   //==================================================
-  // تحميل الصورة
-  //==================================================
+// تحميل الصورة فقط
+//==================================================
 
-  Future<void> _loadImage() async {
+Future<void> _loadImage() async {
 
-
-
-    final provider = AssetImage(
-
-      widget.level.image,
-
-    );
+  final provider = AssetImage(
+    widget.level.image,
+  );
 
 
-
-    final stream = provider.resolve(
-
-      const ImageConfiguration(),
-
-    );
-
-debugPrint("START LOAD: ${widget.level.image}");
-
-    stream.addListener(
+  final stream = provider.resolve(
+    const ImageConfiguration(),
+  );
 
 
-
-      ImageStreamListener(
-
-  (info, _) {
-
-  image = info.image;
-
-  if(mounted){
-    setState(() {});
-  }
-
-},
-  onError:(error, stack){
-
-    debugPrint(
-      "IMAGE ERROR: ${widget.level.image}"
-    );
-
-    setState(() {
-      loading = false;
-    });
-
-  },
-
-),
+  debugPrint(
+    "START LOAD: ${widget.level.image}"
+  );
 
 
-    );
+  stream.addListener(
+
+    ImageStreamListener(
+
+      (info, _) {
 
 
-  }
+        if(!mounted){
+          return;
+        }
 
 
+        image = info.image;
 
 
+        setState(() {
+
+          loading = false;
+
+        });
 
 
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) {
+
+          _calculateBoardPosition();
+
+        });
+
+
+      },
+
+
+      onError:(error, stack){
+
+
+        debugPrint(
+          "IMAGE ERROR: ${widget.level.image}"
+        );
+
+
+        if(mounted){
+
+          setState(() {
+
+            loading = false;
+
+          });
+
+        }
+
+
+      },
+
+    ),
+
+  );
+
+}
 
 
   //==================================================
@@ -171,172 +176,197 @@ debugPrint("START LOAD: ${widget.level.image}");
 
   void _calculateBoardPosition(){
 
-  WidgetsBinding.instance.addPostFrameCallback((_) {
 
-    if(!mounted){
-      return;
-    }
-
-    final context = boardKey.currentContext;
-
-    if(context == null){
-
-      debugPrint("BOARD NOT READY");
-
-      Future.delayed(
-        const Duration(milliseconds:100),
-        (){
-          if(mounted){
-            _calculateBoardPosition();
-          }
-        },
-      );
-
-      return;
-    }
-
-    final RenderBox box =
-        context.findRenderObject()
-        as RenderBox;
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) {
 
 
-    boardOffset =
-        box.localToGlobal(
-          Offset.zero,
+      if(!mounted){
+
+        return;
+
+      }
+
+
+
+      final context = boardKey.currentContext;
+
+
+
+      if(context == null){
+
+
+        debugPrint(
+          "BOARD NOT READY"
         );
 
 
-    debugPrint(
-      "BOARD OFFSET = $boardOffset"
-    );
 
+        Future.delayed(
 
-    _createPuzzle();
+          const Duration(
+              milliseconds:100
+          ),
 
-  });
+          (){
 
-}
+            if(mounted){
 
+              _calculateBoardPosition();
 
+            }
 
-  //==================================================
-  // إنشاء القطع
-  //==================================================
+          },
 
-  void _createPuzzle(){
+        );
 
-  if(image == null){
-    return;
-  }
 
+        return;
 
-    final pieceSize =
+      }
 
-        boardSize /
-        widget.level.gridSize;
 
 
 
-    pieces = PuzzleGenerator.generate(
+      final RenderBox box =
+      context.findRenderObject()
+      as RenderBox;
 
 
 
-      rows: widget.level.gridSize,
 
+      boardOffset =
+          box.localToGlobal(
+            Offset.zero,
+          );
 
 
-      columns: widget.level.gridSize,
 
 
+      debugPrint(
+        "BOARD OFFSET = $boardOffset"
+      );
 
-      imageSize: Size(
 
-        image!.width.toDouble(),
 
-        image!.height.toDouble(),
-
-      ),
-
-
-
-      pieceSize: Size(
-
-        pieceSize,
-
-        pieceSize,
-
-      ),
-
-
-
-      traySize: Size(
-
-        MediaQuery.of(context).size.width,
-
-        trayHeight,
-
-      ),
-
-
-
-      boardOffset: boardOffset,
-
-
-
-    );
-
-
-
-
-    controller = PuzzleController(
-
-
-
-      pieces: pieces,
-
-
-
-      boardRect: Rect.fromLTWH(
-
-        boardOffset.dx,
-
-        boardOffset.dy,
-
-        boardSize,
-
-        boardSize,
-
-      ),
-
-
-
-    );
-
-debugPrint(
-  "PUZZLE PIECES = ${pieces.length}"
-);
-
-    setState(() {
-
-
-
-      loading = false;
+      _createPuzzle();
 
 
 
     });
 
 
+  }
+
+
+
+
+
+
+  //==================================================
+// إنشاء قطع البازل فقط
+//==================================================
+
+void _createPuzzle(){
+
+
+  if(image == null || puzzleCreated){
+
+    return;
 
   }
 
 
-  //==================================================
+  puzzleCreated = true;
+
+
+
+  final pieceSize =
+      boardSize /
+      widget.level.gridSize;
+
+
+
+  pieces = PuzzleGenerator.generate(
+
+
+    rows: widget.level.gridSize,
+
+
+    columns: widget.level.gridSize,
+
+
+    imageSize: Size(
+
+      image!.width.toDouble(),
+
+      image!.height.toDouble(),
+
+    ),
+
+
+    pieceSize: Size(
+
+      pieceSize,
+
+      pieceSize,
+
+    ),
+
+
+    traySize: Size(
+
+      MediaQuery.of(context).size.width,
+
+      trayHeight,
+
+    ),
+
+
+    boardOffset: boardOffset,
+
+
+  );
+
+
+
+  controller = PuzzleController(
+
+
+    pieces: pieces,
+
+
+    boardRect: Rect.fromLTWH(
+
+      boardOffset.dx,
+
+      boardOffset.dy,
+
+      boardSize,
+
+      boardSize,
+
+    ),
+
+  );
+
+
+  debugPrint(
+    "PUZZLE PIECES = ${pieces.length}"
+  );
+
+
+  setState(() {});
+
+} 
+
+
+
+ //==================================================
   // تحقق من الفوز
   //==================================================
 
   void checkWin(){
-
 
 
     if(!controller.isCompleted){
@@ -349,7 +379,7 @@ debugPrint(
 
     Future.delayed(
 
-      const Duration(milliseconds: 400),
+      const Duration(milliseconds:400),
 
       (){
 
@@ -374,15 +404,12 @@ debugPrint(
 
 
 
-
-
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
 
 
 
-    if(loading || image == null){
-
+    if(image == null || loading){
 
 
       return const Scaffold(
@@ -411,15 +438,13 @@ debugPrint(
 
 
 
-
-
     return Scaffold(
 
 
 
       backgroundColor:
 
-          const Color(0xff18354f),
+      const Color(0xff18354f),
 
 
 
@@ -436,11 +461,9 @@ debugPrint(
 
 
 
-
-
             const SizedBox(
 
-              height: 12,
+              height:12,
 
             ),
 
@@ -448,40 +471,29 @@ debugPrint(
 
 
 
-
-
-            //========================================
-            // شريط القطع المتحرك
-            //========================================
+            //==============================
+            // شريط القطع
+            //==============================
 
 
             Container(
 
 
-
               height: trayHeight,
 
 
+              margin: const EdgeInsets.symmetric(
 
-              margin:
-
-              const EdgeInsets.symmetric(
-
-                horizontal: 12,
+                horizontal:12,
 
               ),
-
 
 
 
               decoration: BoxDecoration(
 
 
-
-                color:
-
-                Colors.black26,
-
+                color: Colors.black26,
 
 
                 borderRadius:
@@ -490,15 +502,11 @@ debugPrint(
 
 
 
-
                 border: Border.all(
 
-                  color:
-
-                  Colors.white24,
+                  color: Colors.white24,
 
                 ),
-
 
 
               ),
@@ -506,10 +514,7 @@ debugPrint(
 
 
 
-
-
               child: ClipRRect(
-
 
 
                 borderRadius:
@@ -522,15 +527,14 @@ debugPrint(
 
 
 
-                  controller:
-
-                  trayController,
+                  controller: trayController,
 
 
 
                   scrollDirection:
 
                   Axis.horizontal,
+
 
 
 
@@ -546,6 +550,7 @@ debugPrint(
 
 
 
+
                     child: Stack(
 
 
@@ -556,13 +561,13 @@ debugPrint(
 
 
 
-
-
                         if(piece.state !=
 
                             PieceState.tray){
 
+
                           return const SizedBox();
+
 
                         }
 
@@ -580,7 +585,6 @@ debugPrint(
 
 
 
-
                           top:
 
                           piece.trayPosition.dy,
@@ -588,15 +592,11 @@ debugPrint(
 
 
 
-                          child:
-
-                          GestureDetector(
+                          child: GestureDetector(
 
 
 
-                            onPanStart:
-
-                                (details){
+                            onPanStart:(details){
 
 
 
@@ -619,10 +619,7 @@ debugPrint(
 
 
 
-
-                            onPanUpdate:
-
-                                (details){
+                            onPanUpdate:(details){
 
 
 
@@ -645,10 +642,7 @@ debugPrint(
 
 
 
-
-                            onPanEnd:
-
-                                (_){
+                            onPanEnd:(_){
 
 
 
@@ -671,7 +665,6 @@ debugPrint(
 
 
 
-
                             child: CustomPaint(
 
 
@@ -686,19 +679,16 @@ debugPrint(
 
 
 
-                              painter:
 
-                              PuzzlePainter(
-
-
-
-                                piece: piece,
+                              painter: PuzzlePainter(
 
 
 
-                                image:
+                                piece:piece,
 
-                                AssetImage(
+
+
+                                image:AssetImage(
 
                                   widget.level.image,
 
@@ -706,9 +696,7 @@ debugPrint(
 
 
 
-                                cachedImage:
-
-                                image,
+                                cachedImage:image,
 
 
 
@@ -723,10 +711,7 @@ debugPrint(
                           ),
 
 
-
                         );
-
-
 
 
 
@@ -756,27 +741,22 @@ debugPrint(
 
 
 
-
-
             const SizedBox(
 
-              height: 20,
+              height:20,
 
             ),
 
 
-
-            //========================================
-            // لوحة تركيب البازل
-            //========================================
+            //==============================
+            // لوحة البازل
+            //==============================
 
 
             Expanded(
 
 
-
               child: Center(
-
 
 
                 child: Container(
@@ -792,6 +772,8 @@ debugPrint(
 
 
                   height: boardSize,
+
+
 
 
 
@@ -813,23 +795,21 @@ debugPrint(
 
 
 
-                    border:
+                    border: Border.all(
 
-                    Border.all(
 
-                      color:
 
-                      Colors.white24,
+                      color: Colors.white24,
 
                       width: 2,
+
+
 
                     ),
 
 
 
                   ),
-
-
 
 
 
@@ -846,6 +826,7 @@ debugPrint(
 
 
 
+
                     child: Stack(
 
 
@@ -856,16 +837,16 @@ debugPrint(
 
 
 
-                        //================================
+
                         // صورة الخلفية الخفيفة
-                        //================================
 
 
                         Opacity(
 
 
 
-                          opacity: 0.07,
+                          opacity:0.07,
+
 
 
 
@@ -901,9 +882,7 @@ debugPrint(
 
 
 
-                        //================================
                         // قطع البازل داخل اللوحة
-                        //================================
 
 
                         ...pieces.map((piece){
@@ -923,7 +902,6 @@ debugPrint(
 
 
                           }
-
 
 
 
@@ -960,9 +938,7 @@ debugPrint(
 
 
 
-                              onPanStart:
-
-                                  (details){
+                              onPanStart:(details){
 
 
 
@@ -986,9 +962,7 @@ debugPrint(
 
 
 
-                              onPanUpdate:
-
-                                  (details){
+                              onPanUpdate:(details){
 
 
 
@@ -1012,9 +986,8 @@ debugPrint(
 
 
 
-                              onPanEnd:
 
-                                  (_){
+                              onPanEnd:(_){
 
 
 
@@ -1042,13 +1015,11 @@ debugPrint(
 
 
 
-                                size: Size(
+                                size:Size(
 
 
 
                                   pieceSize,
-
-
 
                                   pieceSize,
 
@@ -1058,19 +1029,20 @@ debugPrint(
 
 
 
-                                painter:
-
-                                PuzzlePainter(
 
 
 
-                                  piece: piece,
+                                painter:PuzzlePainter(
 
 
 
-                                  image:
+                                  piece:piece,
 
-                                  AssetImage(
+
+
+                                  image:AssetImage(
+
+
 
                                     widget.level.image,
 
@@ -1078,13 +1050,12 @@ debugPrint(
 
 
 
-                                  cachedImage:
-
-                                  image,
+                                  cachedImage:image,
 
 
 
                                 ),
+
 
 
 
@@ -1102,14 +1073,15 @@ debugPrint(
 
 
 
+
                         }).toList(),
 
 
 
 
-
-
                       ],
+
+
 
                     ),
 
@@ -1145,10 +1117,6 @@ debugPrint(
 
     );
 
-
-
   }
-
-
 
 }
