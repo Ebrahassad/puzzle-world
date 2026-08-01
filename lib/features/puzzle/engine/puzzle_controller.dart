@@ -1,469 +1,174 @@
-import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
+
+import 'puzzle_generator.dart';
 import 'puzzle_piece.dart';
 
+/// Drives a jigsaw puzzle: owns every [PuzzlePiece], handles drag gestures,
+/// and decides when a piece should snap into its solved position.
+///
+/// Extends [ChangeNotifier] so a [PuzzlePainter] can be repainted directly
+/// by passing this controller as `CustomPaint`'s `repaint` listenable —
+/// every drag frame calls [notifyListeners], which repaints the canvas
+/// without the host widget needing `setState` (see [JigsawPuzzleView]).
+class PuzzleController extends ChangeNotifier {
+  PuzzleController({this.snapTolerance = 28});
 
-//==================================================
-// متحكم لعبة البازل
-//==================================================
-
-class PuzzleController {
-
-
-  final List<PuzzlePiece> pieces;
-
-
-
-  PuzzlePiece? activePiece;
-
-
-
-  Offset lastPosition = Offset.zero;
-
-
-
+  /// Max distance (canvas pixels) between a piece's current position and
+  /// its correct position for it to snap home on release.
   final double snapTolerance;
 
-
-
-  // حدود لوحة البازل
-  final Rect boardRect;
-
-
-
-  PuzzleController({
-
-    required this.pieces,
-
-    required this.boardRect,
-
-    this.snapTolerance = 35,
-
-  });
-
-
-
-
-
-
-
-  //==================================================
-  // الضغط على قطعة
-  //==================================================
-
-  void pointerDown(
-
-      Offset position,
-
-      ) {
-
-
-
-    // البحث من الأعلى للأسفل
-
-    for(int i = pieces.length - 1; i >= 0; i--){
-
-
-
-      final piece = pieces[i];
-
-
-
-
-      if(piece.state == PieceState.locked){
-
-        continue;
-
-      }
-
-
-
-
-
-
-
-      final local =
-
-          position -
-
-              piece.position;
-
-
-
-
-
-
-
-      if(piece.path.contains(local)){
-
-
-
-        activePiece = piece;
-
-
-
-        lastPosition = position;
-
-
-
-        piece.startDrag();
-
-piece.state = PieceState.board;
-
-
-piece.position = position -
-    Offset(
-      piece.size.width / 2,
-      piece.size.height / 2,
-    );
-lastPosition = position;
-
-        // وضع القطعة فوق باقي القطع
-
-        pieces.remove(piece);
-
-        pieces.add(piece);
-
-
-
-
-        break;
-
-      }
-
-
-    }
-
-
-  }
-
-
-
-
-
-
-
-  //==================================================
-  // تحريك القطعة
-  //==================================================
-
-  void pointerMove(
-
-      Offset position,
-
-      ){
-
-
-
-    if(activePiece == null){
-
-      return;
-
-    }
-
-
-
-
-
-
-    final delta =
-
-        position -
-
-            lastPosition;
-
-
-
-
-
-
-    activePiece!.move(
-
-      delta,
-
+  List<PuzzlePiece> _pieces = [];
+
+  /// All pieces, exposed read-only. [PuzzlePainter] reads this every frame.
+  List<PuzzlePiece> get pieces => List.unmodifiable(_pieces);
+
+  ui.Image? _image;
+
+  /// The source image the puzzle was generated from.
+  ui.Image? get image => _image;
+
+  ui.Rect _boardRect = ui.Rect.zero;
+
+  /// Where, in canvas coordinates, the assembled puzzle lives.
+  ui.Rect get boardRect => _boardRect;
+
+  ui.Rect _scatterArea = ui.Rect.zero;
+
+  int rows = 0;
+  int cols = 0;
+  int? _seed;
+
+  PuzzlePiece? _dragging;
+  ui.Offset _dragOffset = ui.Offset.zero; // pointer position relative to the piece's origin
+  int _zCounter = 0;
+
+  /// True once every piece has snapped into its correct spot.
+  bool get isSolved => _pieces.isNotEmpty && _pieces.every((p) => p.isPlaced);
+
+  /// (Re)builds the puzzle for [image], split into [rows] x [cols] pieces,
+  /// and scatters the pieces into starting positions.
+  ///
+  /// * [boardRect] — where the assembled picture should sit once solved.
+  /// * [scatterArea] — the region pieces are shuffled into to start
+  ///   (usually the whole visible canvas).
+  ///
+  /// Internally delegates all geometry work to [PuzzleGenerator.generate].
+  void initialize({
+    required ui.Image image,
+    required int rows,
+    required int cols,
+    required ui.Rect boardRect,
+    required ui.Rect scatterArea,
+    int? seed,
+  }) {
+    _image = image;
+    this.rows = rows;
+    this.cols = cols;
+    _boardRect = boardRect;
+    _scatterArea = scatterArea;
+    _seed = seed;
+
+    _pieces = PuzzleGenerator.generate(
+      image: image,
+      rows: rows,
+      cols: cols,
+      boardRect: boardRect,
+      scatterArea: scatterArea,
+      seed: seed,
     );
 
-
-
-
-
-    lastPosition = position;
-
-
-
+    _zCounter = _pieces.length;
+    _dragging = null;
+    notifyListeners();
   }
 
+  /// Call from a `GestureDetector.onPanStart`. Finds the top-most
+  /// not-yet-placed piece under [position] using each piece's exact outline
+  /// (not its bounding box), makes it the active dragged piece, and brings
+  /// it to the front by giving it the highest [PuzzlePiece.zOrder].
+  ///
+  /// Already-placed pieces are ignored so a finished section of the puzzle
+  /// can't be knocked loose by an accidental drag.
+  void onPanStart(ui.Offset position) {
+    // Search from the most recently touched/highest piece downward so an
+    // overlapping stack is picked correctly.
+    final candidates = _pieces.where((p) => !p.isPlaced).toList()
+      ..sort((a, b) => b.zOrder.compareTo(a.zOrder));
 
-
-//==================================================
-// رفع الإصبع
-//==================================================
-
-void pointerUp(){
-
-
-
-  if(activePiece == null){
-
-    return;
-
+    for (final piece in candidates) {
+      if (piece.containsPoint(position)) {
+        _dragging = piece;
+        _dragOffset = position - piece.currentPosition;
+        piece.isDragging = true;
+        piece.zOrder = ++_zCounter; // bring to front
+        notifyListeners();
+        return;
+      }
+    }
   }
 
+  /// Call from `GestureDetector.onPanUpdate` with the pointer's current
+  /// position. Moves the active piece so it stays under the finger at the
+  /// same offset it was originally grabbed at, giving a smooth drag.
+  void onPanUpdate(ui.Offset position) {
+    final piece = _dragging;
+    if (piece == null) return;
+    piece.currentPosition = position - _dragOffset;
+    notifyListeners();
+  }
 
+  /// Call from `GestureDetector.onPanEnd`/`onPanCancel`. Snaps the active
+  /// piece exactly onto [PuzzlePiece.correctPosition] and marks it placed
+  /// if it's within [snapTolerance]; otherwise the piece simply stays
+  /// wherever the player released it.
+  void onPanEnd() {
+    final piece = _dragging;
+    if (piece == null) return;
 
-  final piece = activePiece!;
-
-
-
-
-
-
-
-  // هل القطعة داخل حدود اللوحة
-
-  if(_isInsideBoard(piece)){
-
-
-
-    piece.state = PieceState.board;
-
-
-
-    // هل اقتربت من مكانها الصحيح
-
-    if(piece.isCorrect(
-
-      snapTolerance,
-
-    )){
-
-
-      piece.lock();
-
-
-    }else{
-
-
-      // إذا لم تركب ترجع للشريط
-
-      piece.returnToTray();
-
-
+    piece.isDragging = false;
+    if (piece.distanceToCorrect <= snapTolerance) {
+      piece.currentPosition = piece.correctPosition;
+      piece.isPlaced = true;
     }
 
-
-  }else{
-
-
-    // خارج اللوحة
-
-    piece.returnToTray();
-
-
+    _dragging = null;
+    notifyListeners();
   }
 
+  /// Reshuffles all pieces into fresh random positions inside the last-used
+  /// scatter area (or [scatterArea] if provided) and clears every placed
+  /// flag, without regenerating the tab/blank cut pattern — i.e. "restart
+  /// this puzzle" using the exact same pieces.
+  void restart({ui.Rect? scatterArea, int? seed}) {
+    if (_pieces.isEmpty) return;
+    final area = scatterArea ?? _scatterArea;
+    if (scatterArea != null) _scatterArea = scatterArea;
 
-
-
-
-
-  piece.endDrag();
-
-
-
-  activePiece = null;
-
-
-
-}
-
-
-
-
-
-
-
-
-
-//==================================================
-// التحقق أن القطعة داخل اللوحة
-//==================================================
-
-bool _isInsideBoard(
-
-    PuzzlePiece piece,
-
-    ){
-
-
-
-  final center = Offset(
-
-    piece.position.dx +
-
-        piece.size.width / 2,
-
-
-    piece.position.dy +
-
-        piece.size.height / 2,
-
-  );
-
-
-
-
-  return boardRect.contains(center);
-
-
-}
-
-
-
-
-
-
-
-
-
-//==================================================
-// نسبة الإنجاز
-//==================================================
-
-double get progress {
-
-
-
-  if(pieces.isEmpty){
-
-    return 0;
-
+    resetSolvedState();
+    PuzzleGenerator.rescatter(_pieces, area, seed: seed ?? _seed);
+    notifyListeners();
   }
 
-
-
-
-  final completed = pieces
-
-      .where(
-
-        (piece)=>
-
-    piece.state == PieceState.locked,
-
-  )
-
-      .length;
-
-
-
-
-  return completed / pieces.length;
-
-
-
-}
-
-
-
-
-
-
-
-
-
-//==================================================
-// هل اكتملت اللعبة
-//==================================================
-
-bool get isCompleted {
-
-
-
-  if(pieces.isEmpty){
-
-    return false;
-
+  /// Clears [PuzzlePiece.isPlaced]/[PuzzlePiece.isDragging] on every piece
+  /// without moving anything, so [isSolved] becomes false again. Useful for
+  /// "keep the current layout but let me rearrange it" flows; [restart]
+  /// calls this internally before re-scattering.
+  void resetSolvedState() {
+    for (final piece in _pieces) {
+      piece.isPlaced = false;
+      piece.isDragging = false;
+    }
+    _dragging = null;
+    notifyListeners();
   }
 
-
-
-  return pieces.every(
-
-        (piece)=>
-
-    piece.state == PieceState.locked,
-
-  );
-
-
-}
-
-
-
-
-
-
-
-
-
-//==================================================
-// عدد القطع المثبتة
-//==================================================
-
-int get completedPieces {
-
-
-
-  return pieces
-
-      .where(
-
-        (piece)=>
-
-    piece.state == PieceState.locked,
-
-  )
-
-      .length;
-
-
-}
-
-
-
-
-
-
-
-
-
-//==================================================
-// إعادة اللعبة
-//==================================================
-
-void reset(){
-
-
-
-  for(final piece in pieces){
-
-
-
-    piece.returnToTray();
-
-
-
+  @override
+  void dispose() {
+    _pieces = [];
+    _dragging = null;
+    _image = null;
+    super.dispose();
   }
-
-
-
-  activePiece = null;
-
-
-
-}
-
-
-
 }
