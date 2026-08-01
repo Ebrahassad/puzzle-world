@@ -34,26 +34,28 @@ class _IslandScreenState extends State<IslandScreen>
     with TickerProviderStateMixin {
 
 
+  // لوحة العالم المرجعية
   static const double worldWidth = 1080;
   static const double worldHeight = 1920;
 
 
-  static const double islandAreaHeightFraction = 0.55;
+  // مساحة الجزيرة أصبحت أكبر
+  static const double islandAreaHeightFraction = 0.70;
 
 
 
   final List<Offset> levelPositions = const [
 
-    Offset(0.15, 0.00),
-    Offset(0.65, 0.08),
-    Offset(0.25, 0.16),
-    Offset(0.70, 0.24),
-    Offset(0.30, 0.32),
-    Offset(0.65, 0.40),
-    Offset(0.25, 0.48),
-    Offset(0.70, 0.56),
-    Offset(0.35, 0.64),
-    Offset(0.60, 0.72),
+    Offset(0.15, 0.05),
+    Offset(0.65, 0.13),
+    Offset(0.25, 0.22),
+    Offset(0.70, 0.31),
+    Offset(0.30, 0.40),
+    Offset(0.65, 0.49),
+    Offset(0.25, 0.58),
+    Offset(0.70, 0.67),
+    Offset(0.35, 0.76),
+    Offset(0.60, 0.85),
 
   ];
 
@@ -114,7 +116,7 @@ class _IslandScreenState extends State<IslandScreen>
 
       begin: 1.0,
 
-      end: 1.02,
+      end: 1.015,
 
     ).animate(
 
@@ -132,9 +134,9 @@ class _IslandScreenState extends State<IslandScreen>
 
     worldTranslate = Tween<double>(
 
-      begin: -8,
+      begin: -5,
 
-      end: 8,
+      end: 5,
 
     ).animate(
 
@@ -161,7 +163,6 @@ class _IslandScreenState extends State<IslandScreen>
     super.dispose();
 
   }
-
 
 
   void openLevel(
@@ -261,6 +262,8 @@ class _IslandScreenState extends State<IslandScreen>
 
   }
 
+
+
 @override
 Widget build(BuildContext context) {
 
@@ -271,6 +274,7 @@ Widget build(BuildContext context) {
       children: [
 
 
+        // خلفية فضاء + بحر
         Positioned.fill(
 
           child: Container(
@@ -285,9 +289,9 @@ Widget build(BuildContext context) {
 
                 colors: [
 
-                  Color(0xff06152f),
+                  Color(0xff020b24),
 
-                  Color(0xff083b5c),
+                  Color(0xff06345a),
 
                   Color(0xff006994),
 
@@ -319,8 +323,8 @@ Widget build(BuildContext context) {
 
 
 
-              // عرض العالم كاملاً بدون قص
-              final double scale = math.min(
+              // تغطية الشاشة كاملة
+              final double scale = math.max(
 
                 screenWidth / worldWidth,
 
@@ -421,8 +425,7 @@ Widget build(BuildContext context) {
 
                               children: [
 
-
-
+                                // خلفية الجزيرة
                                 Positioned.fill(
 
                                   child: Image.asset(
@@ -433,8 +436,7 @@ Widget build(BuildContext context) {
                                     ),
 
 
-                                    fit:
-                                    BoxFit.contain,
+                                    fit: BoxFit.cover,
 
 
                                     alignment:
@@ -446,13 +448,12 @@ Widget build(BuildContext context) {
 
 
 
-
-
+                                // الجزيرة في المنتصف
                                 Positioned(
 
                                   left:0,
 
-                                  top:0,
+                                  top:80,
 
                                   width:worldWidth,
 
@@ -466,9 +467,11 @@ Widget build(BuildContext context) {
                                     widget.island.image,
 
 
-                                    fit:
-                                    BoxFit.contain,
+                                    fit:BoxFit.contain,
 
+
+                                    alignment:
+                                    Alignment.topCenter,
 
                                   ),
 
@@ -476,8 +479,7 @@ Widget build(BuildContext context) {
 
 
 
-
-
+                                // المراحل
                                 ...List.generate(
 
                                   levels.length,
@@ -507,7 +509,7 @@ Widget build(BuildContext context) {
                                       levelButton(
 
                                         levels[
-                                        levelOrder[index]
+                                          levelOrder[index]
                                         ],
 
                                       ),
@@ -533,7 +535,6 @@ Widget build(BuildContext context) {
 
                     ),
 
-
                   ],
 
                 ),
@@ -549,13 +550,13 @@ Widget build(BuildContext context) {
 
 
 
-
+        // طبقة دمج خفيفة
         Positioned.fill(
 
           child: Container(
 
             color:
-            Colors.black.withOpacity(0.05),
+            Colors.black.withOpacity(0.04),
 
           ),
 
@@ -563,8 +564,7 @@ Widget build(BuildContext context) {
 
 
 
-
-
+        // أزرار الواجهة
         SafeArea(
 
           child: Padding(
@@ -582,7 +582,6 @@ Widget build(BuildContext context) {
               children:[
 
 
-
                 CircleAvatar(
 
                   backgroundColor:
@@ -593,11 +592,8 @@ Widget build(BuildContext context) {
 
                     icon:
                     const Icon(
-
                       Icons.arrow_back,
-
                       color:Colors.white,
-
                     ),
 
 
@@ -613,8 +609,6 @@ Widget build(BuildContext context) {
 
 
 
-
-
                 CircleAvatar(
 
                   backgroundColor:
@@ -625,11 +619,8 @@ Widget build(BuildContext context) {
 
                     icon:
                     const Icon(
-
                       Icons.settings,
-
                       color:Colors.white,
-
                     ),
 
 
@@ -638,7 +629,6 @@ Widget build(BuildContext context) {
                   ),
 
                 ),
-
 
 
               ],
@@ -650,13 +640,10 @@ Widget build(BuildContext context) {
         ),
 
 
-
       ],
 
     ),
 
   );
-
-}
 
 }
