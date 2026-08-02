@@ -179,7 +179,7 @@ class _WorldMapScreenState
 
     worldController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 18),
+      duration: const Duration(seconds: 22),
     )..repeat(reverse: true);
 
     // تأثير "التنفس" الوحيد للعالم كله: تكبير خفيف جداً + انزياح
@@ -187,9 +187,9 @@ class _WorldMapScreenState
     // Translate عمودي -5..+5)، مطبَّق على Stack واحد يضم الخلفية
     // والغيوم والجزر معاً — لا يوجد أي تحريك منفصل لأي جزيرة.
     worldScale = Tween<double>(
-      begin: 1.00,
-      end: 1.03,
-    ).animate(
+  begin: 1.00,
+  end: 1.045,
+).animate(
       CurvedAnimation(
         parent: worldController,
         curve: Curves.easeInOut,
@@ -197,9 +197,9 @@ class _WorldMapScreenState
     );
 
     worldTranslateY = Tween<double>(
-      begin: -5,
-      end: 5,
-    ).animate(
+  begin: -12,
+  end: 12,
+).animate(
       CurvedAnimation(
         parent: worldController,
         curve: Curves.easeInOut,
