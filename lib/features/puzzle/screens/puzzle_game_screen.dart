@@ -60,7 +60,7 @@ bool showCoinAnimation = false;
 
 
 
-  final double boardSize = 360;
+  final double boardSize = 350;
 
 
   final double trayHeight = 110;
@@ -448,7 +448,7 @@ island: widget.island,
 
               Positioned(
 
-                top: 8,
+                top: 0,
 
                 left: 8,
 
@@ -497,7 +497,7 @@ if(showCoinAnimation &&
 
                   const SizedBox(
 
-                    height: 75,
+                    height: 100,
 
                   ),
 
@@ -585,11 +585,10 @@ if(showCoinAnimation &&
                   //==========================================
 
                   Expanded(
-
-                    child: Center(
-
-
-                      child: Container(
+  child: Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 8),
+    child: Center(
+      child: Container(
 
                         key: boardKey,
 
@@ -687,16 +686,12 @@ if(showCoinAnimation &&
                       ),
 
 
+                    ),                      
                     ),
-
-
                   ),
-
-
-                ],
-
-              ),
-
+                ),
+              ],
+            ),
 
 
 
