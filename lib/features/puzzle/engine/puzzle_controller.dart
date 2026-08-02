@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 
 import 'puzzle_generator.dart';
 import 'puzzle_piece.dart';
+import '../managers/puzzle_progress_manager.dart';
+
 
 /// Drives a jigsaw puzzle: owns every [PuzzlePiece], handles drag gestures,
 /// and decides when a piece should snap into its solved position.
@@ -155,13 +157,15 @@ void onPanEnd() {
   piece.isPlaced = true;
 
 
-  // مكان خروج العملة بعد تثبيت القطعة
+  // مكان ظهور العملة
   _lastPlacedPosition =
       piece.currentPosition +
       piece.path.getBounds().center;
 
-}
 
+  // إضافة عملة عند وضع قطعة صحيحة
+PuzzleProgressManager.addCoins(1).catchError((_) {});
+}
   // إذا كانت القطعة خاطئة:
   // تبقى في مكانها ولا ترجع للشريط
   _dragging = null;
