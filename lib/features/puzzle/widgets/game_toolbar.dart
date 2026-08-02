@@ -4,219 +4,124 @@ import '../screens/wallet_screen.dart';
 import '../managers/reward_manager.dart';
 import '../models/reward_result_model.dart';
 
-
-
 class GameToolbar extends StatefulWidget {
 
-
   final String logo =
-    "assets/images/ui/puzzle_logo.png";
+      "assets/images/ui/puzzle_logo.png";
 
   final VoidCallback? onBack;
 
   final GlobalKey starKey;
-final GlobalKey coinKey;
-
+  final GlobalKey coinKey;
 
   const GameToolbar({
-
-  super.key,
-
-  required this.starKey,
-
-  required this.coinKey,
-
-  this.onBack,
-
-});
+    super.key,
+    required this.starKey,
+    required this.coinKey,
+    this.onBack,
+  });
 
   @override
   State<GameToolbar> createState() =>
       _GameToolbarState();
-
 }
-
-
-
-
-
 
 class _GameToolbarState
     extends State<GameToolbar> {
 
-
-
   RewardResultModel reward =
       const RewardResultModel();
 
-
-
-
   @override
-  void initState(){
-
+  void initState() {
     super.initState();
 
-    loadToolbarData();
+    RewardManager.rewardNotifier.addListener(
+      loadToolbarData,
+    );
 
+    loadToolbarData();
   }
 
-
-
-
-
   Future<void> loadToolbarData() async {
-
 
     final data =
         await RewardManager.getReward();
 
+    if (!mounted) return;
 
-
-    if(!mounted) return;
-
-
-
-    setState((){
-
+    setState(() {
       reward = data;
-
     });
-
-
   }
 
-
-
-
-
-  void refreshReward(){
-
+  void refreshReward() {
     loadToolbarData();
-
   }
 
-
-
-
-
-
-  void openWallet(BuildContext context){
-
+  void openWallet(BuildContext context) {
 
     Navigator.push(
-
       context,
-
       MaterialPageRoute(
-
         builder: (_) =>
             const WalletScreen(),
-
       ),
-
-    ).then((_){
-
+    ).then((_) {
       loadToolbarData();
-
     });
-
-
   }
 
-
-
-
-
-  void showSettings(BuildContext context){
-
+  void showSettings(BuildContext context) {
 
     showDialog(
-
-      context:context,
-
-      builder:(_){
-
+      context: context,
+      builder: (_) {
 
         return AlertDialog(
 
-          title:
-          const Text(
+          title: const Text(
             "⚙️ الإعدادات",
           ),
 
-
-          content:
-          const Column(
+          content: const Column(
 
             mainAxisSize:
-            MainAxisSize.min,
+                MainAxisSize.min,
 
-
-            children:[
-
+            children: [
 
               Text(
-
                 "Puzzle World",
-
-                style:
-                TextStyle(
-
+                style: TextStyle(
                   fontWeight:
-                  FontWeight.bold,
-
+                      FontWeight.bold,
                 ),
-
               ),
 
-
-
-              SizedBox(height:10),
-
-
+              SizedBox(height: 10),
 
               Text(
                 "الإصدار: 1.0.0",
               ),
-
-
             ],
-
           ),
 
-
-
-          actions:[
-
+          actions: [
 
             TextButton(
-
-              onPressed:(){
-
+              onPressed: () {
                 Navigator.pop(context);
-
               },
-
-
-              child:
-              const Text(
+              child: const Text(
                 "حسناً",
               ),
-
             ),
 
-
           ],
-
         );
-
-
       },
-
     );
-
-
   }
 
   @override
@@ -227,650 +132,320 @@ class _GameToolbarState
       child: Container(
 
         margin:
-        const EdgeInsets.all(12),
-
+            const EdgeInsets.all(12),
 
         padding:
-        const EdgeInsets.symmetric(
-
-          horizontal:12,
-
-          vertical:8,
-
+            const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 8,
         ),
 
-
-
-        decoration:BoxDecoration(
+        decoration: BoxDecoration(
 
           color:
-          Colors.black.withOpacity(0.35),
-
+              Colors.black.withOpacity(0.35),
 
           borderRadius:
-          BorderRadius.circular(35),
+              BorderRadius.circular(35),
 
-
-          border:
-          Border.all(
-
-            color:
-            Colors.white30,
-
+          border: Border.all(
+            color: Colors.white30,
           ),
-
-
         ),
 
-
-
-        child:Row(
+        child: Row(
 
           mainAxisAlignment:
-          MainAxisAlignment.spaceBetween,
+              MainAxisAlignment.spaceBetween,
 
-
-          children:[
-
-
-
-
-            // الإعدادات
+          children: [
 
             GestureDetector(
 
-              onTap:(){
-
+              onTap: () {
                 showSettings(context);
-
               },
 
-
-              child:
-              const Icon(
-
+              child: const Icon(
                 Icons.settings_rounded,
-
-                color:
-                Colors.white,
-
-                size:30,
-
+                color: Colors.white,
+                size: 30,
               ),
-
             ),
-
-
-
-
-
-
-            // الشعار
 
             Image.asset(
-
               widget.logo,
-
-              height:45,
-
+              height: 45,
             ),
-
-
-
-
-
-
-
-
-            // المكافآت
 
             Row(
 
-              children:[
-
-
-
-
-                // ⭐ النجوم
+              children: [
 
                 Container(
-
-                  key:
-                  widget.starKey,
-
-
-                  child:
-                  AnimatedStarCounter(
-
-                    value:
-                    reward.stars,
-
+                  key: widget.starKey,
+                  child: AnimatedStarCounter(
+                    value: reward.stars,
                   ),
-
-
                 ),
 
-
-
-
-
-                const SizedBox(
-                  width:8,
-                ),
-
-
-
-
-
-                // 💎 الجواهر
+                const SizedBox(width: 8),
 
                 ImageCounterBox(
-
                   image:
-                  "assets/images/rewards/gem.png",
-
-                  value:
-                  reward.gems,
-
+                      "assets/images/rewards/gem.png",
+                  value: reward.gems,
                 ),
 
-
-
-
-
-                const SizedBox(
-                  width:8,
-                ),
-
-
-
-
-
-
-                // 🪙 العملات
+                const SizedBox(width: 8),
 
                 GestureDetector(
 
-                  onTap:(){
-
+                  onTap: () {
                     openWallet(context);
-
                   },
 
-
                   child: Container(
-
-  key: widget.coinKey,
-
-  child: CoinCounterBox(
-
-    value: reward.coins,
-
-  ),
-
-),
-
+                    key: widget.coinKey,
+                    child: CoinCounterBox(
+                      value: reward.coins,
+                    ),
+                  ),
                 ),
-
-
-
               ],
-
             ),
-
-
-
           ],
-
         ),
-
-
       ),
-
     );
-
   }
 
+  @override
+  void dispose() {
 
+    RewardManager.rewardNotifier.removeListener(
+      loadToolbarData,
+    );
+
+    super.dispose();
+  }
 }
 
 class AnimatedStarCounter extends StatefulWidget {
 
   final int value;
 
-
   const AnimatedStarCounter({
-
     super.key,
-
     required this.value,
-
   });
-
-
 
   @override
   State<AnimatedStarCounter> createState() =>
       _AnimatedStarCounterState();
-
 }
-
-
-
-
 
 class _AnimatedStarCounterState
     extends State<AnimatedStarCounter>
     with SingleTickerProviderStateMixin {
 
-
   late AnimationController controller;
-
   late Animation<double> scale;
 
-
-
   @override
-void initState(){
+  void initState() {
+    super.initState();
 
-  super.initState();
+    controller = AnimationController(
+      vsync: this,
+      duration: const Duration(
+        milliseconds: 500,
+      ),
+    );
 
-  RewardManager.rewardNotifier.addListener(
-    loadToolbarData,
-  );
-
-  loadToolbarData();
-
-}
-
-
-    scale =
-        Tween<double>(
-
-          begin:1,
-
-          end:1.3,
-
-        ).animate(
-
-          CurvedAnimation(
-
-            parent:
-            controller,
-
-            curve:
-            Curves.elasticOut,
-
-          ),
-
-        );
-
-
+    scale = Tween<double>(
+      begin: 1,
+      end: 1.3,
+    ).animate(
+      CurvedAnimation(
+        parent: controller,
+        curve: Curves.elasticOut,
+      ),
+    );
 
     controller.forward();
-
-
   }
-
-
-
-
 
   @override
   void didUpdateWidget(
-      covariant AnimatedStarCounter oldWidget){
-
+      covariant AnimatedStarCounter oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-
-
-    if(oldWidget.value != widget.value){
-
-      controller.forward(
-        from:0,
-      );
-
+    if (oldWidget.value != widget.value) {
+      controller.forward(from: 0);
     }
-
   }
 
-
-
-
-
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
 
     return ScaleTransition(
+      scale: scale,
 
-      scale:scale,
+      child: Container(
 
-
-      child:Container(
-
-        padding:
-        const EdgeInsets.symmetric(
-
-          horizontal:8,
-
-          vertical:5,
-
+        padding: const EdgeInsets.symmetric(
+          horizontal: 8,
+          vertical: 5,
         ),
 
-
-        decoration:BoxDecoration(
-
-          color:
-          Colors.white24,
-
-
+        decoration: BoxDecoration(
+          color: Colors.white24,
           borderRadius:
-          BorderRadius.circular(18),
-
+              BorderRadius.circular(18),
         ),
 
+        child: Row(
 
+          mainAxisSize: MainAxisSize.min,
 
-        child:Row(
-
-          mainAxisSize:
-          MainAxisSize.min,
-
-
-          children:[
-
+          children: [
 
             Image.asset(
-
               "assets/images/rewards/Star_gold.png",
-
-              width:24,
-
-              height:24,
-
+              width: 24,
+              height: 24,
             ),
 
-
-
-            const SizedBox(
-              width:4,
-            ),
-
-
+            const SizedBox(width: 4),
 
             Text(
-
               "${widget.value}",
-
-
-              style:
-              const TextStyle(
-
-                color:
-                Colors.white,
-
-
-                fontSize:16,
-
-
-                fontWeight:
-                FontWeight.bold,
-
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
               ),
-
             ),
 
-
           ],
-
         ),
-
       ),
-
     );
-
   }
-
-
-
-
 
   @override
-  void dispose(){
-
+  void dispose() {
     controller.dispose();
-
     super.dispose();
-
   }
-
 }
-
-
-
-
-
-
 
 class ImageCounterBox extends StatelessWidget {
 
-
   final String image;
-
   final int value;
 
-
-
   const ImageCounterBox({
-
     super.key,
-
     required this.image,
-
     required this.value,
-
   });
 
-
-
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
 
     return Container(
 
-      padding:
-      const EdgeInsets.symmetric(
-
-        horizontal:8,
-
-        vertical:5,
-
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 5,
       ),
 
-
-      decoration:
-      BoxDecoration(
-
-        color:
-        Colors.white24,
-
-
-        borderRadius:
-        BorderRadius.circular(18),
-
+      decoration: BoxDecoration(
+        color: Colors.white24,
+        borderRadius: BorderRadius.circular(18),
       ),
 
+      child: Row(
 
+        mainAxisSize: MainAxisSize.min,
 
-      child:Row(
-
-        mainAxisSize:
-        MainAxisSize.min,
-
-
-        children:[
-
+        children: [
 
           Image.asset(
-
             image,
-
-            width:24,
-
-            height:24,
-
+            width: 24,
+            height: 24,
           ),
 
-
-
-          const SizedBox(
-            width:4,
-          ),
-
-
+          const SizedBox(width: 4),
 
           Text(
-
             "$value",
-
-            style:
-            const TextStyle(
-
-              color:
-              Colors.white,
-
-              fontSize:16,
-
-              fontWeight:
-              FontWeight.bold,
-
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
-
           ),
 
-
         ],
-
       ),
-
     );
-
   }
-
 }
-
-
-
-
-
-
 
 class CoinCounterBox extends StatelessWidget {
 
-
   final int value;
 
-
-
   const CoinCounterBox({
-
     super.key,
-
     required this.value,
-
   });
 
-
-
   @override
-  Widget build(BuildContext context){
-
+  Widget build(BuildContext context) {
 
     return Container(
 
-      padding:
-      const EdgeInsets.symmetric(
-
-        horizontal:8,
-
-        vertical:5,
-
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 5,
       ),
 
-
-      decoration:
-      BoxDecoration(
-
-        color:
-        Colors.white24,
-
-
-        borderRadius:
-        BorderRadius.circular(18),
-
+      decoration: BoxDecoration(
+        color: Colors.white24,
+        borderRadius: BorderRadius.circular(18),
       ),
 
+      child: Row(
 
+        mainAxisSize: MainAxisSize.min,
 
-      child:Row(
-
-        mainAxisSize:
-        MainAxisSize.min,
-
-
-        children:[
-
+        children: [
 
           const Text(
-
             "🪙",
-
-            style:
-            TextStyle(
-
-              fontSize:22,
-
+            style: TextStyle(
+              fontSize: 22,
             ),
-
           ),
 
-
-
-          const SizedBox(
-            width:4,
-          ),
-
-
+          const SizedBox(width: 4),
 
           Text(
-
             "$value",
-
-            style:
-            const TextStyle(
-
-              color:
-              Colors.white,
-
-
-              fontSize:16,
-
-
-              fontWeight:
-              FontWeight.bold,
-
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
-
           ),
 
-
         ],
-
       ),
-
     );
-
-
   }
-
 }
