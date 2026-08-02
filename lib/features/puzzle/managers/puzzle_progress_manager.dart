@@ -158,7 +158,7 @@ static const String gameStateKey =
           "row": piece.row,
 
 
-          ""column": piece.col,
+          "column": piece.col,
 "x": piece.currentPosition.dx,
 "y": piece.currentPosition.dy,
 "placed": piece.isPlaced,
