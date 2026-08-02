@@ -46,6 +46,8 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 late Stopwatch stopwatch;
 
 int lastCoinPositionCheck = 0;
+Offset? coinAnimationStart;
+bool showCoinAnimation = false;
 
   //==============================
   // صورة الفوز
@@ -459,6 +461,27 @@ stopwatch.stop();
               ),
 
 
+// حركة العملة إلى العداد
+if(showCoinAnimation &&
+   coinAnimationStart != null)
+
+  CoinFlyAnimation(
+    start: coinAnimationStart!,
+    end: Offset(
+      MediaQuery.of(context).size.width - 50,
+      35,
+    ),
+    onFinished:(){
+
+      setState(() {
+
+        showCoinAnimation = false;
+
+      });
+
+    },
+  ),
+
 
 
 
@@ -473,8 +496,6 @@ stopwatch.stop();
                     height: 75,
 
                   ),
-
-
 
 
 
@@ -721,6 +742,15 @@ stopwatch.stop();
 
     // تحديث عداد العملات
     RewardManager.addCoins(1);
+
+setState(() {
+
+  coinAnimationStart =
+      controller.lastPlacedPosition;
+
+  showCoinAnimation = true;
+
+});
 
   }
 
