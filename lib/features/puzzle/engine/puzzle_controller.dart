@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 
 import 'puzzle_generator.dart';
 import 'puzzle_piece.dart';
-import '../managers/puzzle_progress_manager.dart';
 
 
 /// Drives a jigsaw puzzle: owns every [PuzzlePiece], handles drag gestures,
@@ -163,8 +162,7 @@ void onPanEnd() {
       piece.path.getBounds().center;
 
 
-  // إضافة عملة عند وضع قطعة صحيحة
-PuzzleProgressManager.addCoins(1).catchError((_) {});
+  
 }
   // إذا كانت القطعة خاطئة:
   // تبقى في مكانها ولا ترجع للشريط
