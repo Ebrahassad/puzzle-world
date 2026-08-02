@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../data/island_background_data.dart';
@@ -8,595 +10,365 @@ import '../models/puzzle_level_model.dart';
 
 import 'puzzle_game_screen.dart';
 
-
-
 class IslandScreen extends StatefulWidget {
-
   final PuzzleModel island;
-
 
   const IslandScreen({
     super.key,
     required this.island,
   });
 
-
   @override
-  State<IslandScreen> createState() =>
-      _IslandScreenState();
-
+  State<IslandScreen> createState() => _IslandScreenState();
 }
-
-
 
 class _IslandScreenState extends State<IslandScreen>
     with TickerProviderStateMixin {
-
-
-
-  // لوحة التصميم المرجعية
+  // لوحة التصميم المرجعية لكل "عالم الجزيرة" (خلفية + جزيرة + مسار
+  // المراحل معاً). كل الإحداثيات في هذا الملف مُعرَّفة بوحدات هذه
+  // اللوحة، ثم يُحسب Scale حقيقي من حجم الشاشة الفعلي عبر
+  // LayoutBuilder بحيث يغطي العالم الشاشة بالكامل على أي جهاز —
+  // هاتف صغير، هاتف طويل، أو تابلت — دون فراغ أسود ودون أي تشويه.
   static const double worldWidth = 1080;
   static const double worldHeight = 1920;
 
+  // نسبة ارتفاع منطقة الجزيرة من أعلى اللوحة. الجزيرة تُرسم مركزية
+  // أعلى الشاشة وبحجم كبير وواضح، مع ترك مساحة كافية حولها.
+  static const double islandAreaTop = worldHeight * 0.04;
+  static const double islandAreaHeight = worldHeight * 0.66;
 
+  // شفافية خفيفة لخلفية وصورة الجزيرة فقط، حتى يبرز مسار المراحل
+  // بوضوح فوقها دون أن تختفي تفاصيل رسم الجزيرة.
+  static const double islandBackgroundOpacity = 0.80;
+  static const double islandImageOpacity = 0.88;
 
-  late List<PuzzleLevelModel> levels;
+  late final List<PuzzleLevelModel> levels;
 
+  late final AnimationController worldController;
+  late final Animation<double> worldScale;
+  late final Animation<double> worldTranslateY;
 
-
-  late AnimationController worldController;
-
-  late Animation<double> worldScale;
-
-
-
-  // مسار المراحل الجديد
-  // مرتب من الأسفل إلى الأعلى داخل الجزيرة
-
+  // مسار المراحل: من الأسفل إلى الأعلى (المرحلة 1 أسفل اللوحة،
+  // آخر مرحلة أعلاها)، بانحناء بسيط يمين/يسار يعطي شكل "رحلة" على
+  // خريطة لعبة احترافية، وبإحداثيات طبيعية (0.0-1.0) وليست بكسل
+  // ثابت — لذلك يعمل نفس المسار على أي حجم شاشة.
   final List<Offset> levelPositions = const [
-
-    Offset(0.50, 0.12),
-
-    Offset(0.35, 0.23),
-
-    Offset(0.60, 0.34),
-
-    Offset(0.42, 0.46),
-
-    Offset(0.65, 0.57),
-
-    Offset(0.45, 0.68),
-
-    Offset(0.30, 0.78),
-
-    Offset(0.58, 0.86),
-
-    Offset(0.42, 0.93),
-
-    Offset(0.70, 0.97),
-
+    Offset(0.50, 0.93), // المرحلة 1 (أسفل اللوحة)
+    Offset(0.32, 0.84),
+    Offset(0.62, 0.75),
+    Offset(0.38, 0.66),
+    Offset(0.66, 0.57),
+    Offset(0.34, 0.48),
+    Offset(0.60, 0.39),
+    Offset(0.36, 0.30),
+    Offset(0.58, 0.21),
+    Offset(0.50, 0.12), // آخر مرحلة (أعلى اللوحة)
   ];
-
-
 
   @override
   void initState() {
-
     super.initState();
 
+    levels = PuzzleLevelData.getLevels(
+      widget.island.id,
+    );
 
-    levels =
-        PuzzleLevelData.getLevels(
-          widget.island.id,
-        );
+    worldController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 18),
+    )..repeat(reverse: true);
 
+    // تأثير "تنفس" واحد لكل العالم (خلفية + جزيرة + مراحل معاً) —
+    // تكبير خفيف جداً + انزياح رأسي بسيط، بالضبط ضمن النطاق المطلوب.
+    // لا يوجد أي تحريك منفصل لأي زر مرحلة أو للجزيرة وحدها.
+    worldScale = Tween<double>(
+      begin: 1.00,
+      end: 1.02,
+    ).animate(
+      CurvedAnimation(
+        parent: worldController,
+        curve: Curves.easeInOut,
+      ),
+    );
 
-
-    worldController =
-        AnimationController(
-
-          vsync: this,
-
-          duration:
-          const Duration(seconds: 18),
-
-        )..repeat(
-          reverse: true,
-        );
-
-
-
-    worldScale =
-        Tween<double>(
-
-          begin: 1.0,
-
-          end: 1.015,
-
-        ).animate(
-
-          CurvedAnimation(
-
-            parent:
-            worldController,
-
-            curve:
-            Curves.easeInOut,
-
-          ),
-
-        );
-
+    worldTranslateY = Tween<double>(
+      begin: -5,
+      end: 5,
+    ).animate(
+      CurvedAnimation(
+        parent: worldController,
+        curve: Curves.easeInOut,
+      ),
+    );
   }
 
   @override
   void dispose() {
-
     worldController.dispose();
-
     super.dispose();
-
   }
-
-
 
   void openLevel(
     PuzzleLevelModel level,
   ) {
-
     Navigator.push(
-
-  context,
-
-  MaterialPageRoute(
-
-    builder: (_) => PuzzleGameScreen(
-
-      level: level,
-
-      island: widget.island,
-
-    ),
-
-  ),
-
-);
-
+      context,
+      MaterialPageRoute(
+        builder: (_) => PuzzleGameScreen(
+          level: level,
+          island: widget.island,
+        ),
+      ),
+    );
   }
 
-
-
-
+  /// زر مرحلة واحد. [size] هو الحجم الفعلي بوحدات لوحة العالم
+  /// (world units)، يُحسب في [build] بحيث يصبح حجمه على الشاشة
+  /// الحقيقية بين 70-90 بكسل منطقي تقريباً مهما اختلف الجهاز.
   Widget levelButton(
-    PuzzleLevelModel level,
-  ) {
-
+    PuzzleLevelModel level, {
+    required double size,
+  }) {
     return GestureDetector(
-
-      behavior:
-      HitTestBehavior.opaque,
-
-
+      behavior: HitTestBehavior.opaque,
       onTap: () {
-
         openLevel(level);
-
       },
-
-
-      child: Container(
-
-        width: 95,
-
-        height: 95,
-
-
-        decoration: BoxDecoration(
-
-          shape:
-          BoxShape.circle,
-
-
-          boxShadow: [
-
-            BoxShadow(
-
-              color:
-              Colors.black.withOpacity(0.35),
-
-              blurRadius:
-              10,
-
-              offset:
-              const Offset(0, 5),
-
-            ),
-
-          ],
-
-        ),
-
-
-        child: Stack(
-
-          alignment:
-          Alignment.center,
-
-
-          children: [
-
-
-            Image.asset(
-
-              "assets/images/ui/level_piece.png",
-
-              fit:
-              BoxFit.contain,
-
-            ),
-
-
-
-            Text(
-
-              "${level.levelNumber}",
-
-
-              style:
-              const TextStyle(
-
-                color:
-                Colors.white,
-
-                fontSize:
-                32,
-
-                fontWeight:
-                FontWeight.bold,
-
-
-                shadows: [
-
-                  Shadow(
-
-                    color:
-                    Colors.black,
-
-                    blurRadius:
-                    6,
-
-                    offset:
-                    Offset(0, 3),
-
-                  ),
-
-                ],
-
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.35),
+                blurRadius: size * 0.10,
+                offset: Offset(0, size * 0.05),
               ),
-
-            ),
-
-
-          ],
-
+            ],
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Image.asset(
+                "assets/images/ui/level_piece.png",
+                fit: BoxFit.contain,
+              ),
+              Text(
+                "${level.levelNumber}",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: size * 0.34,
+                  fontWeight: FontWeight.bold,
+                  height: 1.0,
+                  shadows: const [
+                    Shadow(
+                      color: Colors.black,
+                      blurRadius: 6,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-
       ),
-
     );
-
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
       body: Container(
-
-        color:
-        const Color(0xff020b24),
-
-
+        color: const Color(0xff020b24),
         child: SafeArea(
-
           child: Stack(
-
             children: [
-
-
-              // العالم الرئيسي
+              // العالم الرئيسي: خلفية + جزيرة + مسار المراحل معاً،
+              // محجّم عبر LayoutBuilder بدل OverflowBox/AspectRatio
+              // القديم (الذي كان يسبب تكبيراً غير متوقع وأزراراً
+              // كبيرة جداً على الهواتف).
               Positioned.fill(
-
                 child: LayoutBuilder(
-
-                  builder:
-                  (context, constraints) {
-
-
-                    return Center(
-
-                      child: ClipRect(
-
-                        child: OverflowBox(
-
-                          alignment:
-                          Alignment.center,
-
-
-                          maxWidth:
-                          double.infinity,
-
-
-                          maxHeight:
-                          double.infinity,
-
-
-                          child: AspectRatio(
-
-                            aspectRatio:
-                            worldWidth /
-                            worldHeight,
-
-
-                            child: AnimatedBuilder(
-
-                              animation:
-                              worldController,
-
-
-                              builder:
-                              (context, child) {
-
-
-                                return Transform.scale(
-
-                                  scale:
-                                  worldScale.value,
-
-
-                                  alignment:
-                                  Alignment.center,
-
-
-                                  child:
-                                  child,
-
-                                );
-
-                              },
-
-
-                              child: SizedBox(
-
-                                width:
-                                worldWidth,
-
-
-                                height:
-                                worldHeight,
-
-
-                                child: Stack(
-
-                                  clipBehavior:
-                                  Clip.none,
-
-
-                                  children: [
-
-
-
-                                    // خلفية الجزيرة
-
-                                    Positioned.fill(
-
-                                      child: Image.asset(
-
-                                        IslandBackgroundData
-                                            .getBackground(
-                                              widget.island.id,
-                                            ),
-
-
-                                        fit:
-                                        BoxFit.cover,
-
-                                      ),
-
-                                    ),
-
-
-
-
-                                    // الجزيرة
-
-                                    Positioned.fill(
-
-                                      child: Image.asset(
-
-                                        widget.island.image,
-
-
-                                        fit:
-                                        BoxFit.contain,
-
-
-                                        alignment:
-                                        Alignment.center,
-
-                                      ),
-
-                                    ),
-
-
-
-                                    // المراحل
-
-                                    ...List.generate(
-
-                                      levels.length,
-
-
-                                      (index) {
-
-
-                                        final pos =
-                                        levelPositions[index];
-
-
-                                        return Positioned(
-
-                                          left:
-
-                                          (worldWidth *
-                                          pos.dx) -
-                                          47,
-
-
-                                          top:
-
-                                          worldHeight *
-                                          pos.dy,
-
-
-                                          child:
-
-                                          levelButton(
-
-                                            levels[index],
-
-                                          ),
-
-                                        );
-
-                                      },
-
-                                    ),
-
-
-
-                                  ],
-
-                                ),
-
-                              ),
-
-                            ),
-
-                          ),
-
-                        ),
-
-                      ),
-
+                  builder: (context, constraints) {
+                    final double screenWidth = constraints.maxWidth;
+                    final double screenHeight = constraints.maxHeight;
+
+                    if (screenWidth <= 0 || screenHeight <= 0) {
+                      return const SizedBox.shrink();
+                    }
+
+                    // "cover" يدوي: أكبر Scale من (العرض، الارتفاع)
+                    // بحيث تغطي لوحة العالم الشاشة بالكامل في
+                    // الاتجاهين معاً دون فراغ أسود ودون أي تشويه
+                    // (لأن نفس القيمة تُطبَّق على المحورين معاً).
+                    final double scale = math.max(
+                      screenWidth / worldWidth,
+                      screenHeight / worldHeight,
                     );
 
+                    final double scaledWidth = worldWidth * scale;
+                    final double scaledHeight = worldHeight * scale;
+
+                    final double dx = (screenWidth - scaledWidth) / 2;
+                    final double dy = (screenHeight - scaledHeight) / 2;
+
+                    // حجم زر المرحلة بوحدات لوحة العالم، محسوب
+                    // ديناميكياً من scale الفعلي بحيث يبقى حجمه على
+                    // الشاشة الحقيقية دائماً قريباً من 70-90 بكسل
+                    // منطقي (macro-clamped لتفادي أحجام متطرفة على
+                    // الشاشات الصغيرة جداً أو التابلت).
+                    final double levelButtonSize =
+                        (80 / scale).clamp(150.0, 260.0);
+
+                    return ClipRect(
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            left: dx,
+                            top: dy,
+                            child: Transform.scale(
+                              scale: scale,
+                              alignment: Alignment.topLeft,
+                              child: SizedBox(
+                                width: worldWidth,
+                                height: worldHeight,
+                                child: AnimatedBuilder(
+                                  animation: worldController,
+                                  builder: (context, child) {
+                                    return Transform.translate(
+                                      offset: Offset(0, worldTranslateY.value),
+                                      child: Transform.scale(
+                                        scale: worldScale.value,
+                                        alignment: Alignment.center,
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                  // العالم كله (خلفية + جزيرة + مراحل) هو
+                                  // child واحد مشترك، فحركة "التنفس"
+                                  // تنعكس عليه ككتلة واحدة فقط.
+                                  child: SizedBox(
+                                    width: worldWidth,
+                                    height: worldHeight,
+                                    child: Stack(
+                                      clipBehavior: Clip.none,
+                                      children: [
+                                        // خلفية الجزيرة، بشفافية خفيفة حتى
+                                        // يبرز مسار المراحل فوقها بوضوح.
+                                        Positioned.fill(
+                                          child: Opacity(
+                                            opacity: islandBackgroundOpacity,
+                                            child: Image.asset(
+                                              IslandBackgroundData.getBackground(
+                                                widget.island.id,
+                                              ),
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                        ),
+
+                                        // صورة الجزيرة نفسها: مركزية أعلى
+                                        // اللوحة، بحجم كبير وواضح، بدون أي
+                                        // قص (BoxFit.contain)، وبشفافية
+                                        // خفيفة جداً فقط لإبراز المراحل.
+                                        Positioned(
+                                          left: 0,
+                                          top: islandAreaTop,
+                                          width: worldWidth,
+                                          height: islandAreaHeight,
+                                          child: Opacity(
+                                            opacity: islandImageOpacity,
+                                            child: Image.asset(
+                                              widget.island.image,
+                                              fit: BoxFit.contain,
+                                              alignment: Alignment.center,
+                                            ),
+                                          ),
+                                        ),
+
+                                        // مسار المراحل: إحداثيات طبيعية ضمن
+                                        // لوحة العالم الكاملة، من الأسفل إلى
+                                        // الأعلى، بحجم موحّد ومحسوب ديناميكياً.
+                                        ...List.generate(
+                                          levels.length,
+                                          (index) {
+                                            if (index >= levelPositions.length) {
+                                              return const SizedBox.shrink();
+                                            }
+
+                                            final pos = levelPositions[index];
+
+                                            return Positioned(
+                                              left: (worldWidth * pos.dx) -
+                                                  (levelButtonSize / 2),
+                                              top: (worldHeight * pos.dy) -
+                                                  (levelButtonSize / 2),
+                                              child: levelButton(
+                                                levels[index],
+                                                size: levelButtonSize,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
                   },
-
                 ),
-
               ),
 
-              // أزرار التحكم
-
+              // أزرار التحكم: ثابتة فوق كل شيء، خارج العالم المتحرك
+              // تماماً، ولا تتأثر بمقياسه أو بحركة "التنفس".
               Positioned(
-
                 top: 20,
-
                 left: 20,
-
                 child: CircleAvatar(
-
                   radius: 28,
-
-                  backgroundColor:
-                  Colors.black54,
-
-
+                  backgroundColor: Colors.black54,
                   child: IconButton(
-
-                    icon:
-
-                    const Icon(
-
+                    icon: const Icon(
                       Icons.arrow_back,
-
-                      color:
-                      Colors.white,
-
-                      size:
-                      32,
-
+                      color: Colors.white,
+                      size: 32,
                     ),
-
-
                     onPressed: () {
-
                       Navigator.pop(context);
-
                     },
-
                   ),
-
                 ),
-
               ),
-
-
-
 
               Positioned(
-
                 top: 20,
-
                 right: 20,
-
                 child: CircleAvatar(
-
                   radius: 28,
-
-                  backgroundColor:
-                  Colors.black54,
-
-
+                  backgroundColor: Colors.black54,
                   child: IconButton(
-
-                    icon:
-
-                    const Icon(
-
+                    icon: const Icon(
                       Icons.settings,
-
-                      color:
-                      Colors.white,
-
-                      size:
-                      32,
-
+                      color: Colors.white,
+                      size: 32,
                     ),
-
-
                     onPressed: () {},
-
                   ),
-
                 ),
-
               ),
-
-
-
             ],
-
           ),
-
         ),
-
       ),
-
     );
-
   }
-
 }
