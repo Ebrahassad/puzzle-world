@@ -13,14 +13,14 @@ import 'puzzle_result_animation_screen.dart';
 
 
 class PuzzleGameScreen extends StatefulWidget {
-
   final PuzzleLevelModel level;
+  final String islandId;
 
   const PuzzleGameScreen({
     super.key,
     required this.level,
+    required this.islandId,
   });
-
 
   @override
   State<PuzzleGameScreen> createState() =>
@@ -369,6 +369,7 @@ stopwatch.stop();
   moves: 0,
   time: stopwatch.elapsed,
 ),
+islandId: widget.islandId,
 
       ),
 
