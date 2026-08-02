@@ -657,62 +657,45 @@ if (!mounted) return;
               // Game Toolbar
               //==========================================
 
-              Positioned(
+    Positioned(
+  top: 0,
+  left: 8,
+  right: 8,
+  child: GameToolbar(
+    starKey: starKey,
+    coinKey: coinKey,
+    soundEnabled: soundEnabled,
 
-                top: 0,
+    onSave: () async {
+  await saveCurrentGame();
 
-                left: 8,
+  if (!mounted) return;
 
-                right: 8,
-
-                child: GameToolbar(
-
-  starKey: starKey,
-
-  coinKey: coinKey,
-
-soundEnabled: soundEnabled,
-
-  onSave: () async {
-
-    await saveCurrentGame();
-
-  },
-
-
-  onRestart: () {
-
-  restartGame();
-
-},
-
-  onExit: () {
-
-    Navigator.pop(context);
-
-  },
-
-
-  
-onSoundChanged: (enabled) {
-
-  setState(() {
-
-    soundEnabled = enabled;
-
-  });
-
-
-  _audioPlayer.setVolume(
-    enabled ? 1 : 0,
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text("تم الحفظ بنجاح"),
+      behavior: SnackBarBehavior.floating,
+    ),
   );
-
 },
 
+    onRestart: () {
+      restartGame();
+    },
 
+    onExit: () {
+      Navigator.pop(context);
+    },
+
+    onSoundChanged: (enabled) {
+      setState(() {
+        soundEnabled = enabled;
+      });
+
+      _audioPlayer.setVolume(enabled ? 1 : 0);
+    },
+  ),
 ),
-
-              ),
 
 
 // حركة العملة إلى العداد
