@@ -4,8 +4,11 @@ import 'package:flutter/material.dart';
 import '../engine/puzzle_controller.dart';
 import '../engine/puzzle_painter.dart';
 import '../models/puzzle_level_model.dart';
+import '../models/game_result_model.dart';
 
 import '../widgets/game_toolbar.dart';
+
+import 'puzzle_result_animation_screen.dart';
 
 
 class PuzzleGameScreen extends StatefulWidget {
@@ -25,10 +28,7 @@ class PuzzleGameScreen extends StatefulWidget {
 
 
 
-class _PuzzleGameScreenState extends State<PuzzleGameScreen>
-    with SingleTickerProviderStateMixin {
-
-
+class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   ui.Image? image;
 
 
@@ -46,14 +46,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen>
   // صورة الفوز
   //==============================
 
-  bool showCompletedImage = false;
-
-
-  late AnimationController imageWinController;
-
-
-  late Animation<double> imageScale;
-
+  
 
 
 
@@ -95,25 +88,7 @@ final GlobalKey coinKey = GlobalKey();
     super.initState();
 
 
-    imageWinController =
-        AnimationController(
-          vsync: this,
-          duration:
-          const Duration(milliseconds: 700),
-        );
-
-
-    imageScale =
-        Tween<double>(
-          begin: 0.2,
-          end: 1,
-        ).animate(
-          CurvedAnimation(
-            parent: imageWinController,
-            curve: Curves.elasticOut,
-          ),
-        );
-
+    
 
 
     _loadImage();
@@ -363,24 +338,38 @@ final GlobalKey coinKey = GlobalKey();
 
   void checkWin() {
 
-  if (!controller.isSolved || showCompletedImage) {
+  if (!controller.isSolved) {
     return;
   }
 
+  Navigator.pushReplacement(
 
-  Future.delayed(
-    const Duration(milliseconds: 600),
-    () {
+    context,
 
-      if (!mounted) return;
+    MaterialPageRoute(
 
-      setState(() {
-        showCompletedImage = true;
-      });
+      builder: (_) => PuzzleResultAnimationScreen(
 
-      imageWinController.forward();
+        image: widget.level.image,
 
-    },
+        starKey: starKey,
+
+        level: widget.level,
+
+        result: GameResultModel(
+
+          moves: controller.moves,
+
+          seconds: controller.seconds,
+
+          stars: 3,
+
+        ),
+
+      ),
+
+    ),
+
   );
 
 }
@@ -755,109 +744,7 @@ final GlobalKey coinKey = GlobalKey();
 
 
 
-              //==========================================
-              // صورة الفوز النهائية
-              // تظهر فوق الشاشة بعد اكتمال البازل
-              //==========================================
-
-              if (showCompletedImage)
-
-                Center(
-
-                  child: ScaleTransition(
-
-                    scale: imageScale,
-
-
-                    child: Container(
-
-                      width: 300,
-
-                      height: 300,
-
-
-                      padding:
-                      const EdgeInsets.all(12),
-
-
-
-                      decoration: BoxDecoration(
-
-
-                        color: Colors.white,
-
-
-
-                        borderRadius:
-                        BorderRadius.circular(28),
-
-
-
-                        boxShadow: [
-
-
-                          BoxShadow(
-
-                            color:
-                            Colors.black.withOpacity(0.45),
-
-                            blurRadius: 30,
-
-                            spreadRadius: 5,
-
-                          ),
-
-
-                        ],
-
-
-
-                        border: Border.all(
-
-                          color: Colors.amber,
-
-                          width: 6,
-
-                        ),
-
-
-                      ),
-
-
-
-
-
-                      child: ClipRRect(
-
-
-                        borderRadius:
-                        BorderRadius.circular(18),
-
-
-
-                        child: Image.asset(
-
-
-                          widget.level.image,
-
-
-                          fit: BoxFit.cover,
-
-
-                        ),
-
-
-                      ),
-
-
-                    ),
-
-
-                  ),
-
-
-                ),
-
+              
   
 
 
@@ -892,7 +779,7 @@ final GlobalKey coinKey = GlobalKey();
     }
 
 
-    imageWinController.dispose();
+    
 
 
     super.dispose();
