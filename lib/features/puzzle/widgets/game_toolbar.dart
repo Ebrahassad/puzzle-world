@@ -471,25 +471,17 @@ class _AnimatedStarCounterState
 
 
   @override
-  void initState(){
+void initState(){
 
-    super.initState();
+  super.initState();
 
+  RewardManager.rewardNotifier.addListener(
+    loadToolbarData,
+  );
 
-    controller =
-        AnimationController(
+  loadToolbarData();
 
-      vsync:this,
-
-      duration:
-      const Duration(
-
-        milliseconds:500,
-
-      ),
-
-    );
-
+}
 
 
     scale =
