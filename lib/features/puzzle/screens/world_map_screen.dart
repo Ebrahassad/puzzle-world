@@ -86,12 +86,12 @@ class _WorldMapScreenState
 
   // جزيرة الفضاء: أعلى المنتصف كما هي
   _RelativeRect(
-    id: "space",
-    left: 248 / worldWidth,
-    top: 25 / worldHeight,
-    width: 400 / worldWidth,
-    height: 460 / worldHeight,
-  ),
+  id: "space",
+  left: 210 / worldWidth,
+  top: 10 / worldHeight,
+  width: 480 / worldWidth,
+  height: 540 / worldHeight,
+),
 
 
   // المعالم: يسار تحت الفضاء
