@@ -37,8 +37,8 @@ class _GameToolbarState
     super.initState();
 
     RewardManager.rewardNotifier.addListener(
-      loadToolbarData,
-    );
+  refreshReward,
+);
 
     loadToolbarData();
   }
@@ -224,9 +224,8 @@ class _GameToolbarState
   void dispose() {
 
     RewardManager.rewardNotifier.removeListener(
-      loadToolbarData,
-    );
-
+  refreshReward,
+);
     super.dispose();
   }
 }
