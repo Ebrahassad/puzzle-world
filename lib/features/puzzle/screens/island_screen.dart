@@ -146,19 +146,21 @@ class _IslandScreenState extends State<IslandScreen>
 
     Navigator.push(
 
-      context,
+  context,
 
-      MaterialPageRoute(
+  MaterialPageRoute(
 
-        builder: (_) => PuzzleGameScreen(
+    builder: (_) => PuzzleGameScreen(
 
-          level: level,
+      level: level,
 
-        ),
+      island: widget.island,
 
-      ),
+    ),
 
-    );
+  ),
+
+);
 
   }
 
