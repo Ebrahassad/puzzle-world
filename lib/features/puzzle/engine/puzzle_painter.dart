@@ -84,7 +84,7 @@ static final Paint _highlightPaint = Paint()
     );
 
     for (final piece in ordered) {
-      if (!piece.isPlaced || piece.isDragging) {
+      if (piece.isDragging) {
   _paintShadow(canvas, piece);
 }
       canvas.save();
@@ -108,33 +108,37 @@ canvas.clipPath(piece.path);
         boardRect.width,
         boardRect.height,
       );
-      canvas.drawImageRect(image, srcRect, destRect, _imagePaint);
-      // حافة داكنة خفيفة
+      canvas.drawImageRect(
+  image,
+  srcRect,
+  destRect,
+  _imagePaint,
+);
+
+// حافة داكنة لكل القطع
 canvas.drawPath(
   piece.path,
   _borderPaint,
 );
 
-// لمعة على الحافة تعطي إحساس قطعة حقيقية
-canvas.drawPath(
-  piece.path,
-  _highlightPaint,
-);
+// لمعة فقط للقطع غير المثبتة
+if (!piece.isPlaced) {
+  canvas.drawPath(
+    piece.path,
+    _highlightPaint,
+  );
+}
 
-
-
-      canvas.restore();
+canvas.restore();
     }
   }
 
   void _paintShadow(Canvas canvas, PuzzlePiece piece) {
   canvas.save();
 
-  final lift = piece.isDragging ? -6.0 : 0.0;
-
   canvas.translate(
     piece.currentPosition.dx + 4,
-    piece.currentPosition.dy + 8 - lift,
+    piece.currentPosition.dy + 8,
   );
 
   canvas.drawPath(
