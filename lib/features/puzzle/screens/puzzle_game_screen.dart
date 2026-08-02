@@ -40,7 +40,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
   bool puzzleCreated = false;
 
+int moves = 0;
 
+late Stopwatch stopwatch;
 
   //==============================
   // صورة الفوز
@@ -87,7 +89,7 @@ final GlobalKey coinKey = GlobalKey();
 
     super.initState();
 
-
+stopwatch = Stopwatch()..start();
     
 
 
@@ -341,6 +343,7 @@ final GlobalKey coinKey = GlobalKey();
   if (!controller.isSolved) {
     return;
   }
+stopwatch.stop();
 
   Navigator.pushReplacement(
 
@@ -706,8 +709,9 @@ final GlobalKey coinKey = GlobalKey();
 
                       controller.onPanEnd();
 
-                      checkWin();
+moves++;
 
+checkWin();
                     },
 
 
