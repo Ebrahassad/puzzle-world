@@ -746,14 +746,14 @@ if(showCoinAnimation &&
           .length;
 
 
-  if(placedCount > lastPlacedCount){
+  if (placedCount > lastPlacedCount) {
 
   lastPlacedCount = placedCount;
 
   await RewardManager.addCoins(1);
 
-
-  if(controller.lastPlacedPosition != null){
+  if (mounted &&
+      controller.lastPlacedPosition != null) {
 
     setState(() {
 
@@ -765,7 +765,6 @@ if(showCoinAnimation &&
     });
 
   }
-
 }
 
 
