@@ -5,6 +5,7 @@ import '../engine/puzzle_controller.dart';
 import '../engine/puzzle_painter.dart';
 import '../models/puzzle_level_model.dart';
 import '../models/game_result_model.dart';
+import '../models/puzzle_model.dart';
 import '../managers/reward_manager.dart';
 
 import '../widgets/game_toolbar.dart';
@@ -14,13 +15,15 @@ import 'puzzle_result_animation_screen.dart';
 
 class PuzzleGameScreen extends StatefulWidget {
   final PuzzleLevelModel level;
-  final String islandId;
+  final PuzzleModel island;
 
   const PuzzleGameScreen({
     super.key,
     required this.level,
-    required this.islandId,
+    required this.island,
   });
+}
+
 
   @override
   State<PuzzleGameScreen> createState() =>
