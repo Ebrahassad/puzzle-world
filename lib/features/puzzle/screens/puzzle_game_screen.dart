@@ -9,7 +9,7 @@ import '../models/puzzle_model.dart';
 import '../managers/reward_manager.dart';
 
 import '../widgets/game_toolbar.dart';
-
+import '../widgets/flying_coin.dart';
 import 'puzzle_result_animation_screen.dart';
 
 
@@ -469,7 +469,7 @@ island: widget.island,
 if(showCoinAnimation &&
    coinAnimationStart != null)
 
-  CoinFlyAnimation(
+ FlyingCoin(
     start: coinAnimationStart!,
     end: Offset(
       MediaQuery.of(context).size.width - 50,
