@@ -106,18 +106,15 @@ class _FlyingCoinState extends State<FlyingCoin>
           top:position.value.dy,
 
 
-          child:const Text(
+          child: Image.asset(
 
-            "🪙",
+  "assets/images/rewards/puzzle_coin.png",
 
-            style:TextStyle(
+  width: 36,
 
-              fontSize:32,
+  height: 36,
 
-            ),
-
-          ),
-
+),
         );
 
 
