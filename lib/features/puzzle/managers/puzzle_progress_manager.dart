@@ -977,6 +977,179 @@ static int getLevelUnlockCost(
 }
 
 
+//==================================================
+// 💰 أسعار الفتح
+//==================================================
+
+
+// 🪙 سعر فتح المرحلة بالعملات
+
+static int getLevelCoinCost(
+    int level,
+) {
+
+  if(level <= 1){
+
+    return 0;
+
+  }
+
+
+  return 50 + ((level - 2) * 25);
+
+}
+
+
+
+// ⭐ سعر فتح المرحلة بالنجوم
+
+static int getLevelStarCost(
+    int level,
+) {
+
+  if(level <= 1){
+
+    return 0;
+
+  }
+
+
+  return 2 + ((level - 2) ~/ 3);
+
+}
+
+
+
+// 💎 سعر فتح المرحلة بالجواهر
+
+static int getLevelGemCost(
+    int level,
+) {
+
+  if(level <= 1){
+
+    return 0;
+
+  }
+
+
+  return 1 + ((level - 2) ~/ 5);
+
+}
+
+
+
+//==================================================
+// 🏝️ أسعار فتح الجزر
+//==================================================
+
+static int getIslandCoinCost(
+    String islandId,
+) {
+
+  switch(islandId){
+
+    case "animals":
+      return 0;
+
+
+    case "cars":
+      return 500;
+
+
+    case "nature":
+      return 1000;
+
+
+    case "landmarks":
+      return 1500;
+
+
+    case "space":
+      return 2500;
+
+
+    default:
+      return 99999;
+
+  }
+
+}
+
+
+
+// ⭐ سعر الجزيرة بالنجوم
+
+static int getIslandStarCost(
+    String islandId,
+) {
+
+  switch(islandId){
+
+    case "animals":
+      return 0;
+
+
+    case "cars":
+      return 10;
+
+
+    case "nature":
+      return 20;
+
+
+    case "landmarks":
+      return 30;
+
+
+    case "space":
+      return 50;
+
+
+    default:
+      return 9999;
+
+  }
+
+}
+
+
+
+// 💎 سعر الجزيرة بالجواهر
+
+static int getIslandGemCost(
+    String islandId,
+) {
+
+  switch(islandId){
+
+    case "animals":
+      return 0;
+
+
+    case "cars":
+      return 5;
+
+
+    case "nature":
+      return 10;
+
+
+    case "landmarks":
+      return 15;
+
+
+    case "space":
+      return 25;
+
+
+    default:
+      return 9999;
+
+  }
+
+}
+
   //==================================================
   // 🔓 فتح المراحل
   //==================================================
