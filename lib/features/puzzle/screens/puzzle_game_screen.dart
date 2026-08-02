@@ -13,6 +13,7 @@ import '../widgets/game_toolbar.dart';
 import '../widgets/flying_coin.dart';
 import 'puzzle_result_animation_screen.dart';
 import '../services/reward_ad_service.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 
 class PuzzleGameScreen extends StatefulWidget {
@@ -62,6 +63,8 @@ int moves = 0;
 
 Offset? coinAnimationStart;
 bool showCoinAnimation = false;
+
+final AudioPlayer _audioPlayer = AudioPlayer();
 
   //==============================
   // صورة الفوز
@@ -910,6 +913,14 @@ if(controller.lastPlacedPosition != null){
 
   lastPlacedCount = placedCount;
 
+
+  await _audioPlayer.play(
+    AssetSource(
+      'audio/piece_correct.mp3',
+    ),
+  );
+
+
   await RewardManager.addCoins(1);
 
   if (mounted &&
@@ -993,6 +1004,7 @@ if(controller.lastPlacedPosition != null){
 
   @override
 void dispose() {
+_audioPlayer.dispose();
 
   if(puzzleCreated && !gameFinished){
 
