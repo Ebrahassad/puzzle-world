@@ -12,6 +12,7 @@ import '../managers/puzzle_progress_manager.dart';
 import '../widgets/game_toolbar.dart';
 import '../widgets/flying_coin.dart';
 import 'puzzle_result_animation_screen.dart';
+import '../services/reward_ad_service.dart';
 
 
 class PuzzleGameScreen extends StatefulWidget {
@@ -192,21 +193,25 @@ Future<void> _checkSavedGame() async {
 
     if(resume == true){
 
-      // هنا سنضع إعلان المكافأة في الخطوة القادمة
-
-      debugPrint(
-        "طلب استمرار اللعبة",
-      );
+  final watched =
+      await RewardAdService.showContinueAd();
 
 
-    }
-    else {
+  if(watched){
 
-      await PuzzleProgressManager.clearProgress();
+    debugPrint(
+      "تم مشاهدة الإعلان - استكمال اللعبة",
+    );
 
-    }
 
   }
+  else {
+
+    await PuzzleProgressManager.clearProgress();
+
+  }
+
+}
 
 
   if(!mounted) return;
