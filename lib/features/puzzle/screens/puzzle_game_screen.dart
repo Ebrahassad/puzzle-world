@@ -346,12 +346,18 @@ stopwatch = Stopwatch()..start();
   // فحص الفوز
   //==================================================
 
-  void checkWin() {
+  void checkWin() async {
 
   if (!controller.isSolved) {
     return;
   }
-stopwatch.stop();
+
+  stopwatch.stop();
+
+  // ⭐ إضافة نجمة عند إنهاء المرحلة
+  await RewardManager.addStars(1);
+
+if (!mounted) return;
 
   Navigator.pushReplacement(
 
@@ -368,11 +374,12 @@ stopwatch.stop();
         level: widget.level,
 
         result: GameResultModel(
-  stars: 3,
-  moves: 0,
-  time: stopwatch.elapsed,
-),
-island: widget.island,
+          stars: 1,
+          moves: 0,
+          time: stopwatch.elapsed,
+        ),
+
+        island: widget.island,
 
       ),
 
@@ -381,7 +388,6 @@ island: widget.island,
   );
 
 }
-
 
   @override
   Widget build(BuildContext context) {
