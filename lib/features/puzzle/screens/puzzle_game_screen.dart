@@ -7,6 +7,7 @@ import '../models/puzzle_level_model.dart';
 import '../models/game_result_model.dart';
 import '../models/puzzle_model.dart';
 import '../managers/reward_manager.dart';
+import '../managers/puzzle_progress_manager.dart';
 
 import '../widgets/game_toolbar.dart';
 import '../widgets/flying_coin.dart';
@@ -46,10 +47,15 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
 bool gameFinished = false;
 
+bool checkingSavedGame = true;
+
 
 late Stopwatch stopwatch;
 
 int lastPlacedCount = 0;
+
+int moves = 0;
+
 
 Offset? coinAnimationStart;
 bool showCoinAnimation = false;
@@ -95,17 +101,127 @@ final GlobalKey coinKey = GlobalKey();
   //==============================
 
   @override
-  void initState() {
+void initState() {
 
-    super.initState();
+  super.initState();
 
-stopwatch = Stopwatch()..start();
-    
+  stopwatch = Stopwatch()..start();
+
+  _checkSavedGame();
+
+}
 
 
-    _loadImage();
+
+Future<void> _checkSavedGame() async {
+
+  final saved =
+      await PuzzleProgressManager.loadProgress();
+
+
+  if(saved != null &&
+     saved["levelId"] == widget.level.id){
+
+
+    if(!mounted) return;
+
+
+    final resume = await showDialog<bool>(
+
+      context: context,
+
+      barrierDismissible: false,
+
+      builder: (context){
+
+        return AlertDialog(
+
+          title: const Text(
+            "توجد لعبة محفوظة",
+          ),
+
+          content: const Text(
+            "هل تريد الاستمرار في اللعبة السابقة؟",
+          ),
+
+          actions: [
+
+            TextButton(
+
+              onPressed: (){
+
+                Navigator.pop(
+                  context,
+                  false,
+                );
+
+              },
+
+              child: const Text(
+                "لعبة جديدة",
+              ),
+
+            ),
+
+
+            ElevatedButton(
+
+              onPressed: (){
+
+                Navigator.pop(
+                  context,
+                  true,
+                );
+
+              },
+
+              child: const Text(
+                "استمرار",
+              ),
+
+            ),
+
+          ],
+
+        );
+
+      },
+
+    );
+
+
+    if(resume == true){
+
+      // هنا سنضع إعلان المكافأة في الخطوة القادمة
+
+      debugPrint(
+        "طلب استمرار اللعبة",
+      );
+
+
+    }
+    else {
+
+      await PuzzleProgressManager.clearProgress();
+
+    }
 
   }
+
+
+  if(!mounted) return;
+
+
+  setState((){
+
+    checkingSavedGame = false;
+
+  });
+
+
+  _loadImage();
+
+}
 
   //==================================================
   // تحميل الصورة
@@ -341,7 +457,26 @@ stopwatch = Stopwatch()..start();
 
 
 
+Future<void> saveCurrentGame() async {
 
+  if(!puzzleCreated) return;
+
+
+  await PuzzleProgressManager.saveProgress(
+
+    puzzleId: widget.island.id,
+
+    levelId: widget.level.id,
+
+    pieces: controller.pieces,
+
+    moves: moves,
+
+    seconds: stopwatch.elapsed.inSeconds,
+
+  );
+
+}
 
 
   //==================================================
@@ -390,8 +525,7 @@ if (!mounted) return;
   Widget build(BuildContext context) {
 
 
-    if (image == null || loading) {
-
+    if (checkingSavedGame || image == null || loading)
       return const Scaffold(
 
         body: Center(
@@ -832,23 +966,25 @@ if(showCoinAnimation &&
 
 
   @override
-  void dispose() {
+void dispose() {
 
 
-    if (puzzleCreated) {
+  if(puzzleCreated && !gameFinished){
 
-      controller.dispose();
-
-    }
-
-
-    
-
-
-    super.dispose();
-
+    saveCurrentGame();
 
   }
 
+
+  if (puzzleCreated) {
+
+    controller.dispose();
+
+  }
+
+
+  super.dispose();
+
+}
 
 }
