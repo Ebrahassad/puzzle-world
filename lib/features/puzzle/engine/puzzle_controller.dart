@@ -91,6 +91,55 @@ ui.Offset? get lastPlacedPosition =>
 _lastPlacedPosition = null;
     notifyListeners();
   }
+//==================================================
+// استرجاع لعبة محفوظة
+//==================================================
+
+void restoreProgress(
+    Map<String, dynamic> data,
+) {
+
+  final savedPieces =
+      data["pieces"] as List<dynamic>?;
+
+
+  if(savedPieces == null){
+    return;
+  }
+
+
+  for(final saved in savedPieces){
+
+    final id =
+        saved["id"];
+
+
+    final piece =
+    _pieces.firstWhere(
+      (p) => p.id.toString() == id.toString(),
+      orElse: () => throw Exception(
+        "Piece not found",
+      ),
+    );
+
+
+    piece.currentPosition =
+        ui.Offset(
+          (saved["x"] ?? 0).toDouble(),
+          (saved["y"] ?? 0).toDouble(),
+        );
+
+
+    piece.isPlaced =
+        saved["placed"] ?? false;
+
+  }
+
+
+  notifyListeners();
+
+}
+
 
   /// Call from a `GestureDetector.onPanStart`. Finds the top-most
   /// not-yet-placed piece under [position] using each piece's exact outline
