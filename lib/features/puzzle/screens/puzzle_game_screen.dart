@@ -50,6 +50,8 @@ bool gameFinished = false;
 
 bool checkingSavedGame = true;
 
+Map<String, dynamic>? savedGameData;
+
 
 late Stopwatch stopwatch;
 
@@ -106,7 +108,9 @@ void initState() {
 
   super.initState();
 
-  stopwatch = Stopwatch()..start();
+  stopwatch = Stopwatch();
+
+
 
   _checkSavedGame();
 
@@ -121,7 +125,9 @@ Future<void> _checkSavedGame() async {
 
 
   if(saved != null &&
-     saved["levelId"] == widget.level.id){
+      saved["levelId"] == widget.level.id) {
+
+    savedGameData = saved;
 
 
     if(!mounted) return;
@@ -133,7 +139,7 @@ Future<void> _checkSavedGame() async {
 
       barrierDismissible: false,
 
-      builder: (context){
+      builder: (context) {
 
         return AlertDialog(
 
@@ -141,15 +147,17 @@ Future<void> _checkSavedGame() async {
             "توجد لعبة محفوظة",
           ),
 
+
           content: const Text(
             "هل تريد الاستمرار في اللعبة السابقة؟",
           ),
+
 
           actions: [
 
             TextButton(
 
-              onPressed: (){
+              onPressed: () {
 
                 Navigator.pop(
                   context,
@@ -158,6 +166,7 @@ Future<void> _checkSavedGame() async {
 
               },
 
+
               child: const Text(
                 "لعبة جديدة",
               ),
@@ -165,22 +174,32 @@ Future<void> _checkSavedGame() async {
             ),
 
 
-            ElevatedButton(
 
-              onPressed: (){
+            TextButton(
+
+              onPressed: () async {
+
+                final result =
+                    await RewardAdService.showContinueAd();
+
+
+                if(!context.mounted) return;
+
 
                 Navigator.pop(
                   context,
-                  true,
+                  result,
                 );
 
               },
+
 
               child: const Text(
                 "استمرار",
               ),
 
             ),
+
 
           ],
 
@@ -191,37 +210,28 @@ Future<void> _checkSavedGame() async {
     );
 
 
-    if(resume == true){
 
-  final watched =
-      await RewardAdService.showContinueAd();
+    if(resume != true) {
 
+      await PuzzleProgressManager.clearProgress();
 
-  if(watched){
+      savedGameData = null;
 
-    debugPrint(
-      "تم مشاهدة الإعلان - استكمال اللعبة",
-    );
-
-
-  }
-  else {
-
-    await PuzzleProgressManager.clearProgress();
+    }
 
   }
 
-}
 
 
   if(!mounted) return;
 
 
-  setState((){
+  setState(() {
 
     checkingSavedGame = false;
 
   });
+
 
 
   _loadImage();
@@ -452,9 +462,23 @@ Future<void> _checkSavedGame() async {
       scatterArea: scatterArea,
     );
 
+if(savedGameData != null){
 
+  controller.restoreProgress(
+    savedGameData!,
+  );
+lastPlacedCount =
+    controller.pieces
+        .where((p)=>p.isPlaced)
+        .length;
+
+}
 
     setState(() {});
+
+if(!stopwatch.isRunning){
+  stopwatch.start();
+}
 
 
   }
@@ -516,7 +540,7 @@ if (!mounted) return;
         level: widget.level,
         result: GameResultModel(
           stars: 1,
-          moves: 0,
+          moves: moves,
           time: stopwatch.elapsed,
         ),
         island: widget.island,
@@ -530,18 +554,13 @@ if (!mounted) return;
   Widget build(BuildContext context) {
 
 
-    if (checkingSavedGame || image == null || loading)
-      return const Scaffold(
-
-        body: Center(
-
-          child: CircularProgressIndicator(),
-
-        ),
-
-      );
-
-    }
+    if (checkingSavedGame || image == null || loading) {
+  return const Scaffold(
+    body: Center(
+      child: CircularProgressIndicator(),
+    ),
+  );
+}
 
 
 
@@ -870,7 +889,9 @@ if(showCoinAnimation &&
 
   controller.onPanEnd();
 
-
+if(controller.lastPlacedPosition != null){
+  moves++;
+}
   await Future.delayed(
     const Duration(milliseconds: 100),
   );
@@ -973,10 +994,15 @@ if(showCoinAnimation &&
   @override
 void dispose() {
 
-
   if(puzzleCreated && !gameFinished){
 
-    saveCurrentGame();
+    PuzzleProgressManager.saveProgress(
+      puzzleId: widget.island.id,
+      levelId: widget.level.id,
+      pieces: controller.pieces,
+      moves: moves,
+      seconds: stopwatch.elapsed.inSeconds,
+    );
 
   }
 
