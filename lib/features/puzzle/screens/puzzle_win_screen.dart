@@ -2,30 +2,22 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-
+import '../models/puzzle_model.dart';
+import 'island_screen.dart';
+import 'world_map_screen.dart';
 class PuzzleWinScreen extends StatefulWidget {
 
 
-  final VoidCallback? onBackToIsland;
-
-  final VoidCallback? onBackToWorld;
-
-  final VoidCallback? onExit;
-
+  final PuzzleModel island;
 
 
   const PuzzleWinScreen({
 
-    super.key,
+  super.key,
 
-    this.onBackToIsland,
+  required this.island,
 
-    this.onBackToWorld,
-
-    this.onExit,
-
-  });
-
+});
 
 
   @override
@@ -309,28 +301,22 @@ class _PuzzleWinScreenState
 
 
 
-  Widget buildNavigationButtons() {
-
+    Widget buildNavigationButtons() {
 
     return Padding(
 
-      padding:
-          const EdgeInsets.symmetric(
-            horizontal: 20,
-          ),
-
+      padding: const EdgeInsets.symmetric(
+        horizontal: 20,
+      ),
 
       child: Row(
 
         mainAxisAlignment:
             MainAxisAlignment.spaceBetween,
 
-
         children: [
 
-
-
-          // العودة للجزيرة
+          // الجزيرة (يسار)
 
           glassButton(
 
@@ -340,7 +326,23 @@ class _PuzzleWinScreenState
 
             onTap: () {
 
-              widget.onBackToIsland?.call();
+              Navigator.pushAndRemoveUntil(
+
+                context,
+
+                MaterialPageRoute(
+
+                  builder: (_) => IslandScreen(
+
+                    island: widget.island,
+
+                  ),
+
+                ),
+
+                (route) => false,
+
+              );
 
             },
 
@@ -348,9 +350,7 @@ class _PuzzleWinScreenState
 
 
 
-
-
-          // العودة للعوالم
+          // العوالم (وسط)
 
           glassButton(
 
@@ -360,7 +360,19 @@ class _PuzzleWinScreenState
 
             onTap: () {
 
-              widget.onBackToWorld?.call();
+              Navigator.pushAndRemoveUntil(
+
+                context,
+
+                MaterialPageRoute(
+
+                  builder: (_) => const WorldMapScreen(),
+
+                ),
+
+                (route) => false,
+
+              );
 
             },
 
@@ -368,9 +380,7 @@ class _PuzzleWinScreenState
 
 
 
-
-
-          // خروج
+          // خروج (يمين)
 
           glassButton(
 
@@ -380,21 +390,17 @@ class _PuzzleWinScreenState
 
             onTap: () {
 
-              if(widget.onExit != null){
+              Navigator.popUntil(
 
-                widget.onExit!();
+                context,
 
-              }else{
+                (route) => route.isFirst,
 
-                Navigator.pop(context);
-
-              }
+              );
 
             },
 
           ),
-
-
 
         ],
 
@@ -443,7 +449,6 @@ class _PuzzleWinScreenState
           ),
 
 
-
           child: Container(
 
             width: 90,
@@ -485,7 +490,6 @@ class _PuzzleWinScreenState
 
 
 
-
             child: Column(
 
               mainAxisSize:
@@ -493,8 +497,6 @@ class _PuzzleWinScreenState
 
 
               children: [
-
-
 
                 Icon(
 
@@ -513,7 +515,6 @@ class _PuzzleWinScreenState
                 const SizedBox(
                   height: 5,
                 ),
-
 
 
 
@@ -537,8 +538,6 @@ class _PuzzleWinScreenState
 
                 ),
 
-
-
               ],
 
             ),
@@ -552,6 +551,7 @@ class _PuzzleWinScreenState
     );
 
   }
+
 
 
 
