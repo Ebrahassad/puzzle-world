@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/game_result_model.dart';
 import '../models/puzzle_level_model.dart';
+import '../models/puzzle_model.dart';
 
 import '../widgets/reward_box_widget.dart';
 import '../screens/puzzle_win_screen.dart';
@@ -26,7 +27,7 @@ class PuzzleResultAnimationScreen extends StatefulWidget {
   // صورة البازل المكتملة
 
   final String image;
-
+final PuzzleModel island;
 
 
   const PuzzleResultAnimationScreen({
@@ -40,6 +41,8 @@ class PuzzleResultAnimationScreen extends StatefulWidget {
     required this.starKey,
 
     required this.image,
+
+required this.island,
 
   });
 
@@ -436,14 +439,9 @@ winScreenOpened = true;
 
           PuzzleWinScreen(
 
-            result:
-            widget.result,
+  island: widget.island,
 
-
-            level:
-            widget.level,
-
-          ),
+),
 
         ),
 
