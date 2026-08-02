@@ -3,8 +3,12 @@ import 'package:flutter/material.dart';
 
 import '../engine/puzzle_controller.dart';
 import '../engine/puzzle_painter.dart';
-
+import 'puzzle_win_screen.dart';
+import '../models/game_result_model.dart';
 import '../models/puzzle_level_model.dart';
+
+
+
 
 class PuzzleGameScreen extends StatefulWidget {
   final PuzzleLevelModel level;
@@ -201,19 +205,33 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   //==================================================
 
   void checkWin() {
-    if (!controller.isSolved) {
-      return;
-    }
-
-    Future.delayed(
-      const Duration(milliseconds: 400),
-      () {
-        if (mounted) {
-          Navigator.pop(context);
-        }
-      },
-    );
+  if (!controller.isSolved) {
+    return;
   }
+
+  Future.delayed(
+    const Duration(milliseconds: 500),
+    () {
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PuzzleWinScreen(
+            result: GameResultModel(
+              moves: controller.moves,
+              seconds: controller.seconds,
+              stars: 3,
+            ),
+            difficulty: widget.level.gridSize,
+            worldId: widget.level.worldId,
+            level: widget.level.levelNumber,
+          ),
+        ),
+      );
+    },
+  );
+}
 
   @override
   Widget build(BuildContext context) {
