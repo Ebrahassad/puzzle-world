@@ -44,6 +44,12 @@ class PuzzleController extends ChangeNotifier {
   ui.Offset _dragOffset = ui.Offset.zero; // pointer position relative to the piece's origin
   int _zCounter = 0;
 
+ui.Offset? _lastPlacedPosition;
+
+ui.Offset? get lastPlacedPosition =>
+    _lastPlacedPosition;
+
+
   /// True once every piece has snapped into its correct spot.
   bool get isSolved => _pieces.isNotEmpty && _pieces.every((p) => p.isPlaced);
 
@@ -81,6 +87,7 @@ class PuzzleController extends ChangeNotifier {
 
     _zCounter = _pieces.length;
     _dragging = null;
+_lastPlacedPosition = null;
     notifyListeners();
   }
 
@@ -141,13 +148,24 @@ void onPanEnd() {
   // 1- القطعة قريبة من مكانها الصحيح
   // 2- القطعة داخل البورد
   if (nearCorrectPosition && insideBoard) {
-    piece.currentPosition = piece.correctPosition;
-    piece.isPlaced = true;
-  }
+
+  piece.currentPosition =
+      piece.correctPosition;
+
+  piece.isPlaced = true;
+
+
+  // مكان خروج العملة بعد تثبيت القطعة
+  _lastPlacedPosition =
+      piece.currentPosition +
+      piece.path.getBounds().center;
+
+}
 
   // إذا كانت القطعة خاطئة:
   // تبقى في مكانها ولا ترجع للشريط
   _dragging = null;
+
 
   notifyListeners();
 }
@@ -176,6 +194,8 @@ void onPanEnd() {
       piece.isDragging = false;
     }
     _dragging = null;
+_lastPlacedPosition = null;
+
     notifyListeners();
   }
 
@@ -184,6 +204,7 @@ void onPanEnd() {
     _pieces = [];
     _dragging = null;
     _image = null;
+_lastPlacedPosition = null;
     super.dispose();
   }
 }
