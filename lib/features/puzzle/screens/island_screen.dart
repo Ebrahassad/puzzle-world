@@ -75,7 +75,7 @@ static const double islandImageOpacity = 0.88;
 
     worldController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 18),
+      duration: const Duration(seconds: 12),
     )..repeat(reverse: true);
 
     // تأثير "تنفس" واحد لكل العالم (خلفية + جزيرة + مراحل معاً) —
@@ -83,7 +83,7 @@ static const double islandImageOpacity = 0.88;
     // لا يوجد أي تحريك منفصل لأي زر مرحلة أو للجزيرة وحدها.
     worldScale = Tween<double>(
       begin: 1.00,
-      end: 1.02,
+      end: 1.05,
     ).animate(
       CurvedAnimation(
         parent: worldController,
@@ -92,8 +92,8 @@ static const double islandImageOpacity = 0.88;
     );
 
     worldTranslateY = Tween<double>(
-      begin: -5,
-      end: 5,
+      begin: -15,
+      end: 15,
     ).animate(
       CurvedAnimation(
         parent: worldController,
