@@ -5,6 +5,7 @@ import '../engine/puzzle_controller.dart';
 import '../engine/puzzle_painter.dart';
 import '../models/puzzle_level_model.dart';
 import '../models/game_result_model.dart';
+import '../managers/reward_manager.dart';
 
 import '../widgets/game_toolbar.dart';
 
@@ -40,9 +41,11 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
   bool puzzleCreated = false;
 
-int moves = 0;
+
 
 late Stopwatch stopwatch;
+
+int lastCoinPositionCheck = 0;
 
   //==============================
   // صورة الفوز
@@ -361,7 +364,7 @@ stopwatch.stop();
 
         result: GameResultModel(
   stars: 3,
-  moves: moves,
+  moves: 0,
   time: stopwatch.elapsed,
 ),
 
@@ -703,12 +706,28 @@ stopwatch.stop();
 
                     onPanEnd: (_) {
 
-                      controller.onPanEnd();
+  controller.onPanEnd();
 
-moves++;
 
-checkWin();
-                    },
+  // القطعة الصحيحة ثبتت
+  if(controller.lastPlacedPosition != null &&
+      lastCoinPositionCheck !=
+      controller.pieces.where((p)=>p.isPlaced).length){
+
+
+    lastCoinPositionCheck =
+        controller.pieces.where((p)=>p.isPlaced).length;
+
+
+    // تحديث عداد العملات
+    RewardManager.addCoins(1);
+
+  }
+
+
+  checkWin();
+
+},
 
 
                     child: CustomPaint(
