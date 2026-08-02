@@ -40,9 +40,9 @@ class PuzzlePainter extends CustomPainter {
   final double pieceHeight;
 
   static final Paint _borderPaint = Paint()
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 1.0
-    ..color = const Color(0x33000000);
+  ..style = PaintingStyle.stroke
+  ..strokeWidth = 1.4
+  ..color = const Color(0x55000000);
 
   static final Paint _imagePaint = Paint()..filterQuality = FilterQuality.high;
 
@@ -52,8 +52,18 @@ class PuzzlePainter extends CustomPainter {
     ..color = const Color(0x22000000);
 
   static final Paint _shadowPaint = Paint()
-    ..color = const Color(0x55000000)
-    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+  ..color = const Color(0x66000000)
+  ..maskFilter = const MaskFilter.blur(
+    BlurStyle.normal,
+    8,
+  );
+
+static final Paint _highlightPaint = Paint()
+  ..style = PaintingStyle.stroke
+  ..strokeWidth = 1.2
+  ..color = const Color(0x33FFFFFF);
+
+
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -74,11 +84,19 @@ class PuzzlePainter extends CustomPainter {
     );
 
     for (final piece in ordered) {
-      if (piece.isDragging) _paintShadow(canvas, piece);
-
+      if (!piece.isPlaced || piece.isDragging) {
+  _paintShadow(canvas, piece);
+}
       canvas.save();
-      canvas.translate(piece.currentPosition.dx, piece.currentPosition.dy);
-      canvas.clipPath(piece.path);
+
+final lift = piece.isDragging ? -6.0 : 0.0;
+
+canvas.translate(
+  piece.currentPosition.dx,
+  piece.currentPosition.dy + lift,
+);
+
+canvas.clipPath(piece.path);
 
       // Shift the whole image so that this piece's cell (col, row) lands
       // exactly on the local origin. The clip (set above) then reveals only
@@ -91,21 +109,41 @@ class PuzzlePainter extends CustomPainter {
         boardRect.height,
       );
       canvas.drawImageRect(image, srcRect, destRect, _imagePaint);
-      canvas.drawPath(piece.path, _borderPaint);
+      // حافة داكنة خفيفة
+canvas.drawPath(
+  piece.path,
+  _borderPaint,
+);
+
+// لمعة على الحافة تعطي إحساس قطعة حقيقية
+canvas.drawPath(
+  piece.path,
+  _highlightPaint,
+);
+
+
 
       canvas.restore();
     }
   }
 
   void _paintShadow(Canvas canvas, PuzzlePiece piece) {
-    canvas.save();
-    canvas.translate(
-      piece.currentPosition.dx + 3,
-      piece.currentPosition.dy + 6,
-    );
-    canvas.drawPath(piece.path, _shadowPaint);
-    canvas.restore();
-  }
+  canvas.save();
+
+  final lift = piece.isDragging ? -6.0 : 0.0;
+
+  canvas.translate(
+    piece.currentPosition.dx + 4,
+    piece.currentPosition.dy + 8 - lift,
+  );
+
+  canvas.drawPath(
+    piece.path,
+    _shadowPaint,
+  );
+
+  canvas.restore();
+}
 
   @override
   bool shouldRepaint(covariant PuzzlePainter oldDelegate) {
