@@ -78,8 +78,7 @@ class _PuzzleResultAnimationScreenState
   bool showRewardBox = false;
 
 
-  bool openWinScreen = false;
-
+  bool winScreenOpened = false;
 
 
   @override
@@ -403,15 +402,11 @@ Widget build(BuildContext context) {
 void openWinScreen(){
 
 
-  if(openWinScreen){
+  if (winScreenOpened) {
+  return;
+}
 
-    return;
-
-  }
-
-
-  openWinScreen=true;
-
+winScreenOpened = true;
 
 
   Future.delayed(
