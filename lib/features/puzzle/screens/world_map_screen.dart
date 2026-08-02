@@ -84,47 +84,56 @@ class _WorldMapScreenState
   // بدل صور منفصلة على خلفية.
   static final List<_RelativeRect> _islandRects = [
 
-    _RelativeRect(
-      id: "space",
-      left: 248 / worldWidth,
-      top: 25 / worldHeight,
-      width: 400 / worldWidth,
-      height: 460 / worldHeight,
-    ),
+  // جزيرة الفضاء: أعلى المنتصف كما هي
+  _RelativeRect(
+    id: "space",
+    left: 248 / worldWidth,
+    top: 25 / worldHeight,
+    width: 400 / worldWidth,
+    height: 460 / worldHeight,
+  ),
 
-    _RelativeRect(
-      id: "landmarks",
-      left: 40 / worldWidth,
-      top: 420 / worldHeight,
-      width: 300 / worldWidth,
-      height: 340 / worldHeight,
-    ),
 
-    _RelativeRect(
-      id: "cars",
-      left: 556 / worldWidth,
-      top: 420 / worldHeight,
-      width: 300 / worldWidth,
-      height: 340 / worldHeight,
-    ),
+  // المعالم: يسار تحت الفضاء
+  _RelativeRect(
+    id: "landmarks",
+    left: 70 / worldWidth,
+    top: 470 / worldHeight,
+    width: 300 / worldWidth,
+    height: 330 / worldHeight,
+  ),
 
-    _RelativeRect(
-      id: "nature",
-      left: 110 / worldWidth,
-      top: 760 / worldHeight,
-      width: 320 / worldWidth,
-      height: 370 / worldHeight,
-    ),
 
-    _RelativeRect(
-      id: "animals",
-      left: 466 / worldWidth,
-      top: 780 / worldHeight,
-      width: 320 / worldWidth,
-      height: 370 / worldHeight,
-    ),
+  // السيارات: يمين تحت الفضاء وقريبة من المعالم
+  _RelativeRect(
+    id: "cars",
+    left: 525 / worldWidth,
+    top: 470 / worldHeight,
+    width: 300 / worldWidth,
+    height: 330 / worldHeight,
+  ),
 
-  ];
+
+  // الطبيعة: في الوسط أسفل المعالم والسيارات
+  _RelativeRect(
+    id: "nature",
+    left: 280 / worldWidth,
+    top: 820 / worldHeight,
+    width: 330 / worldWidth,
+    height: 370 / worldHeight,
+  ),
+
+
+  // الحيوانات: بجانب الطبيعة وأسفل المجموعة
+  _RelativeRect(
+    id: "animals",
+    left: 500 / worldWidth,
+    top: 820 / worldHeight,
+    width: 320 / worldWidth,
+    height: 370 / worldHeight,
+  ),
+
+];
 
   static final List<_RelativeCloud> _clouds = [
 
