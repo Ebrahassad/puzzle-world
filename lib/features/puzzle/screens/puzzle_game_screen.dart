@@ -444,7 +444,9 @@ Future<void> _checkSavedGame() async {
       return;
     }
 
-
+if (image == null) {
+  return;
+}
 
     puzzleCreated = true;
 
@@ -620,11 +622,61 @@ if (!mounted) return;
 
                 child: GameToolbar(
 
-                  starKey: starKey,
+  starKey: starKey,
 
-                  coinKey: coinKey,
+  coinKey: coinKey,
 
-                ),
+
+  onSave: () async {
+
+    await saveCurrentGame();
+
+  },
+
+
+  onRestart: () {
+
+    if (puzzleCreated) {
+
+      controller.dispose();
+
+    }
+
+
+    setState(() {
+
+      puzzleCreated = false;
+
+    });
+
+
+    _createPuzzle();
+
+  },
+
+
+  onExit: () {
+
+    Navigator.pop(context);
+
+  },
+
+
+  soundEnabled: true,
+
+
+  onSoundChanged: (enabled) {
+
+
+    _audioPlayer.setVolume(
+      enabled ? 1 : 0,
+    );
+
+
+  },
+
+
+),
 
               ),
 
