@@ -22,7 +22,7 @@ class PuzzleGameScreen extends StatefulWidget {
     required this.level,
     required this.island,
   });
-}
+
 
 
   @override
@@ -372,7 +372,7 @@ stopwatch.stop();
   moves: 0,
   time: stopwatch.elapsed,
 ),
-islandId: widget.islandId,
+island: widget.island,
 
       ),
 
