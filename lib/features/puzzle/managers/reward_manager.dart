@@ -64,7 +64,43 @@ static final ValueNotifier<int> rewardNotifier =
 
 
 
+//==================================================
+// 🪙 خصم العملات
+//==================================================
 
+static Future<bool> spendCoins(
+    int amount,
+) async {
+
+  if(amount <= 0){
+    return false;
+  }
+
+  try {
+
+    final result =
+        await PuzzleProgressManager.spendCoins(
+          amount,
+        );
+
+
+    if(result){
+
+      rewardNotifier.value++;
+
+    }
+
+
+    return result;
+
+
+  } catch (_) {
+
+    return false;
+
+  }
+
+}
 
 
 
@@ -119,7 +155,43 @@ static final ValueNotifier<int> rewardNotifier =
 
 
 
+//==================================================
+// 💎 خصم الجواهر
+//==================================================
 
+static Future<bool> spendGems(
+    int amount,
+) async {
+
+  if(amount <= 0){
+    return false;
+  }
+
+  try {
+
+    final result =
+        await PuzzleProgressManager.spendGems(
+          amount,
+        );
+
+
+    if(result){
+
+      rewardNotifier.value++;
+
+    }
+
+
+    return result;
+
+
+  } catch (_) {
+
+    return false;
+
+  }
+
+}
 
 
 
@@ -170,7 +242,43 @@ static final ValueNotifier<int> rewardNotifier =
 }
 
 
+//==================================================
+// ⭐ خصم النجوم
+//==================================================
 
+static Future<bool> spendStars(
+    int amount,
+) async {
+
+  if(amount <= 0){
+    return false;
+  }
+
+  try {
+
+    final result =
+        await PuzzleProgressManager.spendStars(
+          amount,
+        );
+
+
+    if(result){
+
+      rewardNotifier.value++;
+
+    }
+
+
+    return result;
+
+
+  } catch (_) {
+
+    return false;
+
+  }
+
+}
 
 
 
