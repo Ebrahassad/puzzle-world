@@ -360,14 +360,10 @@ stopwatch.stop();
         level: widget.level,
 
         result: GameResultModel(
-
-          moves: controller.moves,
-
-          seconds: controller.seconds,
-
-          stars: 3,
-
-        ),
+  stars: 3,
+  moves: moves,
+  time: stopwatch.elapsed,
+),
 
       ),
 
