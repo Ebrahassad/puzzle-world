@@ -214,166 +214,40 @@ static final ValueNotifier<int> rewardNotifier =
   //==================================================
 
 
-  static Future<RewardResultModel?>
+  static Future<RewardResultModel?> completePuzzle({
+  required String rewardKey,
+}) async {
 
-  completePuzzle({
+  try {
 
-    required int difficulty,
+    final claimed =
+        await PuzzleProgressManager.isRewardClaimed(
+      rewardKey,
+    );
 
-    required String rewardKey,
-
-  }) async {
-
-
-    try {
-
-
-      final claimed =
-
-      await PuzzleProgressManager.isRewardClaimed(
-
-        rewardKey,
-
-      );
-
-
-
-      if(claimed){
-
-        return null;
-
-      }
-
-
-
-
-
-      late RewardResultModel reward;
-
-
-
-
-
-      switch(difficulty){
-
-
-        case 1:
-
-
-          reward = const RewardResultModel(
-
-            coins:50,
-
-            stars:1,
-
-          );
-
-
-          break;
-
-
-
-
-        case 2:
-
-
-          reward = const RewardResultModel(
-
-            coins:100,
-
-            stars:2,
-
-          );
-
-
-          break;
-
-
-
-
-        case 3:
-
-
-          reward = const RewardResultModel(
-
-            coins:150,
-
-            gems:1,
-
-            stars:3,
-
-          );
-
-
-          break;
-
-
-
-
-        default:
-
-
-          reward = const RewardResultModel(
-
-            coins:200,
-
-            gems:2,
-
-            stars:5,
-
-          );
-
-
-          break;
-
-
-      }
-
-
-
-
-
-
-      await applyReward(
-
-        reward,
-
-      );
-
-
-
-
-
-
-      await PuzzleProgressManager.markRewardClaimed(
-
-        rewardKey,
-
-      );
-
-
-
-
-
-
-      return reward;
-
-
-
-    }catch(_){
-
-
+    if (claimed) {
       return null;
-
-
     }
 
+    const reward = RewardResultModel(
+      stars: 1,
+    );
+
+    await applyReward(reward);
+
+    await PuzzleProgressManager.markRewardClaimed(
+      rewardKey,
+    );
+
+    return reward;
+
+  } catch (_) {
+
+    return null;
 
   }
 
-
-
-
+}
 
 
 
