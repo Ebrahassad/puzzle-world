@@ -89,6 +89,17 @@ static const String gameStateKey =
   static const String dailyMissionKey =
       "puzzle_daily_missions";
 
+static const String purchasedLevelsKey =
+    "puzzle_purchased_levels";
+
+
+static const String purchasedStarsKey =
+    "puzzle_star_unlocks";
+
+
+static const String purchasedGemsKey =
+    "puzzle_gem_unlocks";
+
 
 
 
@@ -368,7 +379,51 @@ static Future<void> saveLevelStars(
     jsonEncode(data),
   );
 
+
 }
+
+//==================================================
+// ⭐ خصم النجوم
+//==================================================
+
+static Future<bool> spendStars(
+    int amount,
+) async {
+
+  if(amount <= 0){
+    return false;
+  }
+
+
+  final prefs = await _prefs;
+
+
+  final current =
+      prefs.getInt(starsKey) ?? 0;
+
+
+
+  if(current < amount){
+
+    return false;
+
+  }
+
+
+
+  await prefs.setInt(
+    starsKey,
+    current - amount,
+  );
+
+
+  return true;
+
+}
+
+
+
+
 
 
   //==================================================
@@ -449,11 +504,48 @@ static Future<void> saveLevelStars(
       value,
 
     );
+}
 
+//==================================================
+// 🪙 خصم العملات
+//==================================================
+
+static Future<bool> spendCoins(
+    int amount,
+) async {
+
+  if(amount <= 0){
+    return false;
+  }
+
+
+  final prefs = await _prefs;
+
+
+  final current =
+      prefs.getInt(coinsKey) ?? 0;
+
+
+
+  if(current < amount){
+
+    return false;
 
   }
 
 
+
+  await prefs.setInt(
+    coinsKey,
+    current - amount,
+  );
+
+
+  return true;
+
+
+
+  }
 
 
 
@@ -538,6 +630,47 @@ static Future<void> saveLevelStars(
 
 
   }
+
+//==================================================
+// 💎 خصم الجواهر
+//==================================================
+
+static Future<bool> spendGems(
+    int amount,
+) async {
+
+  if(amount <= 0){
+    return false;
+  }
+
+
+  final prefs = await _prefs;
+
+
+  final current =
+      prefs.getInt(gemsKey) ?? 0;
+
+
+
+  if(current < amount){
+
+    return false;
+
+  }
+
+
+
+  await prefs.setInt(
+    gemsKey,
+    current - amount,
+  );
+
+
+  return true;
+
+}
+
+
 
   //==================================================
   // 💡 التلميحات
@@ -822,6 +955,26 @@ static Future<void> saveLevelStars(
 
 
 
+//==================================================
+// 🪙 تكلفة فتح المرحلة
+//==================================================
+
+static int getLevelUnlockCost(
+    int level,
+) {
+
+  if(level <= 1){
+
+    return 0;
+
+  }
+
+
+  // كلما تقدم اللاعب تزيد التكلفة
+
+  return 50 + ((level - 2) * 25);
+
+}
 
 
   //==================================================
@@ -933,7 +1086,119 @@ static Future<void> saveLevelStars(
 
 
 
+//==================================================
+// 🔓 شراء مرحلة بالعملات
+//==================================================
 
+static Future<bool> buyLevelWithCoins(
+
+    String levelId,
+
+    int levelNumber,
+
+) async {
+
+
+  final alreadyPurchased =
+      await isLevelPurchased(
+        levelId,
+      );
+
+
+  if(alreadyPurchased){
+
+    return true;
+
+  }
+
+
+
+  final cost =
+      getLevelUnlockCost(
+        levelNumber,
+      );
+
+
+
+  if(cost <= 0){
+
+    return true;
+
+  }
+
+
+
+  final paid =
+      await spendCoins(
+        cost,
+      );
+
+
+
+  if(!paid){
+
+    return false;
+
+  }
+
+
+
+  await unlockLevel(
+    levelId,
+  );
+
+
+  final prefs =
+      await _prefs;
+
+
+  final levels =
+      prefs.getStringList(
+        purchasedLevelsKey,
+      ) ?? [];
+
+
+
+  if(!levels.contains(levelId)){
+
+    levels.add(levelId);
+
+    await prefs.setStringList(
+      purchasedLevelsKey,
+      levels,
+    );
+
+  }
+
+
+  return true;
+
+}
+
+//==================================================
+// 🔍 هل المرحلة مشتراة
+//==================================================
+
+static Future<bool> isLevelPurchased(
+
+    String levelId,
+
+) async {
+
+
+  final prefs =
+      await _prefs;
+
+
+  final levels =
+      prefs.getStringList(
+        purchasedLevelsKey,
+      ) ?? [];
+
+
+  return levels.contains(levelId);
+
+}
 
   //==================================================
   // 🌍 فتح العوالم
@@ -1053,6 +1318,66 @@ static Future<void> saveLevelStars(
 
 
   }
+
+//==================================================
+// ⭐ حفظ فتح بالنجوم
+//==================================================
+
+static Future<void> saveStarPurchase(
+    String id,
+) async {
+
+  final prefs = await _prefs;
+
+
+  final list =
+      prefs.getStringList(
+        purchasedStarsKey,
+      ) ?? [];
+
+
+  if(!list.contains(id)){
+
+    list.add(id);
+
+
+    await prefs.setStringList(
+      purchasedStarsKey,
+      list,
+    );
+
+  }
+
+}
+
+
+//==================================================
+// 💎 استخدام الجواهر
+//==================================================
+
+static Future<bool> useGemsForUnlock(
+
+    int amount,
+
+) async {
+
+
+  final paid =
+      await spendGems(
+        amount,
+      );
+
+
+  if(!paid){
+
+    return false;
+
+  }
+
+
+  return true;
+
+}
 
   //==================================================
   // 🎮 آخر مستوى لعب
