@@ -730,12 +730,11 @@ if(showCoinAnimation &&
                     },
 
 
-                    onPanEnd: (_) {
+                    onPanEnd: (_) async {
 
   controller.onPanEnd();
 
 
-  // القطعة الصحيحة ثبتت
   if(controller.lastPlacedPosition != null &&
       lastCoinPositionCheck !=
       controller.pieces.where((p)=>p.isPlaced).length){
@@ -746,16 +745,17 @@ if(showCoinAnimation &&
 
 
     // تحديث عداد العملات
-    RewardManager.addCoins(1);
+    await RewardManager.addCoins(1);
 
-setState(() {
 
-  coinAnimationStart =
-      controller.lastPlacedPosition;
+    setState(() {
 
-  showCoinAnimation = true;
+      coinAnimationStart =
+          controller.lastPlacedPosition;
 
-});
+      showCoinAnimation = true;
+
+    });
 
   }
 
@@ -763,7 +763,6 @@ setState(() {
   checkWin();
 
 },
-
 
                     child: CustomPaint(
 
