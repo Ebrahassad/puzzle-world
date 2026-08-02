@@ -56,12 +56,14 @@ static final ValueNotifier<int> rewardNotifier =
       amount,
     );
 
-    rewardNotifier.value++;
+
+    // تحديث الواجهة
+    rewardNotifier.notifyListeners();
+
 
   } catch (_) {}
 
 }
-
 
 
 //==================================================
@@ -86,7 +88,7 @@ static Future<bool> spendCoins(
 
     if(result){
 
-      rewardNotifier.value++;
+      rewardNotifier.notifyListeners();
 
     }
 
@@ -150,7 +152,7 @@ static Future<bool> spendCoins(
     );
 
 
-    rewardNotifier.value++;
+    rewardNotifier.notifyListeners();
 
 
   } catch (_) {}
@@ -180,7 +182,7 @@ static Future<bool> spendGems(
 
     if(result){
 
-      rewardNotifier.value++;
+      rewardNotifier.notifyListeners();
 
     }
 
@@ -238,7 +240,7 @@ static Future<bool> spendGems(
       amount,
     );
 
-    rewardNotifier.value++;
+    rewardNotifier.notifyListeners();
 
   } catch (_) {}
 
@@ -267,7 +269,7 @@ static Future<bool> spendStars(
 
     if(result){
 
-      rewardNotifier.value++;
+      rewardNotifier.notifyListeners();
 
     }
 
