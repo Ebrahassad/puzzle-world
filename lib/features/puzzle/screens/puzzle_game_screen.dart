@@ -44,11 +44,13 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
   bool puzzleCreated = false;
 
+bool gameFinished = false;
 
 
 late Stopwatch stopwatch;
 
-int lastCoinPositionCheck = 0;
+int lastPlacedCount = 0;
+
 Offset? coinAnimationStart;
 bool showCoinAnimation = false;
 
@@ -345,49 +347,44 @@ stopwatch = Stopwatch()..start();
   //==================================================
   // فحص الفوز
   //==================================================
+Future<void> checkWin() async {
 
-  void checkWin() async {
+  if (gameFinished) {
+    return;
+  }
 
   if (!controller.isSolved) {
     return;
   }
 
-  stopwatch.stop();
+  gameFinished = true;
 
-  // ⭐ إضافة نجمة عند إنهاء المرحلة
-  await RewardManager.addStars(1);
+stopwatch.stop();
+
+final reward =
+    await RewardManager.completePuzzle(
+      rewardKey: widget.level.id,
+    );
 
 if (!mounted) return;
-
   Navigator.pushReplacement(
-
     context,
-
     MaterialPageRoute(
-
       builder: (_) => PuzzleResultAnimationScreen(
-
         image: widget.level.image,
-
         starKey: starKey,
-
         level: widget.level,
-
         result: GameResultModel(
           stars: 1,
           moves: 0,
           time: stopwatch.elapsed,
         ),
-
         island: widget.island,
-
       ),
-
     ),
-
   );
-
 }
+
 
   @override
   Widget build(BuildContext context) {
@@ -730,23 +727,33 @@ if(showCoinAnimation &&
                     },
 
 
-                    onPanEnd: (_) async {
+ onPanEnd: (_) async {
 
   controller.onPanEnd();
 
 
-  if(controller.lastPlacedPosition != null &&
-      lastCoinPositionCheck !=
-      controller.pieces.where((p)=>p.isPlaced).length){
+  await Future.delayed(
+    const Duration(milliseconds: 100),
+  );
 
 
-    lastCoinPositionCheck =
-        controller.pieces.where((p)=>p.isPlaced).length;
+  if(!mounted) return;
 
 
-    // تحديث عداد العملات
-    await RewardManager.addCoins(1);
+  final placedCount =
+      controller.pieces
+          .where((p)=>p.isPlaced)
+          .length;
 
+
+  if(placedCount > lastPlacedCount){
+
+  lastPlacedCount = placedCount;
+
+  await RewardManager.addCoins(1);
+
+
+  if(controller.lastPlacedPosition != null){
 
     setState(() {
 
@@ -759,10 +766,14 @@ if(showCoinAnimation &&
 
   }
 
+}
 
-  checkWin();
+
+  await checkWin();
 
 },
+
+
 
                     child: CustomPaint(
 
