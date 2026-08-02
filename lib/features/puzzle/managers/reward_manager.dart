@@ -131,28 +131,31 @@ static Future<bool> spendCoins(
 
   static Future<void> addGems(
 
-      int amount,
+    int amount,
 
-      ) async {
-
-
-    if(amount <= 0){
-
-      return;
-
-    }
+    ) async {
 
 
-    try {
+  if(amount <= 0){
 
-      await PuzzleProgressManager.addGems(
-        amount,
-      );
-
-    } catch (_) {}
+    return;
 
   }
 
+
+  try {
+
+    await PuzzleProgressManager.addGems(
+      amount,
+    );
+
+
+    rewardNotifier.value++;
+
+
+  } catch (_) {}
+
+}
 
 
 //==================================================
