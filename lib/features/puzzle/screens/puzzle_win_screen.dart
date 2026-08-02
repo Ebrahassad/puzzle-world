@@ -2,15 +2,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-import '../models/game_result_model.dart';
-import '../models/puzzle_level_model.dart';
-
 
 class PuzzleWinScreen extends StatefulWidget {
-
-  final GameResultModel result;
-
-  final PuzzleLevelModel level;
 
 
   final VoidCallback? onBackToIsland;
@@ -20,13 +13,10 @@ class PuzzleWinScreen extends StatefulWidget {
   final VoidCallback? onExit;
 
 
+
   const PuzzleWinScreen({
 
     super.key,
-
-    required this.result,
-
-    required this.level,
 
     this.onBackToIsland,
 
@@ -35,6 +25,7 @@ class PuzzleWinScreen extends StatefulWidget {
     this.onExit,
 
   });
+
 
 
   @override
@@ -61,11 +52,15 @@ class _PuzzleWinScreenState
   late Animation<double> scaleAnimation;
 
 
+  late Animation<double> glowAnimation;
+
+
 
   @override
   void initState() {
 
     super.initState();
+
 
 
     animationController =
@@ -74,7 +69,7 @@ class _PuzzleWinScreenState
       vsync: this,
 
       duration:
-          const Duration(seconds: 2),
+          const Duration(seconds: 3),
 
     );
 
@@ -123,9 +118,37 @@ class _PuzzleWinScreenState
 
 
 
-    animationController.forward();
+    glowAnimation =
+        Tween<double>(
+
+      begin: 0.05,
+
+      end: 0.15,
+
+    ).animate(
+
+      CurvedAnimation(
+
+        parent: animationController,
+
+        curve: Curves.easeInOut,
+
+      ),
+
+    );
+
+
+
+    animationController.repeat(
+      reverse: true,
+    );
 
   }
+
+
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -134,20 +157,25 @@ class _PuzzleWinScreenState
 
       backgroundColor: Colors.transparent,
 
+
       body: FadeTransition(
 
         opacity: fadeAnimation,
 
+
         child: ScaleTransition(
 
           scale: scaleAnimation,
+
 
           child: Stack(
 
             children: [
 
 
-              // الخلفية الرئيسية
+
+              // الخلفية الجاهزة
+
               Positioned.fill(
 
                 child: Image.asset(
@@ -162,51 +190,76 @@ class _PuzzleWinScreenState
 
 
 
-              // طبقة شفافية خفيفة فوق الخلفية
+
+
+              // طبقة شفافية
+
               Positioned.fill(
 
                 child: Container(
 
-                  color: Colors.black.withOpacity(0.18),
-
-                ),
-
-              ),
-
-
-
-              // تأثير إضاءة خفيف
-              Positioned.fill(
-
-                child: IgnorePointer(
-
-                  child: Container(
-
-                    decoration: BoxDecoration(
-
-                      gradient: RadialGradient(
-
-                        center: Alignment.center,
-
-                        radius: 0.8,
-
-                        colors: [
-
-                          Colors.white.withOpacity(0.08),
-
-                          Colors.transparent,
-
-                        ],
-
-                      ),
-
-                    ),
-
+                  color: Colors.black.withOpacity(
+                    0.18,
                   ),
 
                 ),
 
               ),
+
+
+
+
+
+              // إضاءة متحركة خفيفة
+
+              Positioned.fill(
+
+                child: AnimatedBuilder(
+
+                  animation: glowAnimation,
+
+                  builder: (context, child) {
+
+                    return IgnorePointer(
+
+                      child: Container(
+
+                        decoration:
+                            BoxDecoration(
+
+                          gradient:
+                              RadialGradient(
+
+                            center:
+                                Alignment.center,
+
+                            radius:
+                                0.8,
+
+                            colors: [
+
+                              Colors.white.withOpacity(
+                                glowAnimation.value,
+                              ),
+
+                              Colors.transparent,
+
+                            ],
+
+                          ),
+
+                        ),
+
+                      ),
+
+                    );
+
+                  },
+
+                ),
+
+              ),
+
 
 
 
@@ -218,23 +271,18 @@ class _PuzzleWinScreenState
                   children: [
 
 
+
                     const Spacer(),
 
 
-
-                    // مساحة فارغة لأن التصميم موجود داخل الصورة
-
-                    const SizedBox(height: 120),
-
-
-
-                    // الأزرار في الأسفل
 
                     buildNavigationButtons(),
 
 
 
-                    const SizedBox(height: 30),
+                    const SizedBox(
+                      height: 30,
+                    ),
 
 
                   ],
@@ -256,23 +304,33 @@ class _PuzzleWinScreenState
 
   }
 
+
+
+
+
+
   Widget buildNavigationButtons() {
+
 
     return Padding(
 
-      padding: const EdgeInsets.symmetric(
-        horizontal: 20,
-      ),
+      padding:
+          const EdgeInsets.symmetric(
+            horizontal: 20,
+          ),
+
 
       child: Row(
 
         mainAxisAlignment:
             MainAxisAlignment.spaceBetween,
 
+
         children: [
 
 
-          // العودة للجزيرة (يسار)
+
+          // العودة للجزيرة
 
           glassButton(
 
@@ -282,11 +340,7 @@ class _PuzzleWinScreenState
 
             onTap: () {
 
-              if (widget.onBackToIsland != null) {
-
-                widget.onBackToIsland!();
-
-              }
+              widget.onBackToIsland?.call();
 
             },
 
@@ -295,7 +349,8 @@ class _PuzzleWinScreenState
 
 
 
-          // العودة للعوالم (وسط)
+
+          // العودة للعوالم
 
           glassButton(
 
@@ -305,11 +360,7 @@ class _PuzzleWinScreenState
 
             onTap: () {
 
-              if (widget.onBackToWorld != null) {
-
-                widget.onBackToWorld!();
-
-              }
+              widget.onBackToWorld?.call();
 
             },
 
@@ -318,7 +369,8 @@ class _PuzzleWinScreenState
 
 
 
-          // خروج (يمين)
+
+          // خروج
 
           glassButton(
 
@@ -328,11 +380,11 @@ class _PuzzleWinScreenState
 
             onTap: () {
 
-              if (widget.onExit != null) {
+              if(widget.onExit != null){
 
                 widget.onExit!();
 
-              } else {
+              }else{
 
                 Navigator.pop(context);
 
@@ -343,6 +395,7 @@ class _PuzzleWinScreenState
           ),
 
 
+
         ],
 
       ),
@@ -350,6 +403,8 @@ class _PuzzleWinScreenState
     );
 
   }
+
+
 
 
 
@@ -370,66 +425,95 @@ class _PuzzleWinScreenState
 
       onTap: onTap,
 
+
       child: ClipRRect(
 
         borderRadius:
             BorderRadius.circular(20),
 
+
         child: BackdropFilter(
 
           filter: ui.ImageFilter.blur(
 
-  sigmaX: 8,
+            sigmaX: 8,
 
-  sigmaY: 8,
+            sigmaY: 8,
 
-),
+          ),
+
+
+
           child: Container(
 
             width: 90,
 
-            padding: const EdgeInsets.symmetric(
+
+            padding:
+                const EdgeInsets.symmetric(
 
               vertical: 10,
 
             ),
 
-            decoration: BoxDecoration(
 
-              color: Colors.white.withOpacity(0.18),
+
+            decoration:
+                BoxDecoration(
+
+              color:
+                  Colors.white.withOpacity(
+                    0.18,
+                  ),
+
 
               borderRadius:
                   BorderRadius.circular(20),
 
-              border: Border.all(
 
-                color: Colors.white.withOpacity(0.35),
+              border:
+                  Border.all(
+
+                color:
+                    Colors.white.withOpacity(
+                      0.35,
+                    ),
 
               ),
 
             ),
+
+
+
 
             child: Column(
 
               mainAxisSize:
                   MainAxisSize.min,
 
+
               children: [
+
 
 
                 Icon(
 
                   icon,
 
-                  color: Colors.white,
+                  color:
+                      Colors.white,
 
-                  size: 24,
+                  size:
+                      24,
 
                 ),
 
 
 
-                const SizedBox(height: 5),
+                const SizedBox(
+                  height: 5,
+                ),
+
 
 
 
@@ -437,11 +521,14 @@ class _PuzzleWinScreenState
 
                   text,
 
-                  style: const TextStyle(
+                  style:
+                      const TextStyle(
 
-                    color: Colors.white,
+                    color:
+                        Colors.white,
 
-                    fontSize: 13,
+                    fontSize:
+                        13,
 
                     fontWeight:
                         FontWeight.bold,
@@ -449,6 +536,7 @@ class _PuzzleWinScreenState
                   ),
 
                 ),
+
 
 
               ],
@@ -469,6 +557,7 @@ class _PuzzleWinScreenState
 
 
 
+
   @override
   void dispose() {
 
@@ -477,5 +566,6 @@ class _PuzzleWinScreenState
     super.dispose();
 
   }
+
 
 }
