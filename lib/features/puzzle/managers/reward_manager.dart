@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/reward_result_model.dart';
 import '../managers/puzzle_progress_manager.dart';
@@ -7,8 +8,12 @@ import '../managers/puzzle_progress_manager.dart';
 
 class RewardManager {
 
+ const RewardManager._();
 
-  const RewardManager._();
+static final ValueNotifier<int> rewardNotifier =
+    ValueNotifier(0);
+
+ 
 
 
 
@@ -38,29 +43,24 @@ class RewardManager {
 
 
   static Future<void> addCoins(
+    int amount,
+) async {
 
-      int amount,
-
-      ) async {
-
-
-    if(amount <= 0){
-
-      return;
-
-    }
-
-
-    try {
-
-      await PuzzleProgressManager.addCoins(
-        amount,
-      );
-
-    } catch (_) {}
-
+  if(amount <= 0){
+    return;
   }
 
+  try {
+
+    await PuzzleProgressManager.addCoins(
+      amount,
+    );
+
+    rewardNotifier.value++;
+
+  } catch (_) {}
+
+}
 
 
 
@@ -150,29 +150,24 @@ class RewardManager {
 
 
   static Future<void> addStars(
+    int amount,
+) async {
 
-      int amount,
-
-      ) async {
-
-
-    if(amount <= 0){
-
-      return;
-
-    }
-
-
-    try {
-
-      await PuzzleProgressManager.addStars(
-        amount,
-      );
-
-    } catch (_) {}
-
+  if(amount <= 0){
+    return;
   }
 
+  try {
+
+    await PuzzleProgressManager.addStars(
+      amount,
+    );
+
+    rewardNotifier.value++;
+
+  } catch (_) {}
+
+}
 
 
 
