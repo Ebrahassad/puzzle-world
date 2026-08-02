@@ -40,7 +40,7 @@ class _IslandScreenState extends State<IslandScreen>
   // شفافية خفيفة لخلفية وصورة الجزيرة فقط، حتى يبرز مسار المراحل
   // بوضوح فوقها دون أن تختفي تفاصيل رسم الجزيرة.
   static const double islandBackgroundOpacity = 0.80;
-  static const double islandImageOpacity = 0.88;
+static const double islandImageOpacity = 0.88;
 
   late final List<PuzzleLevelModel> levels;
 
