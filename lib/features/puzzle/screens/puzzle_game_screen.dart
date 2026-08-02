@@ -418,11 +418,11 @@ island: widget.island,
 
             colors: [
 
-              Color(0xff10283d),
+  Color(0xffD8C7A5),
 
-              Color(0xff1c4966),
+  Color(0xffF3E7CF),
 
-            ],
+],
 
           ),
 
