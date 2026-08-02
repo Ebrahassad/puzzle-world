@@ -3,14 +3,13 @@ import 'package:flutter/material.dart';
 
 import '../engine/puzzle_controller.dart';
 import '../engine/puzzle_painter.dart';
-import 'puzzle_win_screen.dart';
-import '../models/game_result_model.dart';
 import '../models/puzzle_level_model.dart';
 
-
+import '../widgets/game_toolbar.dart';
 
 
 class PuzzleGameScreen extends StatefulWidget {
+
   final PuzzleLevelModel level;
 
   const PuzzleGameScreen({
@@ -18,172 +17,324 @@ class PuzzleGameScreen extends StatefulWidget {
     required this.level,
   });
 
+
   @override
-  State<PuzzleGameScreen> createState() => _PuzzleGameScreenState();
+  State<PuzzleGameScreen> createState() =>
+      _PuzzleGameScreenState();
 }
 
-class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
+
+
+class _PuzzleGameScreenState extends State<PuzzleGameScreen>
+    with SingleTickerProviderStateMixin {
+
+
   ui.Image? image;
+
 
   late PuzzleController controller;
 
+
   bool loading = true;
+
 
   bool puzzleCreated = false;
 
+
+
+  //==============================
+  // صورة الفوز
+  //==============================
+
+  bool showCompletedImage = false;
+
+
+  late AnimationController imageWinController;
+
+
+  late Animation<double> imageScale;
+
+
+
+
   final double boardSize = 360;
+
 
   final double trayHeight = 110;
 
+
+
   final GlobalKey overlayKey = GlobalKey();
+
 
   final GlobalKey boardKey = GlobalKey();
 
+
   final GlobalKey trayKey = GlobalKey();
+
+
 
   Rect boardRect = Rect.zero;
 
+
   Rect scatterArea = Rect.zero;
+
+
+final GlobalKey starKey = GlobalKey();
+
+final GlobalKey coinKey = GlobalKey();
+
+
+  //==============================
+  // بداية الشاشة
+  //==============================
 
   @override
   void initState() {
+
     super.initState();
+
+
+    imageWinController =
+        AnimationController(
+          vsync: this,
+          duration:
+          const Duration(milliseconds: 700),
+        );
+
+
+    imageScale =
+        Tween<double>(
+          begin: 0.2,
+          end: 1,
+        ).animate(
+          CurvedAnimation(
+            parent: imageWinController,
+            curve: Curves.elasticOut,
+          ),
+        );
+
+
+
     _loadImage();
+
   }
 
   //==================================================
-  // تحميل الصورة فقط
+  // تحميل الصورة
   //==================================================
 
   Future<void> _loadImage() async {
+
     final provider = AssetImage(
       widget.level.image,
     );
+
 
     final stream = provider.resolve(
       const ImageConfiguration(),
     );
 
-    debugPrint(
-      "START LOAD: ${widget.level.image}",
-    );
 
     stream.addListener(
       ImageStreamListener(
         (info, _) {
-          if (!mounted) {
-            return;
-          }
+
+          if (!mounted) return;
+
 
           image = info.image;
+
 
           setState(() {
             loading = false;
           });
 
-          WidgetsBinding.instance.addPostFrameCallback((_) {
+
+          WidgetsBinding.instance
+              .addPostFrameCallback((_) {
+
             _calculateBoardPosition();
+
           });
+
         },
+
         onError: (error, stack) {
+
           debugPrint(
-            "IMAGE ERROR: ${widget.level.image}",
+            "IMAGE ERROR ${widget.level.image}",
           );
 
+
           if (mounted) {
+
             setState(() {
               loading = false;
             });
+
           }
+
         },
       ),
     );
+
   }
 
+
+
+
+
+
+
   //==================================================
-  // حساب مكان اللوحة وشريط القطع
+  // حساب أماكن اللوحة والشريط
   //==================================================
 
   void _calculateBoardPosition() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
-      }
 
-      final overlayContext = overlayKey.currentContext;
-      final boardContext = boardKey.currentContext;
-      final trayContext = trayKey.currentContext;
+
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) {
+
+
+      if (!mounted) return;
+
+
+
+      final overlayContext =
+          overlayKey.currentContext;
+
+
+      final boardContext =
+          boardKey.currentContext;
+
+
+      final trayContext =
+          trayKey.currentContext;
+
+
 
       if (overlayContext == null ||
           boardContext == null ||
           trayContext == null) {
-        debugPrint(
-          "BOARD NOT READY",
-        );
+
 
         Future.delayed(
           const Duration(milliseconds: 100),
-          () {
+              () {
+
             if (mounted) {
               _calculateBoardPosition();
             }
+
           },
         );
 
+
         return;
+
       }
 
+
+
+
+
       final RenderBox overlayBox =
-          overlayContext.findRenderObject() as RenderBox;
+          overlayContext.findRenderObject()
+          as RenderBox;
+
+
 
       final RenderBox boardBox =
-          boardContext.findRenderObject() as RenderBox;
+          boardContext.findRenderObject()
+          as RenderBox;
+
+
 
       final RenderBox trayBox =
-          trayContext.findRenderObject() as RenderBox;
+          trayContext.findRenderObject()
+          as RenderBox;
 
-      final boardLocal = overlayBox.globalToLocal(
-        boardBox.localToGlobal(Offset.zero),
-      );
 
-      final trayLocal = overlayBox.globalToLocal(
-        trayBox.localToGlobal(Offset.zero),
-      );
 
-      boardRect = Rect.fromLTWH(
-        boardLocal.dx,
-        boardLocal.dy,
-        boardSize,
-        boardSize,
-      );
 
-      scatterArea = Rect.fromLTWH(
-        trayLocal.dx,
-        trayLocal.dy,
-        trayBox.size.width,
-        trayBox.size.height,
-      );
 
-      debugPrint(
-        "BOARD RECT = $boardRect",
-      );
+      final boardLocal =
+          overlayBox.globalToLocal(
+            boardBox.localToGlobal(
+              Offset.zero,
+            ),
+          );
+
+
+
+      final trayLocal =
+          overlayBox.globalToLocal(
+            trayBox.localToGlobal(
+              Offset.zero,
+            ),
+          );
+
+
+
+
+      boardRect =
+          Rect.fromLTWH(
+            boardLocal.dx,
+            boardLocal.dy,
+            boardSize,
+            boardSize,
+          );
+
+
+
+      scatterArea =
+          Rect.fromLTWH(
+            trayLocal.dx,
+            trayLocal.dy,
+            trayBox.size.width,
+            trayBox.size.height,
+          );
+
+
 
       _createPuzzle();
+
+
     });
+
   }
 
+
+
+
+
+
+
   //==================================================
-  // إنشاء قطع البازل فقط
+  // إنشاء البازل
   //==================================================
 
   void _createPuzzle() {
+
+
     if (image == null || puzzleCreated) {
       return;
     }
 
+
+
     puzzleCreated = true;
 
-    controller = PuzzleController(snapTolerance: 28);
+
+
+    controller =
+        PuzzleController(
+          snapTolerance: 28,
+        );
+
+
 
     controller.initialize(
       image: image!,
@@ -193,167 +344,561 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       scatterArea: scatterArea,
     );
 
-    debugPrint(
-      "PUZZLE PIECES = ${controller.pieces.length}",
-    );
+
 
     setState(() {});
+
+
   }
 
+
+
+
+
+
+
   //==================================================
-  // تحقق من الفوز
+  // فحص الفوز
   //==================================================
 
   void checkWin() {
-  if (!controller.isSolved) {
+
+  if (!controller.isSolved || showCompletedImage) {
     return;
   }
 
+
   Future.delayed(
-    const Duration(milliseconds: 500),
+    const Duration(milliseconds: 600),
     () {
+
       if (!mounted) return;
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => PuzzleWinScreen(
-            result: GameResultModel(
-              moves: controller.moves,
-              seconds: controller.seconds,
-              stars: 3,
-            ),
-            difficulty: widget.level.gridSize,
-            worldId: widget.level.worldId,
-            level: widget.level.levelNumber,
-          ),
-        ),
-      );
+      setState(() {
+        showCompletedImage = true;
+      });
+
+      imageWinController.forward();
+
     },
   );
+
 }
+
 
   @override
   Widget build(BuildContext context) {
+
+
     if (image == null || loading) {
+
       return const Scaffold(
+
         body: Center(
+
           child: CircularProgressIndicator(),
+
         ),
+
       );
+
     }
+
+
+
 
     return Scaffold(
-      backgroundColor: const Color(0xff18354f),
-      body: SafeArea(
-        child: Stack(
-          key: overlayKey,
-          children: [
-            Column(
-              children: [
-                const SizedBox(
-                  height: 12,
-                ),
 
-                //==============================
-                // شريط القطع
-                //==============================
+      body: Container(
 
-                Container(
-                  key: trayKey,
-                  height: trayHeight,
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black26,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.white24,
-                    ),
-                  ),
-                ),
+        decoration: const BoxDecoration(
 
-                const SizedBox(
-                  height: 20,
-                ),
+          gradient: LinearGradient(
 
-                //==============================
-                // لوحة البازل
-                //==============================
+            begin: Alignment.topCenter,
 
-                Expanded(
-                  child: Center(
-                    child: Container(
-                      key: boardKey,
-                      width: boardSize,
-                      height: boardSize,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.06),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: Colors.white24,
-                          width: 2,
-                        ),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(18),
-                        child: Opacity(
-                          opacity: 0.07,
-                          child: Image.asset(
-                            widget.level.image,
-                            width: boardSize,
-                            height: boardSize,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            end: Alignment.bottomCenter,
 
-            //==============================
-            // طبقة رسم وسحب القطع الموحدة
-            //==============================
+            colors: [
 
-            if (puzzleCreated)
-              Positioned.fill(
-                child: GestureDetector(
-                  onPanStart: (details) {
-                    controller.onPanStart(details.localPosition);
-                  },
-                  onPanUpdate: (details) {
-                    controller.onPanUpdate(details.localPosition);
-                  },
-                  onPanEnd: (_) {
-                    controller.onPanEnd();
-                    checkWin();
-                  },
-                  child: CustomPaint(
-                    painter: PuzzlePainter(
-                      pieces: controller.pieces,
-                      image: image!,
-                      boardRect: controller.boardRect,
-                      rows: widget.level.gridSize,
-                      cols: widget.level.gridSize,
-                      repaint: controller,
-                    ),
-                  ),
-                ),
-              ),
-          ],
+              Color(0xff10283d),
+
+              Color(0xff1c4966),
+
+            ],
+
+          ),
+
         ),
-      ),
-    );
-  } 
 
- @override
-  void dispose() {
-    if (puzzleCreated) {
-      controller.dispose();
-    }
-    super.dispose();
+
+
+
+        child: SafeArea(
+
+          child: Stack(
+
+            key: overlayKey,
+
+            children: [
+
+
+
+
+              //==========================================
+              // Game Toolbar
+              //==========================================
+
+              Positioned(
+
+                top: 8,
+
+                left: 8,
+
+                right: 8,
+
+                child: GameToolbar(
+
+                  starKey: starKey,
+
+                  coinKey: coinKey,
+
+                ),
+
+              ),
+
+
+
+
+
+
+              Column(
+
+                children: [
+
+
+                  const SizedBox(
+
+                    height: 75,
+
+                  ),
+
+
+
+
+
+                  //==========================================
+                  // شريط القطع
+                  //==========================================
+
+                  Container(
+
+                    key: trayKey,
+
+                    height: trayHeight,
+
+
+                    margin: const EdgeInsets.symmetric(
+
+                      horizontal: 12,
+
+                    ),
+
+
+
+                    decoration: BoxDecoration(
+
+
+                      color: Colors.white.withOpacity(0.08),
+
+
+                      borderRadius:
+                      BorderRadius.circular(22),
+
+
+
+                      boxShadow: [
+
+
+                        BoxShadow(
+
+                          color:
+                          Colors.black.withOpacity(0.25),
+
+                          blurRadius: 20,
+
+                          offset:
+                          const Offset(0,8),
+
+                        ),
+
+
+                      ],
+
+
+
+                      border: Border.all(
+
+                        color:
+                        Colors.white.withOpacity(0.15),
+
+                      ),
+
+
+                    ),
+
+
+                  ),
+
+
+
+
+
+                  const SizedBox(
+
+                    height: 20,
+
+                  ),
+
+
+
+
+
+                  //==========================================
+                  // لوحة البازل
+                  //==========================================
+
+                  Expanded(
+
+                    child: Center(
+
+
+                      child: Container(
+
+                        key: boardKey,
+
+
+                        width: boardSize,
+
+                        height: boardSize,
+
+
+
+                        decoration: BoxDecoration(
+
+
+                          color:
+                          Colors.white.withOpacity(0.05),
+
+
+
+                          borderRadius:
+                          BorderRadius.circular(24),
+
+
+
+                          boxShadow: [
+
+
+                            BoxShadow(
+
+                              color:
+                              Colors.black.withOpacity(0.35),
+
+                              blurRadius: 25,
+
+                              spreadRadius: 2,
+
+                            ),
+
+
+                          ],
+
+
+
+                          border: Border.all(
+
+                            color:
+                            Colors.white.withOpacity(0.18),
+
+                            width: 2,
+
+                          ),
+
+
+                        ),
+
+
+
+
+
+                        child: ClipRRect(
+
+
+                          borderRadius:
+                          BorderRadius.circular(18),
+
+
+
+                          child: Opacity(
+
+
+                            opacity: 0.07,
+
+
+
+                            child: Image.asset(
+
+                              widget.level.image,
+
+
+                              width: boardSize,
+
+                              height: boardSize,
+
+
+                              fit: BoxFit.cover,
+
+                            ),
+
+
+                          ),
+
+
+                        ),
+
+
+                      ),
+
+
+                    ),
+
+
+                  ),
+
+
+                ],
+
+              ),
+
+
+
+
+            //==========================================
+              // طبقة رسم وسحب القطع
+              // (لم يتم تعديل منطق اللعب)
+              //==========================================
+
+              if (puzzleCreated)
+
+                Positioned.fill(
+
+                  child: GestureDetector(
+
+                    onPanStart: (details) {
+
+                      controller.onPanStart(
+                        details.localPosition,
+                      );
+
+                    },
+
+
+                    onPanUpdate: (details) {
+
+                      controller.onPanUpdate(
+                        details.localPosition,
+                      );
+
+                    },
+
+
+                    onPanEnd: (_) {
+
+                      controller.onPanEnd();
+
+                      checkWin();
+
+                    },
+
+
+                    child: CustomPaint(
+
+                      painter: PuzzlePainter(
+
+                        pieces: controller.pieces,
+
+                        image: image!,
+
+
+                        boardRect: controller.boardRect,
+
+
+                        rows: widget.level.gridSize,
+
+
+                        cols: widget.level.gridSize,
+
+
+                        repaint: controller,
+
+                      ),
+
+
+                    ),
+
+
+                  ),
+
+
+                ),
+
+
+
+              //==========================================
+              // صورة الفوز النهائية
+              // تظهر فوق الشاشة بعد اكتمال البازل
+              //==========================================
+
+              if (showCompletedImage)
+
+                Center(
+
+                  child: ScaleTransition(
+
+                    scale: imageScale,
+
+
+                    child: Container(
+
+                      width: 300,
+
+                      height: 300,
+
+
+                      padding:
+                      const EdgeInsets.all(12),
+
+
+
+                      decoration: BoxDecoration(
+
+
+                        color: Colors.white,
+
+
+
+                        borderRadius:
+                        BorderRadius.circular(28),
+
+
+
+                        boxShadow: [
+
+
+                          BoxShadow(
+
+                            color:
+                            Colors.black.withOpacity(0.45),
+
+                            blurRadius: 30,
+
+                            spreadRadius: 5,
+
+                          ),
+
+
+                        ],
+
+
+
+                        border: Border.all(
+
+                          color: Colors.amber,
+
+                          width: 6,
+
+                        ),
+
+
+                      ),
+
+
+
+
+
+                      child: ClipRRect(
+
+
+                        borderRadius:
+                        BorderRadius.circular(18),
+
+
+
+                        child: Image.asset(
+
+
+                          widget.level.image,
+
+
+                          fit: BoxFit.cover,
+
+
+                        ),
+
+
+                      ),
+
+
+                    ),
+
+
+                  ),
+
+
+                ),
+
+  
+
+
+
+            ],
+
+
+          ),
+
+        ),
+
+      ),
+
+    );
+
+
   }
+
+
+
+
+
+
+  @override
+  void dispose() {
+
+
+    if (puzzleCreated) {
+
+      controller.dispose();
+
+    }
+
+
+    imageWinController.dispose();
+
+
+    super.dispose();
+
+
+  }
+
+
 }
