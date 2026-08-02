@@ -133,9 +133,18 @@ void restoreProgress(
     piece.isPlaced =
         saved["placed"] ?? false;
 
+
+    if(piece.isPlaced){
+
+      _lastPlacedPosition =
+          piece.currentPosition +
+          piece.path.getBounds().center;
+
+    }
+
   }
 
-
+_zCounter = _pieces.length;
   notifyListeners();
 
 }
