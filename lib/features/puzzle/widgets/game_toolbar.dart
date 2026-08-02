@@ -1174,6 +1174,148 @@ class _AnimatedStarCounterState
 
 }
 
+class ImageCounterBox extends StatelessWidget {
+
+  final String image;
+  final int value;
+
+
+  const ImageCounterBox({
+
+    super.key,
+
+    required this.image,
+
+    required this.value,
+
+  });
+
+
+
+  @override
+  Widget build(BuildContext context) {
+
+
+    return Container(
+
+      padding:
+      const EdgeInsets.symmetric(
+
+        horizontal: 10,
+
+        vertical: 6,
+
+      ),
+
+
+      decoration:
+      BoxDecoration(
+
+        color:
+        Colors.white24,
+
+
+        borderRadius:
+        BorderRadius.circular(18),
+
+
+
+        border:
+        Border.all(
+
+          color:
+          Colors.white30,
+
+        ),
+
+
+
+        boxShadow: [
+
+          BoxShadow(
+
+            color:
+            Colors.black.withOpacity(0.25),
+
+            blurRadius:
+            8,
+
+            offset:
+            const Offset(0,4),
+
+          ),
+
+        ],
+
+      ),
+
+
+
+      child: Row(
+
+
+        mainAxisSize:
+        MainAxisSize.min,
+
+
+        children: [
+
+
+          Image.asset(
+
+            image,
+
+            width:
+            30,
+
+            height:
+            30,
+
+          ),
+
+
+
+          const SizedBox(
+
+            width:
+            5,
+
+          ),
+
+
+
+          Text(
+
+            "$value",
+
+
+            style:
+            const TextStyle(
+
+              color:
+              Colors.white,
+
+              fontSize:
+              18,
+
+              fontWeight:
+              FontWeight.bold,
+
+            ),
+
+          ),
+
+
+        ],
+
+      ),
+
+    );
+
+  }
+
+}
+
 class CoinCounterBox extends StatelessWidget {
 
 
