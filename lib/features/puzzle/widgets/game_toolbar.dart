@@ -9,7 +9,8 @@ import '../models/reward_result_model.dart';
 class GameToolbar extends StatefulWidget {
 
 
-  final String logo;
+  final String logo =
+    "assets/images/ui/puzzle_logo.png";
 
   final VoidCallback? onBack;
 
@@ -21,8 +22,6 @@ final GlobalKey coinKey;
 
   super.key,
 
-  required this.logo,
-
   required this.starKey,
 
   required this.coinKey,
@@ -30,7 +29,6 @@ final GlobalKey coinKey;
   this.onBack,
 
 });
-
 
   @override
   State<GameToolbar> createState() =>
