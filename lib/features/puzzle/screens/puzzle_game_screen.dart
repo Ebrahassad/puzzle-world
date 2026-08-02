@@ -51,6 +51,8 @@ bool gameFinished = false;
 
 bool checkingSavedGame = true;
 
+bool soundEnabled = true;
+
 Map<String, dynamic>? savedGameData;
 
 
@@ -513,6 +515,49 @@ Future<void> saveCurrentGame() async {
 }
 
 
+Future<void> restartGame() async {
+
+  final confirm = await showDialog<bool>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text("إعادة اللعبة"),
+        content: const Text("هل تريد إعادة اللعبة من البداية؟"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("لا"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("نعم"),
+          ),
+        ],
+      );
+    },
+  );
+
+  if (confirm != true) return;
+
+  if (puzzleCreated) {
+    controller.dispose();
+  }
+
+  savedGameData = null;
+
+  setState(() {
+    puzzleCreated = false;
+    gameFinished = false;
+    moves = 0;
+    lastPlacedCount = 0;
+  });
+
+  stopwatch
+    ..reset()
+    ..start();
+
+  _createPuzzle();
+}
   //==================================================
   // فحص الفوز
   //==================================================
@@ -626,6 +671,7 @@ if (!mounted) return;
 
   coinKey: coinKey,
 
+soundEnabled: soundEnabled,
 
   onSave: () async {
 
@@ -636,24 +682,9 @@ if (!mounted) return;
 
   onRestart: () {
 
-    if (puzzleCreated) {
+  restartGame();
 
-      controller.dispose();
-
-    }
-
-
-    setState(() {
-
-      puzzleCreated = false;
-
-    });
-
-
-    _createPuzzle();
-
-  },
-
+},
 
   onExit: () {
 
@@ -662,18 +693,21 @@ if (!mounted) return;
   },
 
 
-  soundEnabled: true,
+  
+onSoundChanged: (enabled) {
+
+  setState(() {
+
+    soundEnabled = enabled;
+
+  });
 
 
-  onSoundChanged: (enabled) {
+  _audioPlayer.setVolume(
+    enabled ? 1 : 0,
+  );
 
-
-    _audioPlayer.setVolume(
-      enabled ? 1 : 0,
-    );
-
-
-  },
+},
 
 
 ),
