@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../data/puzzle_data.dart';
@@ -53,56 +55,73 @@ class _WorldMapScreenState
   static const String mapImage =
       "assets/images/world/world_map.jpg";
 
+  // لوحة إحداثيات مرجعية ثابتة للعالم كاملاً (خلفية + غيوم + جزر).
+  // نفس فكرة IslandScreen: كل شيء يُوضع بإحداثيات ضمن هذه اللوحة،
+  // ثم يُحسب Scale حقيقي من حجم الشاشة عبر LayoutBuilder بحيث تغطي
+  // اللوحة الشاشة بالكامل (بدون أي فراغ أسود وبدون أي تشويه) على
+  // أي جهاز — هاتف صغير، هاتف طويل، أو تابلت.
   static const double worldWidth = 896;
   static const double worldHeight = 1350;
 
   late final List<PuzzleModel> islands;
 
+  // متحكم حركة واحد فقط لكل العالم (خلفية + غيوم + جزر معاً) —
+  // بالضبط كما هو مطلوب: عنصر واحد يتحرك، وليس كل جزيرة بمفردها.
   late final AnimationController worldController;
   late final Animation<double> worldScale;
+  late final Animation<double> worldTranslateY;
 
   late final List<AnimationController> cloudControllers;
 
+  // مواقع الجزر مُعرَّفة بوحدات لوحة العالم (896x1350) ثم تُحوَّل إلى
+  // نسب طبيعية (0.0-1.0) تلقائياً في المُنشئ أدناه، وتُستخدم هذه
+  // النسب لاحقاً لحساب أي حجم شاشة فعلي — لا توجد أي قيم بكسل
+  // خاصة بجهاز معيّن.
+  //
+  // جزيرة "space" هي المحور الرئيسي: مركزية أعلى الخريطة، وأكبر من
+  // بقية الجزر بحوالي 30%. باقي الجزر مرتبة حولها بأحجام متفاوتة
+  // ومتداخلة قليلاً مع حافتها السفلى لخلق شعور "عالم واحد متصل"
+  // بدل صور منفصلة على خلفية.
   static final List<_RelativeRect> _islandRects = [
 
     _RelativeRect(
       id: "space",
-      left: 260 / worldWidth,
-      top: 20 / worldHeight,
-      width: 370 / worldWidth,
-      height: 450 / worldHeight,
+      left: 248 / worldWidth,
+      top: 25 / worldHeight,
+      width: 400 / worldWidth,
+      height: 460 / worldHeight,
     ),
 
     _RelativeRect(
       id: "landmarks",
-      left: 120 / worldWidth,
-      top: 330 / worldHeight,
-      width: 280 / worldWidth,
-      height: 360 / worldHeight,
+      left: 40 / worldWidth,
+      top: 420 / worldHeight,
+      width: 300 / worldWidth,
+      height: 340 / worldHeight,
     ),
 
     _RelativeRect(
       id: "cars",
-      left: 500 / worldWidth,
-      top: 330 / worldHeight,
-      width: 280 / worldWidth,
-      height: 360 / worldHeight,
+      left: 556 / worldWidth,
+      top: 420 / worldHeight,
+      width: 300 / worldWidth,
+      height: 340 / worldHeight,
     ),
 
     _RelativeRect(
       id: "nature",
-      left: 275 / worldWidth,
-      top: 590 / worldHeight,
+      left: 110 / worldWidth,
+      top: 760 / worldHeight,
       width: 320 / worldWidth,
-      height: 395 / worldHeight,
+      height: 370 / worldHeight,
     ),
 
     _RelativeRect(
       id: "animals",
-      left: 285 / worldWidth,
-      top: 980 / worldHeight,
+      left: 466 / worldWidth,
+      top: 780 / worldHeight,
       width: 320 / worldWidth,
-      height: 390 / worldHeight,
+      height: 370 / worldHeight,
     ),
 
   ];
@@ -154,10 +173,13 @@ class _WorldMapScreenState
       duration: const Duration(seconds: 18),
     )..repeat(reverse: true);
 
-
+    // تأثير "التنفس" الوحيد للعالم كله: تكبير خفيف جداً + انزياح
+    // رأسي بسيط، بالضبط ضمن النطاق المطلوب (Scale 1.00-1.03،
+    // Translate عمودي -5..+5)، مطبَّق على Stack واحد يضم الخلفية
+    // والغيوم والجزر معاً — لا يوجد أي تحريك منفصل لأي جزيرة.
     worldScale = Tween<double>(
-      begin: 1.02,
-      end: 1.04,
+      begin: 1.00,
+      end: 1.03,
     ).animate(
       CurvedAnimation(
         parent: worldController,
@@ -165,6 +187,15 @@ class _WorldMapScreenState
       ),
     );
 
+    worldTranslateY = Tween<double>(
+      begin: -5,
+      end: 5,
+    ).animate(
+      CurvedAnimation(
+        parent: worldController,
+        curve: Curves.easeInOut,
+      ),
+    );
 
     cloudControllers = _clouds
         .map(
@@ -175,7 +206,6 @@ class _WorldMapScreenState
         )
         .toList();
   }
-
 
   @override
   void dispose() {
@@ -189,254 +219,192 @@ class _WorldMapScreenState
     super.dispose();
   }
 
-
-  PuzzleModel getIsland(String id) {
-    return islands.firstWhere(
-      (item) => item.id == id,
-    );
+  /// بحث آمن عن جزيرة بمعرّفها. يعيد null بدل تعطّل التطبيق إن كان
+  /// أحد المعرّفات في [_islandRects] غير موجود ضمن [PuzzleData.puzzles]
+  /// (بدل استخدام firstWhere غير الآمن الذي يرمي استثناءً).
+  PuzzleModel? getIsland(String id) {
+    for (final item in islands) {
+      if (item.id == id) {
+        return item;
+      }
+    }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
       backgroundColor: const Color(0xff08182b),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final double screenWidth = constraints.maxWidth;
+          final double screenHeight = constraints.maxHeight;
 
-      body: SizedBox.expand(
+          // نفس نظام "cover" اليدوي المستخدم في IslandScreen: أكبر
+          // Scale من (العرض، الارتفاع) بحيث تغطي لوحة العالم الشاشة
+          // بالكامل في الاتجاهين معاً دون أي فراغ أسود ودون أي تشويه
+          // (لأن التحجيم موحّد لكلا المحورين).
+          if (screenWidth <= 0 || screenHeight <= 0) {
+            return const SizedBox.shrink();
+          }
 
-        child: ClipRect(
+          final double scale = math.max(
+            screenWidth / worldWidth,
+            screenHeight / worldHeight,
+          );
 
-          child: OverflowBox(
+          final double scaledWidth = worldWidth * scale;
+          final double scaledHeight = worldHeight * scale;
 
-            alignment: Alignment.center,
+          final double dx = (screenWidth - scaledWidth) / 2;
+          final double dy = (screenHeight - scaledHeight) / 2;
 
-            maxWidth: double.infinity,
+          return ClipRect(
+            child: Stack(
+              children: [
+                Positioned(
+                  left: dx,
+                  top: dy,
+                  child: Transform.scale(
+                    scale: scale,
+                    alignment: Alignment.topLeft,
+                    child: SizedBox(
+                      width: worldWidth,
+                      height: worldHeight,
+                      child: AnimatedBuilder(
+                        animation: worldController,
+                        builder: (context, child) {
+                          return Transform.translate(
+                            offset: Offset(0, worldTranslateY.value),
+                            child: Transform.scale(
+                              scale: worldScale.value,
+                              alignment: Alignment.center,
+                              child: child,
+                            ),
+                          );
+                        },
+                        // العالم كله (خلفية + غيوم + جزر) هو child واحد
+                        // مشترك لهذا الـ AnimatedBuilder، لذلك حركة
+                        // "التنفس" تنعكس على كل شيء معاً وبنفس النسبة —
+                        // لا توجد أي حركة scale/translate منفصلة لأي جزيرة.
+                        child: SizedBox(
+                          width: worldWidth,
+                          height: worldHeight,
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
 
-            maxHeight: double.infinity,
+                              Positioned.fill(
+                                child: Image.asset(
+                                  mapImage,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stack) =>
+                                      const SizedBox.shrink(),
+                                ),
+                              ),
 
-            child: AspectRatio(
+                              for (int i = 0; i < _clouds.length; i++)
+                                cloudWidget(
+                                  cloud: _clouds[i],
+                                  controller: cloudControllers[i],
+                                ),
 
-              aspectRatio: worldWidth / worldHeight,
+                              for (final rect in _islandRects)
+                                islandImage(
+                                  rect: rect,
+                                ),
 
-              child: AnimatedBuilder(
-
-                animation: worldController,
-
-                builder: (context, child) {
-
-                  return Transform.scale(
-
-                    scale: worldScale.value,
-
-                    alignment: Alignment.center,
-
-                    child: child,
-
-                  );
-
-                },
-
-                child: SizedBox(
-
-                  width: worldWidth,
-
-                  height: worldHeight,
-
-                  child: Stack(
-
-                    clipBehavior: Clip.none,
-
-                    children: [
-
-                      Positioned.fill(
-
-                        child: Image.asset(
-
-                          mapImage,
-
-                          fit: BoxFit.cover,
-
+                            ],
+                          ),
                         ),
-
                       ),
-
-
-                      for (int i = 0; i < _clouds.length; i++)
-
-                        cloudWidget(
-
-                          cloud: _clouds[i],
-
-                          controller: cloudControllers[i],
-
-                        ),
-
-
-                      for (final rect in _islandRects)
-
-                        islandImage(
-
-                          rect: rect,
-
-                        ),
-
-                    ],
-
+                    ),
                   ),
-
                 ),
-
-              ),
-
+              ],
             ),
-
-          ),
-
-        ),
-
+          );
+        },
       ),
-
     );
-
   }
 
   Widget cloudWidget({
-
     required _RelativeCloud cloud,
-
     required AnimationController controller,
-
   }) {
-
-    final double top =
-        cloud.top * worldHeight;
-
-    final double size =
-        cloud.size * worldWidth;
-
+    final double top = cloud.top * worldHeight;
+    final double size = cloud.size * worldWidth;
 
     return AnimatedBuilder(
-
       animation: controller,
-
       builder: (context, child) {
-
         return Positioned(
-
           left: (worldWidth + 100) -
-              (controller.value *
-                  (worldWidth + 400)),
-
+              (controller.value * (worldWidth + 400)),
           top: top,
-
           child: Opacity(
-
             opacity: cloud.opacity,
-
             child: Transform.rotate(
-
               angle: controller.value * 0.15,
-
               child: child,
-
             ),
-
           ),
-
         );
-
       },
-
-
       child: Image.asset(
-
         cloud.image,
-
         width: size,
-
+        errorBuilder: (context, error, stack) => const SizedBox.shrink(),
       ),
-
     );
-
   }
 
-
-
   Widget islandImage({
-
     required _RelativeRect rect,
-
   }) {
-
     final island = getIsland(rect.id);
 
+    // حماية من معرّف جزيرة غير موجود في بيانات اللعبة — تجاهل رسمها
+    // بدل تعطّل الشاشة بالكامل.
+    if (island == null) {
+      return const SizedBox.shrink();
+    }
 
-    final double left =
-        rect.left * worldWidth;
-
-    final double top =
-        rect.top * worldHeight;
-
-    final double width =
-        rect.width * worldWidth;
-
-    final double height =
-        rect.height * worldHeight;
-
+    final double left = rect.left * worldWidth;
+    final double top = rect.top * worldHeight;
+    final double width = rect.width * worldWidth;
+    final double height = rect.height * worldHeight;
 
     return Positioned(
-
       left: left,
-
       top: top,
-
       width: width,
-
       height: height,
-
-      child: Transform.scale(
-
-        scale: 1.08,
-
-        child: GestureDetector(
-
-          onTap: () => openIsland(island),
-
-          child: Image.asset(
-
-            island.image,
-
-            fit: BoxFit.contain,
-
-          ),
-
+      // منطقة اللمس هنا مطابقة تماماً لحجم/مكان الصورة المعروضة
+      // (نفس width/height/Positioned)، فلا يوجد أي إزاحة بين ما
+      // يراه المستخدم وما يستجيب للمس.
+      child: GestureDetector(
+        onTap: () => openIsland(island),
+        behavior: HitTestBehavior.opaque,
+        child: Image.asset(
+          island.image,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stack) => const SizedBox.shrink(),
         ),
-
       ),
-
     );
-
   }
 
   void openIsland(PuzzleModel island) {
-
     Navigator.push(
-
       context,
-
       MaterialPageRoute(
-
         builder: (_) => IslandScreen(
-
           island: island,
-
         ),
-
       ),
-
     );
-
   }
 
 }
