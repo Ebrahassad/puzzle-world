@@ -14,21 +14,22 @@ class GameToolbar extends StatefulWidget {
   final VoidCallback? onBack;
 
   final GlobalKey starKey;
-
+final GlobalKey coinKey;
 
 
   const GameToolbar({
 
-    super.key,
+  super.key,
 
-    required this.logo,
+  required this.logo,
 
-    required this.starKey,
+  required this.starKey,
 
-    this.onBack,
+  required this.coinKey,
 
-  });
+  this.onBack,
 
+});
 
 
   @override
@@ -399,13 +400,17 @@ class _GameToolbarState
                   },
 
 
-                  child:
-                  CoinCounterBox(
+                  child: Container(
 
-                    value:
-                    reward.coins,
+  key: widget.coinKey,
 
-                  ),
+  child: CoinCounterBox(
+
+    value: reward.coins,
+
+  ),
+
+),
 
                 ),
 
