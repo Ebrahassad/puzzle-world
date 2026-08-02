@@ -296,78 +296,27 @@ class _GameToolbarState
 
 
                   ListTile(
+  leading: const Icon(Icons.save_rounded),
+  title: const Text("حفظ اللعبة"),
+  onTap: () async {
+    Navigator.pop(context);
 
+    await Future.delayed(
+      const Duration(milliseconds: 200),
+    );
 
-                    leading:
-                    const Icon(
-                      Icons.save_rounded,
-                    ),
+    widget.onSave?.call();
+  },
+),
 
-
-
-                    title:
-                    const Text(
-                      "حفظ اللعبة",
-                    ),
-
-
-
-                    onTap: (){
-
-
-                      Navigator.pop(
-                        context,
-                      );
-
-
-                      widget.onSave
-                          ?.call();
-
-
-                    },
-
-
-                  ),
-
-
-
-
-
-
-                  ListTile(
-
-
-                    leading:
-                    const Icon(
-                      Icons.restart_alt_rounded,
-                    ),
-
-
-
-                    title:
-                    const Text(
-                      "إعادة اللعبة",
-                    ),
-
-
-
-                    onTap: (){
-
-
-                      Navigator.pop(
-                        context,
-                      );
-
-
-                      widget.onRestart
-                          ?.call();
-
-
-                    },
-
-
-                  ),
-
+ListTile(
+  leading: const Icon(Icons.restart_alt_rounded),
+  title: const Text("إعادة اللعبة"),
+  onTap: () {
+    Navigator.pop(context);
+    widget.onRestart?.call();
+  },
+),
 
 
 
