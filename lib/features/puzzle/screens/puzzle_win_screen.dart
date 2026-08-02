@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 
 import '../models/game_result_model.dart';
@@ -375,14 +377,13 @@ class _PuzzleWinScreenState
 
         child: BackdropFilter(
 
-          filter: ImageFilter.blur(
+          filter: ui.ImageFilter.blur(
 
-            sigmaX: 8,
+  sigmaX: 8,
 
-            sigmaY: 8,
+  sigmaY: 8,
 
-          ),
-
+),
           child: Container(
 
             width: 90,
