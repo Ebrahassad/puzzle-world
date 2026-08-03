@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../engine/puzzle_controller.dart';
 import '../engine/puzzle_painter.dart';
+import '../engine/tray_controller.dart';
 import '../models/puzzle_level_model.dart';
 import '../models/game_result_model.dart';
 import '../models/puzzle_model.dart';
@@ -60,6 +61,10 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
   final double boardSize = 350;
   final double trayHeight = 110;
+
+final TrayController trayController = TrayController();
+
+
 
   final GlobalKey overlayKey = GlobalKey();
   final GlobalKey boardKey = GlobalKey();
