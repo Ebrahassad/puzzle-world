@@ -94,7 +94,7 @@ static final Paint _highlightPaint = Paint()
 final lift = piece.isDragging ? -6.0 : 0.0;
 
 canvas.translate(
-  piece.currentPosition.dx +
+  piece.currentPosition.dx -
       (!piece.isPlaced ? trayOffset : 0),
   piece.currentPosition.dy + lift,
 );
@@ -140,9 +140,11 @@ canvas.restore();
   canvas.save();
 
   canvas.translate(
-    piece.currentPosition.dx + 4,
-    piece.currentPosition.dy + 8,
-  );
+  piece.currentPosition.dx -
+      (!piece.isPlaced ? trayOffset : 0) +
+      4,
+  piece.currentPosition.dy + 8,
+);
 
   canvas.drawPath(
     piece.path,
