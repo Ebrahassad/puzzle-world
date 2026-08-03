@@ -2030,3 +2030,193 @@ class _VictoryCinematicScreenState
 
 
 }
+
+
+class VictoryFinalScreen extends StatelessWidget {
+
+  const VictoryFinalScreen({
+
+    super.key,
+
+    required this.levelNumber,
+
+    required this.onContinue,
+
+    this.starsEarned = 1,
+
+    this.gemEarned = false,
+
+  });
+
+
+
+  final int levelNumber;
+
+  final int starsEarned;
+
+  final bool gemEarned;
+
+  final VoidCallback onContinue;
+
+
+
+  @override
+  Widget build(BuildContext context) {
+
+    return Scaffold(
+
+      backgroundColor:
+          const Color(0xff0A1330),
+
+
+      body:
+          SafeArea(
+
+        child:
+            Center(
+
+          child:
+              Column(
+
+            mainAxisSize:
+                MainAxisSize.min,
+
+
+            children: [
+
+
+              const Icon(
+
+                Icons.emoji_events,
+
+                color:
+                    Color(0xffffd54f),
+
+                size:
+                    90,
+
+              ),
+
+
+
+              const SizedBox(
+                height: 20,
+              ),
+
+
+
+              const Text(
+
+                'Victory!',
+
+                style:
+                    TextStyle(
+
+                  color:
+                      Colors.white,
+
+                  fontSize:
+                      36,
+
+                  fontWeight:
+                      FontWeight.bold,
+
+                ),
+
+              ),
+
+
+
+              Text(
+
+                'Level $levelNumber Complete',
+
+                style:
+                    const TextStyle(
+
+                  color:
+                      Colors.white70,
+
+                ),
+
+              ),
+
+
+
+              const SizedBox(
+                height: 25,
+              ),
+
+
+
+              Row(
+
+                mainAxisAlignment:
+                    MainAxisAlignment.center,
+
+
+                children:
+                    List.generate(
+
+                  3,
+
+                  (i) {
+
+                    return Icon(
+
+                      i < starsEarned
+
+                          ? Icons.star
+
+                          : Icons.star_border,
+
+                      color:
+                          const Color(
+                            0xffffd54f,
+                          ),
+
+                      size:
+                          45,
+
+                    );
+
+                  },
+
+                ),
+
+              ),
+
+
+
+              const SizedBox(
+                height: 35,
+              ),
+
+
+
+              ElevatedButton(
+
+                onPressed:
+                    onContinue,
+
+
+                child:
+                    const Text(
+                      'Continue',
+                    ),
+
+              ),
+
+            ],
+
+          ),
+
+        ),
+
+      ),
+
+    );
+
+  }
+
+}
