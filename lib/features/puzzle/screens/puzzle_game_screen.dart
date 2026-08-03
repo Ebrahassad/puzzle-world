@@ -625,6 +625,8 @@ currentIsland: widget.island,
                         boardRect: controller.boardRect,
                         rows: widget.level.gridSize,
                         cols: widget.level.gridSize,
+trayOffset: trayController.offsetX,
+
                         repaint: controller,
                       ),
                     ),
