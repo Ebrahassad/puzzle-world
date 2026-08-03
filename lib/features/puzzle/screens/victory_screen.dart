@@ -1,1 +1,2032 @@
-cd /home/claude/victory cat > /home/claude/victory/victory_screen.dart << 'DARTEOF' import 'dart:async'; import 'dart:math' as math; import 'dart:ui' as ui;  import 'package:flutter/material.dart';  // ============================================================================ // victory_screen.dart // // Everything needed for the "Puzzle World" cinematic victory sequence, in // one file: the shared particle/shatter painters, the automatic 5-second // VictoryCinematicScreen, and the follow-up VictoryFinalScreen. Pure // Flutter, no external packages. // ============================================================================  // ============================================================================ // SECTION 1 — shared particle burst + puzzle-shatter painters // ============================================================================  /// A burst of small glowing "magic" particles radiating outward from /// [origin]. Reused for every sparkle moment in the victory cinematic: the /// ambient glow around the completed puzzle, the shatter burst, the /// chest-opening flash, and the star/gem flight trail. /// /// [progress] drives the whole burst: 0 = particles tightly packed at /// [origin] and invisible, 1 = fully dispersed and faded out. Feed it a /// 0..1 value derived from whichever phase of the cinematic is playing. /// /// Particles are generated deterministically from [seed], so re-rendering /// this widget every animation tick (as AnimatedBuilder naturally does) /// always reproduces the exact same particle set — motion stays coherent /// instead of re-randomizing every frame. class MagicParticles extends StatelessWidget {   const MagicParticles({     super.key,     required this.origin,     required this.progress,     this.count = 26,     this.spread = 140,     this.colors = const [       Color(0xFFFFE9A8),       Color(0xFFFFD54F),       Color(0xFFFFFFFF),       Color(0xFF9BE8FF),     ],     this.seed = 1,     this.minSize = 2.5,     this.maxSize = 6.5,   });    final Offset origin;   final double progress;   final int count;   final double spread;   final List<Color> colors;   final int seed;   final double minSize;   final double maxSize;    @override   Widget build(BuildContext context) {     return IgnorePointer(       child: CustomPaint(         painter: _ParticlePainter(           origin: origin,           progress: progress.clamp(0.0, 1.0),           count: count,           spread: spread,           colors: colors,           seed: seed,           minSize: minSize,           maxSize: maxSize,         ),       ),     );   } }  class _Particle {   _Particle({     required this.angle,     required this.distanceFactor,     required this.size,     required this.color,     required this.delay,     required this.twinklePhase,   });    final double angle;   final double distanceFactor; // 0..1 fraction of spread   final double size;   final Color color;   final double delay; // 0..0.35, staggered start   final double twinklePhase; }  class _ParticlePainter extends CustomPainter {   _ParticlePainter({     required this.origin,     required this.progress,     required this.count,     required this.spread,     required this.colors,     required this.seed,     required this.minSize,     required this.maxSize,   }) : particles = _build(count, colors, seed, minSize, maxSize);    final Offset origin;   final double progress;   final int count;   final double spread;   final List<Color> colors;   final int seed;   final double minSize;   final double maxSize;   final List<_Particle> particles;    static List<_Particle> _build(     int count,     List<Color> colors,     int seed,     double minSize,     double maxSize,   ) {     final random = math.Random(seed);     return List.generate(count, (i) {       return _Particle(         angle: random.nextDouble() * math.pi * 2,         distanceFactor: 0.4 + random.nextDouble() * 0.6,         size: minSize + random.nextDouble() * (maxSize - minSize),         color: colors[random.nextInt(colors.length)],         delay: random.nextDouble() * 0.35,         twinklePhase: random.nextDouble() * math.pi * 2,       );     });   }    @override   void paint(Canvas canvas, Size size) {     for (final p in particles) {       var local = (progress - p.delay) / (1 - p.delay);       if (local <= 0) continue;       local = local.clamp(0.0, 1.0);        final eased = Curves.easeOut.transform(local);       final distance = spread * p.distanceFactor * eased;       final dx = math.cos(p.angle) * distance;       final dy = math.sin(p.angle) * distance;        final twinkle =           0.55 + 0.45 * math.sin(p.twinklePhase + local * math.pi * 6);       final opacity = (1 - local) * twinkle;       if (opacity <= 0.02) continue;        final center = origin + Offset(dx, dy);       final radius = p.size * (0.6 + 0.4 * (1 - local));        final glowPaint = Paint()         ..color = p.color.withOpacity(opacity * 0.5)         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);       canvas.drawCircle(center, radius * 2.2, glowPaint);        final corePaint = Paint()..color = p.color.withOpacity(opacity);       canvas.drawCircle(center, radius, corePaint);     }   }    @override   bool shouldRepaint(covariant _ParticlePainter oldDelegate) {     return oldDelegate.progress != progress || oldDelegate.origin != origin;   } }  /// A single shard used by [ShatterPainter] — a small rectangular piece of /// the completed puzzle image that flies outward and fades away. class PuzzleShard {   PuzzleShard({     required this.srcRect,     required this.restRect,     required this.direction,     required this.travel,     required this.spin,     required this.delay,   });    final Rect srcRect; // source pixels inside the ui.Image   final Rect restRect; // on-screen rect at rest, before shattering   final Offset direction; // unit vector, outward fling direction   final double travel; // max travel distance in logical pixels   final double spin; // total rotation in radians by the end of the effect   final double delay; // 0..0.3, staggered start so shards don't pop together }  /// Builds the grid of [PuzzleShard]s for a given [frameRect], each one /// assigned a random outward direction/spin/delay. Generate this once (not /// every frame) and reuse it across the whole shatter animation so the /// motion stays stable instead of re-randomizing every tick. List<PuzzleShard> buildPuzzleShards({   required Rect frameRect,   required Size imageSize,   int cols = 6,   int rows = 8,   int seed = 7, }) {   final random = math.Random(seed);   final shards = <PuzzleShard>[];    final cellW = frameRect.width / cols;   final cellH = frameRect.height / rows;   final srcCellW = imageSize.width / cols;   final srcCellH = imageSize.height / rows;   final center = frameRect.center;    for (var r = 0; r < rows; r++) {     for (var c = 0; c < cols; c++) {       final restRect = Rect.fromLTWH(         frameRect.left + c * cellW,         frameRect.top + r * cellH,         cellW,         cellH,       );       final srcRect = Rect.fromLTWH(         c * srcCellW,         r * srcCellH,         srcCellW,         srcCellH,       );        final outward = restRect.center - center;       final direction = outward.distance < 1           ? Offset(random.nextDouble() * 2 - 1, random.nextDouble() * 2 - 1)           : outward / outward.distance;        shards.add(PuzzleShard(         srcRect: srcRect,         restRect: restRect,         direction: direction,         travel: 90 + random.nextDouble() * 160,         spin: (random.nextDouble() - 0.5) * math.pi * 2.4,         delay: random.nextDouble() * 0.3,       ));     }   }   return shards; }  /// Paints the completed puzzle image breaking apart into [shards] and /// flying outward with a fade, using drawImageRect per shard so the /// artwork stays crisp right up until it disappears — the same technique /// the core jigsaw engine's PuzzlePainter uses to keep artwork continuous /// across pieces. class ShatterPainter extends CustomPainter {   ShatterPainter({     required this.image,     required this.shards,     required this.progress,   });    final ui.Image image;   final List<PuzzleShard> shards;   final double progress;    @override   void paint(Canvas canvas, Size size) {     for (final shard in shards) {       var local = (progress - shard.delay) / (1 - shard.delay);       if (local <= 0) {         // Not started yet — draw it at rest, full opacity, so the picture         // looks whole until its own shard actually begins to move.         _drawShard(canvas, shard, shard.restRect, 0, 1);         continue;       }       local = local.clamp(0.0, 1.0);       final eased = Curves.easeIn.transform(local);        final offset = shard.direction * shard.travel * eased;       final rect = shard.restRect.shift(offset);       final rotation = shard.spin * eased;       final opacity = 1 - local;        if (opacity <= 0.01) continue;       _drawShard(canvas, shard, rect, rotation, opacity);     }   }    void _drawShard(     Canvas canvas,     PuzzleShard shard,     Rect rect,     double rotation,     double opacity,   ) {     canvas.save();     canvas.translate(rect.center.dx, rect.center.dy);     canvas.rotate(rotation);     canvas.translate(-rect.center.dx, -rect.center.dy);     final paint = Paint()..color = Color.fromRGBO(255, 255, 255, opacity);     canvas.drawImageRect(image, shard.srcRect, rect, paint);     canvas.restore();   }    @override   bool shouldRepaint(covariant ShatterPainter oldDelegate) {     return oldDelegate.progress != progress || oldDelegate.image != image;   } }  // ============================================================================ // SECTION 2 — the automatic 5-second cinematic // ============================================================================  /// Full-screen, fully automatic cinematic that plays the instant a puzzle /// level is completed. /// /// Sequence (all driven by a single 5-second [AnimationController], so /// every phase always lands at exactly the same moment regardless of /// device performance): ///  1. The completed puzzle grows from the center into a glowing premium ///     frame. ///  2. It shatters into puzzle-piece shards that fly outward with magic ///     particles. ///  3. A closed reward chest pops in. ///  4. The chest opens with a golden glow, light burst and sparkles. ///  5. A gold star flies from the chest to the HUD star counter. ///  6. On the final level only, a gem then flies to the HUD gem counter. ///  7. The scene fades to clear and [onFinished] fires so the caller can ///     show the final victory screen. /// /// The player never touches this screen — there is nothing tappable on /// it, and it always finishes on its own after [totalDuration]. class VictoryCinematicScreen extends StatefulWidget {   const VictoryCinematicScreen({     super.key,     required this.puzzleImage,     required this.levelNumber,     this.isFinalLevel = false,     this.starTargetKey,     this.gemTargetKey,     this.onStarEarned,     this.onGemEarned,     required this.onFinished,     this.totalDuration = const Duration(seconds: 5),   });    /// The just-completed puzzle image, exactly as shown on the board.   final ImageProvider puzzleImage;    final int levelNumber;    /// When true, an extra gem reward flies out after the star (level 10).   final bool isFinalLevel;    /// Keys of the star/gem icons in the HUD this cinematic is layered over.   /// Used to compute where each reward should fly to. If a key can't be   /// resolved (not mounted, off-screen, etc.) a safe top-right fallback   /// position is used instead, so the animation never crashes.   final GlobalKey? starTargetKey;   final GlobalKey? gemTargetKey;    /// Fires the instant the star reaches the HUD — bump the star counter   /// exactly then, so the number updates in sync with the animation.   final VoidCallback? onStarEarned;    /// Fires the instant the gem reaches the HUD (only relevant when   /// [isFinalLevel] is true).   final VoidCallback? onGemEarned;    /// Fires once, after [totalDuration], when the cinematic is done. The   /// caller should replace this widget with the final victory screen here.   final VoidCallback onFinished;    final Duration totalDuration;    @override   State<VictoryCinematicScreen> createState() =>       _VictoryCinematicScreenState(); }  class _VictoryCinematicScreenState extends State<VictoryCinematicScreen>     with SingleTickerProviderStateMixin {   final GlobalKey _stageKey = GlobalKey();    late final AnimationController _controller;    ui.Image? _puzzleUiImage;   List<PuzzleShard>? _shards;    Offset? _starTarget;   Offset? _gemTarget;    bool _starLanded = false;   bool _gemLanded = false;    // --- Phase boundaries, as fractions of the whole timeline --------------   static const double _tRevealEnd = 0.20;   static const double _tHoldEnd = 0.32;   static const double _tShatterEnd = 0.50;   static const double _tChestInEnd = 0.60;   static const double _tChestOpenEnd = 0.68;   static const double _tFadeStart = 0.94;    double get _tStarEnd => widget.isFinalLevel ? 0.80 : 0.92;   double get _tGemEnd => 0.96;    @override   void initState() {     super.initState();      _controller = AnimationController(       vsync: this,       duration: widget.totalDuration,     );      _controller.addStatusListener((status) {       if (status == AnimationStatus.completed && mounted) {         widget.onFinished();       }     });      resolvePuzzleImage();      WidgetsBinding.instance.addPostFrameCallback(() {       if (!mounted) return;       _resolveTargets();       _controller.forward();     });   }    Future<void> _resolvePuzzleImage() async {     final completer = Completer<ui.Image>();     final stream = widget.puzzleImage.resolve(const ImageConfiguration());     late final ImageStreamListener listener;     listener = ImageStreamListener(       (info, _) {         completer.complete(info.image);         stream.removeListener(listener);       },       onError: (error, stack) {         if (!completer.isCompleted) completer.completeError(error);         stream.removeListener(listener);       },     );     stream.addListener(listener);      try {       final image = await completer.future;       if (!mounted) return;       setState(() => puzzleUiImage = image);     } catch () {       // If the image can't be decoded in time, the cinematic still plays       // in full (frame -> chest -> star/gem) — it just skips the shatter       // step gracefully instead of crashing.     }   }    void _resolveTargets() {     _starTarget = _resolveTarget(widget.starTargetKey) ?? _fallbackTarget();     _gemTarget = _resolveTarget(widget.gemTargetKey) ?? _fallbackTarget();   }    Offset? _resolveTarget(GlobalKey? key) {     final stageBox =         _stageKey.currentContext?.findRenderObject() as RenderBox?;     final targetBox =         key?.currentContext?.findRenderObject() as RenderBox?;     if (stageBox == null ||         !stageBox.attached ||         targetBox == null ||         !targetBox.attached) {       return null;     }     final globalCenter = targetBox.localToGlobal(       targetBox.size.center(Offset.zero),     );     return stageBox.globalToLocal(globalCenter);   }    Offset _fallbackTarget() {     final media = MediaQuery.of(context);     return Offset(media.size.width - 40, media.padding.top + 40);   }    @override   void dispose() {     _controller.dispose();     super.dispose();   }    /// Maps the global [t] into a local 0..1 progress for a [start, end]   /// window — 0 before it starts, 1 once it's finished, smoothly between.   double _phase(double start, double end, double t) {     if (end <= start) return t >= start ? 1 : 0;     return ((t - start) / (end - start)).clamp(0.0, 1.0);   }    @override   Widget build(BuildContext context) {     final size = MediaQuery.of(context).size;     final shortestSide = math.min(size.width, size.height);     // Sized relative to the smaller screen dimension so nothing gets     // cropped or zoomed oddly on very narrow or very wide devices.     final stageSize = shortestSide.clamp(280.0, 640.0) * 0.60;     final center = Offset(size.width / 2, size.height / 2 - stageSize * 0.05);      return Material(       color: Colors.transparent,       child: Container(         key: _stageKey,         width: double.infinity,         height: double.infinity,         decoration: const BoxDecoration(           gradient: RadialGradient(             center: Alignment.center,             radius: 1.1,             colors: [Color(0xFF1B2A63), Color(0xFF060B1F)],           ),         ),         child: AnimatedBuilder(           animation: _controller,           builder: (context, _) {             final t = _controller.value;             return Stack(               children: [                 _buildPuzzleFrame(t, center, stageSize),                 _buildShatterLayer(t, center, stageSize),                 _buildChestGlow(t, center, stageSize),                 _buildChestImage(t, center, stageSize),                 _buildStar(t, center),                 if (widget.isFinalLevel) _buildGem(t, center),                 _buildFinalFade(t),               ],             );           },         ),       ),     );   }    // --- Phase 1: completed puzzle grows into a glowing premium frame ------   Widget _buildPuzzleFrame(double t, Offset center, double stageSize) {     if (t >= _tShatterEnd) return const SizedBox.shrink();      final growT = _phase(0, _tRevealEnd, t);     final holdT = _phase(_tRevealEnd, _tHoldEnd, t);     final shatterT = _phase(_tHoldEnd, _tShatterEnd, t);      final scale = 0.35 + Curves.easeOutBack.transform(growT) * 0.65;     final opacity = shatterT > 0         ? (1 - Curves.easeIn.transform(shatterT))         : Curves.easeOut.transform(growT).clamp(0.0, 1.0);     final glowPulse = 0.5 + 0.5 * math.sin((growT + holdT) * math.pi * 3);      return Positioned(       left: center.dx - stageSize / 2,       top: center.dy - stageSize / 2,       width: stageSize,       height: stageSize,       child: Opacity(         opacity: opacity.clamp(0.0, 1.0),         child: Transform.scale(           scale: scale,           child: DecoratedBox(             decoration: BoxDecoration(               borderRadius: BorderRadius.circular(28),               border: Border.all(                 color: const Color(0xFFFFD54F).withOpacity(0.9),                 width: 4,               ),               boxShadow: [                 BoxShadow(                   color: const Color(0xFFFFD54F)                       .withOpacity(0.30 + glowPulse * 0.25),                   blurRadius: 42,                   spreadRadius: 6,                 ),               ],             ),             child: ClipRRect(               borderRadius: BorderRadius.circular(24),               child: _puzzleUiImage == null                   ? Image(image: widget.puzzleImage, fit: BoxFit.cover)                   : RawImage(image: _puzzleUiImage, fit: BoxFit.cover),             ),           ),         ),       ),     );   }    // --- Phase 2: puzzle shatters into pieces + magic particles -------------   Widget _buildShatterLayer(double t, Offset center, double stageSize) {     if (_puzzleUiImage == null) return const SizedBox.shrink();     if (t < _tHoldEnd || t > _tShatterEnd) return const SizedBox.shrink();      final shatterT = _phase(_tHoldEnd, _tShatterEnd, t);      _shards ??= buildPuzzleShards(       frameRect: Rect.fromCenter(           center: center, width: stageSize, height: stageSize),       imageSize: Size(         _puzzleUiImage!.width.toDouble(),         _puzzleUiImage!.height.toDouble(),       ),     );      return Positioned.fill(       child: Stack(         children: [           Positioned.fill(             child: CustomPaint(               painter: ShatterPainter(                 image: _puzzleUiImage!,                 shards: _shards!,                 progress: shatterT,               ),             ),           ),           Positioned.fill(             child: MagicParticles(               origin: center,               progress: shatterT,               count: 40,               spread: stageSize * 0.9,               seed: 3,             ),           ),         ],       ),     );   }    // --- Phase 4: chest-opening glow burst + light rays + sparkles ---------   Widget _buildChestGlow(double t, Offset center, double stageSize) {     if (t < _tChestInEnd) return const SizedBox.shrink();      final chestSize = stageSize * 0.62;     final openT = _phase(_tChestInEnd, _tChestOpenEnd, t);     final burstT = _phase(_tChestInEnd, _tChestOpenEnd + 0.10, t);      final dismissStart = widget.isFinalLevel ? _tGemEnd : _tStarEnd;     final dismissT = _phase(dismissStart, 1.0, t);     final glowOpacity = (openT * (1 - dismissT)).clamp(0.0, 1.0);      return Stack(       children: [         Positioned(           left: center.dx - chestSize,           top: center.dy - chestSize,           width: chestSize * 2,           height: chestSize * 2,           child: Opacity(             opacity: glowOpacity,             child: DecoratedBox(               decoration: BoxDecoration(                 shape: BoxShape.circle,                 gradient: RadialGradient(                   colors: [                     const Color(0xFFFFF3C4).withOpacity(0.55),                     const Color(0xFFFFD54F).withOpacity(0.0),                   ],                 ),               ),             ),           ),         ),         Positioned.fill(           child: MagicParticles(             origin: center,             progress: burstT,             count: 34,             spread: chestSize * 1.3,             seed: 5,           ),         ),       ],     );   }    // --- Phase 3 & 4: chest pops in, then crossfades closed -> open --------   Widget _buildChestImage(double t, Offset center, double stageSize) {     if (t < _tShatterEnd) return const SizedBox.shrink();      final chestSize = stageSize * 0.62;     final appearT = _phase(_tShatterEnd, _tChestInEnd, t);     final openT = _phase(_tChestInEnd, _tChestOpenEnd, t);      final dismissStart = widget.isFinalLevel ? _tGemEnd : _tStarEnd;     final dismissT = _phase(dismissStart, 1.0, t);      final popScale = Curves.easeOutBack.transform(appearT).clamp(0.0, 1.3);     final chestOpacity = (1 - dismissT).clamp(0.0, 1.0);      return Positioned(       left: center.dx - chestSize / 2,       top: center.dy - chestSize / 2,       width: chestSize,       height: chestSize,       child: Opacity(         opacity: chestOpacity,         child: Transform.translate(           offset: Offset(0, (1 - appearT) * 30),           child: Transform.scale(             scale: popScale,             child: Stack(               alignment: Alignment.center,               children: [                 Opacity(                   opacity: (1 - openT).clamp(0.0, 1.0),                   child: Image.asset(                     'assets/images/rewards/reward_chest_closed.png',                     fit: BoxFit.contain,                     errorBuilder: (context, error, stack) =>                         const SizedBox.shrink(),                   ),                 ),                 Opacity(                   opacity: openT.clamp(0.0, 1.0),                   child: Image.asset(                     'assets/images/rewards/reward_chest_open.png',                     fit: BoxFit.contain,                     errorBuilder: (context, error, stack) =>                         const SizedBox.shrink(),                   ),                 ),               ],             ),           ),         ),       ),     );   }    // --- Phase 5: star flies from the chest to the HUD star counter --------   Widget _buildStar(double t, Offset chestCenter) {     if (t < _tChestOpenEnd) return const SizedBox.shrink();      final flightT = _phase(_tChestOpenEnd, _tStarEnd, t);     if (flightT >= 1) {       if (!_starLanded) {         starLanded = true;         // Deferred so we never call back to the parent mid-build.         WidgetsBinding.instance.addPostFrameCallback(() {           if (mounted) widget.onStarEarned?.call();         });       }       return const SizedBox.shrink();     }      final target = _starTarget ?? chestCenter;     final eased = Curves.easeInOutCubic.transform(flightT);     final arc = -math.sin(flightT * math.pi) * 90;     final pos = Offset.lerp(chestCenter, target, eased)! + Offset(0, arc);     final scale = (1.0 - eased * 0.68).clamp(0.28, 1.0);      return Positioned(       left: pos.dx - 28,       top: pos.dy - 28,       child: Transform.scale(         scale: scale,         child: _glowingIcon('assets/images/rewards/Star_gold.png'),       ),     );   }    // --- Phase 6 (final level only): gem flies from the chest to the HUD ---   Widget _buildGem(double t, Offset chestCenter) {     if (t < _tStarEnd) return const SizedBox.shrink();      final flightT = _phase(_tStarEnd, _tGemEnd, t);     if (flightT >= 1) {       if (!_gemLanded) {         gemLanded = true;         WidgetsBinding.instance.addPostFrameCallback(() {           if (mounted) widget.onGemEarned?.call();         });       }       return const SizedBox.shrink();     }      final target = _gemTarget ?? chestCenter;     final eased = Curves.easeInOutCubic.transform(flightT);     final arc = -math.sin(flightT * math.pi) * 90;     final pos = Offset.lerp(chestCenter, target, eased)! + Offset(0, arc);     final scale = (1.0 - eased * 0.68).clamp(0.28, 1.0);      return Positioned(       left: pos.dx - 26,       top: pos.dy - 26,       child: Transform.scale(         scale: scale,         child: _glowingIcon('assets/images/rewards/gem.png'),       ),     );   }    Widget _glowingIcon(String asset) {     return SizedBox(       width: 56,       height: 56,       child: DecoratedBox(         decoration: BoxDecoration(           shape: BoxShape.circle,           boxShadow: [             BoxShadow(               color: const Color(0xFFFFD54F).withOpacity(0.55),               blurRadius: 18,               spreadRadius: 2,             ),           ],         ),         child: Image.asset(           asset,           fit: BoxFit.contain,           errorBuilder: (context, error, stack) => const SizedBox.shrink(),         ),       ),     );   }    // --- Final beat: fade to clear right before onFinished fires ------------   Widget _buildFinalFade(double t) {     final fadeT = _phase(_tFadeStart, 1.0, t);     if (fadeT <= 0) return const SizedBox.shrink();     return Positioned.fill(       child: IgnorePointer(         child: Opacity(           opacity: fadeT,           child: Container(color: const Color(0xFF060B1F)),         ),       ),     );   } }  // ============================================================================ // SECTION 3 — the follow-up victory screen (message, level info, continue) // ============================================================================  /// Shown right after [VictoryCinematicScreen] finishes: a calm "you did /// it" summary with a Continue button. This is where the player regains /// control — the cinematic before it has no buttons and no input at all. class VictoryFinalScreen extends StatelessWidget {   const VictoryFinalScreen({     super.key,     required this.levelNumber,     required this.onContinue,     this.starsEarned = 1,     this.gemEarned = false,   });    final int levelNumber;    /// 0..3 — how many stars to show as filled.   final int starsEarned;    /// Whether the bonus gem line should be shown (final level reward).   final bool gemEarned;    final VoidCallback onContinue;    @override   Widget build(BuildContext context) {     return Scaffold(       backgroundColor: const Color(0xFF0A1330),       body: SafeArea(         child: Center(           child: Padding(             padding: const EdgeInsets.symmetric(horizontal: 32),             child: Column(               mainAxisSize: MainAxisSize.min,               children: [                 const Icon(                   Icons.emoji_events_rounded,                   color: Color(0xFFFFD54F),                   size: 84,                 ),                 const SizedBox(height: 12),                 const Text(                   'Victory!',                   style: TextStyle(                     color: Colors.white,                     fontSize: 34,                     fontWeight: FontWeight.bold,                   ),                 ),                 const SizedBox(height: 6),                 Text(                   'Level $levelNumber Complete',                   style: const TextStyle(color: Colors.white70, fontSize: 16),                 ),                 const SizedBox(height: 22),                 Row(                   mainAxisAlignment: MainAxisAlignment.center,                   children: List.generate(3, (i) {                     final filled = i < starsEarned;                     return Padding(                       padding: const EdgeInsets.symmetric(horizontal: 5),                       child: Icon(                         filled                             ? Icons.star_rounded                             : Icons.star_outline_rounded,                         color: const Color(0xFFFFD54F),                         size: 42,                       ),                     );                   }),                 ),                 if (gemEarned) ...[                   const SizedBox(height: 14),                   const Row(                     mainAxisAlignment: MainAxisAlignment.center,                     children: [                       Icon(Icons.diamond_rounded,                           color: Color(0xFF8FE3FF), size: 22),                       SizedBox(width: 6),                       Text(                         'Bonus gem earned!',                         style: TextStyle(                           color: Colors.white,                           fontWeight: FontWeight.w600,                         ),                       ),                     ],                   ),                 ],                 const SizedBox(height: 34),                 SizedBox(                   width: double.infinity,                   child: ElevatedButton(                     onPressed: onContinue,                     style: ElevatedButton.styleFrom(                       backgroundColor: const Color(0xFFFFD54F),                       foregroundColor: const Color(0xFF0A1330),                       padding: const EdgeInsets.symmetric(vertical: 16),                       shape: RoundedRectangleBorder(                         borderRadius: BorderRadius.circular(18),                       ),                     ),                     child: const Text(                       'Continue',                       style: TextStyle(                         fontWeight: FontWeight.bold,                         fontSize: 17,                       ),                     ),                   ),                 ),               ],             ),           ),         ),       ),     );   } } DARTEOF mkdir -p /mnt/user-data/outputs/victory cp /home/claude/victory/victory_screen.dart /mnt/user-data/outputs/victory/victory_screen.dart wc -l /mnt/user-data/outputs/victory/victory_screen.dart
+import 'dart:async';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
+
+import 'package:flutter/material.dart';
+
+
+// ============================================================================
+// victory_screen.dart
+//
+// Puzzle World cinematic victory sequence.
+// Contains:
+// - MagicParticles
+// - Puzzle shatter effect
+// - VictoryCinematicScreen
+// - VictoryFinalScreen
+//
+// Pure Flutter, no external packages.
+// ============================================================================
+
+
+// ============================================================================
+// SECTION 1 — Magic particles
+// ============================================================================
+
+class MagicParticles extends StatelessWidget {
+  const MagicParticles({
+    super.key,
+    required this.origin,
+    required this.progress,
+    this.count = 26,
+    this.spread = 140,
+    this.colors = const [
+      Color(0xFFFFE9A8),
+      Color(0xFFFFD54F),
+      Color(0xFFFFFFFF),
+      Color(0xFF9BE8FF),
+    ],
+    this.seed = 1,
+    this.minSize = 2.5,
+    this.maxSize = 6.5,
+  });
+
+  final Offset origin;
+  final double progress;
+  final int count;
+  final double spread;
+  final List<Color> colors;
+  final int seed;
+  final double minSize;
+  final double maxSize;
+
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: CustomPaint(
+        painter: _ParticlePainter(
+          origin: origin,
+          progress: progress.clamp(0.0, 1.0),
+          count: count,
+          spread: spread,
+          colors: colors,
+          seed: seed,
+          minSize: minSize,
+          maxSize: maxSize,
+        ),
+      ),
+    );
+  }
+}
+
+
+
+class _Particle {
+
+  _Particle({
+    required this.angle,
+    required this.distanceFactor,
+    required this.size,
+    required this.color,
+    required this.delay,
+    required this.twinklePhase,
+  });
+
+
+  final double angle;
+  final double distanceFactor;
+  final double size;
+  final Color color;
+  final double delay;
+  final double twinklePhase;
+}
+
+
+
+class _ParticlePainter extends CustomPainter {
+
+  _ParticlePainter({
+    required this.origin,
+    required this.progress,
+    required this.count,
+    required this.spread,
+    required this.colors,
+    required this.seed,
+    required this.minSize,
+    required this.maxSize,
+  }) : particles =
+          _build(
+            count,
+            colors,
+            seed,
+            minSize,
+            maxSize,
+          );
+
+
+  final Offset origin;
+  final double progress;
+  final int count;
+  final double spread;
+  final List<Color> colors;
+  final int seed;
+  final double minSize;
+  final double maxSize;
+
+  final List<_Particle> particles;
+
+
+
+  static List<_Particle> _build(
+    int count,
+    List<Color> colors,
+    int seed,
+    double minSize,
+    double maxSize,
+  ) {
+
+    final random = math.Random(seed);
+
+
+    return List.generate(
+      count,
+      (i) {
+
+        return _Particle(
+
+          angle:
+              random.nextDouble() *
+              math.pi *
+              2,
+
+          distanceFactor:
+              0.4 +
+              random.nextDouble() *
+              0.6,
+
+
+          size:
+              minSize +
+              random.nextDouble() *
+              (maxSize - minSize),
+
+
+          color:
+              colors[
+                random.nextInt(
+                  colors.length,
+                )
+              ],
+
+
+          delay:
+              random.nextDouble() *
+              0.35,
+
+
+          twinklePhase:
+              random.nextDouble() *
+              math.pi *
+              2,
+
+        );
+
+      },
+    );
+  }
+
+
+
+  @override
+  void paint(
+    Canvas canvas,
+    Size size,
+  ) {
+
+    for (final particle in particles) {
+
+      var local =
+          (progress - particle.delay) /
+          (1 - particle.delay);
+
+
+      if (local <= 0) {
+        continue;
+      }
+
+
+      local =
+          local.clamp(
+            0.0,
+            1.0,
+          );
+
+
+      final eased =
+          Curves.easeOut.transform(
+            local,
+          );
+
+
+      final distance =
+          spread *
+          particle.distanceFactor *
+          eased;
+
+
+      final position =
+          origin +
+          Offset(
+            math.cos(particle.angle) *
+                distance,
+
+            math.sin(particle.angle) *
+                distance,
+          );
+
+
+      final opacity =
+          (1 - local);
+
+
+      final paint =
+          Paint()
+            ..color =
+                particle.color.withOpacity(
+                  opacity,
+                );
+
+
+      canvas.drawCircle(
+        position,
+        particle.size,
+        paint,
+      );
+
+    }
+  }
+
+
+
+  @override
+  bool shouldRepaint(
+    covariant _ParticlePainter oldDelegate,
+  ) {
+
+    return oldDelegate.progress != progress ||
+        oldDelegate.origin != origin;
+
+  }
+}
+
+// ============================================================================
+// SECTION 1 — Puzzle shatter system
+// ============================================================================
+
+
+class PuzzleShard {
+
+  PuzzleShard({
+    required this.srcRect,
+    required this.restRect,
+    required this.direction,
+    required this.travel,
+    required this.spin,
+    required this.delay,
+  });
+
+
+  final Rect srcRect;
+  final Rect restRect;
+  final Offset direction;
+  final double travel;
+  final double spin;
+  final double delay;
+
+}
+
+
+
+List<PuzzleShard> buildPuzzleShards({
+
+  required Rect frameRect,
+
+  required Size imageSize,
+
+  int cols = 6,
+
+  int rows = 8,
+
+  int seed = 7,
+
+}) {
+
+
+  final random =
+      math.Random(seed);
+
+
+  final shards =
+      <PuzzleShard>[];
+
+
+
+  final cellWidth =
+      frameRect.width / cols;
+
+
+  final cellHeight =
+      frameRect.height / rows;
+
+
+
+  final sourceWidth =
+      imageSize.width / cols;
+
+
+  final sourceHeight =
+      imageSize.height / rows;
+
+
+
+  final center =
+      frameRect.center;
+
+
+
+  for (int row = 0; row < rows; row++) {
+
+
+    for (int col = 0; col < cols; col++) {
+
+
+      final restRect =
+          Rect.fromLTWH(
+
+            frameRect.left +
+                col * cellWidth,
+
+            frameRect.top +
+                row * cellHeight,
+
+            cellWidth,
+
+            cellHeight,
+
+          );
+
+
+
+      final sourceRect =
+          Rect.fromLTWH(
+
+            col * sourceWidth,
+
+            row * sourceHeight,
+
+            sourceWidth,
+
+            sourceHeight,
+
+          );
+
+
+
+      final outward =
+          restRect.center - center;
+
+
+
+      final direction =
+          outward.distance < 1
+
+              ? Offset(
+                  random.nextDouble() * 2 - 1,
+                  random.nextDouble() * 2 - 1,
+                )
+
+              : outward /
+                  outward.distance;
+
+
+
+      shards.add(
+
+        PuzzleShard(
+
+          srcRect:
+              sourceRect,
+
+          restRect:
+              restRect,
+
+          direction:
+              direction,
+
+          travel:
+              90 +
+              random.nextDouble() *
+              160,
+
+          spin:
+              (random.nextDouble() - 0.5) *
+              math.pi *
+              2.4,
+
+          delay:
+              random.nextDouble() *
+              0.3,
+
+        ),
+
+      );
+
+    }
+
+  }
+
+
+  return shards;
+
+}
+
+
+
+
+
+class ShatterPainter extends CustomPainter {
+
+
+  ShatterPainter({
+
+    required this.image,
+
+    required this.shards,
+
+    required this.progress,
+
+  });
+
+
+
+  final ui.Image image;
+
+  final List<PuzzleShard> shards;
+
+  final double progress;
+
+
+
+  @override
+  void paint(
+    Canvas canvas,
+    Size size,
+  ) {
+
+
+    for (final shard in shards) {
+
+
+      var local =
+          (progress - shard.delay) /
+          (1 - shard.delay);
+
+
+
+      if (local <= 0) {
+
+
+        _drawShard(
+
+          canvas,
+
+          shard,
+
+          shard.restRect,
+
+          0,
+
+          1,
+
+        );
+
+
+        continue;
+
+      }
+
+
+
+      local =
+          local.clamp(
+            0.0,
+            1.0,
+          );
+
+
+
+      final eased =
+          Curves.easeIn.transform(
+            local,
+          );
+
+
+
+      final offset =
+          shard.direction *
+          shard.travel *
+          eased;
+
+
+
+      final rect =
+          shard.restRect.shift(
+            offset,
+          );
+
+
+
+      final rotation =
+          shard.spin *
+          eased;
+
+
+
+      final opacity =
+          1 - local;
+
+
+
+      if (opacity <= 0.01) {
+        continue;
+      }
+
+
+
+      _drawShard(
+
+        canvas,
+
+        shard,
+
+        rect,
+
+        rotation,
+
+        opacity,
+
+      );
+
+    }
+
+  }
+
+
+
+
+
+  void _drawShard(
+
+    Canvas canvas,
+
+    PuzzleShard shard,
+
+    Rect rect,
+
+    double rotation,
+
+    double opacity,
+
+  ) {
+
+
+    canvas.save();
+
+
+
+    canvas.translate(
+      rect.center.dx,
+      rect.center.dy,
+    );
+
+
+
+    canvas.rotate(
+      rotation,
+    );
+
+
+
+    canvas.translate(
+      -rect.center.dx,
+      -rect.center.dy,
+    );
+
+
+
+    final paint =
+        Paint()
+          ..color =
+              Colors.white.withOpacity(
+                opacity,
+              );
+
+
+
+    canvas.drawImageRect(
+
+      image,
+
+      shard.srcRect,
+
+      rect,
+
+      paint,
+
+    );
+
+
+
+    canvas.restore();
+
+  }
+
+
+
+
+
+  @override
+  bool shouldRepaint(
+    covariant ShatterPainter oldDelegate,
+  ) {
+
+    return oldDelegate.progress != progress ||
+        oldDelegate.image != image;
+
+  }
+
+}
+
+class VictoryCinematicScreen extends StatefulWidget {
+
+  const VictoryCinematicScreen({
+
+    super.key,
+
+    required this.puzzleImage,
+
+    required this.levelNumber,
+
+    required this.onFinished,
+
+    this.isFinalLevel = false,
+
+    this.starTargetKey,
+
+    this.gemTargetKey,
+
+    this.onStarEarned,
+
+    this.onGemEarned,
+
+    this.totalDuration =
+        const Duration(seconds: 5),
+
+  });
+
+
+
+  final ImageProvider puzzleImage;
+
+  final int levelNumber;
+
+  final bool isFinalLevel;
+
+
+  final GlobalKey? starTargetKey;
+
+  final GlobalKey? gemTargetKey;
+
+
+  final VoidCallback? onStarEarned;
+
+  final VoidCallback? onGemEarned;
+
+
+  final VoidCallback onFinished;
+
+
+  final Duration totalDuration;
+
+
+
+  @override
+  State<VictoryCinematicScreen> createState() =>
+      _VictoryCinematicScreenState();
+
+}
+
+
+
+
+class _VictoryCinematicScreenState
+    extends State<VictoryCinematicScreen>
+    with SingleTickerProviderStateMixin {
+
+
+  final GlobalKey _stageKey =
+      GlobalKey();
+
+
+
+  late AnimationController _controller;
+
+
+
+  ui.Image? _puzzleImage;
+
+
+
+  List<PuzzleShard>? _shards;
+
+
+
+  Offset? _starTarget;
+
+  Offset? _gemTarget;
+
+
+
+  bool _starLanded = false;
+
+  bool _gemLanded = false;
+
+
+
+  static const double revealEnd = 0.20;
+
+  static const double holdEnd = 0.32;
+
+  static const double shatterEnd = 0.50;
+
+  static const double chestInEnd = 0.60;
+
+  static const double chestOpenEnd = 0.68;
+
+  static const double fadeStart = 0.94;
+
+
+
+  double get starEnd =>
+      widget.isFinalLevel
+          ? 0.80
+          : 0.92;
+
+
+
+  double get gemEnd =>
+      0.96;
+
+
+
+
+  @override
+  void initState() {
+
+    super.initState();
+
+
+
+    _controller =
+        AnimationController(
+          vsync: this,
+          duration: widget.totalDuration,
+        );
+
+
+
+    _controller.addStatusListener(
+      (status) {
+
+        if (status ==
+                AnimationStatus.completed &&
+            mounted) {
+
+          widget.onFinished();
+
+        }
+
+      },
+    );
+
+
+
+    _loadPuzzleImage();
+
+
+
+    WidgetsBinding.instance
+        .addPostFrameCallback(
+      (_) {
+
+        if (!mounted) return;
+
+
+        _resolveTargets();
+
+
+        _controller.forward();
+
+      },
+    );
+
+  }
+
+
+
+
+
+  Future<void> _loadPuzzleImage() async {
+
+
+    final completer =
+        Completer<ui.Image>();
+
+
+
+    final stream =
+        widget.puzzleImage.resolve(
+          const ImageConfiguration(),
+        );
+
+
+
+    late ImageStreamListener listener;
+
+
+
+    listener =
+        ImageStreamListener(
+      (info, _) {
+
+        completer.complete(
+          info.image,
+        );
+
+
+        stream.removeListener(
+          listener,
+        );
+
+      },
+
+      onError: (error, stack) {
+
+        if (!completer.isCompleted) {
+
+          completer.completeError(
+            error,
+          );
+
+        }
+
+
+        stream.removeListener(
+          listener,
+        );
+
+      },
+
+    );
+
+
+
+    stream.addListener(
+      listener,
+    );
+
+
+
+    try {
+
+
+      final image =
+          await completer.future;
+
+
+
+      if (!mounted) return;
+
+
+
+      setState(() {
+
+        _puzzleImage =
+            image;
+
+      });
+
+
+
+    } catch (_) {}
+
+  }
+
+
+
+
+
+  void _resolveTargets() {
+
+    _starTarget =
+        _findTarget(
+          widget.starTargetKey,
+        );
+
+    _gemTarget =
+        _findTarget(
+          widget.gemTargetKey,
+        );
+
+  }
+
+
+
+
+
+  Offset? _findTarget(
+    GlobalKey? key,
+  ) {
+
+
+    if (key == null) {
+      return null;
+    }
+
+
+
+    final stage =
+        _stageKey.currentContext
+            ?.findRenderObject()
+        as RenderBox?;
+
+
+
+    final target =
+        key.currentContext
+            ?.findRenderObject()
+        as RenderBox?;
+
+
+
+    if (stage == null ||
+        target == null) {
+
+      return null;
+
+    }
+
+
+
+    final global =
+        target.localToGlobal(
+          target.size.center(
+            Offset.zero,
+          ),
+        );
+
+
+
+    return stage.globalToLocal(
+      global,
+    );
+
+  }
+
+
+
+
+
+  @override
+  void dispose() {
+
+    _controller.dispose();
+
+    super.dispose();
+
+  }
+
+  double _phase(
+    double start,
+    double end,
+    double value,
+  ) {
+
+    if (end <= start) {
+
+      return value >= start
+          ? 1
+          : 0;
+
+    }
+
+
+    return (
+      (value - start) /
+      (end - start)
+
+    ).clamp(
+      0.0,
+      1.0,
+    );
+
+  }
+
+
+
+
+
+  @override
+  Widget build(BuildContext context) {
+
+
+    final size =
+        MediaQuery.of(context).size;
+
+
+    final shortest =
+        math.min(
+          size.width,
+          size.height,
+        );
+
+
+
+    final stageSize =
+        shortest
+            .clamp(
+              280.0,
+              640.0,
+            ) *
+        0.60;
+
+
+
+    final center =
+        Offset(
+          size.width / 2,
+          size.height / 2 -
+              stageSize * 0.05,
+        );
+
+
+
+    return Material(
+
+      color:
+          Colors.transparent,
+
+
+      child: Container(
+
+        key:
+            _stageKey,
+
+
+        width:
+            double.infinity,
+
+
+        height:
+            double.infinity,
+
+
+
+        decoration:
+            const BoxDecoration(
+
+          gradient:
+              RadialGradient(
+
+            colors: [
+
+              Color(0xff1B2A63),
+
+              Color(0xff060B1F),
+
+            ],
+
+          ),
+
+        ),
+
+
+
+        child:
+            AnimatedBuilder(
+
+          animation:
+              _controller,
+
+
+          builder:
+              (context, child) {
+
+
+            final t =
+                _controller.value;
+
+
+
+            return Stack(
+
+              children: [
+
+
+                _buildPuzzleFrame(
+                  t,
+                  center,
+                  stageSize,
+                ),
+
+
+
+                _buildShatter(
+                  t,
+                  center,
+                  stageSize,
+                ),
+
+
+
+                _buildChestGlow(
+                  t,
+                  center,
+                  stageSize,
+                ),
+
+
+
+                _buildChest(
+                  t,
+                  center,
+                  stageSize,
+                ),
+
+
+
+                _buildStar(
+                  t,
+                  center,
+                ),
+
+
+
+                if (widget.isFinalLevel)
+
+                  _buildGem(
+                    t,
+                    center,
+                  ),
+
+
+
+                _buildFade(
+                  t,
+                ),
+
+
+              ],
+
+            );
+
+          },
+
+        ),
+
+      ),
+
+    );
+
+  }
+
+
+
+
+
+  Widget _buildPuzzleFrame(
+    double t,
+    Offset center,
+    double size,
+  ) {
+
+
+    if (t >= shatterEnd) {
+
+      return const SizedBox.shrink();
+
+    }
+
+
+
+    final grow =
+        _phase(
+          0,
+          revealEnd,
+          t,
+        );
+
+
+
+    final disappear =
+        _phase(
+          holdEnd,
+          shatterEnd,
+          t,
+        );
+
+
+
+    final scale =
+        0.35 +
+        Curves.easeOutBack.transform(
+          grow,
+        ) *
+        0.65;
+
+
+
+    final opacity =
+        disappear > 0
+
+            ? 1 - disappear
+
+            : grow;
+
+
+
+    return Positioned(
+
+      left:
+          center.dx -
+          size / 2,
+
+
+      top:
+          center.dy -
+          size / 2,
+
+
+      width:
+          size,
+
+
+      height:
+          size,
+
+
+
+      child:
+          Opacity(
+
+        opacity:
+            opacity.clamp(
+              0.0,
+              1.0,
+            ),
+
+
+
+        child:
+            Transform.scale(
+
+          scale:
+              scale,
+
+
+
+          child:
+              DecoratedBox(
+
+            decoration:
+                BoxDecoration(
+
+              borderRadius:
+                  BorderRadius.circular(
+                    28,
+                  ),
+
+
+              border:
+                  Border.all(
+
+                color:
+                    const Color(
+                      0xffffd54f,
+                    ),
+
+
+                width:
+                    4,
+
+              ),
+
+
+              boxShadow: [
+
+                BoxShadow(
+
+                  color:
+                      const Color(
+                        0xffffd54f,
+                      ).withOpacity(
+                        0.4,
+                      ),
+
+                  blurRadius:
+                      40,
+
+                ),
+
+              ],
+
+            ),
+
+
+
+            child:
+                ClipRRect(
+
+              borderRadius:
+                  BorderRadius.circular(
+                    24,
+                  ),
+
+
+
+              child:
+
+                  _puzzleImage == null
+
+                      ? Image(
+                          image:
+                              widget.puzzleImage,
+
+                          fit:
+                              BoxFit.cover,
+                        )
+
+
+                      : RawImage(
+
+                          image:
+                              _puzzleImage,
+
+                          fit:
+                              BoxFit.cover,
+
+                        ),
+
+            ),
+
+          ),
+
+        ),
+
+      ),
+
+    );
+
+  }
+
+  Widget _buildShatter(
+    double t,
+    Offset center,
+    double size,
+  ) {
+
+    if (_puzzleImage == null ||
+        t < holdEnd ||
+        t > shatterEnd) {
+
+      return const SizedBox.shrink();
+
+    }
+
+
+
+    final progress =
+        _phase(
+          holdEnd,
+          shatterEnd,
+          t,
+        );
+
+
+
+    _shards ??=
+        buildPuzzleShards(
+
+          frameRect:
+              Rect.fromCenter(
+
+            center:
+                center,
+
+            width:
+                size,
+
+            height:
+                size,
+
+          ),
+
+
+          imageSize:
+
+              Size(
+
+            _puzzleImage!.width
+                .toDouble(),
+
+            _puzzleImage!.height
+                .toDouble(),
+
+          ),
+
+        );
+
+
+
+    return Positioned.fill(
+
+      child:
+          Stack(
+
+        children: [
+
+
+          Positioned.fill(
+
+            child:
+                CustomPaint(
+
+              painter:
+                  ShatterPainter(
+
+                image:
+                    _puzzleImage!,
+
+                shards:
+                    _shards!,
+
+                progress:
+                    progress,
+
+              ),
+
+            ),
+
+          ),
+
+
+
+          Positioned.fill(
+
+            child:
+                MagicParticles(
+
+              origin:
+                  center,
+
+              progress:
+                  progress,
+
+              count:
+                  40,
+
+              spread:
+                  size * 0.9,
+
+              seed:
+                  3,
+
+            ),
+
+          ),
+
+        ],
+
+      ),
+
+    );
+
+  }
+
+
+
+
+
+
+  Widget _buildChestGlow(
+    double t,
+    Offset center,
+    double size,
+  ) {
+
+
+    if (t < chestInEnd) {
+
+      return const SizedBox.shrink();
+
+    }
+
+
+
+    final open =
+        _phase(
+          chestInEnd,
+          chestOpenEnd,
+          t,
+        );
+
+
+
+    final opacity =
+        open *
+        (1 -
+            _phase(
+              starEnd,
+              1,
+              t,
+            ));
+
+
+
+    return Positioned.fill(
+
+      child:
+          Opacity(
+
+        opacity:
+            opacity.clamp(
+              0.0,
+              1.0,
+            ),
+
+
+
+        child:
+            Center(
+
+          child:
+              Container(
+
+            width:
+                size * 0.9,
+
+            height:
+                size * 0.9,
+
+
+
+            decoration:
+                const BoxDecoration(
+
+              shape:
+                  BoxShape.circle,
+
+
+              gradient:
+                  RadialGradient(
+
+                colors: [
+
+                  Color(
+                    0xfffff3c4,
+                  ),
+
+                  Colors.transparent,
+
+                ],
+
+              ),
+
+            ),
+
+          ),
+
+        ),
+
+      ),
+
+    );
+
+  }
+
+
+
+
+
+
+  Widget _buildChest(
+    double t,
+    Offset center,
+    double size,
+  ) {
+
+
+    if (t < shatterEnd) {
+
+      return const SizedBox.shrink();
+
+    }
+
+
+
+    final appear =
+        _phase(
+          shatterEnd,
+          chestInEnd,
+          t,
+        );
+
+
+
+    final open =
+        _phase(
+          chestInEnd,
+          chestOpenEnd,
+          t,
+        );
+
+
+
+    final chestSize =
+        size * 0.62;
+
+
+
+    return Positioned(
+
+      left:
+          center.dx -
+          chestSize / 2,
+
+
+      top:
+          center.dy -
+          chestSize / 2,
+
+
+      width:
+          chestSize,
+
+
+      height:
+          chestSize,
+
+
+
+      child:
+          Transform.scale(
+
+        scale:
+            Curves.easeOutBack.transform(
+              appear,
+            ),
+
+
+
+        child:
+            Stack(
+
+          alignment:
+              Alignment.center,
+
+
+
+          children: [
+
+
+            Opacity(
+
+              opacity:
+                  1 - open,
+
+
+
+              child:
+                  Image.asset(
+
+                'assets/images/rewards/reward_chest_closed.png',
+
+                fit:
+                    BoxFit.contain,
+
+              ),
+
+            ),
+
+
+
+            Opacity(
+
+              opacity:
+                  open,
+
+
+
+              child:
+                  Image.asset(
+
+                'assets/images/rewards/reward_chest_open.png',
+
+                fit:
+                    BoxFit.contain,
+
+              ),
+
+            ),
+
+
+          ],
+
+        ),
+
+      ),
+
+    );
+
+  }
+
+  Widget _buildStar(
+    double t,
+    Offset chest,
+  ) {
+
+
+    if (t < chestOpenEnd) {
+
+      return const SizedBox.shrink();
+
+    }
+
+
+
+    final progress =
+        _phase(
+          chestOpenEnd,
+          starEnd,
+          t,
+        );
+
+
+
+    if (progress >= 1) {
+
+
+      if (!_starLanded) {
+
+        _starLanded = true;
+
+
+        WidgetsBinding.instance
+            .addPostFrameCallback(
+          (_) {
+
+            if (mounted) {
+
+              widget.onStarEarned?.call();
+
+            }
+
+          },
+        );
+
+      }
+
+
+      return const SizedBox.shrink();
+
+    }
+
+
+
+    final target =
+        _starTarget ??
+        chest;
+
+
+
+    final eased =
+        Curves.easeInOutCubic
+            .transform(
+              progress,
+            );
+
+
+
+    final position =
+        Offset.lerp(
+          chest,
+          target,
+          eased,
+        )! +
+        Offset(
+          0,
+          -math.sin(
+                progress *
+                    math.pi,
+              ) *
+              90,
+        );
+
+
+
+    return Positioned(
+
+      left:
+          position.dx -
+          28,
+
+
+      top:
+          position.dy -
+          28,
+
+
+
+      child:
+          Image.asset(
+
+        'assets/images/rewards/Star_gold.png',
+
+        width:
+            56,
+
+        height:
+            56,
+
+      ),
+
+    );
+
+  }
+
+
+
+
+
+  Widget _buildGem(
+    double t,
+    Offset chest,
+  ) {
+
+
+    if (t < starEnd) {
+
+      return const SizedBox.shrink();
+
+    }
+
+
+
+    final progress =
+        _phase(
+          starEnd,
+          gemEnd,
+          t,
+        );
+
+
+
+    if (progress >= 1) {
+
+
+      if (!_gemLanded) {
+
+        _gemLanded = true;
+
+
+        WidgetsBinding.instance
+            .addPostFrameCallback(
+          (_) {
+
+            if (mounted) {
+
+              widget.onGemEarned?.call();
+
+            }
+
+          },
+        );
+
+      }
+
+
+      return const SizedBox.shrink();
+
+    }
+
+
+
+    final target =
+        _gemTarget ??
+        chest;
+
+
+
+    final eased =
+        Curves.easeInOutCubic
+            .transform(
+              progress,
+            );
+
+
+
+    final position =
+        Offset.lerp(
+          chest,
+          target,
+          eased,
+        )! +
+        Offset(
+          0,
+          -math.sin(
+                progress *
+                    math.pi,
+              ) *
+              90,
+        );
+
+
+
+    return Positioned(
+
+      left:
+          position.dx -
+          26,
+
+
+      top:
+          position.dy -
+          26,
+
+
+
+      child:
+          Image.asset(
+
+        'assets/images/rewards/gem.png',
+
+        width:
+            52,
+
+        height:
+            52,
+
+      ),
+
+    );
+
+  }
+
+
+
+
+
+
+  Widget _buildFade(
+    double t,
+  ) {
+
+
+    final value =
+        _phase(
+          fadeStart,
+          1,
+          t,
+        );
+
+
+    if (value <= 0) {
+
+      return const SizedBox.shrink();
+
+    }
+
+
+
+    return Positioned.fill(
+
+      child:
+          Container(
+
+        color:
+            Color.fromRGBO(
+              6,
+              11,
+              31,
+              value,
+            ),
+
+      ),
+
+    );
+
+  }
+
+
+}
