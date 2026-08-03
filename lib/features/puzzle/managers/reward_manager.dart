@@ -726,6 +726,22 @@ static Future<bool> spendStars(
 
   }
 
+  //==================================================
+  // توافق مع شاشات المكافآت القديمة
+  //==================================================
 
+  static Future<void> addStar() async {
+
+    await addStars(1);
+
+  }
+
+
+
+  static Future<void> addGem() async {
+
+    await addGems(1);
+
+  }
 
 }
