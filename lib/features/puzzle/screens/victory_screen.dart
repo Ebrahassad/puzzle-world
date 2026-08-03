@@ -1,980 +1,623 @@
-import 'dart:async';
+import 'dart:math';
 import 'dart:ui' as ui;
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../managers/reward_manager.dart';
-import '../models/reward_result_model.dart';
-import '../models/puzzle_model.dart';
 
+// --- Audio Helper (Replace with your actual audio manager) ---
+void _playSound(String soundName) {
+  debugPrint("🎵 Playing Sound: $soundName");
+}
 
-class PuzzlePieceDataModel {
-  final int row;
-  final int col;
-  final Path path;
+// --- Data Models ---
+class PuzzlePiece {
   final Rect sourceRect;
-  final Offset originalCenter;
+  final Path path; 
+  
+  double x = 0.0;
+  double y = 0.0;
+  double rotationZ = 0.0;
+  double scale = 1.0;
+  double opacity = 1.0;
+  
+  // Velocity vectors
+  double vx = 0.0;
+  double vy = 0.0;
+  double vr = 0.0;
 
-  const PuzzlePieceDataModel({
-    required this.row,
-    required this.col,
-    required this.path,
-    required this.sourceRect,
-    required this.originalCenter,
-  });
+  PuzzlePiece({required this.sourceRect, required this.path});
 }
 
-class _PieceAnimData {
-  final double moveAngle;
-  final double speedFactor;
-  final double rotationOffset;
-
-  const _PieceAnimData({
-    required this.moveAngle,
-    required this.speedFactor,
-    required this.rotationOffset,
-  });
+class _Particle {
+  double distance = 0.0;
+  double angle = 0.0;
+  double speed = 0.0;
+  double radius = 0.0;
+  double alpha = 1.0;
+  bool active = false;
 }
 
-class VictoryCinematicScreen extends StatefulWidget {
-  final ImageProvider puzzleImage;
-  final int levelNumber;
+// --- Main Victory Screen ---
+class VictoryScreen extends StatefulWidget {
+  final ui.Image puzzleImage;
+  final List<PuzzlePiece> pieces;
+  final VoidCallback onReplay;
+  final VoidCallback onNextLevel;
   final bool isFinalLevel;
-  final PuzzleModel island;
-  final GlobalKey? starTargetKey;
-  final GlobalKey? gemTargetKey;
-  final List<PuzzlePieceDataModel>? prebuiltPieces;
-  final VoidCallback? onFinished;
-  final VoidCallback? onStarEarned;
-  final VoidCallback? onGemEarned;
-  final VoidCallback? onNextLevel;
-  final VoidCallback? onReplay;
-  final VoidCallback? onGoToMap;
+  final VoidCallback onFinished;
+  
+  // Added as an optional parameter to maintain backwards compatibility
+  final GlobalKey? targetIconKey; 
 
-  const VictoryCinematicScreen({
+  const VictoryScreen({
     Key? key,
     required this.puzzleImage,
-    required this.levelNumber,
-    required this.isFinalLevel,
-  required this.island,
-    this.starTargetKey,
-    this.gemTargetKey,
-    this.prebuiltPieces,
-    this.onFinished,
-    this.onStarEarned,
-    this.onGemEarned,
-    this.onNextLevel,
-    this.onReplay,
-    this.onGoToMap,
+    required this.pieces,
+    required this.onReplay,
+    required this.onNextLevel,
+    this.isFinalLevel = false,
+    required this.onFinished,
+    this.targetIconKey,
   }) : super(key: key);
 
   @override
-  State<VictoryCinematicScreen> createState() => _VictoryCinematicScreenState();
+  _VictoryScreenState createState() => _VictoryScreenState();
 }
 
-class _VictoryCinematicScreenState extends State<VictoryCinematicScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _puzzleAssembleController;
-  late AnimationController _puzzleShatterController;
-  late AnimationController _chestDropController;
-  late AnimationController _chestOpenController;
-  late AnimationController _chestFlareController;
-  late AnimationController _starFlyController;
-  late AnimationController _gemFlyController;
-  late AnimationController _celebrationController;
+class _VictoryScreenState extends State<VictoryScreen> with TickerProviderStateMixin {
+  // Sequence Controllers (No Future.delayed)
+  late AnimationController _pauseController;
+  late AnimationController _chestSequenceController;
+  late AnimationController _flightController;
+  late AnimationController _chestFadeController;
+  late AnimationController _uiController;
+  
+  // Animation States
+  bool _showPuzzle = true;
+  bool _shatterStarted = false;
+  bool _showChest = false;
+  bool _chestOpened = false;
+  bool _showRewardFlight = false;
+  bool _rewardGranted = false;
 
-  final GlobalKey _chestWidgetKey = GlobalKey();
+  // Tickers for Physics (Updates handled strictly outside CustomPainters)
+  late Ticker _puzzlePhysicsTicker;
+  late Ticker _particleTicker;
+  
+  // Disney-Style Chest Animations
+  late Animation<double> _chestFallBounce;
+  late Animation<double> _chestAnticipation;
+  late Animation<double> _chestShake;
+  late Animation<double> _chestPop;
+  
+  // Particle System
+  final int _maxParticles = 25;
+  late List<_Particle> _particles;
 
-  bool _isPuzzleShattered = false;
-  bool _isChestVisible = false;
-  bool _isStarFlying = false;
-  bool _isGemFlying = false;
-  bool _showCelebrationBanner = false;
-  bool _showActionButtons = false;
-
-  bool _isSecondChestPhase = false;
-  bool _isSecondChestVisible = false;
-  bool _isSecondChestOpen = false;
-
-  bool _starRewardTriggered = false;
-  bool _gemRewardTriggered = false;
-  bool _sequenceStarted = false;
-
-  Offset _starTargetOffset = Offset.zero;
-  Offset _gemTargetOffset = Offset.zero;
-
-  ui.Image? _resolvedPuzzleImage;
-  ImageStream? _imageStream;
-  ImageStreamListener? _imageStreamListener;
-
-  List<PuzzlePieceDataModel> _cachedPieces = [];
-  List<_PieceAnimData> _cachedPieceAnimationData = [];
-
-  bool get _effectiveIsFinalLevel =>
-      widget.isFinalLevel || widget.levelNumber == 10;
+  // Bezier Flight Path
+  Offset _flightStart = Offset.zero;
+  Offset _flightEnd = Offset.zero;
 
   @override
   void initState() {
     super.initState();
-
-    _puzzleAssembleController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
-
-    _puzzleShatterController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-
-    _chestDropController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
-
-    _chestOpenController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-
-    _chestFlareController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-
-    _starFlyController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-
-    _gemFlyController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1100),
-    );
-
-    _celebrationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-
-    if (widget.prebuiltPieces != null && widget.prebuiltPieces!.isNotEmpty) {
-      _cachedPieces = widget.prebuiltPieces!;
-      _initPieceAnimationData();
-    }
-
-    _loadUiImage();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_sequenceStarted) {
-        _sequenceStarted = true;
-        _runVictorySequence();
-      }
-    });
-  }
-
-  void _loadUiImage() {
-    final provider = widget.puzzleImage;
-    _imageStream = provider.resolve(const ImageConfiguration());
-    _imageStreamListener = ImageStreamListener((info, _) {
-      if (mounted) {
-        setState(() {
-          _resolvedPuzzleImage = info.image;
-          if (_cachedPieces.isEmpty) {
-            final sz = MediaQuery.of(context).size;
-            final puzzleDim = math.min(sz.width * 0.75, 320.0);
-            _generateSharedEdgePuzzlePieces(Size(puzzleDim, puzzleDim), 4, 4);
-          }
-        });
-      }
-    });
-    _imageStream?.addListener(_imageStreamListener!);
-  }
-
-  void _generateSharedEdgePuzzlePieces(Size size, int rows, int cols) {
-    final double pieceWidth = size.width / cols;
-    final double pieceHeight = size.height / rows;
+    _initParticles();
+    _setupControllers();
+    _setupAnimations();
     
-    final List<List<int>> horizontalTabs = List.generate(
-      rows, 
-      (_) => List.generate(cols - 1, (index) => (index + _) % 2 == 0 ? 1 : -1)
+    // Start Sequence: Assemble puzzle -> wait briefly
+    _playSound("puzzle_complete");
+    _pauseController.forward();
+  }
+
+  void _initParticles() {
+    final rnd = Random();
+    _particles = List.generate(_maxParticles, (index) => _Particle()
+      ..angle = rnd.nextDouble() * 2 * pi
+      ..speed = 3.0 + rnd.nextDouble() * 5.0
+      ..radius = rnd.nextDouble() * 3.0 + 2.0
+      ..active = false
     );
-    final List<List<int>> verticalTabs = List.generate(
-      rows - 1, 
-      (_) => List.generate(cols, (index) => (index + _) % 2 == 0 ? 1 : -1)
-    );
+  }
 
-    final List<PuzzlePieceDataModel> pieces = [];
-
-    for (int r = 0; r < rows; r++) {
-      for (int c = 0; c < cols; c++) {
-        final double x = c * pieceWidth;
-        final double y = r * pieceHeight;
-        final Path path = Path();
-
-        path.moveTo(x, y);
-
-        if (r == 0) {
-          path.lineTo(x + pieceWidth, y);
-        } else {
-          final int topDir = -verticalTabs[r - 1][c];
-          _buildEdge(path, x, y, x + pieceWidth, y, topDir);
-        }
-
-        if (c == cols - 1) {
-          path.lineTo(x + pieceWidth, y + pieceHeight);
-        } else {
-          final int rightDir = horizontalTabs[r][c];
-          _buildEdge(path, x + pieceWidth, y, x + pieceWidth, y + pieceHeight, rightDir);
-        }
-
-        if (r == rows - 1) {
-          path.lineTo(x, y + pieceHeight);
-        } else {
-          final int bottomDir = verticalTabs[r][c];
-          _buildEdge(path, x + pieceWidth, y + pieceHeight, x, y + pieceHeight, bottomDir);
-        }
-
-        if (c == 0) {
-          path.close();
-        } else {
-          final int leftDir = -horizontalTabs[r][c - 1];
-          _buildEdge(path, x, y + pieceHeight, x, y, leftDir);
-          path.close();
-        }
-
-        pieces.add(PuzzlePieceDataModel(
-          row: r,
-          col: c,
-          path: path,
-          sourceRect: Rect.fromLTWH(x, y, pieceWidth, pieceHeight),
-          originalCenter: Offset(x + pieceWidth / 2, y + pieceHeight / 2),
-        ));
+  void _setupControllers() {
+    // 1. Pause after puzzle assembly
+    _pauseController = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+    _pauseController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _triggerShatterAndChestFall();
       }
-    }
+    });
 
-    _cachedPieces = pieces;
-    _initPieceAnimationData();
+    // 2. Chest Disney Sequence (Fall, Bounce, Squash, Shake, Open)
+    _chestSequenceController = AnimationController(vsync: this, duration: const Duration(milliseconds: 2200));
+    _chestSequenceController.addListener(_chestSequenceAudioListener);
+    _chestSequenceController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _triggerRewardFlight();
+      }
+    });
+
+    // 3. Reward Flight
+    _flightController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
+    _flightController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _triggerFinalization();
+      }
+    });
+
+    // 4. Chest Fade Out
+    _chestFadeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+
+    // 5. UI Fade In
+    _uiController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+
+    // Tickers
+    _puzzlePhysicsTicker = createTicker((_) => _updatePuzzlePhysics());
+    _particleTicker = createTicker((_) => _updateParticlePhysics());
   }
 
-  void _buildEdge(Path path, double x1, double y1, double x2, double y2, int direction) {
-    if (direction == 0) {
-      path.lineTo(x2, y2);
-      return;
-    }
+  void _setupAnimations() {
+    // Fall & Bounce
+    _chestFallBounce = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: -500.0, end: 0.0).chain(CurveTween(curve: Curves.easeInCubic)), weight: 30),
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: -60.0).chain(CurveTween(curve: Curves.easeOutQuad)), weight: 15),
+      TweenSequenceItem(tween: Tween(begin: -60.0, end: 0.0).chain(CurveTween(curve: Curves.easeInQuad)), weight: 15),
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: -20.0).chain(CurveTween(curve: Curves.easeOutQuad)), weight: 10),
+      TweenSequenceItem(tween: Tween(begin: -20.0, end: 0.0).chain(CurveTween(curve: Curves.bounceOut)), weight: 30),
+    ]).animate(CurvedAnimation(parent: _chestSequenceController, curve: const Interval(0.0, 0.4)));
 
-    final double dx = x2 - x1;
-    final double dy = y2 - y1;
-    final double length = math.sqrt(dx * dx + dy * dy);
-    final double nx = dx / length;
-    final double ny = dy / length;
-    final double px = -ny * direction;
-    final double py = nx * direction;
+    // Anticipation (Squash)
+    _chestAnticipation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.85).chain(CurveTween(curve: Curves.easeInOut)), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 0.85, end: 1.0).chain(CurveTween(curve: Curves.easeInOut)), weight: 50),
+    ]).animate(CurvedAnimation(parent: _chestSequenceController, curve: const Interval(0.45, 0.55)));
 
-    final p1 = Offset(x1 + dx * 0.35, y1 + dy * 0.35);
-    final p2 = Offset(x1 + dx * 0.5 + px * length * 0.2, y1 + dy * 0.5 + py * length * 0.2);
-    final p3 = Offset(x1 + dx * 0.65, y1 + dy * 0.65);
+    // Shake
+    _chestShake = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 0.15), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 0.15, end: -0.15), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -0.15, end: 0.15), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 0.15, end: -0.1), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -0.1, end: 0.0), weight: 1),
+    ]).animate(CurvedAnimation(parent: _chestSequenceController, curve: const Interval(0.55, 0.75)));
 
-    path.lineTo(p1.dx, p1.dy);
-    path.cubicTo(
-      p1.dx + px * length * 0.1, p1.dy + py * length * 0.1,
-      p2.dx - nx * length * 0.1, p2.dy - ny * length * 0.1,
-      p2.dx, p2.dy,
-    );
-    path.cubicTo(
-      p2.dx + nx * length * 0.1, p2.dy + ny * length * 0.1,
-      p3.dx + px * length * 0.1, p3.dy + py * length * 0.1,
-      p3.dx, p3.dy,
-    );
-    path.lineTo(x2, y2);
+    // Open Overshoot
+    _chestPop = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.25).chain(CurveTween(curve: Curves.easeOutBack)), weight: 40),
+      TweenSequenceItem(tween: Tween(begin: 1.25, end: 1.0).chain(CurveTween(curve: Curves.easeOut)), weight: 60),
+    ]).animate(CurvedAnimation(parent: _chestSequenceController, curve: const Interval(0.75, 0.9)));
   }
 
-  void _initPieceAnimationData() {
-    final random = math.Random(42);
-    _cachedPieceAnimationData = _cachedPieces.map((piece) {
-      final double moveAngle = random.nextDouble() * math.pi * 2;
-      final double speedFactor = 0.7 + random.nextDouble() * 0.6;
-      final double rotationOffset = (random.nextDouble() - 0.5) * 2.0;
-      return _PieceAnimData(
-        moveAngle: moveAngle,
-        speedFactor: speedFactor,
-        rotationOffset: rotationOffset,
-      );
-    }).toList();
+  bool _chestLandedPlayed = false;
+  bool _chestOpenedPlayed = false;
+  
+  void _chestSequenceAudioListener() {
+    final val = _chestSequenceController.value;
+    
+    // Fall finishes at 0.4 interval
+    if (val >= 0.4 && !_chestLandedPlayed) {
+      _chestLandedPlayed = true;
+      _playSound("chest_landing");
+    }
+    
+    // Open starts at 0.75 interval
+    if (val >= 0.75 && !_chestOpenedPlayed) {
+      _chestOpenedPlayed = true;
+      _playSound("chest_opening");
+      
+      setState(() {
+        _chestOpened = true;
+      });
+      
+      // Start magical particle burst
+      _playSound("magical_burst");
+      for (var p in _particles) {
+        p.active = true;
+        p.distance = 0.0;
+        p.alpha = 1.0;
+      }
+      _particleTicker.start();
+    }
+  }
+
+  void _triggerShatterAndChestFall() {
+    setState(() {
+      _shatterStarted = true;
+      _showChest = true;
+    });
+    
+    _playSound("explosion");
+    
+    final random = Random();
+    for (var piece in widget.pieces) {
+      // Strong upward impulse
+      piece.vx = (random.nextDouble() - 0.5) * 25; 
+      piece.vy = -15 - (random.nextDouble() * 18);
+      piece.vr = (random.nextDouble() - 0.5) * 0.4;
+      piece.opacity = 1.0;
+    }
+    
+    _puzzlePhysicsTicker.start();
+    _chestSequenceController.forward();
+  }
+
+  void _updatePuzzlePhysics() {
+    bool piecesActive = false;
+    setState(() {
+      for (var piece in widget.pieces) {
+        if (piece.opacity <= 0.01) continue;
+        piecesActive = true;
+        
+        piece.x += piece.vx;
+        piece.y += piece.vy;
+        
+        piece.vy += 0.9; // Gravity
+        
+        // Air resistance
+        piece.vx *= 0.97;
+        piece.vy *= 0.97;
+        piece.vr *= 0.97;
+
+        piece.rotationZ += piece.vr;
+        
+        piece.scale = max(0.0, piece.scale - 0.008);
+        piece.opacity = max(0.0, piece.opacity - 0.02);
+      }
+    });
+
+    if (!piecesActive && _shatterStarted) {
+      _puzzlePhysicsTicker.stop();
+      setState(() {
+        _showPuzzle = false;
+      });
+    }
+  }
+
+  void _updateParticlePhysics() {
+    bool particlesActive = false;
+    setState(() {
+      for (var p in _particles) {
+        if (!p.active) continue;
+        particlesActive = true;
+        
+        p.distance += p.speed;
+        p.alpha = max(0.0, p.alpha - 0.02); // Fade out as they burst outward
+        
+        if (p.alpha <= 0.01) {
+          p.active = false;
+        }
+      }
+    });
+
+    if (!particlesActive) {
+      _particleTicker.stop();
+    }
+  }
+
+  void _triggerRewardFlight() {
+    _playSound("reward_flying");
+    
+    // Calculate accurate screen positions
+    final size = MediaQuery.of(context).size;
+    _flightStart = Offset(size.width / 2, size.height / 2);
+    
+    if (widget.targetIconKey != null && widget.targetIconKey!.currentContext != null) {
+      final RenderBox box = widget.targetIconKey!.currentContext!.findRenderObject() as RenderBox;
+      _flightEnd = box.localToGlobal(Offset(box.size.width / 2, box.size.height / 2));
+    } else {
+      // Fallback
+      _flightEnd = Offset(size.width - 40, 40);
+    }
+
+    setState(() {
+      _showRewardFlight = true;
+    });
+    
+    _flightController.forward();
+  }
+
+  void _triggerFinalization() {
+    if (_rewardGranted) return;
+    _rewardGranted = true;
+    
+    _playSound("reward_collected");
+    
+    setState(() {
+      _showRewardFlight = false; // Hide gem once it hits the UI
+    });
+
+    _chestFadeController.forward();
+
+    if (widget.isFinalLevel) {
+      widget.onFinished();
+    } else {
+      _uiController.forward();
+    }
   }
 
   @override
   void dispose() {
-    if (_imageStream != null && _imageStreamListener != null) {
-      _imageStream!.removeListener(_imageStreamListener!);
-    }
-    _puzzleAssembleController.dispose();
-    _puzzleShatterController.dispose();
-    _chestDropController.dispose();
-    _chestOpenController.dispose();
-    _chestFlareController.dispose();
-    _starFlyController.dispose();
-    _gemFlyController.dispose();
-    _celebrationController.dispose();
+    _pauseController.dispose();
+    _chestSequenceController.dispose();
+    _flightController.dispose();
+    _chestFadeController.dispose();
+    _uiController.dispose();
+    _puzzlePhysicsTicker.dispose();
+    _particleTicker.dispose();
     super.dispose();
-  }
-
-  void _calculateTargetPositions() {
-    final Size screenSize = MediaQuery.of(context).size;
-
-    if (widget.starTargetKey != null) {
-      _starTargetOffset = _getOffsetFromKey(widget.starTargetKey!) ??
-          Offset(screenSize.width * 0.2, 50);
-    } else {
-      _starTargetOffset = Offset(screenSize.width * 0.2, 50);
-    }
-        
-    if (widget.gemTargetKey != null) {
-      _gemTargetOffset = _getOffsetFromKey(widget.gemTargetKey!) ??
-          Offset(screenSize.width * 0.8, 50);
-    } else {
-      _gemTargetOffset = Offset(screenSize.width * 0.8, 50);
-    }
-  }
-
-  Offset? _getOffsetFromKey(GlobalKey key) {
-    final RenderBox? renderBox =
-        key.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox != null) {
-      final position = renderBox.localToGlobal(Offset.zero);
-      final size = renderBox.size;
-      return Offset(
-          position.dx + size.width / 2, position.dy + size.height / 2);
-    }
-    return null;
-  }
-
-  Offset _getChestCenterOffset() {
-    final RenderBox? renderBox =
-        _chestWidgetKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox != null) {
-      final position = renderBox.localToGlobal(Offset.zero);
-      final size = renderBox.size;
-      return Offset(position.dx + size.width / 2, position.dy + size.height / 2);
-    }
-    final Size screenSize = MediaQuery.of(context).size;
-    return Offset(screenSize.width / 2, screenSize.height / 2);
-  }
-
-  Future<void> _runVictorySequence() async {
-    await _puzzleAssembleController.forward();
-    await Future.delayed(const Duration(milliseconds: 200));
-
-    if (!mounted) return;
-    setState(() => _isPuzzleShattered = true);
-    await _puzzleShatterController.forward();
-
-    if (!mounted) return;
-    setState(() => _isChestVisible = true);
-    await _chestDropController.forward();
-    
-    await _chestOpenController.forward();
-    await _chestFlareController.forward();
-
-    _calculateTargetPositions();
-
-    if (!mounted) return;
-    setState(() => _isStarFlying = true);
-    await _starFlyController.forward();
-    
-    if (!mounted) return;
-    setState(() => _isStarFlying = false);
-
-    if (!_starRewardTriggered) {
-      _starRewardTriggered = true;
-      widget.onStarEarned?.call();
-      RewardManager.addReward(
-        const RewardResultModel(
-          stars: 1,
-        ),
-      );
-    }
-
-    if (!_effectiveIsFinalLevel) {
-      if (mounted) {
-        setState(() {
-          _showCelebrationBanner = true;
-          _showActionButtons = true;
-        });
-        _celebrationController.repeat(reverse: true);
-      }
-      widget.onFinished?.call();
-    } else {
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      if (!mounted) return;
-      setState(() {
-        _isSecondChestPhase = true;
-        _isChestVisible = false;
-        _isSecondChestVisible = true;
-        _isSecondChestOpen = false;
-      });
-
-      _chestDropController.reset();
-      _chestOpenController.reset();
-      _chestFlareController.reset();
-      _gemFlyController.reset();
-
-      await _chestDropController.forward();
-      await _chestOpenController.forward();
-
-      if (!mounted) return;
-      setState(() {
-        _isSecondChestOpen = true;
-      });
-
-      await _chestFlareController.forward();
-
-      _calculateTargetPositions();
-
-      if (!mounted) return;
-      setState(() {
-        _isGemFlying = true;
-      });
-
-      await _gemFlyController.forward();
-
-      if (!mounted) return;
-      setState(() {
-        _isGemFlying = false;
-      });
-
-      if (!_gemRewardTriggered) {
-        _gemRewardTriggered = true;
-        widget.onGemEarned?.call();
-        RewardManager.addReward(
-          const RewardResultModel(
-            gems: 1,
-          ),
-        );
-      }
-
-      if (!mounted) return;
-      setState(() {
-        _showCelebrationBanner = true;
-        _showActionButtons = true;
-      });
-      _celebrationController.repeat(reverse: true);
-
-      widget.onFinished?.call();
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final puzzleDim = math.min(screenSize.width * 0.75, 320.0);
-
     return Scaffold(
-      backgroundColor: Colors.black.withOpacity(0.75),
+      backgroundColor: Colors.black87,
       body: Stack(
         children: [
-          if (!_isPuzzleShattered) _buildAssemblingPuzzle(puzzleDim),
-
-          if (_isPuzzleShattered)
-            _buildShatteringPuzzle(puzzleDim),
-
-          if (_isChestVisible || _isSecondChestVisible) _buildChestWidget(),
-
-          if (_isStarFlying)
-            _buildFlyingItem(
-              imagePath: 'assets/images/rewards/Star_gold.png',
-              animation: _starFlyController,
-              start: _getChestCenterOffset(),
-              end: _starTargetOffset,
-              glowColor: Colors.amber,
-            ),
-
-          if (_isGemFlying)
-            _buildFlyingItem(
-              imagePath: 'assets/images/rewards/gem.png',
-              animation: _gemFlyController,
-              start: _getChestCenterOffset(),
-              end: _gemTargetOffset,
-              glowColor: Colors.cyanAccent,
-            ),
-
-          if (_showCelebrationBanner) _buildCelebrationBanner(),
-
-          if (_showActionButtons) _buildActionButtons(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAssemblingPuzzle(double puzzleDim) {
-    return Center(
-      child: ScaleTransition(
-        scale: CurvedAnimation(
-          parent: _puzzleAssembleController,
-          curve: Curves.elasticOut,
-        ),
-        child: FadeTransition(
-          opacity: _puzzleAssembleController,
-          child: Container(
-            width: puzzleDim,
-            height: puzzleDim,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.amberAccent, width: 4),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.amberAccent,
-                  blurRadius: 25,
-                  spreadRadius: 5,
-                )
-              ],
-              image: DecorationImage(
-                image: widget.puzzleImage,
-                fit: BoxFit.cover,
+          // 1. Puzzle Shatter
+          if (_showPuzzle)
+            RepaintBoundary(
+              child: CustomPaint(
+                painter: PuzzleShatterPainter(
+                  image: widget.puzzleImage,
+                  pieces: widget.pieces,
+                ),
+                size: Size.infinite,
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildShatteringPuzzle(double puzzleDim) {
-    if (_resolvedPuzzleImage == null || _cachedPieces.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    return AnimatedBuilder(
-      animation: _puzzleShatterController,
-      builder: (context, child) {
-        final progress = _puzzleShatterController.value;
-        return Center(
-          child: CustomPaint(
-            size: Size(puzzleDim, puzzleDim),
-            painter: AdvancedShatterPainter(
-              image: _resolvedPuzzleImage!,
-              progress: progress,
-              pieces: _cachedPieces,
-              pieceAnimationData: _cachedPieceAnimationData,
+          // 2. Chest & Particles
+          if (_showChest)
+            RepaintBoundary(
+              child: FadeTransition(
+                opacity: Tween<double>(begin: 1.0, end: 0.0).animate(_chestFadeController),
+                child: AnimatedBuilder(
+                  animation: _chestSequenceController,
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(0, _chestFallBounce.value),
+                      child: Transform.scale(
+                        scale: _chestOpened ? _chestPop.value : _chestAnticipation.value,
+                        child: Transform.rotate(
+                          angle: _chestShake.value,
+                          child: Center(
+                            child: _chestOpened 
+                                ? ChestOpenedEffect(particles: _particles) 
+                                : Image.asset('assets/chest_closed.png', width: 160),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ),
-          ),
-        );
-      },
-    );
-  }
 
-  Widget _buildChestWidget() {
-    return Center(
-      child: AnimatedBuilder(
-        animation: Listenable.merge(
-            [_chestDropController, _chestOpenController, _chestFlareController]),
-        builder: (context, child) {
-          final dropValue = CurvedAnimation(
-            parent: _chestDropController,
-            curve: Curves.elasticOut,
-          ).value;
+          // 3. Cinematic Reward Flight
+          if (_showRewardFlight)
+            AnimatedBuilder(
+              animation: _flightController,
+              builder: (context, child) {
+                // EaseInOutCubic curve application
+                final t = Curves.easeInOutCubic.transform(_flightController.value);
+                
+                final control = Offset(_flightStart.dx + 150, _flightStart.dy - 100);
+                final pos = _calculateBezier(t, _flightStart, control, _flightEnd);
+                
+                final scale = 1.0 + sin(t * pi) * 0.8; 
+                final rotation = t * pi * 4;
 
-          final flareValue = _chestFlareController.value;
-          final isOpen = _isSecondChestPhase
-              ? (_isSecondChestOpen || _chestOpenController.value > 0.5)
-              : (_chestOpenController.value > 0.5);
+                return Positioned(
+                  left: pos.dx - 25,
+                  top: pos.dy - 25,
+                  child: CustomPaint(
+                    painter: GemTrailPainter(progress: t),
+                    child: Transform.scale(
+                      scale: scale,
+                      child: Transform.rotate(
+                        angle: rotation,
+                        child: Image.asset('assets/gem.png', width: 50, height: 50),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
 
-          double shakeOffset = 0.0;
-          if (_chestOpenController.isAnimating || _chestOpenController.value > 0) {
-            shakeOffset = math.sin(_chestOpenController.value * math.pi * 8) * 3.0 * (1.0 - _chestOpenController.value);
-          }
-
-          return Transform.translate(
-            offset: Offset(shakeOffset, (1.0 - dropValue) * -400),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Container(
-                  width: 200 + (flareValue * 140),
-                  height: 200 + (flareValue * 140),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        (_isSecondChestPhase ? Colors.cyan : Colors.amber)
-                            .withOpacity(0.9 * (0.5 + flareValue / 2)),
-                        (_isSecondChestPhase ? Colors.blue : Colors.orange)
-                            .withOpacity(0.5),
-                        Colors.transparent,
+          // 4. UI Actions (Hidden on Final Level)
+          if (!widget.isFinalLevel)
+            RepaintBoundary(
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 50.0),
+                  child: FadeTransition(
+                    opacity: _uiController,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          onPressed: widget.onReplay, 
+                          style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
+                          child: const Text("Replay", style: TextStyle(fontSize: 18))
+                        ),
+                        const SizedBox(width: 20),
+                        ElevatedButton(
+                          onPressed: widget.onNextLevel,
+                          style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)), 
+                          child: const Text("Next Level", style: TextStyle(fontSize: 18))
+                        ),
                       ],
                     ),
                   ),
                 ),
-                if (flareValue > 0)
-                  CustomPaint(
-                    size: const Size(200, 200),
-                    painter: ChestLightBurstPainter(
-                      progress: flareValue,
-                      color: _isSecondChestPhase ? Colors.cyanAccent : Colors.amberAccent,
-                    ),
-                  ),
-                if (_isSecondChestPhase)
-                  CustomPaint(
-                    size: const Size(200, 200),
-                    painter: ParticleBurstPainter(
-                      progress: flareValue,
-                      isGem: true,
-                    ),
-                  )
-                else
-                  CustomPaint(
-                    size: const Size(200, 200),
-                    painter: ParticleBurstPainter(
-                      progress: flareValue,
-                      isGem: false,
-                    ),
-                  ),
-                Image(
-                  key: _chestWidgetKey,
-                  image: isOpen
-                      ? const AssetImage('assets/images/rewards/reward_chest_open.png')
-                      : const AssetImage('assets/images/rewards/reward_chest_closed.png'),
-                  width: 130,
-                  height: 130,
-                  fit: BoxFit.contain,
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildFlyingItem({
-    required String imagePath,
-    required AnimationController animation,
-    required Offset start,
-    required Offset end,
-    required Color glowColor,
-  }) {
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (context, child) {
-        final t = Curves.easeInOutCubic.transform(animation.value);
-
-        final controlPoint = Offset(
-          (start.dx + end.dx) / 2 + (start.dx < end.dx ? -100 : 100),
-          math.min(start.dy, end.dy) - 180,
-        );
-
-        final currentDx = math.pow(1 - t, 2) * start.dx +
-            2 * (1 - t) * t * controlPoint.dx +
-            math.pow(t, 2) * end.dx;
-
-        final currentDy = math.pow(1 - t, 2) * start.dy +
-            2 * (1 - t) * t * controlPoint.dy +
-            math.pow(t, 2) * end.dy;
-
-        final scale = 1.3 - (t * 0.4) + (math.sin(t * math.pi) * 0.2);
-        final rotation = t * math.pi * 4;
-
-        return Positioned(
-          left: currentDx - 30,
-          top: currentDy - 30,
-          child: CustomPaint(
-            foregroundPainter: RealisticParticleTrailPainter(
-              progress: animation.value,
-              color: glowColor,
-            ),
-            child: Transform.rotate(
-              angle: rotation,
-              child: Transform.scale(
-                scale: scale,
-                child: Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: glowColor.withOpacity(0.9),
-                        blurRadius: 25,
-                        spreadRadius: 8,
-                      ),
-                    ],
-                  ),
-                  child: Image(
-                    image: AssetImage(imagePath),
-                    fit: BoxFit.contain,
-                  ),
-                ),
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCelebrationBanner() {
-    return Positioned(
-      top: 80,
-      left: 0,
-      right: 0,
-      child: Center(
-        child: AnimatedBuilder(
-          animation: _celebrationController,
-          builder: (context, child) {
-            final pulse = 1.0 + (_celebrationController.value * 0.08);
-            return Transform.scale(
-              scale: pulse,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Colors.purple, Colors.deepOrange],
-                  ),
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.amber.withOpacity(0.8),
-                      blurRadius: 35,
-                      spreadRadius: 8,
-                    ),
-                  ],
-                ),
-                child: Text(
-                  _effectiveIsFinalLevel
-                      ? '🏝️ Island Completed! Gem Acquired 💎'
-                      : '🎉 Level Completed! Star Acquired ⭐',
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black45,
-                        offset: Offset(2, 2),
-                        blurRadius: 4,
-                      )
-                    ],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionButtons() {
-    return Positioned(
-      bottom: 50,
-      left: 0,
-      right: 0,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ElevatedButton.icon(
-            onPressed: () => widget.onReplay?.call(),
-            icon: const Icon(Icons.replay),
-            label: const Text('إعادة اللعب'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-          ),
-          if (!_effectiveIsFinalLevel) ...[
-            const SizedBox(width: 12),
-            ElevatedButton.icon(
-              onPressed: () => widget.onNextLevel?.call(),
-              icon: const Icon(Icons.skip_next),
-              label: const Text('المرحلة التالية'),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            ),
-          ],
-          const SizedBox(width: 12),
-          ElevatedButton.icon(
-            onPressed: () => widget.onGoToMap?.call(),
-            icon: const Icon(Icons.map),
-            label: const Text('الخريطة'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-          ),
         ],
       ),
     );
   }
+
+  Offset _calculateBezier(double t, Offset p0, Offset p1, Offset p2) {
+    double u = 1 - t;
+    double tt = t * t;
+    double uu = u * u;
+    
+    double dx = uu * p0.dx + 2 * u * t * p1.dx + tt * p2.dx;
+    double dy = uu * p0.dy + 2 * u * t * p1.dy + tt * p2.dy;
+    return Offset(dx, dy);
+  }
 }
 
-class AdvancedShatterPainter extends CustomPainter {
+// --- Puzzle Shatter Painter ---
+class PuzzleShatterPainter extends CustomPainter {
   final ui.Image image;
-  final double progress;
-  final List<PuzzlePieceDataModel> pieces;
-  final List<_PieceAnimData> pieceAnimationData;
+  final List<PuzzlePiece> pieces;
+  
+  static final Paint _imagePaint = Paint()..isAntiAlias = true;
 
-  AdvancedShatterPainter({
-    required this.image,
-    required this.progress,
-    required this.pieces,
-    required this.pieceAnimationData,
-  });
+  PuzzleShatterPainter({required this.image, required this.pieces});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final double widgetWidth = size.width;
-    final double widgetHeight = size.height;
-
-    final double scaleX = image.width / widgetWidth;
-    final double scaleY = image.height / widgetHeight;
-
-    for (int i = 0; i < pieces.length; i++) {
-      final piece = pieces[i];
-      final animData = pieceAnimationData[i];
-
-      final double moveAngle = animData.moveAngle;
-      final double speedFactor = animData.speedFactor;
-      final double rotOffset = animData.rotationOffset;
-
-      final double currentRotation = rotOffset * progress * math.pi * 0.75;
-      final double moveDist = 180.0 * progress * speedFactor;
-      final double dx = math.cos(moveAngle) * moveDist;
-      final double dy = math.sin(moveAngle) * moveDist;
-
-      final Offset center = piece.originalCenter;
-      final double scale3D = 1.0 + (progress * 0.15);
-      final double opacity = progress > 0.7 ? (1.0 - (progress - 0.7) / 0.3).clamp(0.0, 1.0) : 1.0;
+    for (var piece in pieces) {
+      if (piece.opacity <= 0.01) continue;
 
       canvas.save();
+      
+      // Hardware accelerated translation only
+      canvas.translate(piece.sourceRect.left + piece.x, piece.sourceRect.top + piece.y);
+      
+      final halfWidth = piece.sourceRect.width / 2;
+      final halfHeight = piece.sourceRect.height / 2;
+      
+      canvas.translate(halfWidth, halfHeight);
+      canvas.rotate(piece.rotationZ);
+      canvas.scale(piece.scale);
+      canvas.translate(-halfWidth, -halfHeight);
 
-      canvas.translate(center.dx + dx, center.dy + dy);
-      canvas.scale(scale3D);
-      canvas.rotate(currentRotation);
-      canvas.translate(-center.dx, -center.dy);
+      // Fade out opacity using color filter
+      _imagePaint.color = Color.fromRGBO(255, 255, 255, piece.opacity);
 
-      final shadowPaint = Paint()
-        ..color = Colors.black.withOpacity(0.35 * opacity)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8.0);
-      canvas.drawPath(piece.path, shadowPaint);
-
+      // EXACT Real Jigsaw path clipping
       canvas.clipPath(piece.path);
-
-      final Rect srcRect = piece.sourceRect;
-      final ui.Rect imageSrcRect = ui.Rect.fromLTWH(
-        srcRect.left * scaleX,
-        srcRect.top * scaleY,
-        srcRect.width * scaleX,
-        srcRect.height * scaleY,
-      );
-
-      canvas.drawImageRect(
-        image,
-        imageSrcRect,
-        srcRect,
-        Paint()..color = Colors.white.withOpacity(opacity),
-      );
-
+      
+      final drawRect = Rect.fromLTWH(0, 0, piece.sourceRect.width, piece.sourceRect.height);
+      canvas.drawImageRect(image, piece.sourceRect, drawRect, _imagePaint);
+      
       canvas.restore();
     }
   }
 
   @override
-  bool shouldRepaint(covariant AdvancedShatterPainter oldDelegate) {
-    return oldDelegate.progress != progress || oldDelegate.image != image;
+  bool shouldRepaint(covariant PuzzleShatterPainter oldDelegate) => true; // Re-paints dictated by Ticker
+}
+
+// --- Chest Flare & Particles ---
+class ChestOpenedEffect extends StatefulWidget {
+  final List<_Particle> particles;
+  
+  const ChestOpenedEffect({Key? key, required this.particles}) : super(key: key);
+
+  @override
+  _ChestOpenedEffectState createState() => _ChestOpenedEffectState();
+}
+
+class _ChestOpenedEffectState extends State<ChestOpenedEffect> with SingleTickerProviderStateMixin {
+  late AnimationController _flareController;
+
+  @override
+  void initState() {
+    super.initState();
+    _flareController = AnimationController(vsync: this, duration: const Duration(seconds: 6))..repeat();
+  }
+
+  @override
+  void dispose() {
+    _flareController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      clipBehavior: Clip.none,
+      children: [
+        AnimatedBuilder(
+          animation: _flareController,
+          builder: (context, child) {
+            return CustomPaint(
+              size: const Size(350, 350),
+              painter: ChestRadialFlarePainter(
+                rotation: _flareController.value * 2 * pi,
+                particles: widget.particles,
+              ),
+            );
+          },
+        ),
+        Image.asset('assets/chest_open.png', width: 170),
+      ],
+    );
   }
 }
 
-class ChestLightBurstPainter extends CustomPainter {
-  final double progress;
-  final Color color;
+class ChestRadialFlarePainter extends CustomPainter {
+  final double rotation;
+  final List<_Particle> particles;
+  
+  static final Paint _flarePaint = Paint()..style = PaintingStyle.fill;
+  static final Paint _particlePaint = Paint()..style = PaintingStyle.fill; // No expensive MaskFilter blur
 
-  ChestLightBurstPainter({required this.progress, required this.color});
+  ChestRadialFlarePainter({required this.rotation, required this.particles});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withOpacity((1.0 - progress).clamp(0.0, 1.0))
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0;
-
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = progress * 90.0;
-    const int rayCount = 10;
+    
+    // Magical radial light sweep
+    final sweepGradient = SweepGradient(
+      center: Alignment.center,
+      colors: const [
+        Color(0x00FFD700), Color(0x99FFEA00), Color(0x00FFD700),
+        Color(0x99FFEA00), Color(0x00FFD700),
+      ],
+      stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+      transform: GradientRotation(rotation),
+    );
 
-    for (int i = 0; i < rayCount; i++) {
-      final angle = (i * 2 * math.pi / rayCount) + (progress * 0.5);
-      final outerPoint = Offset(
-        center.dx + math.cos(angle) * (radius + 25),
-        center.dy + math.sin(angle) * (radius + 25),
-      );
-      final innerPoint = Offset(
-        center.dx + math.cos(angle) * radius,
-        center.dy + math.sin(angle) * radius,
-      );
-      canvas.drawLine(innerPoint, outerPoint, paint);
+    _flarePaint.shader = sweepGradient.createShader(Rect.fromCircle(center: center, radius: size.width / 2));
+    canvas.drawCircle(center, size.width / 2, _flarePaint);
+
+    // Burst sparks (physics computed outside in Ticker)
+    for (var p in particles) {
+      if (!p.active) continue;
+      
+      final px = center.dx + cos(p.angle) * p.distance;
+      final py = center.dy + sin(p.angle) * p.distance;
+      
+      _particlePaint.color = Color.fromRGBO(255, 255, 255, p.alpha);
+      canvas.drawCircle(Offset(px, py), p.radius, _particlePaint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant ChestLightBurstPainter oldDelegate) =>
-      oldDelegate.progress != progress || oldDelegate.color != color;
+  bool shouldRepaint(covariant ChestRadialFlarePainter oldDelegate) => true; 
 }
 
-class ParticleBurstPainter extends CustomPainter {
+// --- Reward Flight Trail ---
+class GemTrailPainter extends CustomPainter {
   final double progress;
-  final bool isGem;
+  static final Paint _trailPaint = Paint()
+    ..color = const Color(0x55FFFFFF) // Lightweight transparency, no blur
+    ..style = PaintingStyle.fill;
 
-  ParticleBurstPainter({required this.progress, required this.isGem});
+  GemTrailPainter({required this.progress});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = (isGem ? Colors.cyanAccent : Colors.amberAccent)
-          .withOpacity((1.0 - progress).clamp(0.0, 1.0))
-      ..style = PaintingStyle.fill;
-
     final center = Offset(size.width / 2, size.height / 2);
-    final random = math.Random(77);
-
-    for (int i = 0; i < 14; i++) {
-      final angle = random.nextDouble() * math.pi * 2;
-      final distance = progress * (60.0 + random.nextDouble() * 50.0);
-      final particleRadius = (random.nextDouble() * 4 + 2) * (1.0 - progress * 0.5);
-
-      final p = Offset(
-        center.dx + math.cos(angle) * distance,
-        center.dy + math.sin(angle) * distance,
-      );
-
-      canvas.drawCircle(p, particleRadius, paint);
-    }
+    canvas.drawCircle(center, 8 * (1 - progress), _trailPaint);
   }
 
   @override
-  bool shouldRepaint(covariant ParticleBurstPainter oldDelegate) =>
-      oldDelegate.progress != progress || oldDelegate.isGem != isGem;
-}
-
-class RealisticParticleTrailPainter extends CustomPainter {
-  final double progress;
-  final Color color;
-
-  RealisticParticleTrailPainter({required this.progress, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withOpacity((1.0 - progress).clamp(0.0, 1.0))
-      ..style = PaintingStyle.fill;
-
-    final random = math.Random(123);
-
-    for (int i = 0; i < 12; i++) {
-      final offsetX = (random.nextDouble() - 0.5) * 70 * progress;
-      final offsetY = (random.nextDouble() - 0.5) * 70 * progress;
-      final radius = (random.nextDouble() * 5 + 2) * (1.0 - progress);
-
-      canvas.drawCircle(
-        Offset(size.width / 2 - offsetX, size.height / 2 - offsetY),
-        radius,
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant RealisticParticleTrailPainter oldDelegate) =>
-      oldDelegate.progress != progress || oldDelegate.color != color;
+  bool shouldRepaint(covariant GemTrailPainter oldDelegate) => true;
 }
