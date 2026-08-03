@@ -373,10 +373,17 @@ trayController.setBounds(
 
 bool _isTouchingPiece(Offset position) {
 
+  controller.trayOffset =
+      trayController.offsetX;
+
+
   for (final piece in controller.pieces) {
 
     if (!piece.isPlaced &&
-        piece.containsPoint(position)) {
+        piece.containsPoint(
+          position,
+          trayController.offsetX,
+        )) {
       return true;
     }
 
@@ -602,11 +609,14 @@ currentIsland: widget.island,
 
         if (_isTouchingPiece(position)) {
 
-          trayDragging = false;
+  trayDragging = false;
 
-          controller.onPanStart(position);
+  controller.trayOffset =
+      trayController.offsetX;
 
-        } else {
+  controller.onPanStart(position);
+
+} else {
 
           trayDragging = true;
 
