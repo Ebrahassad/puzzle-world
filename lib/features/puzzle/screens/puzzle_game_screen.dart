@@ -297,18 +297,20 @@ bool trayDragging = false;
     setState(() {});
 
 
-    final pieceWidth =
-    boardRect.width / widget.level.gridSize;
-final trayContentWidth =
-    pieceWidth * controller.pieces.length +
-    (12 * controller.pieces.length);
+    final totalWidth =
+    controller.pieces.fold<double>(
+  0,
+  (sum, piece) =>
+      sum +
+      piece.localBounds.width +
+      12,
+);
 
 
 trayController.setBounds(
-  contentWidth: trayContentWidth,
+  contentWidth: totalWidth,
   viewportWidth: scatterArea.width,
 );
-
 
 
     if (!stopwatch.isRunning) {
@@ -442,6 +444,10 @@ currentIsland: widget.island,
         ),
       ),
     );
+
+
+
+
   }
 
   @override
@@ -500,6 +506,15 @@ currentIsland: widget.island,
                     setState(() {
                       soundEnabled = enabled;
                     });
+
+
+
+
+
+
+
+
+
 
                     _audioPlayer.setVolume(enabled ? 1 : 0);
                   },
@@ -599,6 +614,50 @@ currentIsland: widget.island,
                   ),
                 ],
               ),
+
+
+Positioned(
+  bottom: 15,
+  left: 0,
+  right: 0,
+  child: Center(
+    child: SizedBox(
+      width: 110,
+      height: 40,
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+        icon: const Icon(Icons.save),
+        label: const Text(
+          "حفظ وخروج",
+          style: TextStyle(
+            fontSize: 12,
+          ),
+        ),
+        onPressed: () async {
+
+          await saveCurrentGame();
+
+          if(!mounted) return;
+
+          Navigator.pop(context);
+
+        },
+      ),
+    ),
+  ),
+),
+
+
+
+
+
+
+
+
 
               if (puzzleCreated)
   Positioned.fill(
