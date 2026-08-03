@@ -543,7 +543,7 @@ currentIsland: widget.island,
                             borderRadius:
                                 BorderRadius.circular(18),
                             child: Opacity(
-                              opacity: 0.07,
+                              opacity: 0.18,
                               child: Image.asset(
                                 widget.level.image,
                                 width: boardSize,
