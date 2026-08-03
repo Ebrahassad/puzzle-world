@@ -4,6 +4,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../managers/reward_manager.dart';
 import '../models/reward_result_model.dart';
+import '../models/puzzle_model.dart';
+
 
 class PuzzlePieceDataModel {
   final int row;
@@ -37,6 +39,7 @@ class VictoryCinematicScreen extends StatefulWidget {
   final ImageProvider puzzleImage;
   final int levelNumber;
   final bool isFinalLevel;
+  final PuzzleModel island;
   final GlobalKey? starTargetKey;
   final GlobalKey? gemTargetKey;
   final List<PuzzlePieceDataModel>? prebuiltPieces;
@@ -52,6 +55,7 @@ class VictoryCinematicScreen extends StatefulWidget {
     required this.puzzleImage,
     required this.levelNumber,
     required this.isFinalLevel,
+  required this.island,
     this.starTargetKey,
     this.gemTargetKey,
     this.prebuiltPieces,
