@@ -590,7 +590,7 @@ if (!mounted) return;
         widget.level.image,
       ),
 
-      levelNumber: widget.level.levelNumber,
+ island: widget.island,
 
       isFinalLevel:
           widget.level.levelNumber == 10,
@@ -610,9 +610,7 @@ onGemEarned: () {},
     MaterialPageRoute(
       builder: (_) => VictoryFinalScreen(
 
-        levelNumber:
-            widget.level.levelNumber,
-
+        
         starsEarned: 1,
 
         gemEarned:
@@ -859,110 +857,78 @@ if(showCoinAnimation &&
     child: Center(
       child: Container(
 
-                        key: boardKey,
+        key: boardKey,
 
+        width: boardSize,
 
-                        width: boardSize,
+        height: boardSize,
 
-                        height: boardSize,
+        decoration: BoxDecoration(
 
+          color: Colors.white.withOpacity(0.05),
 
+          borderRadius:
+              BorderRadius.circular(24),
 
-                        decoration: BoxDecoration(
+          boxShadow: [
 
+            BoxShadow(
 
-                          color:
-                          Colors.white.withOpacity(0.05),
+              color:
+                  Colors.black.withOpacity(0.35),
 
+              blurRadius: 25,
 
+              spreadRadius: 2,
 
-                          borderRadius:
-                          BorderRadius.circular(24),
-
-
-
-                          boxShadow: [
-
-
-                            BoxShadow(
-
-                              color:
-                              Colors.black.withOpacity(0.35),
-
-                              blurRadius: 25,
-
-                              spreadRadius: 2,
-
-                            ),
-
-
-                          ],
-
-
-
-                          border: Border.all(
-
-                            color:
-                            Colors.white.withOpacity(0.18),
-
-                            width: 2,
-
-                          ),
-
-
-                        ),
-
-
-
-
-
-                        child: ClipRRect(
-
-
-                          borderRadius:
-                          BorderRadius.circular(18),
-
-
-
-                          child: Opacity(
-
-
-                            opacity: 0.07,
-
-
-
-                            child: Image.asset(
-
-                              widget.level.image,
-
-
-                              width: boardSize,
-
-                              height: boardSize,
-
-
-                              fit: BoxFit.cover,
-
-                            ),
-
-
-                          ),
-
-
-                        ),
-
-
-                      ),
-
-
-                    ),                      
-                    ),
-                  ),
-                ),
-              ],
             ),
 
+          ],
 
+          border: Border.all(
+
+            color:
+                Colors.white.withOpacity(0.18),
+
+            width: 2,
+
+          ),
+
+        ),
+
+
+        child: ClipRRect(
+
+          borderRadius:
+              BorderRadius.circular(18),
+
+          child: Opacity(
+
+            opacity: 0.07,
+
+            child: Image.asset(
+
+              widget.level.image,
+
+              width: boardSize,
+
+              height: boardSize,
+
+              fit: BoxFit.cover,
+
+            ),
+
+          ),
+
+        ),
+
+      ),
+
+    ),
+
+  ),
+
+),
 
             //==========================================
               // طبقة رسم وسحب القطع
@@ -1079,7 +1045,7 @@ if(controller.lastPlacedPosition != null){
                   ),
 
 
-                ),
+                
 
 
 
