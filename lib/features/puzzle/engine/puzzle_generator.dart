@@ -128,16 +128,29 @@ class PuzzleGenerator {
   }
 
   static void _scatter(List<PuzzlePiece> pieces, Rect area, Random random) {
-    for (final piece in pieces) {
-      final w = piece.localBounds.width;
-      final h = piece.localBounds.height;
-      final maxX = max(area.left, area.right - w);
-      final maxY = max(area.top, area.bottom - h);
-      final dx = area.left + random.nextDouble() * (maxX - area.left);
-      final dy = area.top + random.nextDouble() * (maxY - area.top);
-      piece.currentPosition = Offset(dx, dy);
-    }
+
+  final shuffledPieces = List<PuzzlePiece>.from(pieces)
+    ..shuffle(random);
+
+  final spacing = 12.0;
+
+  double x = area.left;
+
+  final centerY = area.center.dy;
+
+  for (final piece in shuffledPieces) {
+
+    final w = piece.localBounds.width;
+    final h = piece.localBounds.height;
+
+    piece.currentPosition = Offset(
+      x,
+      centerY - h / 2,
+    );
+
+    x += w + spacing;
   }
+}
 
   /// Builds the closed outline of a single piece by walking its four sides
   /// clockwise starting at the top-left corner: top -> right -> bottom ->
