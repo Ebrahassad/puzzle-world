@@ -13,14 +13,17 @@ class TrayController extends ChangeNotifier {
   double maxOffset = 0;
 
 
+  double _lastX = 0;
+
+
   void setBounds({
     required double contentWidth,
     required double viewportWidth,
   }) {
 
-    maxOffset =
+    maxOffset = 
         (contentWidth - viewportWidth)
-            .clamp(0, double.infinity);
+        .clamp(0, double.infinity);
 
     if (_offsetX > maxOffset) {
       _offsetX = maxOffset;
@@ -33,17 +36,26 @@ class TrayController extends ChangeNotifier {
 
   void startDrag(double x) {
 
+    _lastX = x;
+
   }
 
 
 
   void updateDrag(double x) {
 
-    _offsetX -= x;
+    final delta = x - _lastX;
+
+    _lastX = x;
+
+
+    _offsetX -= delta;
+
 
     if (_offsetX < minOffset) {
       _offsetX = minOffset;
     }
+
 
     if (_offsetX > maxOffset) {
       _offsetX = maxOffset;
@@ -76,6 +88,5 @@ class TrayController extends ChangeNotifier {
     notifyListeners();
 
   }
-
 
 }
