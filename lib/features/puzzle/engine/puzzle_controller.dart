@@ -19,6 +19,8 @@ class PuzzleController extends ChangeNotifier {
   /// Max distance (canvas pixels) between a piece's current position and
   /// its correct position for it to snap home on release.
   final double snapTolerance;
+double trayOffset = 0;
+
 
   List<PuzzlePiece> _pieces = [];
 
@@ -164,7 +166,10 @@ _zCounter = _pieces.length;
       ..sort((a, b) => b.zOrder.compareTo(a.zOrder));
 
     for (final piece in candidates) {
-      if (piece.containsPoint(position)) {
+  if (piece.containsPoint(
+    position,
+    trayOffset,
+  )) {
         _dragging = piece;
         _dragOffset = position - piece.currentPosition;
         piece.isDragging = true;
