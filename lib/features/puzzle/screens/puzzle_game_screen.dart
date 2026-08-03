@@ -63,7 +63,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   final double trayHeight = 110;
 
 final TrayController trayController = TrayController();
-
+bool trayDragging = false;
 
 
   final GlobalKey overlayKey = GlobalKey();
@@ -296,6 +296,21 @@ final TrayController trayController = TrayController();
 
     setState(() {});
 
+final pieceWidth =
+    controller.pieces.first.localBounds.width;
+
+final trayContentWidth =
+    pieceWidth * controller.pieces.length +
+    (12 * controller.pieces.length);
+
+
+trayController.setBounds(
+  contentWidth: trayContentWidth,
+  viewportWidth: scatterArea.width,
+);
+
+
+
     if (!stopwatch.isRunning) {
       stopwatch.start();
     }
@@ -355,6 +370,20 @@ final TrayController trayController = TrayController();
 
     _calculateBoardPosition();
   }
+
+bool _isTouchingPiece(Offset position) {
+
+  for (final piece in controller.pieces) {
+
+    if (!piece.isPlaced &&
+        piece.containsPoint(position)) {
+      return true;
+    }
+
+  }
+
+  return false;
+}
 
   Future<void> checkWin() async {
     if (gameFinished) {
@@ -565,74 +594,127 @@ currentIsland: widget.island,
               ),
 
               if (puzzleCreated)
-                Positioned.fill(
-                  child: GestureDetector(
-                    onPanStart: (details) {
-                      controller.onPanStart(
-                        details.localPosition,
-                      );
-                    },
-                    onPanUpdate: (details) {
-                      controller.onPanUpdate(
-                        details.localPosition,
-                      );
-                    },
-                    onPanEnd: (_) async {
-                      controller.onPanEnd();
+  Positioned.fill(
+    child: GestureDetector(
+      onPanStart: (details) {
 
-                      if (controller.lastPlacedPosition != null) {
-                        moves++;
-                      }
+        final position = details.localPosition;
 
-                      await Future.delayed(
-                        const Duration(milliseconds: 100),
-                      );
+        if (_isTouchingPiece(position)) {
 
-                      if (!mounted) return;
+          trayDragging = false;
 
-                      final placedCount =
-                          controller.pieces
-                              .where((p) => p.isPlaced)
-                              .length;
+          controller.onPanStart(position);
 
-                      if (placedCount > lastPlacedCount) {
-                        lastPlacedCount = placedCount;
+        } else {
 
-                        await _audioPlayer.play(
-                          AssetSource(
-                            'audio/piece_correct.mp3',
-                          ),
-                        );
+          trayDragging = true;
 
-                        await RewardManager.addCoins(1);
+          trayController.startDrag(
+            position.dx,
+          );
 
-                        if (mounted &&
-                            controller.lastPlacedPosition != null) {
-                          setState(() {
-                            coinAnimationStart =
-                                controller.lastPlacedPosition;
-                            showCoinAnimation = true;
-                          });
-                        }
-                      }
+        }
 
-                      await checkWin();
-                    },
-                    child: CustomPaint(
-                      painter: PuzzlePainter(
-                        pieces: controller.pieces,
-                        image: image!,
-                        boardRect: controller.boardRect,
-                        rows: widget.level.gridSize,
-                        cols: widget.level.gridSize,
-trayOffset: trayController.offsetX,
+      },
 
-                        repaint: controller,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+      onPanUpdate: (details) {
+
+        if (trayDragging) {
+
+          trayController.updateDrag(
+            details.localPosition.dx,
+          );
+
+          
+
+        } else {
+
+          controller.onPanUpdate(
+            details.localPosition,
+          );
+
+        }
+
+      },
+
+      onPanEnd: (_) async {
+
+        if (trayDragging) {
+
+          trayDragging = false;
+
+        } else {
+
+          controller.onPanEnd();
+
+          if (controller.lastPlacedPosition != null) {
+            moves++;
+          }
+
+          await Future.delayed(
+            const Duration(milliseconds: 100),
+          );
+
+          if (!mounted) return;
+
+          final placedCount =
+              controller.pieces
+                  .where((p) => p.isPlaced)
+                  .length;
+
+          if (placedCount > lastPlacedCount) {
+
+            lastPlacedCount = placedCount;
+
+            await _audioPlayer.play(
+              AssetSource(
+                'audio/piece_correct.mp3',
+              ),
+            );
+
+            await RewardManager.addCoins(1);
+
+            if (mounted &&
+                controller.lastPlacedPosition != null) {
+
+              setState(() {
+
+                coinAnimationStart =
+                    controller.lastPlacedPosition;
+
+                showCoinAnimation = true;
+
+              });
+
+            }
+
+          }
+
+          await checkWin();
+
+        }
+
+      },
+
+      child: CustomPaint(
+        painter: PuzzlePainter(
+          pieces: controller.pieces,
+          image: image!,
+          boardRect: controller.boardRect,
+          rows: widget.level.gridSize,
+          cols: widget.level.gridSize,
+          trayOffset: trayController.offsetX,
+          repaint: Listenable.merge([
+  controller,
+  trayController,
+]),
+        ),
+      ),
+    ),
+  ),  
+
+           ],
           ),
         ),
       ),
@@ -656,7 +738,7 @@ trayOffset: trayController.offsetX,
     if (puzzleCreated) {
       controller.dispose();
     }
-
+trayController.dispose();
     super.dispose();
   }
 }
