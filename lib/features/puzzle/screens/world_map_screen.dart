@@ -94,44 +94,41 @@ class _WorldMapScreenState
 ),
 
 
-  // المعالم: يسار تحت الفضاء
-  _RelativeRect(
-    id: "landmarks",
-    left: 70 / worldWidth,
-    top: 470 / worldHeight,
-    width: 300 / worldWidth,
-    height: 330 / worldHeight,
-  ),
+  // المعالم
+_RelativeRect(
+  id: "landmarks",
+  left: 110 / worldWidth,
+  top: 455 / worldHeight,
+  width: 335 / worldWidth,
+  height: 365 / worldHeight,
+),
 
+// السيارات
+_RelativeRect(
+  id: "cars",
+  left: 455 / worldWidth,
+  top: 455 / worldHeight,
+  width: 335 / worldWidth,
+  height: 365 / worldHeight,
+),
 
-  // السيارات: يمين تحت الفضاء وقريبة من المعالم
-  _RelativeRect(
-    id: "cars",
-    left: 525 / worldWidth,
-    top: 470 / worldHeight,
-    width: 300 / worldWidth,
-    height: 330 / worldHeight,
-  ),
+// الطبيعة
+_RelativeRect(
+  id: "nature",
+  left: 255 / worldWidth,
+  top: 760 / worldHeight,
+  width: 360 / worldWidth,
+  height: 400 / worldHeight,
+),
 
-
-  // الطبيعة: في الوسط أسفل المعالم والسيارات
-  _RelativeRect(
-    id: "nature",
-    left: 280 / worldWidth,
-    top: 820 / worldHeight,
-    width: 330 / worldWidth,
-    height: 370 / worldHeight,
-  ),
-
-
-  // الحيوانات: بجانب الطبيعة وأسفل المجموعة
-  _RelativeRect(
-    id: "animals",
-    left: 500 / worldWidth,
-    top: 820 / worldHeight,
-    width: 320 / worldWidth,
-    height: 370 / worldHeight,
-  ),
+// الحيوانات
+_RelativeRect(
+  id: "animals",
+  left: 515 / worldWidth,
+  top: 760 / worldHeight,
+  width: 350 / worldWidth,
+  height: 400 / worldHeight,
+),
 
 ];
 
