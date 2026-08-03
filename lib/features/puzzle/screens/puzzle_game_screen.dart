@@ -11,7 +11,8 @@ import '../managers/puzzle_progress_manager.dart';
 
 import '../widgets/game_toolbar.dart';
 import '../widgets/flying_coin.dart';
-import 'puzzle_result_animation_screen.dart';
+import 'victory_screen.dart';
+import 'puzzle_win_screen.dart';
 import '../services/reward_ad_service.dart';
 import 'package:audioplayers/audioplayers.dart';
 
@@ -582,21 +583,58 @@ final reward =
 
 if (!mounted) return;
   Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (_) => PuzzleResultAnimationScreen(
-        image: widget.level.image,
-        starKey: starKey,
-        level: widget.level,
-        result: GameResultModel(
-          stars: 1,
-          moves: moves,
-          time: stopwatch.elapsed,
-        ),
-        island: widget.island,
+  context,
+  MaterialPageRoute(
+    builder: (_) => VictoryCinematicScreen(
+      puzzleImage: AssetImage(
+        widget.level.image,
       ),
+
+      levelNumber: widget.level.levelNumber,
+
+      isFinalLevel:
+          widget.level.levelNumber == 10,
+
+      starTargetKey: starKey,
+
+      gemTargetKey: null,
+
+      onStarEarned: () {
+        RewardManager.addStar();
+      },
+
+      onGemEarned: () {
+        RewardManager.addGem();
+      },
+
+      onFinished: () {
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => VictoryFinalScreen(
+              levelNumber:
+                  widget.level.levelNumber,
+
+              starsEarned: 1,
+
+              gemEarned:
+                  widget.level.levelNumber == 10,
+
+              onContinue: () {
+
+                Navigator.pop(context);
+
+              },
+            ),
+          ),
+        );
+
+      },
+
     ),
-  );
+  ),
+);
 }
 
 
