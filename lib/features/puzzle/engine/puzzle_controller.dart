@@ -19,7 +19,7 @@ class PuzzleController extends ChangeNotifier {
   /// Max distance (canvas pixels) between a piece's current position and
   /// its correct position for it to snap home on release.
   final double snapTolerance;
-double trayOffset = 0;
+
 
 
   List<PuzzlePiece> _pieces = [];
@@ -219,9 +219,13 @@ void onPanEnd() {
   if (nearCorrectPosition && insideBoard) {
 
   piece.currentPosition =
-      piece.correctPosition;
+    piece.correctPosition;
 
-  piece.isPlaced = true;
+piece.isPlaced = true;
+
+// بعد خروج القطعة من الشريط
+// لا تتأثر بإزاحة الشريط
+trayOffset = 0;
 
 
   // مكان ظهور العملة
