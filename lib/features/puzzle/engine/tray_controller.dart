@@ -1,44 +1,81 @@
-import 'dart:ui';
+import 'package:flutter/foundation.dart';
 
-class TrayController {
 
-  double offsetX = 0;
+class TrayController extends ChangeNotifier {
 
-  double _startX = 0;
-  double _startOffset = 0;
+  double _offsetX = 0;
+
+  double get offsetX => _offsetX;
+
+
+  double minOffset = 0;
+
+  double maxOffset = 0;
+
+
+  void setBounds({
+    required double contentWidth,
+    required double viewportWidth,
+  }) {
+
+    maxOffset =
+        (contentWidth - viewportWidth)
+            .clamp(0, double.infinity);
+
+    if (_offsetX > maxOffset) {
+      _offsetX = maxOffset;
+    }
+
+    notifyListeners();
+  }
+
 
 
   void startDrag(double x) {
 
-    _startX = x;
-    _startOffset = offsetX;
-
   }
+
 
 
   void updateDrag(double x) {
 
-    offsetX = _startOffset + (x - _startX);
+    _offsetX -= x;
 
-  }
-
-
-  void reset() {
-
-    offsetX = 0;
-
-  }
-
-
-  void clamp(double min, double max) {
-
-    if (offsetX < min) {
-      offsetX = min;
+    if (_offsetX < minOffset) {
+      _offsetX = minOffset;
     }
 
-    if (offsetX > max) {
-      offsetX = max;
+    if (_offsetX > maxOffset) {
+      _offsetX = maxOffset;
     }
 
+
+    notifyListeners();
+
   }
+
+
+
+  void jumpTo(double value){
+
+    _offsetX = value.clamp(
+      minOffset,
+      maxOffset,
+    );
+
+    notifyListeners();
+
+  }
+
+
+
+  void reset(){
+
+    _offsetX = 0;
+
+    notifyListeners();
+
+  }
+
+
 }
