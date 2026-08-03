@@ -171,7 +171,11 @@ _zCounter = _pieces.length;
     trayOffset,
   )) {
         _dragging = piece;
-        _dragOffset = position - piece.currentPosition;
+        _dragOffset =
+    position -
+    (piece.isPlaced
+        ? piece.currentPosition
+        : piece.currentPosition - ui.Offset(trayOffset, 0));
         piece.isDragging = true;
         piece.zOrder = ++_zCounter; // bring to front
         notifyListeners();
@@ -186,7 +190,8 @@ _zCounter = _pieces.length;
   void onPanUpdate(ui.Offset position) {
     final piece = _dragging;
     if (piece == null) return;
-    piece.currentPosition = position - _dragOffset;
+   piece.currentPosition =
+    position - _dragOffset;
     notifyListeners();
   }
 
