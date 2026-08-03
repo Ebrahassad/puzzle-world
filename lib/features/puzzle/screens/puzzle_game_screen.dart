@@ -389,6 +389,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
               context,
               MaterialPageRoute(
                 builder: (_) => VictoryFinalScreen(
+currentIsland: widget.island,
                   currentLevel: widget.level.levelNumber,
                   starsEarned: 1,
                   gemEarned:
