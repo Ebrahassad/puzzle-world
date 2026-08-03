@@ -19,7 +19,7 @@ class PuzzleController extends ChangeNotifier {
   /// Max distance (canvas pixels) between a piece's current position and
   /// its correct position for it to snap home on release.
   final double snapTolerance;
-
+double trayOffset = 0.0;
 
 
   List<PuzzlePiece> _pieces = [];
@@ -188,12 +188,21 @@ _zCounter = _pieces.length;
   /// position. Moves the active piece so it stays under the finger at the
   /// same offset it was originally grabbed at, giving a smooth drag.
   void onPanUpdate(ui.Offset position) {
-    final piece = _dragging;
-    if (piece == null) return;
-   piece.currentPosition =
-    position - _dragOffset;
-    notifyListeners();
-  }
+  final piece = _dragging;
+
+  if (piece == null) return;
+
+  final visual =
+      position - _dragOffset;
+
+  piece.currentPosition =
+      visual +
+      (piece.isPlaced
+          ? ui.Offset.zero
+          : ui.Offset(trayOffset, 0));
+
+  notifyListeners();
+}
 
 void onPanEnd() {
   final piece = _dragging;
@@ -225,7 +234,7 @@ piece.isPlaced = true;
 
 // بعد خروج القطعة من الشريط
 // لا تتأثر بإزاحة الشريط
-trayOffset = 0;
+
 
 
   // مكان ظهور العملة
