@@ -599,38 +599,36 @@ if (!mounted) return;
 
       gemTargetKey: null,
 
-      onStarEarned: () {
-        RewardManager.addStar();
-      },
+      onStarEarned: () {},
 
-      onGemEarned: () {
-        RewardManager.addGem();
-      },
+onGemEarned: () {},
 
       onFinished: () {
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => VictoryFinalScreen(
-              levelNumber:
-                  widget.level.levelNumber,
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (_) => VictoryFinalScreen(
 
-              starsEarned: 1,
+        levelNumber:
+            widget.level.levelNumber,
 
-              gemEarned:
-                  widget.level.levelNumber == 10,
+        starsEarned: 1,
 
-              onContinue: () {
+        gemEarned:
+            widget.level.levelNumber == 10,
 
-                Navigator.pop(context);
+        onContinue: () {
 
-              },
-            ),
-          ),
-        );
+          Navigator.pop(context);
 
-      },
+        },
+
+      ),
+    ),
+  );
+
+},
 
     ),
   ),
