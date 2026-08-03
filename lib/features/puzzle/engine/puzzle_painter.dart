@@ -26,8 +26,9 @@ class PuzzlePainter extends CustomPainter {
     required this.boardRect,
     required this.rows,
     required this.cols,
+    required this.trayOffset,
     Listenable? repaint,
-  })  : pieceWidth = boardRect.width / cols,
+})  : pieceWidth = boardRect.width / cols,
         pieceHeight = boardRect.height / rows,
         super(repaint: repaint);
 
@@ -38,6 +39,7 @@ class PuzzlePainter extends CustomPainter {
   final int cols;
   final double pieceWidth;
   final double pieceHeight;
+final double trayOffset;
 
   static final Paint _borderPaint = Paint()
   ..style = PaintingStyle.stroke
@@ -92,7 +94,8 @@ static final Paint _highlightPaint = Paint()
 final lift = piece.isDragging ? -6.0 : 0.0;
 
 canvas.translate(
-  piece.currentPosition.dx,
+  piece.currentPosition.dx +
+      (!piece.isPlaced ? trayOffset : 0),
   piece.currentPosition.dy + lift,
 );
 
@@ -152,7 +155,8 @@ canvas.restore();
   @override
   bool shouldRepaint(covariant PuzzlePainter oldDelegate) {
     return oldDelegate.pieces != pieces ||
-        oldDelegate.image != image ||
-        oldDelegate.boardRect != boardRect;
+    oldDelegate.image != image ||
+    oldDelegate.boardRect != boardRect ||
+    oldDelegate.trayOffset != trayOffset;
   }
 }
