@@ -591,6 +591,7 @@ if (!mounted) return;
       ),
 
  island: widget.island,
+levelNumber: widget.level.levelNumber,
 
       isFinalLevel:
           widget.level.levelNumber == 10,
@@ -616,12 +617,7 @@ onGemEarned: () {},
         gemEarned:
             widget.level.levelNumber == 10,
 
-        onContinue: () {
-
-          Navigator.pop(context);
-
-        },
-
+        
       ),
     ),
   );
@@ -856,80 +852,46 @@ if(showCoinAnimation &&
     padding: const EdgeInsets.symmetric(horizontal: 8),
     child: Center(
       child: Container(
-
         key: boardKey,
-
         width: boardSize,
-
         height: boardSize,
 
         decoration: BoxDecoration(
-
           color: Colors.white.withOpacity(0.05),
-
-          borderRadius:
-              BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(24),
 
           boxShadow: [
-
             BoxShadow(
-
-              color:
-                  Colors.black.withOpacity(0.35),
-
+              color: Colors.black.withOpacity(0.35),
               blurRadius: 25,
-
               spreadRadius: 2,
-
             ),
-
           ],
 
           border: Border.all(
-
-            color:
-                Colors.white.withOpacity(0.18),
-
+            color: Colors.white.withOpacity(0.18),
             width: 2,
-
           ),
-
         ),
 
-
         child: ClipRRect(
-
-          borderRadius:
-              BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(18),
 
           child: Opacity(
-
             opacity: 0.07,
 
             child: Image.asset(
-
               widget.level.image,
-
               width: boardSize,
-
               height: boardSize,
-
               fit: BoxFit.cover,
-
             ),
-
           ),
-
         ),
-
       ),
-
     ),
-
   ),
-
 ),
-
             //==========================================
               // طبقة رسم وسحب القطع
               // (لم يتم تعديل منطق اللعب)
