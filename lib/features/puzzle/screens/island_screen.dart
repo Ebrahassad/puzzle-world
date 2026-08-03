@@ -34,7 +34,7 @@ class _IslandScreenState extends State<IslandScreen>
 
   // نسبة ارتفاع منطقة الجزيرة من أعلى اللوحة. الجزيرة تُرسم مركزية
   // أعلى الشاشة وبحجم كبير وواضح، مع ترك مساحة كافية حولها.
-  static const double islandAreaTop = worldHeight * 0.04;
+  static const double islandAreaTop = worldHeight * 0.00;
   static const double islandAreaHeight = worldHeight * 0.66;
 
   // شفافية خفيفة لخلفية وصورة الجزيرة فقط، حتى يبرز مسار المراحل
@@ -53,17 +53,17 @@ static const double islandImageOpacity = 0.65;
   // خريطة لعبة احترافية، وبإحداثيات طبيعية (0.0-1.0) وليست بكسل
   // ثابت — لذلك يعمل نفس المسار على أي حجم شاشة.
   final List<Offset> levelPositions = const [
-    Offset(0.50, 0.93), // المرحلة 1 (أسفل اللوحة)
-    Offset(0.32, 0.84),
-    Offset(0.62, 0.75),
-    Offset(0.38, 0.66),
-    Offset(0.66, 0.57),
-    Offset(0.34, 0.48),
-    Offset(0.60, 0.39),
-    Offset(0.36, 0.30),
-    Offset(0.58, 0.21),
-    Offset(0.50, 0.12), // آخر مرحلة (أعلى اللوحة)
-  ];
+  Offset(0.50, 0.91), // 1
+  Offset(0.31, 0.83), // 2
+  Offset(0.64, 0.73), // 3
+  Offset(0.36, 0.64), // 4
+  Offset(0.67, 0.55), // 5
+  Offset(0.33, 0.46), // 6
+  Offset(0.60, 0.37), // 7
+  Offset(0.35, 0.28), // 8
+  Offset(0.56, 0.19), // 9
+  Offset(0.50, 0.10), // 10
+];
 
   @override
   void initState() {
