@@ -83,10 +83,23 @@ class PuzzlePiece {
 
   /// Returns true if [globalPoint] (board/canvas coordinates) falls inside
   /// this piece's exact silhouette.
-  bool containsPoint(Offset globalPoint) {
-    final local = globalPoint - currentPosition;
-    return path.contains(local);
-  }
+  bool containsPoint(
+  Offset globalPoint,
+  double trayOffset,
+) {
+
+  final adjustedPosition =
+      isPlaced
+          ? currentPosition
+          : currentPosition - Offset(trayOffset, 0);
+
+
+  final local =
+      globalPoint - adjustedPosition;
+
+
+  return path.contains(local);
+}
 
   /// Distance between where the piece currently is and where it belongs.
   /// The controller snaps the piece home when this is small enough.
