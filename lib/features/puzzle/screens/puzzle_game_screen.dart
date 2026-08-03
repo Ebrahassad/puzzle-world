@@ -297,8 +297,8 @@ bool trayDragging = false;
     setState(() {});
 
 final pieceWidth =
-    controller.pieces.first.localBounds.width;
-
+    final pieceWidth =
+    boardRect.width / widget.level.gridSize;
 final trayContentWidth =
     pieceWidth * controller.pieces.length +
     (12 * controller.pieces.length);
