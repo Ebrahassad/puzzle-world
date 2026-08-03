@@ -5,7 +5,6 @@ import '../engine/puzzle_controller.dart';
 import '../engine/puzzle_painter.dart';
 import '../engine/tray_controller.dart';
 import '../models/puzzle_level_model.dart';
-import '../models/game_result_model.dart';
 import '../models/puzzle_model.dart';
 import '../managers/reward_manager.dart';
 import '../managers/puzzle_progress_manager.dart';
@@ -62,9 +61,8 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   final double boardSize = 350;
   final double trayHeight = 110;
 
-final TrayController trayController = TrayController();
-bool trayDragging = false;
-
+  final TrayController trayController = TrayController();
+  bool trayDragging = false;
 
   final GlobalKey overlayKey = GlobalKey();
   final GlobalKey boardKey = GlobalKey();
@@ -74,6 +72,7 @@ bool trayDragging = false;
   Rect scatterArea = Rect.zero;
 
   final GlobalKey starKey = GlobalKey();
+  final GlobalKey gemKey = GlobalKey();
   final GlobalKey coinKey = GlobalKey();
 
   @override
@@ -296,22 +295,19 @@ bool trayDragging = false;
 
     setState(() {});
 
-
     final totalWidth =
     controller.pieces.fold<double>(
-  0,
-  (sum, piece) =>
-      sum +
-      piece.localBounds.width +
-      12,
-);
+      0,
+      (sum, piece) =>
+          sum +
+          piece.localBounds.width +
+          12,
+    );
 
-
-trayController.setBounds(
-  contentWidth: totalWidth,
-  viewportWidth: scatterArea.width,
-);
-
+    trayController.setBounds(
+      contentWidth: totalWidth,
+      viewportWidth: scatterArea.width,
+    );
 
     if (!stopwatch.isRunning) {
       stopwatch.start();
@@ -373,26 +369,22 @@ trayController.setBounds(
     _calculateBoardPosition();
   }
 
-bool _isTouchingPiece(Offset position) {
+  bool _isTouchingPiece(Offset position) {
+    controller.trayOffset =
+        trayController.offsetX;
 
-  controller.trayOffset =
-      trayController.offsetX;
-
-
-  for (final piece in controller.pieces) {
-
-    if (!piece.isPlaced &&
-        piece.containsPoint(
-          position,
-          trayController.offsetX,
-        )) {
-      return true;
+    for (final piece in controller.pieces) {
+      if (!piece.isPlaced &&
+          piece.containsPoint(
+            position,
+            trayController.offsetX,
+          )) {
+        return true;
+      }
     }
 
+    return false;
   }
-
-  return false;
-}
 
   Future<void> checkWin() async {
     if (gameFinished) {
@@ -424,7 +416,7 @@ bool _isTouchingPiece(Offset position) {
           isFinalLevel:
               widget.level.levelNumber == 10,
           starTargetKey: starKey,
-          gemTargetKey: null,
+          gemTargetKey: gemKey,
           onStarEarned: () {},
           onGemEarned: () {},
           onFinished: () {
@@ -432,7 +424,7 @@ bool _isTouchingPiece(Offset position) {
               context,
               MaterialPageRoute(
                 builder: (_) => VictoryFinalScreen(
-currentIsland: widget.island,
+                  currentIsland: widget.island,
                   currentLevel: widget.level.levelNumber,
                   starsEarned: 1,
                   gemEarned:
@@ -444,10 +436,6 @@ currentIsland: widget.island,
         ),
       ),
     );
-
-
-
-
   }
 
   @override
@@ -482,6 +470,7 @@ currentIsland: widget.island,
                 right: 8,
                 child: GameToolbar(
                   starKey: starKey,
+                  gemKey: gemKey,
                   coinKey: coinKey,
                   soundEnabled: soundEnabled,
                   onSave: () async {
@@ -506,16 +495,6 @@ currentIsland: widget.island,
                     setState(() {
                       soundEnabled = enabled;
                     });
-
-
-
-
-
-
-
-
-
-
                     _audioPlayer.setVolume(enabled ? 1 : 0);
                   },
                 ),
@@ -615,175 +594,131 @@ currentIsland: widget.island,
                 ],
               ),
 
+              Positioned(
+                bottom: 15,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: SizedBox(
+                    width: 110,
+                    height: 40,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      icon: const Icon(Icons.exit_to_app_rounded),
+                      label: const Text(
+                        "حفظ وخروج",
+                        style: TextStyle(
+                          fontSize: 12,
+                        ),
+                      ),
+                      onPressed: () async {
+                        await saveCurrentGame();
+                        stopwatch.stop();
 
-Positioned(
-  bottom: 15,
-  left: 0,
-  right: 0,
-  child: Center(
-    child: SizedBox(
-      width: 110,
-      height: 40,
-      child: ElevatedButton.icon(
-        style: ElevatedButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-        ),
-        icon: const Icon(Icons.save),
-        label: const Text(
-          "حفظ وخروج",
-          style: TextStyle(
-            fontSize: 12,
-          ),
-        ),
-        onPressed: () async {
+                        if (!mounted) return;
 
-          await saveCurrentGame();
-
-          if(!mounted) return;
-
-          Navigator.pop(context);
-
-        },
-      ),
-    ),
-  ),
-),
-
-
-
-
-
-
-
-
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ),
+              ),
 
               if (puzzleCreated)
-  Positioned.fill(
-    child: GestureDetector(
-      onPanStart: (details) {
+                Positioned.fill(
+                  child: GestureDetector(
+                    onPanStart: (details) {
+                      final position = details.localPosition;
 
-        final position = details.localPosition;
+                      if (_isTouchingPiece(position)) {
+                        trayDragging = false;
+                        controller.trayOffset =
+                            trayController.offsetX;
+                        controller.onPanStart(position);
+                      } else {
+                        trayDragging = true;
+                        trayController.startDrag(
+                          position.dx,
+                        );
+                      }
+                    },
+                    onPanUpdate: (details) {
+                      if (trayDragging) {
+                        trayController.updateDrag(
+                          details.localPosition.dx,
+                        );
+                      } else {
+                        controller.onPanUpdate(
+                          details.localPosition,
+                        );
+                      }
+                    },
+                    onPanEnd: (_) async {
+                      if (trayDragging) {
+                        trayDragging = false;
+                      } else {
+                        controller.onPanEnd();
 
-        if (_isTouchingPiece(position)) {
+                        if (controller.lastPlacedPosition != null) {
+                          moves++;
+                        }
 
-  trayDragging = false;
+                        await Future.delayed(
+                          const Duration(milliseconds: 100),
+                        );
 
-  controller.trayOffset =
-      trayController.offsetX;
+                        if (!mounted) return;
 
-  controller.onPanStart(position);
+                        final placedCount =
+                            controller.pieces
+                                .where((p) => p.isPlaced)
+                                .length;
 
-} else {
+                        if (placedCount > lastPlacedCount) {
+                          lastPlacedCount = placedCount;
 
-          trayDragging = true;
+                          await _audioPlayer.play(
+                            AssetSource(
+                              'audio/piece_correct.mp3',
+                            ),
+                          );
 
-          trayController.startDrag(
-            position.dx,
-          );
+                          await RewardManager.addCoins(1);
 
-        }
+                          if (mounted &&
+                              controller.lastPlacedPosition != null) {
+                            setState(() {
+                              coinAnimationStart =
+                                  controller.lastPlacedPosition;
+                              showCoinAnimation = true;
+                            });
+                          }
+                        }
 
-      },
-
-      onPanUpdate: (details) {
-
-        if (trayDragging) {
-
-          trayController.updateDrag(
-            details.localPosition.dx,
-          );
-
-          
-
-        } else {
-
-          controller.onPanUpdate(
-            details.localPosition,
-          );
-
-        }
-
-      },
-
-      onPanEnd: (_) async {
-
-        if (trayDragging) {
-
-          trayDragging = false;
-
-        } else {
-
-          controller.onPanEnd();
-
-          if (controller.lastPlacedPosition != null) {
-            moves++;
-          }
-
-          await Future.delayed(
-            const Duration(milliseconds: 100),
-          );
-
-          if (!mounted) return;
-
-          final placedCount =
-              controller.pieces
-                  .where((p) => p.isPlaced)
-                  .length;
-
-          if (placedCount > lastPlacedCount) {
-
-            lastPlacedCount = placedCount;
-
-            await _audioPlayer.play(
-              AssetSource(
-                'audio/piece_correct.mp3',
-              ),
-            );
-
-            await RewardManager.addCoins(1);
-
-            if (mounted &&
-                controller.lastPlacedPosition != null) {
-
-              setState(() {
-
-                coinAnimationStart =
-                    controller.lastPlacedPosition;
-
-                showCoinAnimation = true;
-
-              });
-
-            }
-
-          }
-
-          await checkWin();
-
-        }
-
-      },
-
-      child: CustomPaint(
-        painter: PuzzlePainter(
-          pieces: controller.pieces,
-          image: image!,
-          boardRect: controller.boardRect,
-          rows: widget.level.gridSize,
-          cols: widget.level.gridSize,
-          trayOffset: trayController.offsetX,
-          repaint: Listenable.merge([
-  controller,
-  trayController,
-]),
-        ),
-      ),
-    ),
-  ),  
-
-           ],
+                        await checkWin();
+                      }
+                    },
+                    child: CustomPaint(
+                      painter: PuzzlePainter(
+                        pieces: controller.pieces,
+                        image: image!,
+                        boardRect: controller.boardRect,
+                        rows: widget.level.gridSize,
+                        cols: widget.level.gridSize,
+                        trayOffset: trayController.offsetX,
+                        repaint: Listenable.merge([
+                          controller,
+                          trayController,
+                        ]),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
@@ -807,7 +742,7 @@ Positioned(
     if (puzzleCreated) {
       controller.dispose();
     }
-trayController.dispose();
+    trayController.dispose();
     super.dispose();
   }
 }
