@@ -391,19 +391,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
           onGemEarned: () {
             RewardManager.addGems(1);
           },
-          onFinished: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => VictoryScreen(
-                  currentIsland: widget.island,
-                  currentLevel: widget.level.levelNumber,
-                  starsEarned: 1,
-                  gemEarned: widget.level.levelNumber == 10,
-                ),
-              ),
-            );
-          },
+      onFinished: () {
+  Navigator.pop(context);
+},
         ),
       ),
     );
