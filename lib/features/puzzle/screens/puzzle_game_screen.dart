@@ -12,7 +12,7 @@ import '../managers/puzzle_progress_manager.dart';
 import '../widgets/game_toolbar.dart';
 import '../widgets/flying_coin.dart';
 import 'victory_screen.dart';
-import 'puzzle_win_screen.dart';
+
 import '../services/reward_ad_service.dart';
 import 'package:audioplayers/audioplayers.dart';
 
@@ -384,16 +384,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
           levelNumber: widget.level.levelNumber,
           isFinalLevel: widget.level.levelNumber == 10,
           starTargetKey: starKey,
-          gemTargetKey: gemKey,
-          onStarEarned: () {
-            RewardManager.addStars(1);
+          onFinished: () {
+            Navigator.pop(context);
           },
-          onGemEarned: () {
-            RewardManager.addGems(1);
-          },
-      onFinished: () {
-  Navigator.pop(context);
-},
         ),
       ),
     );
@@ -553,7 +546,11 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                     MediaQuery.of(context).size.width - 50,
                     35,
                   ),
-                  onFinished: () {
+                  onFinished: () async {
+                    await RewardManager.addCoins(1);
+
+                    if (!mounted) return;
+
                     setState(() {
                       showCoinAnimation = false;
                     });
@@ -617,8 +614,6 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                             ),
                           );
 
-                          await RewardManager.addCoins(1);
-
                           if (mounted &&
                               controller.lastPlacedPosition != null) {
                             setState(() {
@@ -634,18 +629,18 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                     },
                     child: CustomPaint(
                       painter: PuzzlePainter(
-  pieces: controller.pieces,
-  image: image!,
-  boardRect: controller.boardRect,
-  scatterArea: scatterArea,
-  rows: widget.level.gridSize,
-  cols: widget.level.gridSize,
-  trayOffset: trayController.offsetX,
-  repaint: Listenable.merge([
-    controller,
-    trayController,
-  ]),
-),
+                        pieces: controller.pieces,
+                        image: image!,
+                        boardRect: controller.boardRect,
+                        scatterArea: scatterArea,
+                        rows: widget.level.gridSize,
+                        cols: widget.level.gridSize,
+                        trayOffset: trayController.offsetX,
+                        repaint: Listenable.merge([
+                          controller,
+                          trayController,
+                        ]),
+                      ),
                     ),
                   ),
                 ),
