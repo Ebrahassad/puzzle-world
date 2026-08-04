@@ -4,6 +4,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/material.dart';
 import 'final_victory_screen.dart';
 import '../engine/puzzle_piece.dart';
+import '../managers/reward_manager.dart';
 
 /// Data used only for cinematic explosion.
 /// We do not modify PuzzlePiece because it is the engine model.
@@ -44,7 +45,6 @@ class VictoryScreen extends StatefulWidget {
 
   final GlobalKey? starTargetKey;
 
-  final VoidCallback onStarEarned;
   final VoidCallback onFinished;
 
   const VictoryScreen({
@@ -58,7 +58,6 @@ class VictoryScreen extends StatefulWidget {
     required this.levelNumber,
     this.isFinalLevel = false,
     this.starTargetKey,
-    required this.onStarEarned,
     required this.onFinished,
   });
 
@@ -330,7 +329,7 @@ class _VictoryScreenState extends State<VictoryScreen>
     _rewardController.forward().then((_) {
       if (!mounted) return;
 
-      widget.onStarEarned();
+      RewardManager.addStars(1);
 
       if (widget.isFinalLevel) {
         Future.delayed(
@@ -343,9 +342,6 @@ class _VictoryScreenState extends State<VictoryScreen>
               MaterialPageRoute(
                 builder: (_) => FinalVictoryScreen(
                   island: widget.island,
-                  onGemEarned: () {
-                    RewardManager.addGems(1);
-                  },
                 ),
               ),
             );
