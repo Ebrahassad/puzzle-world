@@ -35,14 +35,37 @@ class GameToolbar extends StatefulWidget {
   State<GameToolbar> createState() => _GameToolbarState();
 }
 
-class _GameToolbarState extends State<GameToolbar> {
+class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStateMixin {
   RewardResultModel reward = const RewardResultModel();
+  
+  // تعريف متغيرات الأنيميشن لزر الإعدادات
+  late AnimationController _settingsAnimController;
+  late Animation<double> _settingsScaleAnimation;
 
   @override
   void initState() {
     super.initState();
+    
+    // تهيئة الأنيميشن
+    _settingsAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+    _settingsScaleAnimation = Tween<double>(begin: 1.0, end: 0.85).animate(
+      CurvedAnimation(
+        parent: _settingsAnimController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
     RewardManager.rewardNotifier.addListener(refreshReward);
     loadToolbarData();
+  }
+
+  @override
+  void dispose() {
+    _settingsAnimController.dispose();
+    super.dispose();
   }
 
   Future<void> loadToolbarData() async {
@@ -191,32 +214,38 @@ class _GameToolbarState extends State<GameToolbar> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // زر الإعدادات
+            // زر الإعدادات مع تأثير الأنيميشن عند الضغط
             GestureDetector(
-              onTap: () {
+              onTapDown: (_) => _settingsAnimController.forward(),
+              onTapUp: (_) {
+                _settingsAnimController.reverse();
                 showSettings(context);
               },
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.2),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.35),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.25),
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
+              onTapCancel: () => _settingsAnimController.reverse(),
+              child: ScaleTransition(
+                scale: _settingsScaleAnimation,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.2),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.35),
                     ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.settings_rounded,
-                  color: Colors.white,
-                  size: 24,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.25),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.settings_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
               ),
             ),
@@ -234,12 +263,12 @@ class _GameToolbarState extends State<GameToolbar> {
                   width: 6,
                 ),
                 Container(
-  key: widget.gemKey,
-  child: ImageCounterBox(
-    image: "assets/images/rewards/gem.png",
-    value: reward.gems,
-  ),
-),
+                  key: widget.gemKey,
+                  child: ImageCounterBox(
+                    image: "assets/images/rewards/gem.png",
+                    value: reward.gems,
+                  ),
+                ),
                 const SizedBox(
                   width: 6,
                 ),
@@ -262,9 +291,6 @@ class _GameToolbarState extends State<GameToolbar> {
     );
   }
 }
-
-// Extension صغيرة لتحديث القيمة دون كسر هيكلة الكلاسات المطلوبة
-
 
 class AnimatedStarCounter extends StatefulWidget {
   final int value;
