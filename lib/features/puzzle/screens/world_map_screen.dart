@@ -103,7 +103,7 @@ class _WorldMapScreenState
     _RelativeRect(
       id: "nature",
       left: 268 / worldWidth,
-      top: 620 / worldHeight,
+      top: 615 / worldHeight,
       width: 360 / worldWidth,
       height: 380 / worldHeight,
     ),
