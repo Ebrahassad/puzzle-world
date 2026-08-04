@@ -16,7 +16,6 @@ import 'puzzle_win_screen.dart';
 import '../services/reward_ad_service.dart';
 import 'package:audioplayers/audioplayers.dart';
 
-
 class PuzzleGameScreen extends StatefulWidget {
   final PuzzleLevelModel level;
   final PuzzleModel island;
@@ -28,11 +27,8 @@ class PuzzleGameScreen extends StatefulWidget {
   });
 
   @override
-  State<PuzzleGameScreen> createState() =>
-      _PuzzleGameScreenState();
+  State<PuzzleGameScreen> createState() => _PuzzleGameScreenState();
 }
-
-
 
 class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   ui.Image? image;
@@ -83,11 +79,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   }
 
   Future<void> _checkSavedGame() async {
-    final saved =
-        await PuzzleProgressManager.loadProgress();
+    final saved = await PuzzleProgressManager.loadProgress();
 
-    if (saved != null &&
-        saved["levelId"] == widget.level.id) {
+    if (saved != null && saved["levelId"] == widget.level.id) {
       savedGameData = saved;
 
       if (!mounted) return;
@@ -117,8 +111,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
               ),
               TextButton(
                 onPressed: () async {
-                  final result =
-                      await RewardAdService.showContinueAd();
+                  final result = await RewardAdService.showContinueAd();
 
                   if (!context.mounted) return;
 
@@ -171,8 +164,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
             loading = false;
           });
 
-          WidgetsBinding.instance
-              .addPostFrameCallback((_) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
             _calculateBoardPosition();
           });
         },
@@ -192,16 +184,12 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   }
 
   void _calculateBoardPosition() {
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
-      final overlayContext =
-          overlayKey.currentContext;
-      final boardContext =
-          boardKey.currentContext;
-      final trayContext =
-          trayKey.currentContext;
+      final overlayContext = overlayKey.currentContext;
+      final boardContext = boardKey.currentContext;
+      final trayContext = trayKey.currentContext;
 
       if (overlayContext == null ||
           boardContext == null ||
@@ -217,47 +205,35 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
         return;
       }
 
-      final RenderBox overlayBox =
-          overlayContext.findRenderObject()
-              as RenderBox;
+      final RenderBox overlayBox = overlayContext.findRenderObject() as RenderBox;
+      final RenderBox boardBox = boardContext.findRenderObject() as RenderBox;
+      final RenderBox trayBox = trayContext.findRenderObject() as RenderBox;
 
-      final RenderBox boardBox =
-          boardContext.findRenderObject()
-              as RenderBox;
+      final boardLocal = overlayBox.globalToLocal(
+        boardBox.localToGlobal(
+          Offset.zero,
+        ),
+      );
 
-      final RenderBox trayBox =
-          trayContext.findRenderObject()
-              as RenderBox;
+      final trayLocal = overlayBox.globalToLocal(
+        trayBox.localToGlobal(
+          Offset.zero,
+        ),
+      );
 
-      final boardLocal =
-          overlayBox.globalToLocal(
-            boardBox.localToGlobal(
-              Offset.zero,
-            ),
-          );
+      boardRect = Rect.fromLTWH(
+        boardLocal.dx,
+        boardLocal.dy,
+        boardSize,
+        boardSize,
+      );
 
-      final trayLocal =
-          overlayBox.globalToLocal(
-            trayBox.localToGlobal(
-              Offset.zero,
-            ),
-          );
-
-      boardRect =
-          Rect.fromLTWH(
-            boardLocal.dx,
-            boardLocal.dy,
-            boardSize,
-            boardSize,
-          );
-
-      scatterArea =
-          Rect.fromLTWH(
-            trayLocal.dx,
-            trayLocal.dy,
-            trayBox.size.width,
-            trayBox.size.height,
-          );
+      scatterArea = Rect.fromLTWH(
+        trayLocal.dx,
+        trayLocal.dy,
+        trayBox.size.width,
+        trayBox.size.height,
+      );
 
       _createPuzzle();
     });
@@ -270,10 +246,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
     puzzleCreated = true;
 
-    controller =
-        PuzzleController(
-          snapTolerance: 28,
-        );
+    controller = PuzzleController(
+      snapTolerance: 28,
+    );
 
     controller.initialize(
       image: image!,
@@ -287,21 +262,14 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       controller.restoreProgress(
         savedGameData!,
       );
-      lastPlacedCount =
-          controller.pieces
-              .where((p) => p.isPlaced)
-              .length;
+      lastPlacedCount = controller.pieces.where((p) => p.isPlaced).length;
     }
 
     setState(() {});
 
-    final totalWidth =
-    controller.pieces.fold<double>(
+    final totalWidth = controller.pieces.fold<double>(
       0,
-      (sum, piece) =>
-          sum +
-          piece.localBounds.width +
-          12,
+      (sum, piece) => sum + piece.localBounds.width + 12,
     );
 
     trayController.setBounds(
@@ -370,8 +338,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   }
 
   bool _isTouchingPiece(Offset position) {
-    controller.trayOffset =
-        trayController.offsetX;
+    controller.trayOffset = trayController.offsetX;
 
     for (final piece in controller.pieces) {
       if (!piece.isPlaced &&
@@ -407,18 +374,23 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => VictoryCinematicScreen(
-          puzzleImage: AssetImage(
-            widget.level.image,
-          ),
+        builder: (_) => VictoryScreen(
+          puzzleImage: image!,
+          pieces: controller.pieces,
+          boardRect: controller.boardRect,
+          rows: widget.level.gridSize,
+          cols: widget.level.gridSize,
           island: widget.island,
           levelNumber: widget.level.levelNumber,
-          isFinalLevel:
-              widget.level.levelNumber == 10,
+          isFinalLevel: widget.level.levelNumber == 10,
           starTargetKey: starKey,
           gemTargetKey: gemKey,
-          onStarEarned: () {},
-          onGemEarned: () {},
+          onStarEarned: () {
+            RewardManager.addStars(1);
+          },
+          onGemEarned: () {
+            RewardManager.addGems(1);
+          },
           onFinished: () {
             Navigator.pushReplacement(
               context,
@@ -427,8 +399,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                   currentIsland: widget.island,
                   currentLevel: widget.level.levelNumber,
                   starsEarned: 1,
-                  gemEarned:
-                      widget.level.levelNumber == 10,
+                  gemEarned: widget.level.levelNumber == 10,
                 ),
               ),
             );
@@ -464,6 +435,86 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
           child: Stack(
             key: overlayKey,
             children: [
+              Column(
+                children: [
+                  const SizedBox(
+                    height: 70,
+                  ),
+
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                      ),
+                      child: Center(
+                        child: Container(
+                          key: boardKey,
+                          width: boardSize,
+                          height: boardSize,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.35),
+                                blurRadius: 25,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.18),
+                              width: 2,
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(18),
+                            child: Opacity(
+                              opacity: 0.18,
+                              child: Image.asset(
+                                widget.level.image,
+                                width: boardSize,
+                                height: boardSize,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(
+                    height: 15,
+                  ),
+
+                  Container(
+                    key: trayKey,
+                    height: trayHeight,
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(22),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.25),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.15),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(
+                    height: 15,
+                  ),
+                ],
+              ),
+
               Positioned(
                 top: 0,
                 left: 8,
@@ -488,7 +539,12 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                   onRestart: () {
                     restartGame();
                   },
-                  onExit: () {
+                  onExit: () async {
+                    await saveCurrentGame();
+                    stopwatch.stop();
+
+                    if (!mounted) return;
+
                     Navigator.pop(context);
                   },
                   onSoundChanged: (enabled) {
@@ -500,8 +556,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                 ),
               ),
 
-              if (showCoinAnimation &&
-                  coinAnimationStart != null)
+              if (showCoinAnimation && coinAnimationStart != null)
                 FlyingCoin(
                   start: coinAnimationStart!,
                   end: Offset(
@@ -515,119 +570,6 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                   },
                 ),
 
-              Column(
-                children: [
-                  const SizedBox(
-                    height: 100,
-                  ),
-
-                  Container(
-                    key: trayKey,
-                    height: trayHeight,
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.08),
-                      borderRadius:
-                          BorderRadius.circular(22),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.25),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.15),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(
-                    height: 20,
-                  ),
-
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                      ),
-                      child: Center(
-                        child: Container(
-                          key: boardKey,
-                          width: boardSize,
-                          height: boardSize,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
-                            borderRadius:
-                                BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.35),
-                                blurRadius: 25,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.18),
-                              width: 2,
-                            ),
-                          ),
-                          child: ClipRRect(
-                            borderRadius:
-                                BorderRadius.circular(18),
-                            child: Opacity(
-                              opacity: 0.18,
-                              child: Image.asset(
-                                widget.level.image,
-                                width: boardSize,
-                                height: boardSize,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              Positioned(
-                bottom: 15,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: SizedBox(
-                    width: 110,
-                    height: 40,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                      icon: const Icon(Icons.exit_to_app_rounded),
-                      label: const Text(
-                        "حفظ وخروج",
-                        style: TextStyle(
-                          fontSize: 12,
-                        ),
-                      ),
-                      onPressed: () async {
-                        await saveCurrentGame();
-                        stopwatch.stop();
-
-                        if (!mounted) return;
-
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ),
-                ),
-              ),
-
               if (puzzleCreated)
                 Positioned.fill(
                   child: GestureDetector(
@@ -636,8 +578,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
                       if (_isTouchingPiece(position)) {
                         trayDragging = false;
-                        controller.trayOffset =
-                            trayController.offsetX;
+                        controller.trayOffset = trayController.offsetX;
                         controller.onPanStart(position);
                       } else {
                         trayDragging = true;
@@ -673,10 +614,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
                         if (!mounted) return;
 
-                        final placedCount =
-                            controller.pieces
-                                .where((p) => p.isPlaced)
-                                .length;
+                        final placedCount = controller.pieces
+                            .where((p) => p.isPlaced)
+                            .length;
 
                         if (placedCount > lastPlacedCount) {
                           lastPlacedCount = placedCount;
