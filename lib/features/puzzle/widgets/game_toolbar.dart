@@ -216,12 +216,20 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
           children: [
             // زر الإعدادات مع تأثير الأنيميشن عند الضغط
             GestureDetector(
-              onTapDown: (_) => _settingsAnimController.forward(),
+              behavior: HitTestBehavior.opaque,
+
+              onTapDown: (_) {
+                _settingsAnimController.forward();
+              },
+
               onTapUp: (_) {
                 _settingsAnimController.reverse();
                 showSettings(context);
               },
-              onTapCancel: () => _settingsAnimController.reverse(),
+
+              onTapCancel: () {
+                _settingsAnimController.reverse();
+              },
               child: ScaleTransition(
                 scale: _settingsScaleAnimation,
                 child: Container(
@@ -380,10 +388,13 @@ class _AnimatedStarCounterState extends State<AnimatedStarCounter>
   }
 
   @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
+void dispose() {
+  RewardManager.rewardNotifier.removeListener(refreshReward);
+
+  _settingsAnimController.dispose();
+
+  super.dispose();
+}
 }
 
 class ImageCounterBox extends StatelessWidget {
