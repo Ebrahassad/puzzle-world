@@ -1,484 +1,599 @@
-import 'dart:math';
-import 'dart:ui' as ui;
-import 'package:flutter/scheduler.dart';
-import 'package:flutter/material.dart';
-import 'final_victory_screen.dart';
-import '../engine/puzzle_piece.dart';
-import '../managers/reward_manager.dart';
+import 'dart:math' as math;
 
-/// Data used only for cinematic explosion.
-/// We do not modify PuzzlePiece because it is the engine model.
-class _ExplosionData {
-  double vx;
-  double vy;
-  double gravity;
-  double rotation;
-  double opacity;
-  double scale;
+import 'package:flutter/material.dart';
+import '../managers/reward_manager.dart';
+import 'world_map_screen.dart';
+
+/// Lightweight particle used for the celebratory confetti/firework burst
+/// when the final chest opens. Kept private to this file — no new files,
+/// no changes to the engine models.
+class _ConfettiParticle {
   double x;
   double y;
+  double vx;
+  double vy;
+  double rotation;
+  double rotationSpeed;
+  double opacity;
+  double size;
+  final Color color;
 
-  _ExplosionData({
-    this.vx = 0,
-    this.vy = 0,
-    this.gravity = 0.65,
-    this.rotation = 0,
-    this.opacity = 1,
-    this.scale = 1,
-    this.x = 0,
-    this.y = 0,
+  _ConfettiParticle({
+    required this.x,
+    required this.y,
+    required this.vx,
+    required this.vy,
+    required this.rotation,
+    required this.rotationSpeed,
+    required this.opacity,
+    required this.size,
+    required this.color,
   });
 }
 
-/// Cinematic victory sequence:
-/// Puzzle explosion -> chest -> reward -> toolbar animation
-///
-/// IMPORTANT: This widget is fully transparent by design so the
-/// PuzzleGameScreen remains visible behind the cinematic. If this screen
-/// is pushed with Navigator.push, make sure the route itself is
-/// transparent as well (e.g. PageRouteBuilder(opaque: false, ...) or
-/// showGeneralDialog), otherwise the default MaterialPageRoute barrier
-/// will still paint an opaque background behind it.
-class VictoryScreen extends StatefulWidget {
-  final ui.Image puzzleImage;
-  final List<PuzzlePiece> pieces;
-  final Rect boardRect;
-  final int rows;
-  final int cols;
-
+class FinalVictoryScreen extends StatefulWidget {
   final dynamic island;
-  final int levelNumber;
-  final bool isFinalLevel;
 
-  final GlobalKey? starTargetKey;
-
-  final VoidCallback onFinished;
-
-  const VictoryScreen({
+  const FinalVictoryScreen({
     super.key,
-    required this.puzzleImage,
-    required this.pieces,
-    required this.boardRect,
-    required this.rows,
-    required this.cols,
     required this.island,
-    required this.levelNumber,
-    this.isFinalLevel = false,
-    this.starTargetKey,
-    required this.onFinished,
   });
 
   @override
-  State<VictoryScreen> createState() => _VictoryScreenState();
+  State<FinalVictoryScreen> createState() => _FinalVictoryScreenState();
 }
 
-class _VictoryScreenState extends State<VictoryScreen>
+class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     with TickerProviderStateMixin {
-
-  //==============================
-  // Intro (completed puzzle entrance)
-  //==============================
-
-  bool _introVisible = false;
-
-  //==============================
-  // Explosion
-  //==============================
-
-  final Map<PuzzlePiece, _ExplosionData> _explosionData = {};
-
-  late Ticker _physicsTicker;
-
-  bool _explosionStarted = false;
-  bool _showPuzzle = true;
 
   //==============================
   // Chest
   //==============================
 
   late AnimationController _chestController;
-
-  late Animation<double> _chestFall;
+  late Animation<double> _chestDrop;
   late Animation<double> _chestScale;
-  late Animation<double> _chestShake;
+  late Animation<double> _shake;
 
-  bool _showChest = false;
-  bool _chestOpened = false;
-
-  double _flash = 0;
+  bool _opened = false;
 
   final GlobalKey _chestKey = GlobalKey();
 
   //==============================
-  // Reward
+  // Flash
   //==============================
 
-  late AnimationController _rewardController;
+  late AnimationController _flashController;
 
-  bool _showReward = false;
-  bool _rewardSent = false;
+  //==============================
+  // Confetti / fireworks burst
+  //==============================
 
-  Offset _rewardStart = Offset.zero;
-  Offset _rewardEnd = Offset.zero;
+  late Ticker _confettiTicker;
+  final List<_ConfettiParticle> _confetti = [];
+  bool _confettiActive = false;
+
+  //==============================
+  // Glow pulse behind the chest (hero spotlight)
+  //==============================
+
+  late AnimationController _glowController;
+
+  //==============================
+  // Gem: pop out of chest, then fly to the on-screen collector badge
+  //==============================
+
+  late AnimationController _gemPopController;
+  late Animation<double> _gemPopScale;
+  late Animation<double> _gemPopRotate;
+
+  late AnimationController _gemFlightController;
+
+  bool _showGemPop = false;
+  bool _showGemFlight = false;
+  bool _gemAdded = false;
+
+  Offset _gemStart = Offset.zero;
+  Offset _gemEnd = Offset.zero;
+
+  final GlobalKey _gemBadgeKey = GlobalKey();
+
+  //==============================
+  // Badge landing punch
+  //==============================
+
+  late AnimationController _badgePunchController;
+  late Animation<double> _badgePunchScale;
+
+  //==============================
+  // Hero title text
+  //==============================
+
+  late AnimationController _titleController;
+  late Animation<double> _titleOpacity;
+  late Animation<Offset> _titleSlide;
 
   @override
   void initState() {
     super.initState();
 
-    _rewardSent = false;
+    _setupAnimations();
+    _confettiTicker = createTicker((_) => _updateConfetti());
 
-    _prepareExplosion();
-
-    _physicsTicker = createTicker((_) {
-      _updateExplosion();
-    });
-
-    _setupChestAnimation();
-    _setupRewardAnimation();
-
-    // Fade + scale in the completed puzzle so it doesn't just "pop" in.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      setState(() {
-        _introVisible = true;
-      });
-    });
-
-    // small pause so player sees completed puzzle
-    Future.delayed(
-      const Duration(milliseconds: 1000),
-      () {
-        if (!mounted) return;
-        _startExplosion();
-      },
-    );
+    _startSequence();
   }
 
-  void _prepareExplosion() {
-    final random = Random();
-
-    for (final piece in widget.pieces) {
-      _explosionData[piece] = _ExplosionData(
-        vx: (random.nextDouble() - 0.5) * 25,
-        vy: -12 - random.nextDouble() * 22,
-        gravity: 0.4 + random.nextDouble() * 0.8,
-        rotation: (random.nextDouble() - 0.5) * 0.3,
-      )
-        ..x = 0
-        ..y = 0;
-    }
-  }
-
-  void _startExplosion() {
-    if (_explosionStarted) return;
-
-    _explosionStarted = true;
-    setState(() {});
-    _physicsTicker.start();
-  }
-
-  void _updateExplosion() {
-    bool active = false;
-
-    for (final piece in widget.pieces) {
-      final data = _explosionData[piece];
-
-      if (data == null) continue;
-      if (data.opacity <= 0) continue;
-
-      active = true;
-
-      data.x += data.vx;
-      data.y += data.vy;
-
-      data.vy += data.gravity;
-
-      if (data.y > 220) {
-        data.y = 220;
-        data.vy *= -0.45;
-        data.vx *= 0.8;
-      }
-
-      data.vx *= 0.97;
-      data.vy *= 0.97;
-
-      data.rotation += 0.025;
-      data.opacity -= 0.008;
-
-      data.scale = max(0.75, data.scale - 0.0015);
-    }
-
-    if (mounted) {
-      setState(() {});
-    }
-
-    if (!active && mounted) {
-      _physicsTicker.stop();
-
-      setState(() {
-        _showPuzzle = false;
-        _showChest = true;
-      });
-
-      Future.delayed(
-        const Duration(milliseconds: 400),
-        () {
-          if (mounted && !_chestController.isAnimating) {
-            _chestController.forward();
-          }
-        },
-      );
-    }
-  }
-
-  void _setupChestAnimation() {
+  void _setupAnimations() {
     _chestController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2200),
+      duration: const Duration(milliseconds: 2500),
     );
 
-    _chestFall = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween(begin: -500.0, end: 0.0).chain(
-          CurveTween(curve: Curves.easeIn),
-        ),
-        weight: 40,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: 0.0, end: -60.0).chain(
-          CurveTween(curve: Curves.easeOut),
-        ),
-        weight: 15,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: -60.0, end: 0.0).chain(
-          CurveTween(curve: Curves.bounceOut),
-        ),
-        weight: 45,
-      ),
-    ]).animate(_chestController);
+    _flashController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+
+    _glowController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    )..repeat(reverse: true);
+
+    _gemPopController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 750),
+    );
+
+    _gemFlightController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
+    _badgePunchController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+
+    _titleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+
+    _chestDrop = Tween<double>(begin: -650, end: 0).animate(
+      CurvedAnimation(parent: _chestController, curve: Curves.bounceOut),
+    );
 
     _chestScale = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween(begin: 0.8, end: 1.15).chain(
-          CurveTween(curve: Curves.easeOutBack),
-        ),
-        weight: 50,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: 1.15, end: 1.0),
-        weight: 50,
-      ),
-    ]).animate(_chestController);
+      TweenSequenceItem(tween: Tween(begin: 0.6, end: 1.25), weight: 60),
+      TweenSequenceItem(tween: Tween(begin: 1.25, end: 1), weight: 40),
+    ]).animate(
+      CurvedAnimation(parent: _chestController, curve: Curves.easeOut),
+    );
 
-    _chestShake = Tween<double>(
-      begin: -0.08,
-      end: 0.08,
-    ).animate(
+    _shake = Tween<double>(begin: -0.08, end: 0.08).animate(
       CurvedAnimation(
         parent: _chestController,
         curve: const Interval(0.55, 0.75, curve: Curves.easeInOut),
       ),
     );
 
-    _chestController.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        setState(() {
-          _chestOpened = true;
-          _flash = 1;
-        });
+    _gemPopScale = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.2, end: 1.4), weight: 60),
+      TweenSequenceItem(tween: Tween(begin: 1.4, end: 1), weight: 40),
+    ]).animate(
+      CurvedAnimation(parent: _gemPopController, curve: Curves.elasticOut),
+    );
 
-        Future.delayed(
-          const Duration(milliseconds: 300),
-          () {
-            if (mounted) {
-              setState(() {
-                _flash = 0;
-              });
-            }
-          },
-        );
+    _gemPopRotate = Tween<double>(begin: 0, end: math.pi * 2).animate(
+      CurvedAnimation(parent: _gemPopController, curve: Curves.easeOut),
+    );
 
-        Future.delayed(
-          const Duration(milliseconds: 700),
-          () {
-            if (!mounted) return;
-            _startRewardFlight();
-          },
-        );
-      }
-    });
-  }
+    _badgePunchScale = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.45), weight: 50),
+      TweenSequenceItem(
+        tween: Tween(begin: 1.45, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeOutBack)),
+        weight: 50,
+      ),
+    ]).animate(_badgePunchController);
 
-  void _setupRewardAnimation() {
-    _rewardController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
+    _titleOpacity = CurvedAnimation(
+      parent: _titleController,
+      curve: Curves.easeOut,
+    );
+
+    _titleSlide = Tween<Offset>(
+      begin: const Offset(0, 0.25),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _titleController, curve: Curves.easeOutCubic),
     );
   }
 
-  Future<void> _startRewardFlight() async {
-    // Guard: never let the reward be granted / flown more than once.
-    if (_rewardSent) return;
+  //==============================
+  // Confetti physics
+  //==============================
 
-    _rewardSent = true;
+  void _spawnConfetti() {
+    if (!mounted) return;
 
-    await Future.delayed(const Duration(milliseconds: 100));
+    final size = MediaQuery.of(context).size;
+    final origin = Offset(size.width / 2, size.height / 2 - 40);
+    final random = math.Random();
 
+    const colors = [
+      Color(0xFFFFD54F), // gold
+      Color(0xFFFFFFFF), // white
+      Color(0xFF64B5F6), // blue
+      Color(0xFFFF8A65), // orange
+      Color(0xFF81C784), // green
+    ];
+
+    _confetti.clear();
+
+    for (var i = 0; i < 60; i++) {
+      final angle = random.nextDouble() * math.pi * 2;
+      final speed = 4 + random.nextDouble() * 9;
+
+      _confetti.add(
+        _ConfettiParticle(
+          x: origin.dx,
+          y: origin.dy,
+          vx: math.cos(angle) * speed,
+          vy: math.sin(angle) * speed - 4,
+          rotation: random.nextDouble() * math.pi,
+          rotationSpeed: (random.nextDouble() - 0.5) * 0.35,
+          opacity: 1,
+          size: 6 + random.nextDouble() * 8,
+          color: colors[random.nextInt(colors.length)],
+        ),
+      );
+    }
+
+    _confettiActive = true;
+    _confettiTicker.start();
+  }
+
+  void _updateConfetti() {
+    bool active = false;
+
+    for (final p in _confetti) {
+      if (p.opacity <= 0) continue;
+
+      active = true;
+
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.18; // gravity
+      p.vx *= 0.985;
+      p.rotation += p.rotationSpeed;
+      p.opacity -= 0.012;
+    }
+
+    if (mounted) {
+      setState(() {});
+    }
+
+    if (!active) {
+      _confettiTicker.stop();
+      _confettiActive = false;
+    }
+  }
+
+  //==============================
+  // Sequence
+  //==============================
+
+  Future<void> _startSequence() async {
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (!mounted) return;
+
+    // Hero moment: the chest crashes down.
+    await _chestController.forward();
+    if (!mounted) return;
+
+    setState(() {
+      _opened = true;
+    });
+
+    // Light + fireworks burst together for maximum impact.
+    _spawnConfetti();
+    await _flashController.forward();
+
+    await Future.delayed(const Duration(milliseconds: 300));
+    _flashController.reset();
+
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (!mounted) return;
+
+    // Gem pops out of the chest with a spin.
+    setState(() {
+      _showGemPop = true;
+    });
+    await _gemPopController.forward();
+    if (!mounted) return;
+
+    // Gem flies from the chest to the on-screen collector badge,
+    // exactly like the star flying into the toolbar in VictoryScreen.
+    await _startGemFlight();
+    if (!mounted) return;
+
+    // Hero title celebration text.
+    await _titleController.forward();
+
+    await Future.delayed(const Duration(milliseconds: 1400));
+    if (!mounted) return;
+
+    // العودة تلقائياً إلى خريطة العوالم.
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const WorldMapScreen(),
+      ),
+      (route) => false,
+    );
+  }
+
+  Future<void> _startGemFlight() async {
+    await Future.delayed(const Duration(milliseconds: 50));
     if (!mounted) return;
 
     final size = MediaQuery.of(context).size;
 
     if (_chestKey.currentContext != null) {
       final box = _chestKey.currentContext!.findRenderObject() as RenderBox;
-      _rewardStart = box.localToGlobal(box.size.center(Offset.zero));
+      _gemStart = box.localToGlobal(box.size.center(Offset.zero));
     } else {
-      _rewardStart = Offset(size.width / 2, size.height / 2);
+      _gemStart = Offset(size.width / 2, size.height / 2);
     }
 
-    final targetKey = widget.starTargetKey;
-
-    // Preferred path: fly straight into the real GameToolbar star slot via
-    // the provided GlobalKey (no duplication of GameToolbar needed).
-    if (targetKey != null && targetKey.currentContext != null) {
-      final box = targetKey.currentContext!.findRenderObject() as RenderBox;
-      _rewardEnd = box.localToGlobal(box.size.center(Offset.zero));
+    if (_gemBadgeKey.currentContext != null) {
+      final box = _gemBadgeKey.currentContext!.findRenderObject() as RenderBox;
+      _gemEnd = box.localToGlobal(box.size.center(Offset.zero));
     } else {
-      // Fallback: if the toolbar key isn't available/measurable yet (e.g.
-      // it hasn't been laid out under the transparent overlay), land the
-      // star in the same top-right corner the real toolbar's star lives in
-      // instead of guessing at GameToolbar's internals or duplicating it.
-      _rewardEnd = Offset(size.width - 50, 40);
+      _gemEnd = Offset(size.width - 50, 40);
     }
 
     setState(() {
-      _showReward = true;
+      _showGemPop = false;
+      _showGemFlight = true;
     });
 
-    _rewardController.reset();
-    _rewardController.forward().then((_) {
-      if (!mounted) return;
+    _gemFlightController.reset();
+    await _gemFlightController.forward();
+    if (!mounted) return;
 
-      // Grant the reward exactly once, then hand control back.
-      RewardManager.addStars(1);
-
-      if (widget.isFinalLevel) {
-        Future.delayed(
-          const Duration(milliseconds: 1500),
-          () {
-            if (!mounted) return;
-
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => FinalVictoryScreen(
-                  island: widget.island,
-                ),
-              ),
-            );
-          },
-        );
-      } else {
-        widget.onFinished();
-      }
+    setState(() {
+      _showGemFlight = false;
     });
+
+    // Grant the gem exactly once, right as it lands in the badge.
+    if (!_gemAdded) {
+      _gemAdded = true;
+      RewardManager.addGems(1);
+    }
+
+    _badgePunchController.forward(from: 0);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Fully transparent root: the underlying PuzzleGameScreen stays
-    // visible behind this whole cinematic. No opaque Scaffold background.
-    return Material(
-      type: MaterialType.transparency,
-      child: Stack(
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        alignment: Alignment.center,
         children: [
-          if (_showPuzzle)
+          // Deep hero-themed gradient backdrop.
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xff081A3A),
+                  Color(0xff020611),
+                ],
+              ),
+            ),
+          ),
+
+          // Pulsing golden spotlight behind the chest.
+          AnimatedBuilder(
+            animation: _glowController,
+            builder: (context, child) {
+              final glow = 0.15 + (_glowController.value * 0.25);
+              return Container(
+                width: 420,
+                height: 420,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      Colors.amber.withOpacity(glow),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+
+          // Firework / confetti burst.
+          if (_confettiActive || _confetti.isNotEmpty)
             Positioned.fill(
               child: IgnorePointer(
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 350),
-                  opacity: _introVisible ? 1 : 0,
-                  child: AnimatedScale(
-                    duration: const Duration(milliseconds: 350),
-                    curve: Curves.easeOutBack,
-                    scale: _introVisible ? 1 : 0.92,
-                    child: CustomPaint(
-                      painter: PuzzleExplosionPainter(
-                        image: widget.puzzleImage,
-                        pieces: widget.pieces,
-                        data: _explosionData,
-                        boardRect: widget.boardRect,
-                        rows: widget.rows,
-                        cols: widget.cols,
-                      ),
-                    ),
-                  ),
+                child: CustomPaint(
+                  painter: _ConfettiPainter(List.of(_confetti)),
                 ),
               ),
             ),
 
-          if (_showChest)
-            Center(
-              child: AnimatedBuilder(
-                animation: _chestController,
-                builder: (context, child) {
-                  return Transform.translate(
-                    offset: Offset(0, _chestFall.value),
-                    child: Transform.scale(
-                      scale: _chestScale.value,
-                      child: Transform.rotate(
-                        angle: _chestShake.value,
-                        child: Container(
-                          key: _chestKey,
-                          child: Image.asset(
-                            _chestOpened
-                                ? 'assets/images/rewards/reward_chest_open.png'
-                                : 'assets/images/rewards/reward_chest_closed.png',
-                            width: 170,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-
-          if (_showReward)
-            AnimatedBuilder(
-              animation: _rewardController,
-              builder: (context, child) {
-                final t = Curves.easeInOutCubic.transform(_rewardController.value);
-
-                final x = _rewardStart.dx + (_rewardEnd.dx - _rewardStart.dx) * t;
-                final y = _rewardStart.dy + (_rewardEnd.dy - _rewardStart.dy) * t;
-                final currentScale = 1.0 - (_rewardController.value * 0.35);
-
-                return Positioned(
-                  left: x - 35,
-                  top: y - 35,
-                  child: Transform.scale(
-                    scale: currentScale.clamp(0.65, 1.0),
+          // الصندوق النهائي
+          AnimatedBuilder(
+            animation: _chestController,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: Offset(0, _chestDrop.value),
+                child: Transform.scale(
+                  scale: _chestScale.value,
+                  child: Transform.rotate(
+                    angle: _opened ? 0 : _shake.value,
                     child: Image.asset(
-                      'assets/images/rewards/Star_gold.png',
-                      width: 70,
+                      _opened
+                          ? "assets/images/rewards/reward_chest_open.png"
+                          : "assets/images/rewards/reward_chest_closed.png",
+                      key: _chestKey,
+                      width: 220,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+
+          // الجوهرة تخرج من الصندوق وتدور
+          if (_showGemPop)
+            AnimatedBuilder(
+              animation: _gemPopController,
+              builder: (context, child) {
+                return Transform.rotate(
+                  angle: _gemPopRotate.value,
+                  child: Transform.scale(
+                    scale: _gemPopScale.value,
+                    child: Image.asset(
+                      "assets/images/rewards/gem.png",
+                      width: 100,
                     ),
                   ),
                 );
               },
             ),
 
-          if (_flash > 0)
-            Positioned.fill(
-              child: IgnorePointer(
-                child: Opacity(
-                  opacity: _flash,
-                  child: Container(
-                    color: Colors.white,
+          // الجوهرة تطير نحو شارة الجمع، تماماً كما تطير النجمة في VictoryScreen
+          if (_showGemFlight)
+            AnimatedBuilder(
+              animation: _gemFlightController,
+              builder: (context, child) {
+                final t = Curves.easeInOutCubic.transform(
+                  _gemFlightController.value,
+                );
+
+                final x = _gemStart.dx + (_gemEnd.dx - _gemStart.dx) * t;
+
+                // Slight upward arc instead of a flat line, for a more
+                // natural, energetic flight path.
+                final arc = -80 * math.sin(math.pi * t);
+                final y = _gemStart.dy +
+                    (_gemEnd.dy - _gemStart.dy) * t +
+                    arc;
+
+                final scale = 1.0 - (t * 0.55);
+
+                return Positioned(
+                  left: x - 40,
+                  top: y - 40,
+                  child: Transform.scale(
+                    scale: scale.clamp(0.4, 1.0),
+                    child: Image.asset(
+                      "assets/images/rewards/gem.png",
+                      width: 80,
+                    ),
                   ),
+                );
+              },
+            ),
+
+          // شارة جمع الجواهر — تمثل "الشريط" ضمن هذه الشاشة نفسها
+          // (لا توجد GameToolbar هنا لأن هذه شاشة احتفالية مستقلة).
+          Positioned(
+            top: 40,
+            right: 24,
+            child: AnimatedBuilder(
+              animation: _badgePunchController,
+              builder: (context, child) {
+                final scale = _badgePunchController.isAnimating ||
+                        _badgePunchController.value > 0
+                    ? _badgePunchScale.value
+                    : 1.0;
+
+                return Transform.scale(
+                  scale: scale,
+                  child: Container(
+                    key: _gemBadgeKey,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.45),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.amberAccent.withOpacity(0.6),
+                      ),
+                    ),
+                    child: Image.asset(
+                      "assets/images/rewards/gem.png",
+                      width: 28,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          // نص البطولة
+          FadeTransition(
+            opacity: _titleOpacity,
+            child: SlideTransition(
+              position: _titleSlide,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 260),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Text(
+                      "🏆 أنت بطل!",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(
+                            color: Colors.amber,
+                            blurRadius: 18,
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      "لقد أكملت جميع المراحل بنجاح",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
+          ),
+
+          // وميض الفتح
+          Positioned.fill(
+            child: IgnorePointer(
+              child: AnimatedBuilder(
+                animation: _flashController,
+                builder: (context, child) {
+                  return Container(
+                    color: Colors.white.withOpacity(_flashController.value),
+                  );
+                },
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -486,107 +601,47 @@ class _VictoryScreenState extends State<VictoryScreen>
 
   @override
   void dispose() {
-    _physicsTicker.dispose();
     _chestController.dispose();
-    _rewardController.dispose();
+    _flashController.dispose();
+    _glowController.dispose();
+    _gemPopController.dispose();
+    _gemFlightController.dispose();
+    _badgePunchController.dispose();
+    _titleController.dispose();
+    _confettiTicker.dispose();
     super.dispose();
   }
 }
 
 //======================================
-// Explosion Painter
+// Confetti Painter
 //======================================
 
-class PuzzleExplosionPainter extends CustomPainter {
-  final ui.Image image;
-  final List<PuzzlePiece> pieces;
-  final Map<PuzzlePiece, _ExplosionData> data;
+class _ConfettiPainter extends CustomPainter {
+  final List<_ConfettiParticle> particles;
 
-  final Rect boardRect;
-  final int rows;
-  final int cols;
-
-  PuzzleExplosionPainter({
-    required this.image,
-    required this.pieces,
-    required this.data,
-    required this.boardRect,
-    required this.rows,
-    required this.cols,
-  });
-
-  static final Paint _paint = Paint()..filterQuality = FilterQuality.high;
+  _ConfettiPainter(this.particles);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final pieceWidth = boardRect.width / cols;
-    final pieceHeight = boardRect.height / rows;
+    final paint = Paint();
 
-    for (final piece in pieces) {
-      final d = data[piece];
+    for (final p in particles) {
+      if (p.opacity <= 0) continue;
 
-      if (d == null || d.opacity <= 0) continue;
+      paint.color = p.color.withOpacity(p.opacity.clamp(0, 1));
 
       canvas.save();
-
-      // Piece's correct (rest) position + explosion offset.
-      final center = Offset(
-        boardRect.left + piece.correctPosition.dx + pieceWidth / 2,
-        boardRect.top + piece.correctPosition.dy + pieceHeight / 2,
+      canvas.translate(p.x, p.y);
+      canvas.rotate(p.rotation);
+      canvas.drawRect(
+        Rect.fromCenter(center: Offset.zero, width: p.size, height: p.size * 0.5),
+        paint,
       );
-
-      canvas.translate(center.dx + d.x, center.dy + d.y);
-      canvas.rotate(d.rotation);
-      canvas.scale(d.scale);
-      canvas.translate(-pieceWidth / 2, -pieceHeight / 2);
-
-      // Clip to the piece's jigsaw shape.
-      canvas.save();
-
-      // piece.path is defined in the SAME absolute coordinate space as
-      // `center` above (i.e. relative to the board's top-left). The local
-      // drawing frame at this point in the transform chain has its origin
-      // at the piece's TOP-LEFT corner (because of the translate by
-      // -pieceWidth/2, -pieceHeight/2 above), not at its center. So the
-      // path must be shifted by -topLeft, not -center, or it ends up
-      // offset by exactly half a piece size and gets clipped away
-      // (this was the bug hiding the whole explosion/completed image).
-      final topLeft = Offset(
-        center.dx - pieceWidth / 2,
-        center.dy - pieceHeight / 2,
-      );
-
-      final localPath = Path()..addPath(piece.path, -topLeft);
-
-      canvas.clipPath(localPath);
-
-      final source = Rect.fromLTWH(
-        piece.col * image.width / cols,
-        piece.row * image.height / rows,
-        image.width / cols,
-        image.height / rows,
-      );
-
-      final destination = Rect.fromLTWH(0, 0, pieceWidth, pieceHeight);
-
-      _paint.color = Colors.white.withOpacity(d.opacity);
-
-      canvas.drawImageRect(image, source, destination, _paint);
-
-      // Soft shadow while exploding.
-      final shadowPaint = Paint()
-        ..color = Colors.black.withOpacity(d.opacity * 0.25)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
-
-      canvas.drawPath(localPath, shadowPaint);
-
-      canvas.restore();
       canvas.restore();
     }
   }
 
   @override
-  bool shouldRepaint(covariant PuzzleExplosionPainter oldDelegate) {
-    return true;
-  }
+  bool shouldRepaint(covariant _ConfettiPainter oldDelegate) => true;
 }
