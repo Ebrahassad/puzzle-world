@@ -526,48 +526,6 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                 ],
               ),
 
-              Positioned(
-                top: 0,
-                left: 8,
-                right: 8,
-                child: GameToolbar(
-                  starKey: starKey,
-                  gemKey: gemKey,
-                  coinKey: coinKey,
-                  soundEnabled: soundEnabled,
-                  onSave: () async {
-                    await saveCurrentGame();
-
-                    if (!mounted) return;
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("تم الحفظ بنجاح"),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                  onRestart: () {
-                    restartGame();
-                  },
-                  
-                  onExit: () async {
-                    await saveCurrentGame();
-                    stopwatch.stop();
-
-                    if (!mounted) return;
-
-                    Navigator.pop(context);
-                  },
-                  onSoundChanged: (enabled) {
-                    setState(() {
-                      soundEnabled = enabled;
-                    });
-                    _audioPlayer.setVolume(enabled ? 1 : 0);
-                  },
-                ),
-              ),
-
               if (showCoinAnimation && coinAnimationStart != null)
                 FlyingCoin(
                   start: coinAnimationStart!,
@@ -587,11 +545,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                 ),
 
               if (puzzleCreated)
-                Positioned(
-                  top: 90,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
+                Positioned.fill(
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onPanStart: (details) {
@@ -647,6 +601,48 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                     ),
                   ),
                 ),
+
+              // تم نقل GameToolbar ليصبح آخر عنصر في الـ Stack
+              Positioned(
+                top: 0,
+                left: 8,
+                right: 8,
+                child: GameToolbar(
+                  starKey: starKey,
+                  gemKey: gemKey,
+                  coinKey: coinKey,
+                  soundEnabled: soundEnabled,
+                  onSave: () async {
+                    await saveCurrentGame();
+
+                    if (!mounted) return;
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("تم الحفظ بنجاح"),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                  onRestart: () {
+                    restartGame();
+                  },
+                  onExit: () async {
+                    await saveCurrentGame();
+                    stopwatch.stop();
+
+                    if (!mounted) return;
+
+                    Navigator.pop(context);
+                  },
+                  onSoundChanged: (enabled) {
+                    setState(() {
+                      soundEnabled = enabled;
+                    });
+                    _audioPlayer.setVolume(enabled ? 1 : 0);
+                  },
+                ),
+              ),
             ],
           ),
         ),
