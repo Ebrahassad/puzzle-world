@@ -7,7 +7,7 @@ import '../data/puzzle_level_data.dart';
 
 import '../models/puzzle_model.dart';
 import '../models/puzzle_level_model.dart';
-import '../widgets/walleticonwidget.dart';
+import '../widgets/wallet_icon_widget.dart';
 
 import 'puzzle_game_screen.dart';
 
