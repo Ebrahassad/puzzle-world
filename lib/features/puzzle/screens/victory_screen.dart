@@ -439,15 +439,22 @@ class _VictoryScreenState extends State<VictoryScreen>
         widget.onStarEarned();
 
         if (widget.isFinalLevel) {
-          Future.delayed(
-            const Duration(milliseconds: 1500),
-            () {
-              if (mounted) {
-                _startFinalGemSequence();
-              }
-            },
-          );
-        } else {
+  Future.delayed(
+    const Duration(milliseconds: 1500),
+    () {
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => FinalVictoryScreen(
+            island: widget.island,
+          ),
+        ),
+      );
+    },
+  );
+} else {
           widget.onFinished();
         }
       }
