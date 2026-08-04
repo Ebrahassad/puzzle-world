@@ -1,4 +1,4 @@
-import 'dart:math';
+mport 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/material.dart';
@@ -32,6 +32,13 @@ class _ExplosionData {
 
 /// Cinematic victory sequence:
 /// Puzzle explosion -> chest -> reward -> toolbar animation
+///
+/// IMPORTANT: This widget is fully transparent by design so the
+/// PuzzleGameScreen remains visible behind the cinematic. If this screen
+/// is pushed with Navigator.push, make sure the route itself is
+/// transparent as well (e.g. PageRouteBuilder(opaque: false, ...) or
+/// showGeneralDialog), otherwise the default MaterialPageRoute barrier
+/// will still paint an opaque background behind it.
 class VictoryScreen extends StatefulWidget {
   final ui.Image puzzleImage;
   final List<PuzzlePiece> pieces;
@@ -67,6 +74,12 @@ class VictoryScreen extends StatefulWidget {
 
 class _VictoryScreenState extends State<VictoryScreen>
     with TickerProviderStateMixin {
+
+  //==============================
+  // Intro (completed puzzle entrance)
+  //==============================
+
+  bool _introVisible = false;
 
   //==============================
   // Explosion
@@ -123,9 +136,17 @@ class _VictoryScreenState extends State<VictoryScreen>
     _setupChestAnimation();
     _setupRewardAnimation();
 
+    // Fade + scale in the completed puzzle so it doesn't just "pop" in.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _introVisible = true;
+      });
+    });
+
     // small pause so player sees completed puzzle
     Future.delayed(
-      const Duration(milliseconds: 900),
+      const Duration(milliseconds: 1000),
       () {
         if (!mounted) return;
         _startExplosion();
@@ -297,11 +318,14 @@ class _VictoryScreenState extends State<VictoryScreen>
   }
 
   Future<void> _startRewardFlight() async {
+    // Guard: never let the reward be granted / flown more than once.
     if (_rewardSent) return;
 
     _rewardSent = true;
 
     await Future.delayed(const Duration(milliseconds: 100));
+
+    if (!mounted) return;
 
     final size = MediaQuery.of(context).size;
 
@@ -314,10 +338,16 @@ class _VictoryScreenState extends State<VictoryScreen>
 
     final targetKey = widget.starTargetKey;
 
+    // Preferred path: fly straight into the real GameToolbar star slot via
+    // the provided GlobalKey (no duplication of GameToolbar needed).
     if (targetKey != null && targetKey.currentContext != null) {
       final box = targetKey.currentContext!.findRenderObject() as RenderBox;
       _rewardEnd = box.localToGlobal(box.size.center(Offset.zero));
     } else {
+      // Fallback: if the toolbar key isn't available/measurable yet (e.g.
+      // it hasn't been laid out under the transparent overlay), land the
+      // star in the same top-right corner the real toolbar's star lives in
+      // instead of guessing at GameToolbar's internals or duplicating it.
       _rewardEnd = Offset(size.width - 50, 40);
     }
 
@@ -329,6 +359,7 @@ class _VictoryScreenState extends State<VictoryScreen>
     _rewardController.forward().then((_) {
       if (!mounted) return;
 
+      // Grant the reward exactly once, then hand control back.
       RewardManager.addStars(1);
 
       if (widget.isFinalLevel) {
@@ -355,48 +386,62 @@ class _VictoryScreenState extends State<VictoryScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black87,
-      body: Stack(
-        alignment: Alignment.center,
+    // Fully transparent root: the underlying PuzzleGameScreen stays
+    // visible behind this whole cinematic. No opaque Scaffold background.
+    return Material(
+      type: MaterialType.transparency,
+      child: Stack(
         children: [
           if (_showPuzzle)
             Positioned.fill(
-              child: CustomPaint(
-                painter: PuzzleExplosionPainter(
-                  image: widget.puzzleImage,
-                  pieces: widget.pieces,
-                  data: _explosionData,
-                  boardRect: widget.boardRect,
-                  rows: widget.rows,
-                  cols: widget.cols,
+              child: IgnorePointer(
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 350),
+                  opacity: _introVisible ? 1 : 0,
+                  child: AnimatedScale(
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeOutBack,
+                    scale: _introVisible ? 1 : 0.92,
+                    child: CustomPaint(
+                      painter: PuzzleExplosionPainter(
+                        image: widget.puzzleImage,
+                        pieces: widget.pieces,
+                        data: _explosionData,
+                        boardRect: widget.boardRect,
+                        rows: widget.rows,
+                        cols: widget.cols,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
 
           if (_showChest)
-            AnimatedBuilder(
-              animation: _chestController,
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(0, _chestFall.value),
-                  child: Transform.scale(
-                    scale: _chestScale.value,
-                    child: Transform.rotate(
-                      angle: _chestShake.value,
-                      child: Container(
-                        key: _chestKey,
-                        child: Image.asset(
-                          _chestOpened
-                              ? 'assets/images/rewards/reward_chest_open.png'
-                              : 'assets/images/rewards/reward_chest_closed.png',
-                          width: 170,
+            Center(
+              child: AnimatedBuilder(
+                animation: _chestController,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, _chestFall.value),
+                    child: Transform.scale(
+                      scale: _chestScale.value,
+                      child: Transform.rotate(
+                        angle: _chestShake.value,
+                        child: Container(
+                          key: _chestKey,
+                          child: Image.asset(
+                            _chestOpened
+                                ? 'assets/images/rewards/reward_chest_open.png'
+                                : 'assets/images/rewards/reward_chest_closed.png',
+                            width: 170,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
 
           if (_showReward)
@@ -484,7 +529,7 @@ class PuzzleExplosionPainter extends CustomPainter {
 
       canvas.save();
 
-      // المكان الأصلي للقطعة + الانفجار
+      // Piece's correct (rest) position + explosion offset.
       final center = Offset(
         boardRect.left + piece.correctPosition.dx + pieceWidth / 2,
         boardRect.top + piece.correctPosition.dy + pieceHeight / 2,
@@ -495,14 +540,23 @@ class PuzzleExplosionPainter extends CustomPainter {
       canvas.scale(d.scale);
       canvas.translate(-pieceWidth / 2, -pieceHeight / 2);
 
-      // قص قطعة البازل بشكل صحيح
+      // Clip to the piece's jigsaw shape.
       canvas.save();
 
-      final localPath = Path();
-      localPath.addPath(
-        piece.path,
-        Offset(-center.dx, -center.dy),
+      // piece.path is defined in the SAME absolute coordinate space as
+      // `center` above (i.e. relative to the board's top-left). The local
+      // drawing frame at this point in the transform chain has its origin
+      // at the piece's TOP-LEFT corner (because of the translate by
+      // -pieceWidth/2, -pieceHeight/2 above), not at its center. So the
+      // path must be shifted by -topLeft, not -center, or it ends up
+      // offset by exactly half a piece size and gets clipped away
+      // (this was the bug hiding the whole explosion/completed image).
+      final topLeft = Offset(
+        center.dx - pieceWidth / 2,
+        center.dy - pieceHeight / 2,
       );
+
+      final localPath = Path()..addPath(piece.path, -topLeft);
 
       canvas.clipPath(localPath);
 
@@ -519,7 +573,7 @@ class PuzzleExplosionPainter extends CustomPainter {
 
       canvas.drawImageRect(image, source, destination, _paint);
 
-      // ظل خفيف أثناء الانفجار
+      // Soft shadow while exploding.
       final shadowPaint = Paint()
         ..color = Colors.black.withOpacity(d.opacity * 0.25)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
