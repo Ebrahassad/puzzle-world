@@ -64,6 +64,7 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
 
   @override
   void dispose() {
+    RewardManager.rewardNotifier.removeListener(refreshReward);
     _settingsAnimController.dispose();
     super.dispose();
   }
@@ -321,12 +322,14 @@ class _AnimatedStarCounterState extends State<AnimatedStarCounter>
   @override
   void initState() {
     super.initState();
+
     controller = AnimationController(
       vsync: this,
       duration: const Duration(
         milliseconds: 500,
       ),
     );
+
     scale = Tween<double>(
       begin: 1.0,
       end: 1.2,
@@ -336,17 +339,23 @@ class _AnimatedStarCounterState extends State<AnimatedStarCounter>
         curve: Curves.elasticOut,
       ),
     );
+
     controller.forward();
   }
 
   @override
   void didUpdateWidget(covariant AnimatedStarCounter oldWidget) {
     super.didUpdateWidget(oldWidget);
+
     if (oldWidget.value != widget.value) {
-      controller.forward(
-        from: 0,
-      );
+      controller.forward(from: 0);
     }
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -354,7 +363,10 @@ class _AnimatedStarCounterState extends State<AnimatedStarCounter>
     return ScaleTransition(
       scale: scale,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 4,
+          vertical: 2,
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -363,9 +375,7 @@ class _AnimatedStarCounterState extends State<AnimatedStarCounter>
               width: 26,
               height: 26,
             ),
-            const SizedBox(
-              width: 3,
-            ),
+            const SizedBox(width: 3),
             Text(
               "${widget.value}",
               style: const TextStyle(
@@ -386,16 +396,8 @@ class _AnimatedStarCounterState extends State<AnimatedStarCounter>
       ),
     );
   }
-
-  @override
-void dispose() {
-  RewardManager.rewardNotifier.removeListener(refreshReward);
-
-  _settingsAnimController.dispose();
-
-  super.dispose();
 }
-}
+
 
 class ImageCounterBox extends StatelessWidget {
   final String image;
@@ -410,7 +412,10 @@ class ImageCounterBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 4,
+        vertical: 2,
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -419,9 +424,7 @@ class ImageCounterBox extends StatelessWidget {
             width: 25,
             height: 25,
           ),
-          const SizedBox(
-            width: 3,
-          ),
+          const SizedBox(width: 3),
           Text(
             "$value",
             style: const TextStyle(
@@ -443,6 +446,7 @@ class ImageCounterBox extends StatelessWidget {
   }
 }
 
+
 class CoinCounterBox extends StatelessWidget {
   final int value;
 
@@ -454,7 +458,10 @@ class CoinCounterBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 4,
+        vertical: 2,
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -463,9 +470,7 @@ class CoinCounterBox extends StatelessWidget {
             width: 25,
             height: 25,
           ),
-          const SizedBox(
-            width: 3,
-          ),
+          const SizedBox(width: 3),
           Text(
             "$value",
             style: const TextStyle(
