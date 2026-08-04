@@ -1,4 +1,4 @@
-mport 'dart:math';
+import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/material.dart';
@@ -160,7 +160,7 @@ class _VictoryScreenState extends State<VictoryScreen>
     for (final piece in widget.pieces) {
       _explosionData[piece] = _ExplosionData(
         vx: (random.nextDouble() - 0.5) * 25,
-        vy: -12 - random.nextDouble() * 22,
+        vy: -12.0 - random.nextDouble() * 22.0,
         gravity: 0.4 + random.nextDouble() * 0.8,
         rotation: (random.nextDouble() - 0.5) * 0.3,
       )
