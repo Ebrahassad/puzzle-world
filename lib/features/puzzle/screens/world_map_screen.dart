@@ -56,7 +56,6 @@ class _WorldMapScreenState
   static const String mapImage =
       "assets/images/world/world_map.jpg";
 
-  // لوحة إحداثيات مرجعية ثابتة للعالم كاملاً (خلفية + غيوم + جزر).
   static const double worldWidth = 896;
   static const double worldHeight = 1350;
 
@@ -68,10 +67,12 @@ class _WorldMapScreenState
 
   late final List<AnimationController> cloudControllers;
 
-  // مواقع الجزر (تم ضبط الطبيعة والحيوانات لتكون في وسط الشاشة بشكل متناسق عمودياً دون التصاق)
+  // تم تعديل إحداثيات الجزر بدقة:
+  // 1. المعالم والسيارات مرفوعة قليلاً للأعلى.
+  // 2. الطبيعة مرفوعة للأعلى لتترك مسافة فاصلة وآمنة تماماً بينها وبين جزيرة الحيوانات.
   static final List<_RelativeRect> _islandRects = [
 
-    // جزيرة الفضاء: أعلى المنتصف كما هي
+    // جزيرة الفضاء
     _RelativeRect(
       id: "space",
       left: 210 / worldWidth,
@@ -83,8 +84,8 @@ class _WorldMapScreenState
     // المعالم (مرفوعة قليلاً)
     _RelativeRect(
       id: "landmarks",
-      left: 110 / worldWidth,
-      top: 430 / worldHeight,
+      left: 100 / worldWidth,
+      top: 415 / worldHeight,
       width: 335 / worldWidth,
       height: 365 / worldHeight,
     ),
@@ -92,28 +93,28 @@ class _WorldMapScreenState
     // السيارات (مرفوعة قليلاً)
     _RelativeRect(
       id: "cars",
-      left: 455 / worldWidth,
-      top: 430 / worldHeight,
+      left: 460 / worldWidth,
+      top: 415 / worldHeight,
       width: 335 / worldWidth,
       height: 365 / worldHeight,
     ),
 
-    // الطبيعة (مرفوعة لوسط الشاشة أسفل السيارات والمعالم بمسافة آمنة ودون التصاق)
+    // الطبيعة (مرفوعة أكثر لتترك مسافة بينها وبين الحيوانات)
     _RelativeRect(
       id: "nature",
       left: 268 / worldWidth,
-      top: 670 / worldHeight,
+      top: 640 / worldHeight,
       width: 360 / worldWidth,
-      height: 400 / worldHeight,
+      height: 380 / worldHeight,
     ),
 
-    // الحيوانات (تم نقلها لتكون تحت جزيرة الطبيعة مباشرة في وسط الشاشة بمسافة آمنة ومتناسقة)
+    // الحيوانات (في الأسفل مع وجود مسافة فاصلة بينها وبين الطبيعة)
     _RelativeRect(
       id: "animals",
       left: 268 / worldWidth,
-      top: 920 / worldHeight,
+      top: 935 / worldHeight,
       width: 350 / worldWidth,
-      height: 400 / worldHeight,
+      height: 380 / worldHeight,
     ),
 
   ];
@@ -291,9 +292,9 @@ class _WorldMapScreenState
                   ),
                 ),
                 
-                // أيقونة المحفظة: أسفل يسار الشاشة، مكبرة ومشعة بلون ذهبي
+                // أيقونة المحفظة: أسفل يسار الشاشة مع وهج مشع وآمن لا يغطي الشاشة
                 Positioned(
-                  bottom: 20,
+                  bottom: 25,
                   left: 20,
                   child: Container(
                     decoration: BoxDecoration(
