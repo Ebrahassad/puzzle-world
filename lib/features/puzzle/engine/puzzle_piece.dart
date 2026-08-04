@@ -32,12 +32,20 @@ class PuzzlePiece {
 
   bool isPlaced = false;
   bool isDragging = false;
+
+  /// true طالما القطعة ما زالت جزءًا من شريط القطع وتتحرك مع تمريره.
+  /// تصبح false بشكل دائم بمجرد أن يسحبها المستخدم أول مرة (سواء انتهى بها
+  /// المطاف مثبّتة في مكانها الصحيح أو حرة في أي مكان آخر).
+  bool inTray = true;
+
   int zOrder = 0;
 
+  /// [trayOffset] لا يُستخدم إلا إذا كانت القطعة لا تزال داخل الشريط
+  /// (inTray == true). القطعة الحرة أو المسحوبة تُفحص بموضعها الحقيقي مباشرة.
   bool containsPoint(Offset globalPoint, double trayOffset) {
-    final adjustedPosition = isPlaced
-        ? currentPosition
-        : currentPosition - Offset(trayOffset, 0);
+    final adjustedPosition = inTray
+        ? currentPosition - Offset(trayOffset, 0)
+        : currentPosition;
 
     final local = globalPoint - adjustedPosition;
     return path.contains(local);
@@ -46,5 +54,6 @@ class PuzzlePiece {
   double get distanceToCorrect => (currentPosition - correctPosition).distance;
 
   @override
-  String toString() => 'PuzzlePiece(#$id r$row c$col placed:$isPlaced)';
+  String toString() =>
+      'PuzzlePiece(#$id r$row c$col placed:$isPlaced tray:$inTray)';
 }
