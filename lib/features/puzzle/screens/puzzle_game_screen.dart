@@ -572,9 +572,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                   onRestart: () {
                     restartGame();
                   },
-                  onSettings: () {
-                    _showSettingsDialog();
-                  },
+                  
                   onExit: () async {
                     await saveCurrentGame();
                     stopwatch.stop();
