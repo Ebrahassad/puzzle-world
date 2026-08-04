@@ -90,9 +90,23 @@ class PuzzleGenerator {
     _scatter(pieces, area, Random(seed));
   }
 
+  /// يحسب العرض الحقيقي لمحتوى الشريط (كل القطع بعد توزيعها أفقيًا) بدءًا من
+  /// الحافة اليسرى لـ [area]. يُستخدم لضبط حدود [TrayController] بحيث لا
+  /// تُقصّ أي قطعة خارج نطاق التمرير المسموح.
+  static double measureContentWidth(List<PuzzlePiece> pieces, Rect area) {
+    if (pieces.isEmpty) return area.width;
+
+    double maxRight = area.left;
+    for (final piece in pieces) {
+      final right = piece.currentPosition.dx + piece.localBounds.width;
+      if (right > maxRight) maxRight = right;
+    }
+
+    return (maxRight - area.left) + 10.0;
+  }
+
   static void _scatter(List<PuzzlePiece> pieces, Rect area, Random random) {
-    final shuffledPieces = List<PuzzlePiece>.from(pieces)
-      ..shuffle(random);
+    final shuffledPieces = List<PuzzlePiece>.from(pieces)..shuffle(random);
 
     final spacing = 8.0; // تقليل المسافة بين القطع لتظهر متناسقة
     double x = area.left + 10.0;
