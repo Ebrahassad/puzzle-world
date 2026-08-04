@@ -1,4 +1,4 @@
-import 'dartui';
+import 'dart:ui';
 
 /// The shape of one side of a puzzle piece.
 ///
