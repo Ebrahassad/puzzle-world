@@ -578,7 +578,11 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                 ),
 
               if (puzzleCreated)
-                Positioned.fill(
+                Positioned(
+                  top: 90,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onPanStart: (details) {
