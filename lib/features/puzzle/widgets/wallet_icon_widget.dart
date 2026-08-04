@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'wallet_screen.dart';
+import '../screens/wallet_screen.dart';
 
 class WalletIconWidget extends StatefulWidget {
   const WalletIconWidget({super.key});
