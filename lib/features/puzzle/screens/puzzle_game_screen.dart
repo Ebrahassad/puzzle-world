@@ -395,7 +395,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (_) => VictoryFinalScreen(
+                builder: (_) => VictoryScreen(
                   currentIsland: widget.island,
                   currentLevel: widget.level.levelNumber,
                   starsEarned: 1,
