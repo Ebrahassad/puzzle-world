@@ -2,16 +2,17 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-
 import 'world_map_screen.dart';
 
 
 class FinalVictoryScreen extends StatefulWidget {
   final dynamic island;
+  final VoidCallback onGemEarned;
 
   const FinalVictoryScreen({
     super.key,
     required this.island,
+    required this.onGemEarned,
   });
 
   @override
@@ -41,33 +42,51 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
   bool _opened = false;
   bool _showGem = false;
+  bool _gemAdded = false;
+
 
 
   @override
   void initState() {
     super.initState();
 
+    _setupAnimations();
+
+    _startSequence();
+  }
+
+
+
+  void _setupAnimations() {
+
 
     _chestController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2500),
+      duration: const Duration(
+        milliseconds: 2500,
+      ),
     );
 
 
     _gemController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 3000),
+      duration: const Duration(
+        milliseconds: 3000,
+      ),
     );
 
 
     _flashController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(
+        milliseconds: 600,
+      ),
     );
 
 
+
     _chestDrop = Tween<double>(
-      begin: -600,
+      begin: -650,
       end: 0,
     ).animate(
       CurvedAnimation(
@@ -77,7 +96,9 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     );
 
 
+
     _chestScale = TweenSequence<double>([
+
       TweenSequenceItem(
         tween: Tween(
           begin: 0.6,
@@ -85,6 +106,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
         ),
         weight: 60,
       ),
+
       TweenSequenceItem(
         tween: Tween(
           begin: 1.25,
@@ -92,12 +114,14 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
         ),
         weight: 40,
       ),
+
     ]).animate(
       CurvedAnimation(
         parent: _chestController,
         curve: Curves.easeOut,
       ),
     );
+
 
 
     _shake = Tween<double>(
@@ -115,18 +139,21 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     );
 
 
+
     _gemMove = Tween<double>(
       begin: 0,
       end: 1,
     ).animate(
       CurvedAnimation(
         parent: _gemController,
-        curve: Curves.easeInOutBack,
+        curve: Curves.easeOutBack,
       ),
     );
 
 
+
     _gemScale = TweenSequence<double>([
+
       TweenSequenceItem(
         tween: Tween(
           begin: 0.2,
@@ -134,6 +161,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
         ),
         weight: 60,
       ),
+
       TweenSequenceItem(
         tween: Tween(
           begin: 1.5,
@@ -141,12 +169,14 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
         ),
         weight: 40,
       ),
+
     ]).animate(
       CurvedAnimation(
         parent: _gemController,
         curve: Curves.elasticOut,
       ),
     );
+
 
 
     _gemRotate = Tween<double>(
@@ -159,27 +189,23 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
       ),
     );
 
-
-    _startAnimation();
   }
 
 
 
-  Future<void> _startAnimation() async {
+  Future<void> _startSequence() async {
 
     await Future.delayed(
-      const Duration(milliseconds: 500),
+      const Duration(
+        milliseconds: 600,
+      ),
     );
 
 
     if (!mounted) return;
 
-    _chestController.forward();
 
-
-    await Future.delayed(
-      const Duration(milliseconds: 2300),
-    );
+    await _chestController.forward();
 
 
     if (!mounted) return;
@@ -190,11 +216,13 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     });
 
 
-    _flashController.forward();
+    await _flashController.forward();
 
 
     await Future.delayed(
-      const Duration(milliseconds: 500),
+      const Duration(
+        milliseconds: 300,
+      ),
     );
 
 
@@ -206,19 +234,47 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     });
 
 
-    _gemController.forward();
+    await _gemController.forward();
+
+
+    if (!mounted) return;
+
+
+    if (!_gemAdded) {
+
+      _gemAdded = true;
+
+      widget.onGemEarned();
+
+    }
+
+
+    await Future.delayed(
+      const Duration(
+        milliseconds: 1200,
+      ),
+    );
+
+
+    if (!mounted) return;
+
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const WorldMapScreen(),
+      ),
+      (route) => false,
+    );
 
   }
-
-
 
   @override
   Widget build(BuildContext context) {
 
     return Scaffold(
 
-      backgroundColor: Colors.black87,
-
+      backgroundColor: Colors.black,
 
       body: Stack(
 
@@ -253,12 +309,13 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
 
 
+          // الصندوق النهائي
+
           AnimatedBuilder(
 
             animation: _chestController,
 
             builder: (context, child) {
-
 
               return Transform.translate(
 
@@ -267,11 +324,9 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
                   _chestDrop.value,
                 ),
 
-
                 child: Transform.scale(
 
                   scale: _chestScale.value,
-
 
                   child: Transform.rotate(
 
@@ -284,9 +339,9 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
                       _opened
 
-                          ? "assets/images/rewards/final_chest_open.png"
+                          ? "assets/images/rewards/reward_chest_open.png"
 
-                          : "assets/images/rewards/final_chest_closed.png",
+                          : "assets/images/rewards/reward_chest_closed.png",
 
 
                       width: 220,
@@ -306,6 +361,8 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
 
 
+          // الجوهرة
+
           if (_showGem)
 
             AnimatedBuilder(
@@ -321,7 +378,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
                     0,
 
-                    -180 * _gemMove.value,
+                    -200 * _gemMove.value,
 
                   ),
 
@@ -350,7 +407,6 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
                 );
 
-
               },
 
             ),
@@ -358,16 +414,17 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
 
 
+          // وميض الفتح
 
-          if (_flashController.value > 0)
+          Positioned.fill(
 
-            Positioned.fill(
+            child: IgnorePointer(
 
               child: AnimatedBuilder(
 
                 animation: _flashController,
 
-                builder: (_, __) {
+                builder: (context, child) {
 
 
                   return Container(
@@ -387,86 +444,8 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
             ),
 
-
-
-
-
-          Positioned(
-
-            bottom: 100,
-
-            child: AnimatedOpacity(
-
-              opacity: _showGem ? 1 : 0,
-
-              duration: const Duration(milliseconds: 800),
-
-
-              child: Column(
-
-                children: [
-
-
-                  const Text(
-
-                    "WORLD COMPLETED",
-
-                    style: TextStyle(
-
-                      color: Colors.white,
-
-                      fontSize: 28,
-
-                      fontWeight: FontWeight.bold,
-
-                    ),
-
-                  ),
-
-
-                  const SizedBox(height: 25),
-
-
-
-                  ElevatedButton(
-
-                    onPressed: () {
-
-
-                      Navigator.pushAndRemoveUntil(
-
-                        context,
-
-                        MaterialPageRoute(
-
-                          builder: (_) =>
-                              const WorldMapScreen(),
-
-                        ),
-
-                        (route) => false,
-
-                      );
-
-
-                    },
-
-                    child: const Text(
-
-                      "CONTINUE",
-
-                    ),
-
-                  ),
-
-
-                ],
-
-              ),
-
-            ),
-
           ),
+
 
 
         ],
