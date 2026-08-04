@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../data/puzzle_data.dart';
 import '../models/puzzle_model.dart';
-import '../widgets/walleticonwidget.dart';
+import '../widgets/wallet_icon_widget.dart';
 import 'island_screen.dart';
 
 class _RelativeRect {
@@ -328,7 +328,7 @@ _RelativeRect(
                     ),
                   ),
                 ),
-                const walletIconWidget(),
+                const WalletIconWidget(),
               ],
             ),
           );
