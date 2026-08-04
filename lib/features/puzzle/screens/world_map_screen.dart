@@ -57,84 +57,68 @@ class _WorldMapScreenState
       "assets/images/world/world_map.jpg";
 
   // لوحة إحداثيات مرجعية ثابتة للعالم كاملاً (خلفية + غيوم + جزر).
-  // نفس فكرة IslandScreen: كل شيء يُوضع بإحداثيات ضمن هذه اللوحة،
-  // ثم يُحسب Scale حقيقي من حجم الشاشة عبر LayoutBuilder بحيث تغطي
-  // اللوحة الشاشة بالكامل (بدون أي فراغ أسود وبدون أي تشويه) على
-  // أي جهاز — هاتف صغير، هاتف طويل، أو تابلت.
   static const double worldWidth = 896;
   static const double worldHeight = 1350;
 
   late final List<PuzzleModel> islands;
 
-  // متحكم حركة واحد فقط لكل العالم (خلفية + غيوم + جزر معاً) —
-  // بالضبط كما هو مطلوب: عنصر واحد يتحرك، وليس كل جزيرة بمفردها.
   late final AnimationController worldController;
   late final Animation<double> worldScale;
   late final Animation<double> worldTranslateY;
 
   late final List<AnimationController> cloudControllers;
 
-  // مواقع الجزر مُعرَّفة بوحدات لوحة العالم (896x1350) ثم تُحوَّل إلى
-  // نسب طبيعية (0.0-1.0) تلقائياً في المُنشئ أدناه، وتُستخدم هذه
-  // النسب لاحقاً لحساب أي حجم شاشة فعلي — لا توجد أي قيم بكسل
-  // خاصة بجهاز معيّن.
-  //
-  // جزيرة "space" هي المحور الرئيسي: مركزية أعلى الخريطة، وأكبر من
-  // بقية الجزر بحوالي 30%. باقي الجزر مرتبة حولها بأحجام متفاوتة
-  // ومتداخلة قليلاً مع حافتها السفلى لخلق شعور "عالم واحد متصل"
-  // بدل صور منفصلة على خلفية.
+  // مواقع الجزر (تم ضبط الطبيعة والحيوانات لتكون في وسط الشاشة بشكل متناسق عمودياً دون التصاق)
   static final List<_RelativeRect> _islandRects = [
 
-  // جزيرة الفضاء: أعلى المنتصف كما هي
-  _RelativeRect(
-  id: "space",
-  left: 210 / worldWidth,
-  top: 10 / worldHeight,
-  width: 480 / worldWidth,
-  height: 540 / worldHeight,
-),
+    // جزيرة الفضاء: أعلى المنتصف كما هي
+    _RelativeRect(
+      id: "space",
+      left: 210 / worldWidth,
+      top: 10 / worldHeight,
+      width: 480 / worldWidth,
+      height: 540 / worldHeight,
+    ),
 
+    // المعالم (مرفوعة قليلاً)
+    _RelativeRect(
+      id: "landmarks",
+      left: 110 / worldWidth,
+      top: 430 / worldHeight,
+      width: 335 / worldWidth,
+      height: 365 / worldHeight,
+    ),
 
-  // المعالم
-_RelativeRect(
-  id: "landmarks",
-  left: 110 / worldWidth,
-  top: 455 / worldHeight,
-  width: 335 / worldWidth,
-  height: 365 / worldHeight,
-),
+    // السيارات (مرفوعة قليلاً)
+    _RelativeRect(
+      id: "cars",
+      left: 455 / worldWidth,
+      top: 430 / worldHeight,
+      width: 335 / worldWidth,
+      height: 365 / worldHeight,
+    ),
 
-// السيارات
-_RelativeRect(
-  id: "cars",
-  left: 455 / worldWidth,
-  top: 455 / worldHeight,
-  width: 335 / worldWidth,
-  height: 365 / worldHeight,
-),
+    // الطبيعة (مرفوعة لوسط الشاشة أسفل السيارات والمعالم بمسافة آمنة ودون التصاق)
+    _RelativeRect(
+      id: "nature",
+      left: 268 / worldWidth,
+      top: 670 / worldHeight,
+      width: 360 / worldWidth,
+      height: 400 / worldHeight,
+    ),
 
-// الطبيعة
-_RelativeRect(
-  id: "nature",
-  left: 255 / worldWidth,
-  top: 760 / worldHeight,
-  width: 360 / worldWidth,
-  height: 400 / worldHeight,
-),
+    // الحيوانات (تم نقلها لتكون تحت جزيرة الطبيعة مباشرة في وسط الشاشة بمسافة آمنة ومتناسقة)
+    _RelativeRect(
+      id: "animals",
+      left: 268 / worldWidth,
+      top: 920 / worldHeight,
+      width: 350 / worldWidth,
+      height: 400 / worldHeight,
+    ),
 
-// الحيوانات
-_RelativeRect(
-  id: "animals",
-  left: 515 / worldWidth,
-  top: 760 / worldHeight,
-  width: 350 / worldWidth,
-  height: 400 / worldHeight,
-),
-
-];
+  ];
 
   static final List<_RelativeCloud> _clouds = [
-
     _RelativeCloud(
       image: "assets/images/background/cloud_01.png",
       top: 80 / worldHeight,
@@ -142,7 +126,6 @@ _RelativeRect(
       opacity: 0.22,
       duration: Duration(seconds: 55),
     ),
-
     _RelativeCloud(
       image: "assets/images/background/cloud_02.png",
       top: 200 / worldHeight,
@@ -150,7 +133,6 @@ _RelativeRect(
       opacity: 0.22,
       duration: Duration(seconds: 70),
     ),
-
     _RelativeCloud(
       image: "assets/images/background/cloud_03.png",
       top: 40 / worldHeight,
@@ -158,7 +140,6 @@ _RelativeRect(
       opacity: 0.22,
       duration: Duration(seconds: 90),
     ),
-
     _RelativeCloud(
       image: "assets/images/background/cloud_04.png",
       top: 300 / worldHeight,
@@ -166,7 +147,6 @@ _RelativeRect(
       opacity: 0.22,
       duration: Duration(seconds: 65),
     ),
-
   ];
 
   @override
@@ -180,14 +160,10 @@ _RelativeRect(
       duration: const Duration(seconds: 22),
     )..repeat(reverse: true);
 
-    // تأثير "التنفس" الوحيد للعالم كله: تكبير خفيف جداً + انزياح
-    // رأسي بسيط، بالضبط ضمن النطاق المطلوب (Scale 1.00-1.03،
-    // Translate عمودي -5..+5)، مطبَّق على Stack واحد يضم الخلفية
-    // والغيوم والجزر معاً — لا يوجد أي تحريك منفصل لأي جزيرة.
     worldScale = Tween<double>(
-  begin: 1.00,
-  end: 1.045,
-).animate(
+      begin: 1.00,
+      end: 1.045,
+    ).animate(
       CurvedAnimation(
         parent: worldController,
         curve: Curves.easeInOut,
@@ -195,9 +171,9 @@ _RelativeRect(
     );
 
     worldTranslateY = Tween<double>(
-  begin: -12,
-  end: 12,
-).animate(
+      begin: -12,
+      end: 12,
+    ).animate(
       CurvedAnimation(
         parent: worldController,
         curve: Curves.easeInOut,
@@ -216,7 +192,6 @@ _RelativeRect(
 
   @override
   void dispose() {
-
     worldController.dispose();
 
     for (final controller in cloudControllers) {
@@ -226,9 +201,6 @@ _RelativeRect(
     super.dispose();
   }
 
-  /// بحث آمن عن جزيرة بمعرّفها. يعيد null بدل تعطّل التطبيق إن كان
-  /// أحد المعرّفات في [_islandRects] غير موجود ضمن [PuzzleData.puzzles]
-  /// (بدل استخدام firstWhere غير الآمن الذي يرمي استثناءً).
   PuzzleModel? getIsland(String id) {
     for (final item in islands) {
       if (item.id == id) {
@@ -247,10 +219,6 @@ _RelativeRect(
           final double screenWidth = constraints.maxWidth;
           final double screenHeight = constraints.maxHeight;
 
-          // نفس نظام "cover" اليدوي المستخدم في IslandScreen: أكبر
-          // Scale من (العرض، الارتفاع) بحيث تغطي لوحة العالم الشاشة
-          // بالكامل في الاتجاهين معاً دون أي فراغ أسود ودون أي تشويه
-          // (لأن التحجيم موحّد لكلا المحورين).
           if (screenWidth <= 0 || screenHeight <= 0) {
             return const SizedBox.shrink();
           }
@@ -290,17 +258,12 @@ _RelativeRect(
                             ),
                           );
                         },
-                        // العالم كله (خلفية + غيوم + جزر) هو child واحد
-                        // مشترك لهذا الـ AnimatedBuilder، لذلك حركة
-                        // "التنفس" تنعكس على كل شيء معاً وبنفس النسبة —
-                        // لا توجد أي حركة scale/translate منفصلة لأي جزيرة.
                         child: SizedBox(
                           width: worldWidth,
                           height: worldHeight,
                           child: Stack(
                             clipBehavior: Clip.none,
                             children: [
-
                               Positioned.fill(
                                 child: Image.asset(
                                   mapImage,
@@ -320,7 +283,6 @@ _RelativeRect(
                                 islandImage(
                                   rect: rect,
                                 ),
-
                             ],
                           ),
                         ),
@@ -328,7 +290,28 @@ _RelativeRect(
                     ),
                   ),
                 ),
-                const WalletIconWidget(),
+                
+                // أيقونة المحفظة: أسفل يسار الشاشة، مكبرة ومشعة بلون ذهبي
+                Positioned(
+                  bottom: 20,
+                  left: 20,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.amber.withOpacity(0.85),
+                          blurRadius: 16,
+                          spreadRadius: 4,
+                        ),
+                      ],
+                    ),
+                    child: Transform.scale(
+                      scale: 1.15,
+                      child: const WalletIconWidget(),
+                    ),
+                  ),
+                ),
               ],
             ),
           );
@@ -373,8 +356,6 @@ _RelativeRect(
   }) {
     final island = getIsland(rect.id);
 
-    // حماية من معرّف جزيرة غير موجود في بيانات اللعبة — تجاهل رسمها
-    // بدل تعطّل الشاشة بالكامل.
     if (island == null) {
       return const SizedBox.shrink();
     }
@@ -389,9 +370,6 @@ _RelativeRect(
       top: top,
       width: width,
       height: height,
-      // منطقة اللمس هنا مطابقة تماماً لحجم/مكان الصورة المعروضة
-      // (نفس width/height/Positioned)، فلا يوجد أي إزاحة بين ما
-      // يراه المستخدم وما يستجيب للمس.
       child: GestureDetector(
         onTap: () => openIsland(island),
         behavior: HitTestBehavior.opaque,
@@ -414,5 +392,4 @@ _RelativeRect(
       ),
     );
   }
-
 }
