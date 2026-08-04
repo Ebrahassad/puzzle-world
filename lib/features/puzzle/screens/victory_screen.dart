@@ -43,10 +43,8 @@ class VictoryScreen extends StatefulWidget {
   final bool isFinalLevel;
 
   final GlobalKey? starTargetKey;
-  final GlobalKey? gemTargetKey;
 
   final VoidCallback onStarEarned;
-  final VoidCallback onGemEarned;
   final VoidCallback onFinished;
 
   const VictoryScreen({
@@ -60,9 +58,7 @@ class VictoryScreen extends StatefulWidget {
     required this.levelNumber,
     this.isFinalLevel = false,
     this.starTargetKey,
-    this.gemTargetKey,
     required this.onStarEarned,
-    required this.onGemEarned,
     required this.onFinished,
   });
 
@@ -89,20 +85,13 @@ class _VictoryScreenState extends State<VictoryScreen>
   //==============================
 
   late AnimationController _chestController;
-  late AnimationController _gemChestController;
 
   late Animation<double> _chestFall;
   late Animation<double> _chestScale;
   late Animation<double> _chestShake;
 
-  late Animation<double> _gemChestScale;
-  late Animation<double> _gemChestFall;
-
   bool _showChest = false;
   bool _chestOpened = false;
-
-  bool _finalGemSequence = false;
-  bool _showGem = false;
 
   double _flash = 0;
 
@@ -124,7 +113,6 @@ class _VictoryScreenState extends State<VictoryScreen>
   void initState() {
     super.initState();
 
-    _showGem = false;
     _rewardSent = false;
 
     _prepareExplosion();
@@ -134,7 +122,6 @@ class _VictoryScreenState extends State<VictoryScreen>
     });
 
     _setupChestAnimation();
-    _setupGemChestAnimation();
     _setupRewardAnimation();
 
     // small pause so player sees completed puzzle
@@ -303,92 +290,11 @@ class _VictoryScreenState extends State<VictoryScreen>
     });
   }
 
-  void _setupGemChestAnimation() {
-    _gemChestController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 3000),
-    );
-
-    _gemChestFall = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween(begin: -700.0, end: 40.0).chain(
-          CurveTween(curve: Curves.easeIn),
-        ),
-        weight: 70,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: 40.0, end: 0.0).chain(
-          CurveTween(curve: Curves.bounceOut),
-        ),
-        weight: 30,
-      ),
-    ]).animate(_gemChestController);
-
-    _gemChestScale = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween(begin: 0.6, end: 1.3).chain(
-          CurveTween(curve: Curves.elasticOut),
-        ),
-        weight: 70,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: 1.3, end: 1.0),
-        weight: 30,
-      ),
-    ]).animate(_gemChestController);
-  }
-
   void _setupRewardAnimation() {
     _rewardController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
-  }
-
-  void _startFinalGemSequence() {
-    if (_finalGemSequence) return;
-
-    _finalGemSequence = true;
-    _rewardSent = false;
-
-    setState(() {
-      _flash = 0;
-      _showGem = false;
-      _showReward = false;
-      _showChest = true;
-      _chestOpened = false;
-    });
-
-    _gemChestController.reset();
-
-    _gemChestController.forward().then((_) {
-      if (!mounted) return;
-
-      setState(() {
-        _chestOpened = true;
-        _flash = 1;
-      });
-
-      Future.delayed(
-        const Duration(milliseconds: 300),
-        () {
-          if (mounted) {
-            setState(() {
-              _flash = 0;
-            });
-          }
-        },
-      );
-
-      Future.delayed(
-        const Duration(milliseconds: 500),
-        () {
-          if (!mounted) return;
-          _showGem = true;
-          _startRewardFlight();
-        },
-      );
-    });
   }
 
   Future<void> _startRewardFlight() async {
@@ -407,7 +313,7 @@ class _VictoryScreenState extends State<VictoryScreen>
       _rewardStart = Offset(size.width / 2, size.height / 2);
     }
 
-    final targetKey = _showGem ? widget.gemTargetKey : widget.starTargetKey;
+    final targetKey = widget.starTargetKey;
 
     if (targetKey != null && targetKey.currentContext != null) {
       final box = targetKey.currentContext!.findRenderObject() as RenderBox;
@@ -424,39 +330,29 @@ class _VictoryScreenState extends State<VictoryScreen>
     _rewardController.forward().then((_) {
       if (!mounted) return;
 
-      if (_showGem) {
-        widget.onGemEarned();
+      widget.onStarEarned();
 
+      if (widget.isFinalLevel) {
         Future.delayed(
-          const Duration(milliseconds: 500),
+          const Duration(milliseconds: 1500),
           () {
-            if (mounted) {
-              widget.onFinished();
-            }
+            if (!mounted) return;
+
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => FinalVictoryScreen(
+                  island: widget.island,
+                  onGemEarned: () {
+                    RewardManager.addGems(1);
+                  },
+                ),
+              ),
+            );
           },
         );
       } else {
-        widget.onStarEarned();
-
-        if (widget.isFinalLevel) {
-  Future.delayed(
-    const Duration(milliseconds: 1500),
-    () {
-      if (!mounted) return;
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => FinalVictoryScreen(
-            island: widget.island,
-          ),
-        ),
-      );
-    },
-  );
-} else {
-          widget.onFinished();
-        }
+        widget.onFinished();
       }
     });
   }
@@ -484,16 +380,14 @@ class _VictoryScreenState extends State<VictoryScreen>
 
           if (_showChest)
             AnimatedBuilder(
-              animation: _finalGemSequence ? _gemChestController : _chestController,
+              animation: _chestController,
               builder: (context, child) {
                 return Transform.translate(
-                  offset: _finalGemSequence
-                      ? Offset(0, _gemChestFall.value)
-                      : Offset(0, _chestFall.value),
+                  offset: Offset(0, _chestFall.value),
                   child: Transform.scale(
-                    scale: _finalGemSequence ? _gemChestScale.value : _chestScale.value,
+                    scale: _chestScale.value,
                     child: Transform.rotate(
-                      angle: _finalGemSequence ? 0 : _chestShake.value,
+                      angle: _chestShake.value,
                       child: Container(
                         key: _chestKey,
                         child: Image.asset(
@@ -525,10 +419,8 @@ class _VictoryScreenState extends State<VictoryScreen>
                   child: Transform.scale(
                     scale: currentScale.clamp(0.65, 1.0),
                     child: Image.asset(
-                      _showGem
-                          ? 'assets/images/rewards/gem.png'
-                          : 'assets/images/rewards/Star_gold.png',
-                      width: _showGem ? 80 : 70,
+                      'assets/images/rewards/Star_gold.png',
+                      width: 70,
                     ),
                   ),
                 );
@@ -555,7 +447,6 @@ class _VictoryScreenState extends State<VictoryScreen>
   void dispose() {
     _physicsTicker.dispose();
     _chestController.dispose();
-    _gemChestController.dispose();
     _rewardController.dispose();
     super.dispose();
   }
