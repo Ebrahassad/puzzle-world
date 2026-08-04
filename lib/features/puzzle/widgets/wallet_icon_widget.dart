@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'wallet_screen.dart';
 
-class walletIconWidget extends StatefulWidget {
-const walletIconWidget({super.key});
+class WalletIconWidget extends StatefulWidget {
+  const WalletIconWidget({super.key});
 
-@override
-State<walletIconWidget> createState() => _WalletIconWidgetState();
+  @override
+  State<WalletIconWidget> createState() => _WalletIconWidgetState();
 }
 
-class _WalletIconWidgetState extends State<walletIconWidget>
-with SingleTickerProviderStateMixin {
+class _WalletIconWidgetState extends State<WalletIconWidget>
+    with SingleTickerProviderStateMixin {
 late AnimationController _animationController;
 bool _isClicked = false;
 
