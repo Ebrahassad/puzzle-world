@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import 'island_screen.dart';
+
 import 'world_map_screen.dart';
 
 
