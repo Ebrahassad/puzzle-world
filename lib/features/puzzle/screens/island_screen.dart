@@ -367,7 +367,7 @@ static const double islandImageOpacity = 0.65;
                 ),
               ),
 
-              const walletIconWidget(),
+              const WalletIconWidget(),
             ],
           ),
         ),
