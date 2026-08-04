@@ -11,10 +11,12 @@ class WalletScreen extends StatefulWidget {
 class _WalletScreenState extends State<WalletScreen>
     with SingleTickerProviderStateMixin {
   int stars = 0;
+  int gems = 0;
   int coins = 0;
   int achievements = 0;
 
   bool loading = true;
+  bool isChestOpen = false;
 
   late AnimationController starController;
   late Animation<double> starAnimation;
@@ -42,36 +44,43 @@ class _WalletScreenState extends State<WalletScreen>
     );
   }
 
-  // تحميل بيانات المحفظة من خلال RewardManager المركزي
   Future<void> loadWallet() async {
     final reward = await RewardManager.getReward();
-    
-    // ملاحظة: إذا كان لديك متغير للإنجازات في مكان آخر يمكنك جلبه بالطريقة المعتادة، وهنا نجلب النجوم والعملات من RewardManager
     if (!mounted) return;
     setState(() {
       stars = reward.stars;
+      gems = reward.gems;
       coins = reward.coins;
-      // achievements = ... (إذا كان لديك مدير خاص للإنجازات يمكنك ربطه هنا)
       loading = false;
     });
   }
 
-  // منح المكافأة وتحديث النظام المركزي مباشرة
-  Future<void> rewardFromAd() async {
-    // استخدام مكافأة الإعلان المتاحة في RewardManager لضمان التحديث الشامل
-    await RewardManager.rewardedAdBonus();
+  Future<void> openChest() async {
+    if (isChestOpen) return;
 
-    // إعادة تحميل البيانات لتحديث الواجهة فوراً
+    setState(() {
+      isChestOpen = true;
+    });
+
+    await RewardManager.rewardedAdBonus();
     await loadWallet();
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
-          "🎁 حصلت على +100 رصيد و +1 نجمة",
+          "🎉 مبروك! لقد فتحت الصندوق وحصلت على مكافأة رائعة",
         ),
       ),
     );
+
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          isChestOpen = false;
+        });
+      }
+    });
   }
 
   @override
@@ -101,12 +110,12 @@ class _WalletScreenState extends State<WalletScreen>
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // النجمة الذهبية
             ScaleTransition(
               scale: starAnimation,
               child: Image.asset(
                 "assets/images/rewards/Star_gold.png",
                 height: 100,
+                width: 100,
                 errorBuilder: (_, __, ___) {
                   return const Icon(
                     Icons.star,
@@ -117,27 +126,46 @@ class _WalletScreenState extends State<WalletScreen>
               ),
             ),
             const SizedBox(height: 20),
+
             walletCard(
-              "⭐ النجوم",
-              stars,
-              Colors.amber,
+              title: "النجوم",
+              value: stars,
+              color: Colors.amber,
+              assetPath: "assets/images/rewards/Star_gold.png",
             ),
+
             walletCard(
-              "🪙 الرصيد",
-              coins,
-              Colors.orange,
+              title: "الجواهر",
+              value: gems,
+              color: Colors.purple,
+              assetPath: "assets/images/rewards/gem.png",
             ),
+
             walletCard(
-              "🏆 الإنجازات",
-              achievements,
-              Colors.blue,
+              title: "الرصيد",
+              value: coins,
+              color: Colors.orange,
+              assetPath: "assets/images/ui/coin.png",
             ),
+
+            walletCard(
+              title: "الإنجازات",
+              value: achievements,
+              color: Colors.blue,
+              iconData: Icons.emoji_events_rounded,
+            ),
+
             const SizedBox(height: 25),
+
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.amber.withOpacity(.15),
                 borderRadius: BorderRadius.circular(25),
+                border: Border.all(
+                  color: Colors.amber.withOpacity(0.4),
+                  width: 1.5,
+                ),
               ),
               child: Column(
                 children: [
@@ -148,36 +176,54 @@ class _WalletScreenState extends State<WalletScreen>
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 10),
                   const Text(
-                    "شاهد إعلان واحصل على مكافأة",
+                    "اضغط على الصندوق لفتحه والحصول على المكافأة",
+                    textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 17,
+                      fontSize: 15,
                     ),
                   ),
                   const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton.icon(
-                      onPressed: rewardFromAd,
-                      icon: const Icon(
-                        Icons.play_circle,
-                      ),
-                      label: const Text(
-                        "شاهد إعلان",
-                        style: TextStyle(
-                          fontSize: 18,
-                        ),
+
+                  GestureDetector(
+                    onTap: openChest,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Image.asset(
+                        isChestOpen
+                            ? "assets/images/rewards/reward_chest_open.png"
+                            : "assets/images/rewards/reward_chest_closed.png",
+                        key: ValueKey<bool>(isChestOpen),
+                        height: 110,
+                        width: 110,
+                        errorBuilder: (_, __, ___) {
+                          return Icon(
+                            isChestOpen ? Icons.lock_open : Icons.lock,
+                            size: 80,
+                            color: Colors.amber,
+                          );
+                        },
                       ),
                     ),
                   ),
-                  const SizedBox(height: 15),
-                  const Text(
-                    "+100 🪙 رصيد   +1 ⭐ نجمة",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+
+                  const SizedBox(height: 20),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      onPressed: openChest,
+                      icon: const Icon(
+                        Icons.card_giftcard_rounded,
+                      ),
+                      label: Text(
+                        isChestOpen ? "تم فتح الصندوق!" : "افتح الصندوق الآن",
+                        style: const TextStyle(
+                          fontSize: 18,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -189,16 +235,18 @@ class _WalletScreenState extends State<WalletScreen>
     );
   }
 
-  Widget walletCard(
-    String title,
-    int value,
-    Color color,
-  ) {
+  Widget walletCard({
+    required String title,
+    required int value,
+    required Color color,
+    String? assetPath,
+    IconData? iconData,
+  }) {
     return Container(
       margin: const EdgeInsets.only(
         bottom: 15,
       ),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withOpacity(.15),
         borderRadius: BorderRadius.circular(22),
@@ -210,12 +258,26 @@ class _WalletScreenState extends State<WalletScreen>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            children: [
+              if (assetPath != null)
+                Image.asset(
+                  assetPath,
+                  width: 32,
+                  height: 32,
+                  errorBuilder: (_, __, ___) => Icon(Icons.star, color: color),
+                )
+              else if (iconData != null)
+                Icon(iconData, size: 32, color: color),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
           Text(
             value.toString(),
