@@ -250,8 +250,9 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
               ),
             ),
 
-            // العدادات (نجوم، جواهر، عملات)
+            // العدادات (نجوم، جواهر، عملات) بدون خلفيات/دوائر لتجنب التداخل
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   key: widget.starKey,
@@ -260,7 +261,7 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
                   ),
                 ),
                 const SizedBox(
-                  width: 6,
+                  width: 4,
                 ),
                 Container(
                   key: widget.gemKey,
@@ -270,7 +271,7 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
                   ),
                 ),
                 const SizedBox(
-                  width: 6,
+                  width: 4,
                 ),
                 GestureDetector(
                   onTap: () {
@@ -344,42 +345,32 @@ class _AnimatedStarCounterState extends State<AnimatedStarCounter>
   Widget build(BuildContext context) {
     return ScaleTransition(
       scale: scale,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 10,
-          vertical: 5,
-        ),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.3),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset(
               "assets/images/rewards/Star_gold.png",
-              width: 30,
-              height: 30,
+              width: 26,
+              height: 26,
             ),
             const SizedBox(
-              width: 5,
+              width: 3,
             ),
             Text(
               "${widget.value}",
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
+                shadows: [
+                  Shadow(
+                    color: Colors.black,
+                    blurRadius: 3,
+                    offset: Offset(0, 1),
+                  ),
+                ],
               ),
             ),
           ],
@@ -407,42 +398,32 @@ class ImageCounterBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 5,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.3),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Image.asset(
             image,
-            width: 28,
-            height: 28,
+            width: 25,
+            height: 25,
           ),
           const SizedBox(
-            width: 5,
+            width: 3,
           ),
           Text(
             "$value",
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.bold,
+              shadows: [
+                Shadow(
+                  color: Colors.black,
+                  blurRadius: 3,
+                  offset: Offset(0, 1),
+                ),
+              ],
             ),
           ),
         ],
@@ -461,42 +442,32 @@ class CoinCounterBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 5,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.3),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Image.asset(
-            "assets/images/ui/coin.png",
-            width: 28,
-            height: 28,
+            "assets/images/rewards/coin.png",
+            width: 25,
+            height: 25,
           ),
           const SizedBox(
-            width: 5,
+            width: 3,
           ),
           Text(
             "$value",
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.bold,
+              shadows: [
+                Shadow(
+                  color: Colors.black,
+                  blurRadius: 3,
+                  offset: Offset(0, 1),
+                ),
+              ],
             ),
           ),
         ],
