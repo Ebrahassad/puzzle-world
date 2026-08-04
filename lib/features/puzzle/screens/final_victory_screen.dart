@@ -1,18 +1,18 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-
+import '../managers/reward_manager.dart';
 import 'world_map_screen.dart';
 
 
 class FinalVictoryScreen extends StatefulWidget {
   final dynamic island;
-  final VoidCallback onGemEarned;
+  
 
   const FinalVictoryScreen({
     super.key,
     required this.island,
-    required this.onGemEarned,
+    
   });
 
   @override
@@ -218,6 +218,11 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
     await _flashController.forward();
 
+    await Future.delayed(
+      const Duration(milliseconds: 300),
+    );
+
+    _flashController.reset();
 
     await Future.delayed(
       const Duration(
@@ -244,10 +249,9 @@ if (!_gemAdded) {
 
   _gemAdded = true;
 
-  widget.onGemEarned();
+  RewardManager.addGems(1);
 
 }
-
 
 await Future.delayed(
   const Duration(
@@ -266,18 +270,6 @@ Navigator.pushAndRemoveUntil(
   ),
   (route) => false,
 );
-
-
-    if (!mounted) return;
-
-
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const WorldMapScreen(),
-      ),
-      (route) => false,
-    );
 
   }
 
