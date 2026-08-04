@@ -1,59 +1,128 @@
-import 'dart:ui';
+import 'dart:ui' as ui;
+import 'package:flutter/material.dart';
+import 'puzzle_piece.dart';
 
-enum EdgeShape { flat, tab, blank }
+class PuzzlePainter extends CustomPainter {
+  PuzzlePainter({
+    required this.pieces,
+    required this.image,
+    required this.boardRect,
+    required this.scatterArea,
+    required this.rows,
+    required this.cols,
+    required this.trayOffset,
+    Listenable? repaint,
+  })  : pieceWidth = boardRect.width / cols,
+        pieceHeight = boardRect.height / rows,
+        super(repaint: repaint);
 
-class PuzzlePiece {
-  PuzzlePiece({
-    required this.id,
-    required this.row,
-    required this.col,
-    required this.path,
-    required this.localBounds,
-    required this.correctPosition,
-    required Offset initialPosition,
-    this.top = EdgeShape.flat,
-    this.right = EdgeShape.flat,
-    this.bottom = EdgeShape.flat,
-    this.left = EdgeShape.flat,
-  }) : currentPosition = initialPosition;
+  final List<PuzzlePiece> pieces;
+  final ui.Image image;
+  final Rect boardRect;
+  final Rect scatterArea;
+  final int rows;
+  final int cols;
+  final double pieceWidth;
+  final double pieceHeight;
+  final double trayOffset;
 
-  final int id;
-  final int row;
-  final int col;
-  final Path path;
-  final Rect localBounds;
-  final Offset correctPosition;
-  Offset currentPosition;
+  static final Paint _borderPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.4
+    ..color = const Color(0x55000000);
 
-  final EdgeShape top;
-  final EdgeShape right;
-  final EdgeShape bottom;
-  final EdgeShape left;
+  static final Paint _imagePaint = Paint()..filterQuality = FilterQuality.high;
 
-  bool isPlaced = false;
-  bool isDragging = false;
+  static final Paint _boardOutlinePaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 2
+    ..color = const Color(0x22000000);
 
-  /// true طالما القطعة ما زالت جزءًا من شريط القطع وتتحرك مع تمريره.
-  /// تصبح false بشكل دائم بمجرد أن يسحبها المستخدم أول مرة (سواء انتهى بها
-  /// المطاف مثبّتة في مكانها الصحيح أو حرة في أي مكان آخر).
-  bool inTray = true;
+  static final Paint _shadowPaint = Paint()
+    ..color = const Color(0x66000000)
+    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
 
-  int zOrder = 0;
+  static final Paint _highlightPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.2
+    ..color = const Color(0x33FFFFFF);
 
-  /// [trayOffset] لا يُستخدم إلا إذا كانت القطعة لا تزال داخل الشريط
-  /// (inTray == true). القطعة الحرة أو المسحوبة تُفحص بموضعها الحقيقي مباشرة.
-  bool containsPoint(Offset globalPoint, double trayOffset) {
-    final adjustedPosition = inTray
-        ? currentPosition - Offset(trayOffset, 0)
-        : currentPosition;
-
-    final local = globalPoint - adjustedPosition;
-    return path.contains(local);
+  /// موضع الرسم الأفقي الفعلي: يُطرح منه trayOffset فقط إذا كانت القطعة
+  /// ما تزال جزءًا من الشريط. القطعة الحرة/المسحوبة تُرسم بموضعها الحقيقي
+  /// دون أي إزاحة، حتى لا تختفي أو تُقص خارج الشاشة.
+  double _drawDx(PuzzlePiece piece) {
+    return piece.inTray
+        ? piece.currentPosition.dx - trayOffset
+        : piece.currentPosition.dx;
   }
 
-  double get distanceToCorrect => (currentPosition - correctPosition).distance;
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRect(boardRect, _boardOutlinePaint);
+
+    final ordered = List<PuzzlePiece>.of(pieces)
+      ..sort((a, b) => a.zOrder.compareTo(b.zOrder));
+
+    final srcRect = Rect.fromLTWH(
+      0,
+      0,
+      image.width.toDouble(),
+      image.height.toDouble(),
+    );
+
+    for (final piece in ordered) {
+      if (piece.isDragging) {
+        _paintShadow(canvas, piece);
+      }
+      canvas.save();
+
+      final lift = piece.isDragging ? -6.0 : 0.0;
+
+      canvas.translate(
+        _drawDx(piece),
+        piece.currentPosition.dy + lift,
+      );
+
+      // هذا الـ clip يقصّ صورة اللوحة الكاملة إلى شكل القطعة فقط (ضروري
+      // لرسم القطعة نفسها) — وليس قصًّا يخفي القطع خارج نطاق الشريط.
+      canvas.clipPath(piece.path);
+
+      final destRect = Rect.fromLTWH(
+        -piece.col * pieceWidth,
+        -piece.row * pieceHeight,
+        boardRect.width,
+        boardRect.height,
+      );
+      canvas.drawImageRect(image, srcRect, destRect, _imagePaint);
+
+      canvas.drawPath(piece.path, _borderPaint);
+
+      if (!piece.isPlaced) {
+        canvas.drawPath(piece.path, _highlightPaint);
+      }
+
+      canvas.restore();
+    }
+  }
+
+  void _paintShadow(Canvas canvas, PuzzlePiece piece) {
+    canvas.save();
+
+    canvas.translate(
+      _drawDx(piece) + 4,
+      piece.currentPosition.dy + 8,
+    );
+
+    canvas.drawPath(piece.path, _shadowPaint);
+    canvas.restore();
+  }
 
   @override
-  String toString() =>
-      'PuzzlePiece(#$id r$row c$col placed:$isPlaced tray:$inTray)';
+  bool shouldRepaint(covariant PuzzlePainter oldDelegate) {
+    return oldDelegate.pieces != pieces ||
+        oldDelegate.image != image ||
+        oldDelegate.boardRect != boardRect ||
+        oldDelegate.scatterArea != scatterArea ||
+        oldDelegate.trayOffset != trayOffset;
+  }
 }
