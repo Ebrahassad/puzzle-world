@@ -7,6 +7,7 @@ import '../data/puzzle_level_data.dart';
 
 import '../models/puzzle_model.dart';
 import '../models/puzzle_level_model.dart';
+import '../widgets/walleticonwidget.dart';
 
 import 'puzzle_game_screen.dart';
 
@@ -365,6 +366,8 @@ static const double islandImageOpacity = 0.65;
                   ),
                 ),
               ),
+
+              const walletIconWidget(),
             ],
           ),
         ),
