@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import '../managers/reward_manager.dart';
 import 'world_map_screen.dart';
 
