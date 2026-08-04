@@ -41,7 +41,7 @@ class _IslandScreenState extends State<IslandScreen>
   // شفافية خفيفة لخلفية وصورة الجزيرة فقط، حتى يبرز مسار المراحل
   // بوضوح فوقها دون أن تختفي تفاصيل رسم الجزيرة.
   static const double islandBackgroundOpacity = 0.55;
-static const double islandImageOpacity = 0.65;
+  static const double islandImageOpacity = 0.65;
 
   late final List<PuzzleLevelModel> levels;
 
@@ -54,17 +54,17 @@ static const double islandImageOpacity = 0.65;
   // خريطة لعبة احترافية، وبإحداثيات طبيعية (0.0-1.0) وليست بكسل
   // ثابت — لذلك يعمل نفس المسار على أي حجم شاشة.
   final List<Offset> levelPositions = const [
-  Offset(0.50, 0.91), // 1
-  Offset(0.31, 0.83), // 2
-  Offset(0.64, 0.73), // 3
-  Offset(0.36, 0.64), // 4
-  Offset(0.67, 0.55), // 5
-  Offset(0.33, 0.46), // 6
-  Offset(0.60, 0.37), // 7
-  Offset(0.35, 0.28), // 8
-  Offset(0.56, 0.19), // 9
-  Offset(0.50, 0.10), // 10
-];
+    Offset(0.50, 0.91), // 1
+    Offset(0.31, 0.83), // 2
+    Offset(0.64, 0.73), // 3
+    Offset(0.36, 0.64), // 4
+    Offset(0.67, 0.55), // 5
+    Offset(0.33, 0.46), // 6
+    Offset(0.60, 0.37), // 7
+    Offset(0.35, 0.28), // 8
+    Offset(0.56, 0.19), // 9
+    Offset(0.50, 0.10), // 10
+  ];
 
   @override
   void initState() {
@@ -334,40 +334,62 @@ static const double islandImageOpacity = 0.65;
               Positioned(
                 top: 20,
                 left: 20,
-                child: CircleAvatar(
-                  radius: 28,
-                  backgroundColor: Colors.black54,
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back,
-                      color: Colors.white,
-                      size: 32,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF8A2BE2), // Violet
+                        Color(0xFF4B0082), // Indigo / Royal Purple
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF9400D3).withOpacity(0.8),
+                        blurRadius: 12,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: CircleAvatar(
+                    radius: 28,
+                    backgroundColor: Colors.transparent,
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
                   ),
                 ),
               ),
 
               Positioned(
-                top: 20,
-                right: 20,
-                child: CircleAvatar(
-                  radius: 28,
-                  backgroundColor: Colors.black54,
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.settings,
-                      color: Colors.white,
-                      size: 32,
-                    ),
-                    onPressed: () {},
+                bottom: 20,
+                left: 20,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.amber.withOpacity(0.85),
+                        blurRadius: 16,
+                        spreadRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: Transform.scale(
+                    scale: 1.15,
+                    child: const WalletIconWidget(),
                   ),
                 ),
               ),
-
-              const WalletIconWidget(),
             ],
           ),
         ),
