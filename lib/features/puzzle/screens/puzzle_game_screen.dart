@@ -341,23 +341,32 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
     if (!mounted) return;
 
-    Navigator.pushReplacement(
+    Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => VictoryScreen(
-          puzzleImage: image!,
-          pieces: controller.pieces,
-          boardRect: controller.boardRect,
-          rows: widget.level.gridSize,
-          cols: widget.level.gridSize,
-          island: widget.island,
-          levelNumber: widget.level.levelNumber,
-          isFinalLevel: widget.level.levelNumber == 10,
-          starTargetKey: starKey,
-          onFinished: () {
-            Navigator.pop(context);
-          },
-        ),
+      PageRouteBuilder(
+        opaque: false,
+        barrierColor: Colors.transparent,
+
+        pageBuilder: (_, animation, secondaryAnimation) {
+          return VictoryScreen(
+            puzzleImage: image!,
+            pieces: controller.pieces,
+            boardRect: controller.boardRect,
+            rows: widget.level.gridSize,
+            cols: widget.level.gridSize,
+            island: widget.island,
+            levelNumber: widget.level.levelNumber,
+            isFinalLevel: widget.level.levelNumber == 10,
+            starTargetKey: starKey,
+            onFinished: () {
+              Navigator.pop(context);
+            },
+          );
+        },
+
+        transitionsBuilder: (_, animation, __, child) {
+          return child;
+        },
       ),
     );
   }
