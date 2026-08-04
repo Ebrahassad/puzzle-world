@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import '../engine/puzzle_controller.dart';
 import '../engine/puzzle_painter.dart';
-import '../engine/tray_controller.dart';
 import '../models/puzzle_level_model.dart';
 import '../models/puzzle_model.dart';
 import '../managers/reward_manager.dart';
@@ -56,9 +55,6 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
   final double boardSize = 350;
   final double trayHeight = 110;
-
-  final TrayController trayController = TrayController();
-  bool trayDragging = false;
 
   final GlobalKey overlayKey = GlobalKey();
   final GlobalKey boardKey = GlobalKey();
@@ -265,17 +261,6 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       lastPlacedCount = controller.pieces.where((p) => p.isPlaced).length;
     }
 
-    // حساب عرض محتوى الشريط بدقة ليتطابق تماماً مع نظام التوزيع (Scatter) الجديد
-    double totalWidth = 20.0;
-    for (final piece in controller.pieces) {
-      totalWidth += (piece.localBounds.width * 0.65) + 8.0;
-    }
-
-    trayController.setBounds(
-      contentWidth: totalWidth,
-      viewportWidth: scatterArea.width,
-    );
-
     setState(() {});
 
     if (!stopwatch.isRunning) {
@@ -336,22 +321,6 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       ..start();
 
     _calculateBoardPosition();
-  }
-
-  bool _isTouchingPiece(Offset position) {
-    controller.trayOffset = trayController.offsetX;
-
-    for (final piece in controller.pieces) {
-      if (!piece.isPlaced &&
-          piece.containsPoint(
-            position,
-            trayController.offsetX,
-          )) {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   Future<void> checkWin() async {
@@ -612,71 +581,46 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                 Positioned.fill(
                   child: GestureDetector(
                     onPanStart: (details) {
-                      final position = details.localPosition;
-
-                      if (_isTouchingPiece(position)) {
-                        trayDragging = false;
-                        controller.trayOffset = trayController.offsetX;
-                        controller.onPanStart(position);
-                      } else {
-                        trayDragging = true;
-                        trayController.startDrag(
-                          position.dx,
-                        );
-                      }
+                      controller.onPanStart(details.localPosition);
                     },
                     onPanUpdate: (details) {
-                      if (trayDragging) {
-                        trayController.updateDrag(
-                          details.localPosition.dx,
-                        );
-                      } else {
-                        controller.onPanUpdate(
-                          details.localPosition,
-                        );
-                      }
+                      controller.onPanUpdate(details.localPosition);
                     },
                     onPanEnd: (_) async {
-                      if (trayDragging) {
-                        trayDragging = false;
-                      } else {
-                        controller.onPanEnd();
+                      controller.onPanEnd();
 
-                        if (controller.lastPlacedPosition != null) {
-                          moves++;
-                        }
+                      moves++;
 
-                        await Future.delayed(
-                          const Duration(milliseconds: 100),
+                      await Future.delayed(
+                        const Duration(milliseconds: 100),
+                      );
+
+                      if (!mounted) return;
+
+                      final placedCount = controller.pieces
+                          .where((p) => p.isPlaced)
+                          .length;
+
+                      if (placedCount > lastPlacedCount) {
+                        lastPlacedCount = placedCount;
+
+                        await _audioPlayer.play(
+                          AssetSource(
+                            'audio/piece_correct.mp3',
+                          ),
                         );
 
-                        if (!mounted) return;
-
-                        final placedCount = controller.pieces
-                            .where((p) => p.isPlaced)
-                            .length;
-
-                        if (placedCount > lastPlacedCount) {
-                          lastPlacedCount = placedCount;
-
-                          await _audioPlayer.play(
-                            AssetSource(
-                              'audio/piece_correct.mp3',
-                            ),
-                          );
-
-                          if (mounted &&
-                              controller.lastPlacedPosition != null) {
-                            setState(() {
-                              coinAnimationStart =
-                                  controller.lastPlacedPosition;
-                              showCoinAnimation = true;
-                            });
-                          }
+                        if (mounted &&
+                            controller.lastPlacedPosition != null) {
+                          setState(() {
+                            coinAnimationStart =
+                                controller.lastPlacedPosition;
+                            showCoinAnimation = true;
+                          });
                         }
-
-                        await checkWin();
                       }
+
+                      await checkWin();
                     },
                     child: CustomPaint(
                       painter: PuzzlePainter(
@@ -686,11 +630,8 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                         scatterArea: scatterArea,
                         rows: widget.level.gridSize,
                         cols: widget.level.gridSize,
-                        trayOffset: trayController.offsetX,
-                        repaint: Listenable.merge([
-                          controller,
-                          trayController,
-                        ]),
+                        trayOffset: controller.trayOffset,
+                        repaint: controller,
                       ),
                     ),
                   ),
@@ -719,7 +660,6 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     if (puzzleCreated) {
       controller.dispose();
     }
-    trayController.dispose();
     super.dispose();
   }
 }
