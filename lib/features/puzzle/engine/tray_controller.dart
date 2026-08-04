@@ -13,9 +13,7 @@ class TrayController extends ChangeNotifier {
     required double contentWidth,
     required double viewportWidth,
   }) {
-    maxOffset =
-        (contentWidth - viewportWidth)
-            .clamp(0, double.infinity);
+    maxOffset = (contentWidth - viewportWidth).clamp(0, double.infinity);
 
     if (_offsetX > maxOffset) {
       _offsetX = maxOffset;
@@ -45,7 +43,7 @@ class TrayController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void reset(){
+  void reset() {
     _offsetX = 0;
     notifyListeners();
   }
