@@ -265,10 +265,10 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       lastPlacedCount = controller.pieces.where((p) => p.isPlaced).length;
     }
 
-    // حساب عرض محتوى الشريط بدقة ومسافات متناسقة وقابلة للتمرير بالكامل
+    // حساب عرض محتوى الشريط بدقة ليتطابق تماماً مع نظام التوزيع (Scatter) الجديد
     double totalWidth = 20.0;
     for (final piece in controller.pieces) {
-      totalWidth += piece.localBounds.width + 15.0;
+      totalWidth += (piece.localBounds.width * 0.65) + 8.0;
     }
 
     trayController.setBounds(
@@ -431,8 +431,8 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                   await saveCurrentGame();
                   stopwatch.stop();
                   if (!mounted) return;
-                  Navigator.pop(context); // إغلاق الحوار
-                  Navigator.pop(context); // الخروج من الشاشة
+                  Navigator.pop(context);
+                  Navigator.pop(context);
                 },
               ),
             ],
@@ -654,7 +654,6 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
                         if (!mounted) return;
 
- مسح المتغيرات المتبعة...
                         final placedCount = controller.pieces
                             .where((p) => p.isPlaced)
                             .length;
