@@ -24,27 +24,29 @@ class PuzzlePainter extends CustomPainter {
     required this.pieces,
     required this.image,
     required this.boardRect,
+    required this.scatterArea,
     required this.rows,
     required this.cols,
     required this.trayOffset,
     Listenable? repaint,
-})  : pieceWidth = boardRect.width / cols,
+  })  : pieceWidth = boardRect.width / cols,
         pieceHeight = boardRect.height / rows,
         super(repaint: repaint);
 
   final List<PuzzlePiece> pieces;
   final ui.Image image;
   final Rect boardRect;
+  final Rect scatterArea;
   final int rows;
   final int cols;
   final double pieceWidth;
   final double pieceHeight;
-final double trayOffset;
+  final double trayOffset;
 
   static final Paint _borderPaint = Paint()
-  ..style = PaintingStyle.stroke
-  ..strokeWidth = 1.4
-  ..color = const Color(0x55000000);
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.4
+    ..color = const Color(0x55000000);
 
   static final Paint _imagePaint = Paint()..filterQuality = FilterQuality.high;
 
@@ -54,18 +56,30 @@ final double trayOffset;
     ..color = const Color(0x22000000);
 
   static final Paint _shadowPaint = Paint()
-  ..color = const Color(0x66000000)
-  ..maskFilter = const MaskFilter.blur(
-    BlurStyle.normal,
-    8,
-  );
+    ..color = const Color(0x66000000)
+    ..maskFilter = const MaskFilter.blur(
+      BlurStyle.normal,
+      8,
+    );
 
-static final Paint _highlightPaint = Paint()
-  ..style = PaintingStyle.stroke
-  ..strokeWidth = 1.2
-  ..color = const Color(0x33FFFFFF);
+  static final Paint _highlightPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.2
+    ..color = const Color(0x33FFFFFF);
 
-
+  /// دالة للتحقق ما إذا كانت القطعة حالياً داخل مساحة الحامل (Tray) لتتأثر بالتمرير،
+  /// أم أنها أُفلتت في مكان حر بالخارج فلا تتأثر بحركة الشريط.
+  bool _isInTray(PuzzlePiece piece) {
+    if (piece.isPlaced) return false;
+    
+    // إذا كانت القطعة تقترب أو تقع عمودياً ضمن حدود منطقة الحامل السفلي
+    // نعتبر أنها داخل الشريط، وإلا فهي في مساحة حرة خارج الشريط.
+    final double pieceY = piece.currentPosition.dy;
+    const double tolerance = 20.0;
+    
+    return pieceY >= (scatterArea.top - tolerance) &&
+        pieceY <= (scatterArea.bottom + tolerance);
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -87,19 +101,21 @@ static final Paint _highlightPaint = Paint()
 
     for (final piece in ordered) {
       if (piece.isDragging) {
-  _paintShadow(canvas, piece);
-}
+        _paintShadow(canvas, piece);
+      }
       canvas.save();
 
-final lift = piece.isDragging ? -6.0 : 0.0;
+      final lift = piece.isDragging ? -6.0 : 0.0;
 
-canvas.translate(
-  piece.currentPosition.dx -
-      (!piece.isPlaced ? trayOffset : 0),
-  piece.currentPosition.dy + lift,
-);
+      // تطبيق إزاحة الشريط فقط إذا كانت القطعة في الحامل ولم يتم تثبيتها
+      final double effectiveTrayOffset = (_isInTray(piece) && !piece.isPlaced) ? trayOffset : 0.0;
 
-canvas.clipPath(piece.path);
+      canvas.translate(
+        piece.currentPosition.dx - effectiveTrayOffset,
+        piece.currentPosition.dy + lift,
+      );
+
+      canvas.clipPath(piece.path);
 
       // Shift the whole image so that this piece's cell (col, row) lands
       // exactly on the local origin. The clip (set above) then reveals only
@@ -112,53 +128,54 @@ canvas.clipPath(piece.path);
         boardRect.height,
       );
       canvas.drawImageRect(
-  image,
-  srcRect,
-  destRect,
-  _imagePaint,
-);
+        image,
+        srcRect,
+        destRect,
+        _imagePaint,
+      );
 
-// حافة داكنة لكل القطع
-canvas.drawPath(
-  piece.path,
-  _borderPaint,
-);
+      // حافة داكنة لكل القطع
+      canvas.drawPath(
+        piece.path,
+        _borderPaint,
+      );
 
-// لمعة فقط للقطع غير المثبتة
-if (!piece.isPlaced) {
-  canvas.drawPath(
-    piece.path,
-    _highlightPaint,
-  );
-}
+      // لمعة فقط للقطع غير المثبتة
+      if (!piece.isPlaced) {
+        canvas.drawPath(
+          piece.path,
+          _highlightPaint,
+        );
+      }
 
-canvas.restore();
+      canvas.restore();
     }
   }
 
   void _paintShadow(Canvas canvas, PuzzlePiece piece) {
-  canvas.save();
+    canvas.save();
 
-  canvas.translate(
-  piece.currentPosition.dx -
-      (!piece.isPlaced ? trayOffset : 0) +
-      4,
-  piece.currentPosition.dy + 8,
-);
+    final double effectiveTrayOffset = (_isInTray(piece) && !piece.isPlaced) ? trayOffset : 0.0;
 
-  canvas.drawPath(
-    piece.path,
-    _shadowPaint,
-  );
+    canvas.translate(
+      piece.currentPosition.dx - effectiveTrayOffset + 4,
+      piece.currentPosition.dy + 8,
+    );
 
-  canvas.restore();
-}
+    canvas.drawPath(
+      piece.path,
+      _shadowPaint,
+    );
+
+    canvas.restore();
+  }
 
   @override
   bool shouldRepaint(covariant PuzzlePainter oldDelegate) {
     return oldDelegate.pieces != pieces ||
-    oldDelegate.image != image ||
-    oldDelegate.boardRect != boardRect ||
-    oldDelegate.trayOffset != trayOffset;
+        oldDelegate.image != image ||
+        oldDelegate.boardRect != boardRect ||
+        oldDelegate.scatterArea != scatterArea ||
+        oldDelegate.trayOffset != trayOffset;
   }
 }
