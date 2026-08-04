@@ -7,12 +7,12 @@ import 'world_map_screen.dart';
 
 class FinalVictoryScreen extends StatefulWidget {
   final dynamic island;
-  
+  final VoidCallback onGemEarned;
 
   const FinalVictoryScreen({
     super.key,
     required this.island,
-    
+    required this.onGemEarned,
   });
 
   @override
