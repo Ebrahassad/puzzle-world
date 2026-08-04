@@ -580,6 +580,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
               if (puzzleCreated)
                 Positioned.fill(
                   child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onPanStart: (details) {
                       controller.onPanStart(details.localPosition);
                     },
@@ -610,8 +611,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                           ),
                         );
 
-                        if (mounted &&
-                            controller.lastPlacedPosition != null) {
+                        if (controller.lastPlacedPosition != null) {
                           setState(() {
                             coinAnimationStart =
                                 controller.lastPlacedPosition;
