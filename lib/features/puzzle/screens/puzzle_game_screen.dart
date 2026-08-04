@@ -265,17 +265,18 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       lastPlacedCount = controller.pieces.where((p) => p.isPlaced).length;
     }
 
-    setState(() {});
-
-    final totalWidth = controller.pieces.fold<double>(
-      0,
-      (sum, piece) => sum + piece.localBounds.width + 12,
-    );
+    // حساب عرض محتوى الشريط بدقة ومسافات متناسقة وقابلة للتمرير بالكامل
+    double totalWidth = 20.0;
+    for (final piece in controller.pieces) {
+      totalWidth += piece.localBounds.width + 15.0;
+    }
 
     trayController.setBounds(
       contentWidth: totalWidth,
       viewportWidth: scatterArea.width,
     );
+
+    setState(() {});
 
     if (!stopwatch.isRunning) {
       stopwatch.start();
@@ -389,6 +390,55 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
           },
         ),
       ),
+    );
+  }
+
+  void _showSettingsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A1B3D),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text("الإعدادات", style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SwitchListTile(
+                title: const Text("الصوت", style: TextStyle(color: Colors.white)),
+                value: soundEnabled,
+                activeColor: Colors.amber,
+                onChanged: (val) {
+                  setState(() {
+                    soundEnabled = val;
+                  });
+                  _audioPlayer.setVolume(val ? 1 : 0);
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.refresh, color: Colors.amber),
+                title: const Text("إعادة المحاولة", style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(context);
+                  restartGame();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.exit_to_app, color: Colors.amber),
+                title: const Text("خروج وحفظ", style: TextStyle(color: Colors.white)),
+                onTap: () async {
+                  await saveCurrentGame();
+                  stopwatch.stop();
+                  if (!mounted) return;
+                  Navigator.pop(context); // إغلاق الحوار
+                  Navigator.pop(context); // الخروج من الشاشة
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -522,6 +572,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                   onRestart: () {
                     restartGame();
                   },
+                  onSettings: () {
+                    _showSettingsDialog();
+                  },
                   onExit: () async {
                     await saveCurrentGame();
                     stopwatch.stop();
@@ -601,6 +654,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
                         if (!mounted) return;
 
+ مسح المتغيرات المتبعة...
                         final placedCount = controller.pieces
                             .where((p) => p.isPlaced)
                             .length;
