@@ -13,7 +13,6 @@ class _WalletScreenState extends State<WalletScreen>
   int stars = 0;
   int gems = 0;
   int coins = 0;
-  int achievements = 0;
 
   bool loading = true;
   bool isChestOpen = false;
@@ -47,7 +46,7 @@ class _WalletScreenState extends State<WalletScreen>
     );
   }
 
-    Future<void> loadWallet() async {
+  Future<void> loadWallet() async {
     final reward = await RewardManager.getReward();
     if (!mounted) return;
     setState(() {
@@ -70,24 +69,60 @@ class _WalletScreenState extends State<WalletScreen>
     await loadWallet();
 
     if (!mounted) return;
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Row(
-          children: [
-            Icon(Icons.card_giftcard, color: Colors.amber),
-            SizedBox(width: 10),
-            Text("🎉 مبروك! لقد فتحت الصندوق وحصلت على مكافأة رائعة"),
-          ],
-        ),
-        backgroundColor: const Color(0xFF2A1B3D),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-          side: const BorderSide(color: Colors.amber, width: 1),
-        ),
-        duration: const Duration(seconds: 3),
-      ),
+
+    // إظهار الرسالة في وسط الشاشة تماماً مع صورة النجمة المحددة
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        Future.delayed(const Duration(seconds: 3), () {
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
+        });
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 40),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2A1B3D),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.amber, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.6),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    "assets/images/rewards/Star_gold.png",
+                    height: 50,
+                    width: 50,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.star, color: Colors.amber, size: 50),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    "تم منح المكافئة",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.amber,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
 
     await chestController.reverse();
@@ -118,149 +153,177 @@ class _WalletScreenState extends State<WalletScreen>
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1A0B2E), // خلفية داكنة متناسقة مع الصندوق
+      backgroundColor: const Color(0xFF1A0B2E),
       appBar: AppBar(
-        title: const Text(
-          "👜 المحفظة الملكية",
-          style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              "assets/images/rewards/reward_chest_closed.png",
+              width: 28,
+              height: 28,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => const Icon(Icons.wallet, color: Colors.amber),
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              "المحفظة الملكية",
+              style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
         centerTitle: true,
         backgroundColor: const Color(0xFF2A1B3D),
         elevation: 4,
         iconTheme: const IconThemeData(color: Colors.amber),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            ScaleTransition(
-              scale: starAnimation,
-              child: Image.asset(
-                "assets/images/rewards/Star_gold.png",
-                height: 90,
-                width: 90,
-                errorBuilder: (_, __, ___) => const Icon(Icons.star, size: 80, color: Colors.amber),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // البطاقات بتصميم مستوحى من إطارات الصندوق الذهبية والبنفسجية
-            walletCard(
-              title: "النجوم",
-              value: stars,
-              assetPath: "assets/images/rewards/Star_gold.png",
-            ),
-            walletCard(
-              title: "الجواهر",
-              value: gems,
-              assetPath: "assets/images/rewards/gem.png",
-            ),
-            walletCard(
-              title: "الرصيد",
-              value: coins,
-              assetPath: "assets/images/ui/coin.png",
-            ),
-            walletCard(
-              title: "الإنجازات",
-              value: achievements,
-              iconData: Icons.emoji_events_rounded,
-            ),
-
-            const SizedBox(height: 25),
-
-            // صندوق المكافآت التفاعلي بتصميم منسجم تماماً
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF35224E), Color(0xFF211333)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-                borderRadius: BorderRadius.circular(25),
-                border: Border.all(
-                  color: Colors.amber.withOpacity(0.6),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  const Text(
-                    "🎁 صندوق المكافأة الملكي",
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.amber,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            physics: const NeverScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ScaleTransition(
+                      scale: starAnimation,
+                      child: Image.asset(
+                        "assets/images/rewards/Star_gold.png",
+                        height: 70,
+                        width: 70,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.star, size: 70, color: Colors.amber),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    "اضغط على الصندوق لفتحه والحصول على مكافأتك",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: Colors.white70),
-                  ),
-                  const SizedBox(height: 20),
 
-                  GestureDetector(
-                    onTap: openChest,
-                    child: ScaleTransition(
-                      scale: chestScaleAnimation,
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: Image.asset(
-                          isChestOpen
-                              ? "assets/images/rewards/reward_chest_open.png"
-                              : "assets/images/rewards/reward_chest_closed.png",
-                          key: ValueKey<bool>(isChestOpen),
-                          height: 130,
-                          width: 130,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) {
-                            return Icon(
-                              isChestOpen ? Icons.lock_open : Icons.lock,
-                              size: 90,
-                              color: Colors.amber,
-                            );
-                          },
+                    walletCard(
+                      title: "النجوم",
+                      value: stars,
+                      assetPath: "assets/images/rewards/Star_gold.png",
+                    ),
+                    walletCard(
+                      title: "الجواهر",
+                      value: gems,
+                      assetPath: "assets/images/rewards/gem.png",
+                    ),
+                    walletCard(
+                      title: "الرصيد",
+                      value: coins,
+                      assetPath: "assets/images/rewards/puzzle_coin.png",
+                    ),
+
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF35224E), Color(0xFF211333)],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
                         ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton.icon(
-                      onPressed: openChest,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.amber[700],
-                        foregroundColor: const Color(0xFF1A0B2E),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.amber.withOpacity(0.6),
+                          width: 2,
                         ),
-                        elevation: 5,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.5),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                      icon: const Icon(Icons.card_giftcard_rounded, color: Color(0xFF1A0B2E)),
-                      label: Text(
-                        isChestOpen ? "تم فتح الصندوق بنجاح!" : "افتح الصندوق الآن",
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                "assets/images/rewards/reward_chest_closed.png",
+                                width: 26,
+                                height: 26,
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                "صندوق المكافأة الملكي",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.amber,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            "اضغط على الصندوق لفتحه والحصول على مكافأتك",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 12, color: Colors.white70),
+                          ),
+                          const SizedBox(height: 10),
+
+                          GestureDetector(
+                            onTap: openChest,
+                            child: ScaleTransition(
+                              scale: chestScaleAnimation,
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 300),
+                                child: Image.asset(
+                                  isChestOpen
+                                      ? "assets/images/rewards/reward_chest_open.png"
+                                      : "assets/images/rewards/reward_chest_closed.png",
+                                  key: ValueKey<bool>(isChestOpen),
+                                  height: 100,
+                                  width: 100,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, __, ___) {
+                                    return Icon(
+                                      isChestOpen ? Icons.lock_open : Icons.lock,
+                                      size: 70,
+                                      color: Colors.amber,
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          SizedBox(
+                            width: double.infinity,
+                            height: 42,
+                            child: ElevatedButton.icon(
+                              onPressed: openChest,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.amber[700],
+                                foregroundColor: const Color(0xFF1A0B2E),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 4,
+                              ),
+                              icon: const Icon(Icons.card_giftcard_rounded, color: Color(0xFF1A0B2E), size: 20),
+                              label: Text(
+                                isChestOpen ? "تم فتح الصندوق بنجاح!" : "افتح الصندوق الآن",
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -272,16 +335,14 @@ class _WalletScreenState extends State<WalletScreen>
     IconData? iconData,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        // تدرج بنفسجي داكن مشابه للمحفظة/الصندوق مع إطار ذهبي نحاسي
         gradient: const LinearGradient(
           colors: [Color(0xFF311E4B), Color(0xFF221335)],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: Colors.amber.withOpacity(0.5),
           width: 1.5,
@@ -289,8 +350,8 @@ class _WalletScreenState extends State<WalletScreen>
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.3),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -302,17 +363,18 @@ class _WalletScreenState extends State<WalletScreen>
               if (assetPath != null)
                 Image.asset(
                   assetPath,
-                  width: 34,
-                  height: 34,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.star, color: Colors.amber),
+                  width: 42,
+                  height: 42,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Icon(Icons.star, color: Colors.amber, size: 42),
                 )
               else if (iconData != null)
-                Icon(iconData, size: 34, color: Colors.amber),
+                Icon(iconData, size: 42, color: Colors.amber),
               const SizedBox(width: 15),
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 20,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
@@ -323,7 +385,7 @@ class _WalletScreenState extends State<WalletScreen>
             value.toString(),
             style: const TextStyle(
               color: Colors.amber,
-              fontSize: 26,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
           ),
