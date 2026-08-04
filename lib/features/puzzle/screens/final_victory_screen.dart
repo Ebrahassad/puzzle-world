@@ -230,30 +230,42 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
 
     setState(() {
-      _showGem = true;
-    });
+  _showGem = true;
+});
 
 
-    await _gemController.forward();
+await _gemController.forward();
 
 
-    if (!mounted) return;
+if (!mounted) return;
 
 
-    if (!_gemAdded) {
+if (!_gemAdded) {
 
-      _gemAdded = true;
+  _gemAdded = true;
 
-      widget.onGemEarned();
+  widget.onGemEarned();
 
-    }
+}
 
 
-    await Future.delayed(
-      const Duration(
-        milliseconds: 1200,
-      ),
-    );
+await Future.delayed(
+  const Duration(
+    milliseconds: 1200,
+  ),
+);
+
+
+// الرجوع للعوالم تلقائياً
+if (!mounted) return;
+
+Navigator.pushAndRemoveUntil(
+  context,
+  MaterialPageRoute(
+    builder: (_) => const WorldMapScreen(),
+  ),
+  (route) => false,
+);
 
 
     if (!mounted) return;
