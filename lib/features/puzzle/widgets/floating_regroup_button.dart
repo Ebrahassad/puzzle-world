@@ -1,9 +1,7 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 
 class FloatingRegroupButton extends StatefulWidget {
-
   final VoidCallback onPressed;
 
   const FloatingRegroupButton({
@@ -12,123 +10,106 @@ class FloatingRegroupButton extends StatefulWidget {
   });
 
   @override
-  State<FloatingRegroupButton> createState() =>
-      _FloatingRegroupButtonState();
+  State<FloatingRegroupButton> createState() => _FloatingRegroupButtonState();
 }
 
-
-class _FloatingRegroupButtonState
-    extends State<FloatingRegroupButton>
-    with SingleTickerProviderStateMixin {
-
-
-  late AnimationController controller;
-
-  late Animation<double> rotation;
-
+class _FloatingRegroupButtonState extends State<FloatingRegroupButton>
+    with TickerProviderStateMixin {
+  late AnimationController _moveController;
+  late AnimationController _fadeController;
+  late Animation<double> _rotation;
+  late Animation<double> _opacity;
 
   @override
   void initState() {
     super.initState();
 
-
-    controller = AnimationController(
+    // 1. متحكم حركة التجوال والدوران المستمرة طوال فترة ظهور الزر
+    _moveController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 14),
+      duration: const Duration(seconds: 12),
     )..repeat(reverse: true);
 
-
-    rotation = Tween<double>(
+    _rotation = Tween<double>(
       begin: 0,
       end: pi * 2,
-    ).animate(controller);
+    ).animate(_moveController);
 
+    // 2. متحكم الظهور والتلاشي عند إظهار وإخفاء الزر من الشاشة الرئيسية
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..forward(); // يبدأ بالظهور فور إنشائه
+
+    _opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
+    );
   }
 
-
+  @override
+  void dispose() {
+    _moveController.dispose();
+    _fadeController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-
     return AnimatedBuilder(
-      animation: controller,
-
+      animation: _moveController,
       builder: (context, child) {
-
         final screenWidth = MediaQuery.of(context).size.width;
-
-        final x = controller.value * (screenWidth + 130) - 80;
-
-        final y = 180 + sin(controller.value * pi * 4) * 80;
-
+        
+        // حركة التجوال في الأعلى (تحت شريط الأدوات مباشرة وفوق لوحة البازل)
+        final x = _moveController.value * (screenWidth - 100) + 20;
+        final y = 110 + sin(_moveController.value * pi * 4) * 10;
 
         return Positioned(
           left: x,
           top: y,
-
           child: child!,
         );
-
       },
-
-
-      child: RotationTransition(
-        turns: rotation,
-
-        child: GestureDetector(
-
-          onTap: widget.onPressed,
-
-          child: Container(
-
-            width: 65,
-            height: 65,
-
-            decoration: BoxDecoration(
-
-              shape: BoxShape.circle,
-
-              color: Colors.white,
-
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 15,
-                  spreadRadius: 3,
+      child: FadeTransition(
+        opacity: _opacity,
+        child: RotationTransition(
+          turns: _rotation,
+          child: GestureDetector(
+            onTap: widget.onPressed,
+            child: Container(
+              width: 55,
+              height: 55,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF7A6899), Color(0xFF4D3F6B)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ],
-
-            ),
-
-
-            child: Padding(
-
-              padding: const EdgeInsets.all(8),
-
-              child: Image.asset(
-                "assets/images/ui/regroup_icon.png",
+                border: Border.all(
+                  color: const Color(0xFFD4AF37), // إطار ذهبي فاخر متوافق مع ثيم اللعبة
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.4),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
-
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Image.asset(
+                  "assets/images/ui/regroup_icon.png",
+                  fit: BoxFit.contain,
+                ),
+              ),
             ),
-
           ),
-
         ),
-
       ),
     );
-
   }
-
-
-
-  @override
-  void dispose() {
-
-    controller.dispose();
-
-    super.dispose();
-
-  }
-
 }
