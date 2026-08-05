@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 import '../data/puzzle_data.dart';
 import '../models/puzzle_model.dart';
@@ -66,6 +67,7 @@ class _WorldMapScreenState
   late final Animation<double> worldTranslateY;
 
   late final List<AnimationController> cloudControllers;
+  late final AudioPlayer audioPlayer;
 
   // تم تعديل إحداثيات الجزر بدقة:
   // 1. المعالم والسيارات مرفوعة قليلاً للأعلى.
@@ -155,15 +157,18 @@ class _WorldMapScreenState
     super.initState();
 
     islands = PuzzleData.puzzles;
+    audioPlayer = AudioPlayer();
 
     worldController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 22),
-    )..repeat(reverse: true);
+    )..forward(from: 0.0);
+    
+    worldController.repeat(reverse: true);
 
     worldScale = Tween<double>(
       begin: 1.00,
-      end: 1.045,
+      end: 1.07,
     ).animate(
       CurvedAnimation(
         parent: worldController,
@@ -172,8 +177,8 @@ class _WorldMapScreenState
     );
 
     worldTranslateY = Tween<double>(
-      begin: -12,
-      end: 12,
+      begin: -22,
+      end: 22,
     ).animate(
       CurvedAnimation(
         parent: worldController,
@@ -194,6 +199,7 @@ class _WorldMapScreenState
   @override
   void dispose() {
     worldController.dispose();
+    audioPlayer.dispose();
 
     for (final controller in cloudControllers) {
       controller.dispose();
@@ -209,6 +215,12 @@ class _WorldMapScreenState
       }
     }
     return null;
+  }
+
+  Future<void> playClickSound() async {
+    try {
+      await audioPlayer.play(AssetSource('audio/puzzle_click.mp3'));
+    } catch (_) {}
   }
 
   @override
@@ -296,20 +308,25 @@ class _WorldMapScreenState
                 Positioned(
                   bottom: 25,
                   left: 20,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.amber.withOpacity(0.85),
-                          blurRadius: 16,
-                          spreadRadius: 4,
-                        ),
-                      ],
-                    ),
-                    child: Transform.scale(
-                      scale: 1.15,
-                      child: const WalletIconWidget(),
+                  child: GestureDetector(
+                    onTap: () async {
+                      await playClickSound();
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.amber.withOpacity(0.85),
+                            blurRadius: 16,
+                            spreadRadius: 4,
+                          ),
+                        ],
+                      ),
+                      child: Transform.scale(
+                        scale: 1.15,
+                        child: const WalletIconWidget(),
+                      ),
                     ),
                   ),
                 ),
@@ -372,7 +389,10 @@ class _WorldMapScreenState
       width: width,
       height: height,
       child: GestureDetector(
-        onTap: () => openIsland(island),
+        onTap: () async {
+          await playClickSound();
+          openIsland(island);
+        },
         behavior: HitTestBehavior.opaque,
         child: Image.asset(
           island.image,
