@@ -1,4 +1,4 @@
-name: puzzle_world
+Name: puzzle_world
 
 description: Jigsaw Puzzle Game
 
@@ -26,6 +26,8 @@ dependencies:
   confetti: ^0.8.0
 
   google_mobile_ads: ^6.0.0
+
+  image_picker: ^1.1.2
 
 
 
