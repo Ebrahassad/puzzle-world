@@ -9,6 +9,9 @@ import '../models/puzzle_model.dart';
 import '../managers/reward_manager.dart';
 import '../managers/puzzle_progress_manager.dart';
 
+import '../data/puzzle_level_data.dart';
+
+
 import '../widgets/game_toolbar.dart';
 import '../widgets/flying_coin.dart';
 import '../widgets/floating_regroup_button.dart';
