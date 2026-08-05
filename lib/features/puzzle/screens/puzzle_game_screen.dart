@@ -367,8 +367,55 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
             levelNumber: widget.level.levelNumber,
             isFinalLevel: widget.level.levelNumber == 10,
             starTargetKey: starKey,
+
             onFinished: () {
               Navigator.pop(context);
+            },
+
+            // زر التالي
+            onNext: () {
+              Navigator.pop(context);
+
+              final levels = PuzzleLevelData.getLevels(
+                widget.island.id,
+              );
+
+              final currentIndex = levels.indexWhere(
+                (level) => level.id == widget.level.id,
+              );
+
+              if (currentIndex != -1 &&
+                  currentIndex + 1 < levels.length) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PuzzleGameScreen(
+                      level: levels[currentIndex + 1],
+                      island: widget.island,
+                    ),
+                  ),
+                );
+              }
+            },
+
+            // زر الخريطة
+            onMap: () {
+              Navigator.pop(context); // يغلق VictoryScreen
+              Navigator.pop(context); // يرجع من PuzzleGameScreen
+              Navigator.pop(context); // يرجع من IslandScreen إلى WorldMapScreen
+            },
+
+            // زر إعادة اللعب
+            onReplay: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PuzzleGameScreen(
+                    level: widget.level,
+                    island: widget.island,
+                  ),
+                ),
+              );
             },
           );
         },
