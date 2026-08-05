@@ -631,6 +631,21 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                   },
                 ),
               ),
+
+              Positioned(
+                top: 78,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      controller.regroupPieces();
+                    },
+                    icon: const Icon(Icons.auto_fix_high),
+                    label: const Text("إعادة تجميع القطع"),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
