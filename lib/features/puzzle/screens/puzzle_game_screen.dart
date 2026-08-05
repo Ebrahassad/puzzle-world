@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../engine/puzzle_controller.dart';
@@ -10,6 +11,7 @@ import '../managers/puzzle_progress_manager.dart';
 
 import '../widgets/game_toolbar.dart';
 import '../widgets/flying_coin.dart';
+import '../widgets/floating_regroup_button.dart';
 import 'victory_screen.dart';
 
 import '../services/reward_ad_service.dart';
@@ -41,6 +43,10 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   bool checkingSavedGame = true;
   bool soundEnabled = true;
 
+  Timer? _regroupTimer;
+
+  bool showRegroupButton = false;
+
   Map<String, dynamic>? savedGameData;
 
   late Stopwatch stopwatch;
@@ -70,8 +76,12 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   @override
   void initState() {
     super.initState();
+
     stopwatch = Stopwatch();
+
     _checkSavedGame();
+
+    _startRegroupHelper();
   }
 
   Future<void> _checkSavedGame() async {
@@ -367,6 +377,57 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     );
   }
 
+  void _startRegroupHelper() {
+
+    Future.delayed(
+      const Duration(minutes: 2),
+      () {
+
+        if (!mounted || gameFinished) return;
+
+        _showRegroupButton();
+
+
+        _regroupTimer = Timer.periodic(
+          const Duration(seconds: 90),
+          (_) {
+
+            if (!mounted || gameFinished) return;
+
+            _showRegroupButton();
+
+          },
+        );
+
+      },
+    );
+
+  }
+
+
+
+  void _showRegroupButton() {
+
+    setState(() {
+      showRegroupButton = true;
+    });
+
+
+    Future.delayed(
+      const Duration(seconds: 20),
+      () {
+
+        if (!mounted) return;
+
+        setState(() {
+          showRegroupButton = false;
+        });
+
+      },
+    );
+
+  }
+
   void _showSettingsDialog() {
     showDialog(
       context: context,
@@ -632,20 +693,16 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                 ),
               ),
 
-              Positioned(
-                top: 78,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      controller.regroupPieces();
-                    },
-                    icon: const Icon(Icons.auto_fix_high),
-                    label: const Text("إعادة تجميع القطع"),
-                  ),
+              if (showRegroupButton)
+                FloatingRegroupButton(
+                  onPressed: () {
+                    controller.regroupPieces();
+
+                    setState(() {
+                      showRegroupButton = false;
+                    });
+                  },
                 ),
-              ),
             ],
           ),
         ),
@@ -656,6 +713,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   @override
   void dispose() {
     _audioPlayer.dispose();
+    _regroupTimer?.cancel();
 
     if (puzzleCreated && !gameFinished) {
       PuzzleProgressManager.saveProgress(
