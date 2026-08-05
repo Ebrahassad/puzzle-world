@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../managers/reward_manager.dart';
 import 'world_map_screen.dart';
 
@@ -67,6 +68,12 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   late AnimationController _flashController;
 
   //==============================
+  // Audio
+  //==============================
+
+  late AudioPlayer _audioPlayer;
+
+  //==============================
   // Confetti / fireworks burst
   //==============================
 
@@ -118,6 +125,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   void initState() {
     super.initState();
 
+    _audioPlayer = AudioPlayer();
     _setupAnimations();
     _confettiTicker = createTicker((_) => _updateConfetti());
 
@@ -296,6 +304,11 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     setState(() {
       _opened = true;
     });
+
+    // تشغيل الصوت بعد فتح الصندوق مباشرة
+    try {
+      await _audioPlayer.play(AssetSource('audio/puzzle_reward.mp3'));
+    } catch (_) {}
 
     // Light + fireworks burst together for maximum impact.
     _spawnConfetti();
@@ -553,7 +566,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: const [
                     Text(
-                      "🏆 أنت بطل!",
+                      " استمر لفتح مزايا جديدة!",
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,
@@ -604,6 +617,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   void dispose() {
     _chestController.dispose();
     _flashController.dispose();
+    _audioPlayer.dispose();
     _glowController.dispose();
     _gemPopController.dispose();
     _gemFlightController.dispose();
