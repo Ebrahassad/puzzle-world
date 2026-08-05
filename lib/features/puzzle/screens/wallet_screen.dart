@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../managers/reward_manager.dart';
 
 class WalletScreen extends StatefulWidget {
@@ -17,8 +18,7 @@ class _WalletScreenState extends State<WalletScreen>
   bool loading = true;
   bool isChestOpen = false;
 
-  late AnimationController starController;
-  late Animation<double> starAnimation;
+  late AudioPlayer audioPlayer;
   late AnimationController chestController;
   late Animation<double> chestScaleAnimation;
 
@@ -27,21 +27,14 @@ class _WalletScreenState extends State<WalletScreen>
     super.initState();
     loadWallet();
 
-    starController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-
-    starAnimation = Tween<double>(begin: 0.9, end: 1.1).animate(
-      CurvedAnimation(parent: starController, curve: Curves.easeInOut),
-    );
+    audioPlayer = AudioPlayer();
 
     chestController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
 
-    chestScaleAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
+    chestScaleAnimation = Tween<double>(begin: 1.0, end: 1.25).animate(
       CurvedAnimation(parent: chestController, curve: Curves.elasticOut),
     );
   }
@@ -60,6 +53,10 @@ class _WalletScreenState extends State<WalletScreen>
   Future<void> openChest() async {
     if (isChestOpen) return;
 
+    try {
+      await audioPlayer.play(AssetSource('audio/puzzle_reward.mp3'));
+    } catch (_) {}
+
     await chestController.forward();
     setState(() {
       isChestOpen = true;
@@ -70,7 +67,6 @@ class _WalletScreenState extends State<WalletScreen>
 
     if (!mounted) return;
 
-    // إظهار الرسالة في وسط الشاشة تماماً مع صورة النجمة المحددة
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -103,9 +99,9 @@ class _WalletScreenState extends State<WalletScreen>
                 children: [
                   Image.asset(
                     "assets/images/rewards/Star_gold.png",
-                    height: 50,
-                    width: 50,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.star, color: Colors.amber, size: 50),
+                    height: 60,
+                    width: 60,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.star, color: Colors.amber, size: 60),
                   ),
                   const SizedBox(height: 12),
                   const Text(
@@ -113,7 +109,7 @@ class _WalletScreenState extends State<WalletScreen>
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.amber,
-                      fontSize: 20,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -138,7 +134,7 @@ class _WalletScreenState extends State<WalletScreen>
 
   @override
   void dispose() {
-    starController.dispose();
+    audioPlayer.dispose();
     chestController.dispose();
     super.dispose();
   }
@@ -159,16 +155,16 @@ class _WalletScreenState extends State<WalletScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset(
-              "assets/images/rewards/reward_chest_closed.png",
-              width: 28,
-              height: 28,
+              "assets/images/rewards/reward_chest_open.png",
+              width: 38,
+              height: 38,
               fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => const Icon(Icons.wallet, color: Colors.amber),
+              errorBuilder: (_, __, ___) => const Icon(Icons.wallet, color: Colors.amber, size: 38),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             const Text(
               "المحفظة الملكية",
-              style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
+              style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 20),
             ),
           ],
         ),
@@ -188,32 +184,6 @@ class _WalletScreenState extends State<WalletScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    ScaleTransition(
-                      scale: starAnimation,
-                      child: Image.asset(
-                        "assets/images/rewards/Star_gold.png",
-                        height: 70,
-                        width: 70,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.star, size: 70, color: Colors.amber),
-                      ),
-                    ),
-
-                    walletCard(
-                      title: "النجوم",
-                      value: stars,
-                      assetPath: "assets/images/rewards/Star_gold.png",
-                    ),
-                    walletCard(
-                      title: "الجواهر",
-                      value: gems,
-                      assetPath: "assets/images/rewards/gem.png",
-                    ),
-                    walletCard(
-                      title: "الرصيد",
-                      value: coins,
-                      assetPath: "assets/images/rewards/puzzle_coin.png",
-                    ),
-
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
@@ -243,8 +213,8 @@ class _WalletScreenState extends State<WalletScreen>
                             children: [
                               Image.asset(
                                 "assets/images/rewards/reward_chest_closed.png",
-                                width: 26,
-                                height: 26,
+                                width: 34,
+                                height: 34,
                                 fit: BoxFit.contain,
                                 errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                               ),
@@ -252,7 +222,7 @@ class _WalletScreenState extends State<WalletScreen>
                               const Text(
                                 "صندوق المكافأة الملكي",
                                 style: TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.amber,
                                 ),
@@ -263,7 +233,7 @@ class _WalletScreenState extends State<WalletScreen>
                           const Text(
                             "اضغط على الصندوق لفتحه والحصول على مكافأتك",
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 12, color: Colors.white70),
+                            style: TextStyle(fontSize: 14, color: Colors.white70),
                           ),
                           const SizedBox(height: 10),
 
@@ -278,13 +248,13 @@ class _WalletScreenState extends State<WalletScreen>
                                       ? "assets/images/rewards/reward_chest_open.png"
                                       : "assets/images/rewards/reward_chest_closed.png",
                                   key: ValueKey<bool>(isChestOpen),
-                                  height: 100,
-                                  width: 100,
+                                  height: 130,
+                                  width: 130,
                                   fit: BoxFit.contain,
                                   errorBuilder: (_, __, ___) {
                                     return Icon(
                                       isChestOpen ? Icons.lock_open : Icons.lock,
-                                      size: 70,
+                                      size: 90,
                                       color: Colors.amber,
                                     );
                                   },
@@ -297,7 +267,7 @@ class _WalletScreenState extends State<WalletScreen>
 
                           SizedBox(
                             width: double.infinity,
-                            height: 42,
+                            height: 46,
                             child: ElevatedButton.icon(
                               onPressed: openChest,
                               style: ElevatedButton.styleFrom(
@@ -308,15 +278,31 @@ class _WalletScreenState extends State<WalletScreen>
                                 ),
                                 elevation: 4,
                               ),
-                              icon: const Icon(Icons.card_giftcard_rounded, color: Color(0xFF1A0B2E), size: 20),
+                              icon: const Icon(Icons.card_giftcard_rounded, color: Color(0xFF1A0B2E), size: 24),
                               label: Text(
                                 isChestOpen ? "تم فتح الصندوق بنجاح!" : "افتح الصندوق الآن",
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
                         ],
                       ),
+                    ),
+
+                    walletCard(
+                      title: "رصيد العملات",
+                      value: coins,
+                      assetPath: "assets/images/rewards/puzzle_coin.png",
+                    ),
+                    walletCard(
+                      title: "رصيد النجوم",
+                      value: stars,
+                      assetPath: "assets/images/rewards/Star_gold.png",
+                    ),
+                    walletCard(
+                      title: "رصيد الجوهر",
+                      value: gems,
+                      assetPath: "assets/images/rewards/gem.png",
                     ),
                   ],
                 ),
@@ -335,7 +321,7 @@ class _WalletScreenState extends State<WalletScreen>
     IconData? iconData,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF311E4B), Color(0xFF221335)],
@@ -363,18 +349,18 @@ class _WalletScreenState extends State<WalletScreen>
               if (assetPath != null)
                 Image.asset(
                   assetPath,
-                  width: 42,
-                  height: 42,
+                  width: 50,
+                  height: 50,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.star, color: Colors.amber, size: 42),
+                  errorBuilder: (_, __, ___) => const Icon(Icons.star, color: Colors.amber, size: 50),
                 )
               else if (iconData != null)
-                Icon(iconData, size: 42, color: Colors.amber),
+                Icon(iconData, size: 50, color: Colors.amber),
               const SizedBox(width: 15),
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 19,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
@@ -385,7 +371,7 @@ class _WalletScreenState extends State<WalletScreen>
             value.toString(),
             style: const TextStyle(
               color: Colors.amber,
-              fontSize: 22,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
           ),
