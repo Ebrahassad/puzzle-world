@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -258,6 +259,34 @@ _lastPlacedPosition = null;
 
     notifyListeners();
   }
+
+void regroupPieces() {
+  final random = Random();
+
+  for (final piece in _pieces) {
+    if (piece.isPlaced) continue;
+
+    final w = piece.localBounds.width;
+    final h = piece.localBounds.height;
+
+    final maxX = max(_scatterArea.left, _scatterArea.right - w);
+    final maxY = max(_scatterArea.top, _scatterArea.bottom - h);
+
+    final dx =
+        _scatterArea.left +
+        random.nextDouble() * (maxX - _scatterArea.left);
+
+    final dy =
+        _scatterArea.top +
+        random.nextDouble() * (maxY - _scatterArea.top);
+
+    piece.currentPosition = Offset(dx, dy);
+    piece.isDragging = false;
+  }
+
+  _dragging = null;
+  notifyListeners();
+}
 
   @override
   void dispose() {
