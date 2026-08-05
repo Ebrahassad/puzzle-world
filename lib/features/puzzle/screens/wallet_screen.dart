@@ -155,7 +155,7 @@ class _WalletScreenState extends State<WalletScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset(
-              "assets/images/rewards/reward_chest_open.png",
+              "assets/images/ui/open_wallet.png",
               width: 38,
               height: 38,
               fit: BoxFit.contain,
@@ -163,7 +163,7 @@ class _WalletScreenState extends State<WalletScreen>
             ),
             const SizedBox(width: 10),
             const Text(
-              "المحفظة الملكية",
+              "المحفظة",
               style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 20),
             ),
           ],
