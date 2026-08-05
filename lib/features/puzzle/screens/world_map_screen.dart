@@ -1,48 +1,50 @@
-Import 'dart:math' as math;
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:image_picker/image_picker.dart'; // <--- استيراد مكتبة اختيار الصور
 
 import '../data/puzzle_data.dart';
 import '../models/puzzle_model.dart';
 import '../widgets/wallet_icon_widget.dart';
 import 'island_screen.dart';
+// import 'puzzle_game_screen.dart'; // <--- قم بإلغاء التعليق واستيراد شاشة اللعب الخاصة بك إذا لزم الأمر
 
 class _RelativeRect {
-  Final String id;
-  Final double left;
-  Final double top;
-  Final double width;
-  Final double height;
+  final String id;
+  final double left;
+  final double top;
+  final double width;
+  final double height;
 
-  Const _RelativeRect({
-    Required this.id,
-    Required this.left,
-    Required this.top,
-    Required this.width,
-    Required this.height,
+  const _RelativeRect({
+    required this.id,
+    required this.left,
+    required this.top,
+    required this.width,
+    required this.height,
   });
 }
 
 class _RelativeCloud {
-  Final String image;
-  Final double top;
-  Final double size;
-  Final double opacity;
-  Final Duration duration;
+  final String image;
+  final double top;
+  final double size;
+  final double opacity;
+  final Duration duration;
 
-  Const _RelativeCloud({
-    Required this.image,
-    Required this.top,
-    Required this.size,
-    Required this.opacity,
-    Required this.duration,
+  const _RelativeCloud({
+    required this.image,
+    required this.top,
+    required this.size,
+    required this.opacity,
+    required this.duration,
   });
 }
 
 class WorldMapScreen extends StatefulWidget {
-  Const WorldMapScreen({
-    Super.key,
+  const WorldMapScreen({
+    super.key,
   });
 
   @override
@@ -51,250 +53,250 @@ class WorldMapScreen extends StatefulWidget {
 }
 
 class _WorldMapScreenState
-    Extends State<WorldMapScreen>
-    With TickerProviderStateMixin {
+    extends State<WorldMapScreen>
+    with TickerProviderStateMixin {
 
-  Static const String mapImage =
+  static const String mapImage =
       "assets/images/world/world_map.jpg";
 
-  Static const double worldWidth = 896;
-  Static const double worldHeight = 1350;
+  static const double worldWidth = 896;
+  static const double worldHeight = 1350;
 
-  Late final List<PuzzleModel> islands;
+  late final List<PuzzleModel> islands;
 
-  Late final AnimationController worldController;
-  Late final Animation<double> worldScale;
-  Late final Animation<double> worldTranslateY;
+  late final AnimationController worldController;
+  late final Animation<double> worldScale;
+  late final Animation<double> worldTranslateY;
 
-  Late final List<AnimationController> cloudControllers;
-  Late final AudioPlayer audioPlayer;
+  late final List<AnimationController> cloudControllers;
+  late final AudioPlayer audioPlayer;
 
   // تم تعديل إحداثيات الجزر بدقة:
   // 1. المعالم والسيارات مرفوعة قليلاً للأعلى.
   // 2. الطبيعة مرفوعة للأعلى لتترك مسافة فاصلة وآمنة تماماً بينها وبين جزيرة الحيوانات.
-  Static final List<_RelativeRect> _islandRects = [
+  static final List<_RelativeRect> _islandRects = [
 
     // جزيرة الفضاء
     _RelativeRect(
-      Id: "space",
-      Left: 210 / worldWidth,
-      Top: 9 / worldHeight,
-      Width: 480 / worldWidth,
-      Height: 540 / worldHeight,
+      id: "space",
+      left: 210 / worldWidth,
+      top: 9 / worldHeight,
+      width: 480 / worldWidth,
+      height: 540 / worldHeight,
     ),
 
     // المعالم (مرفوعة قليلاً)
     _RelativeRect(
-      Id: "landmarks",
-      Left: 100 / worldWidth,
-      Top: 410 / worldHeight,
-      Width: 335 / worldWidth,
-      Height: 365 / worldHeight,
+      id: "landmarks",
+      left: 100 / worldWidth,
+      top: 410 / worldHeight,
+      width: 335 / worldWidth,
+      height: 365 / worldHeight,
     ),
 
     // السيارات (مرفوعة قليلاً)
     _RelativeRect(
-      Id: "cars",
-      Left: 460 / worldWidth,
-      Top: 410 / worldHeight,
-      Width: 335 / worldWidth,
-      Height: 365 / worldHeight,
+      id: "cars",
+      left: 460 / worldWidth,
+      top: 410 / worldHeight,
+      width: 335 / worldWidth,
+      height: 365 / worldHeight,
     ),
 
     // الطبيعة (مرفوعة أكثر لتترك مسافة بينها وبين الحيوانات)
     _RelativeRect(
-      Id: "nature",
-      Left: 268 / worldWidth,
-      Top: 605 / worldHeight,
-      Width: 360 / worldWidth,
-      Height: 380 / worldHeight,
+      id: "nature",
+      left: 268 / worldWidth,
+      top: 605 / worldHeight,
+      width: 360 / worldWidth,
+      height: 380 / worldHeight,
     ),
 
     // الحيوانات (في الأسفل مع وجود مسافة فاصلة بينها وبين الطبيعة)
     _RelativeRect(
-      Id: "animals",
-      Left: 268 / worldWidth,
-      Top: 935 / worldHeight,
-      Width: 350 / worldWidth,
-      Height: 380 / worldHeight,
+      id: "animals",
+      left: 268 / worldWidth,
+      top: 935 / worldHeight,
+      width: 350 / worldWidth,
+      height: 380 / worldHeight,
     ),
 
   ];
 
-  Static final List<_RelativeCloud> _clouds = [
+  static final List<_RelativeCloud> _clouds = [
     _RelativeCloud(
-      Image: "assets/images/background/cloud_01.png",
-      Top: 80 / worldHeight,
-      Size: 280 / worldWidth,
-      Opacity: 0.22,
-      Duration: Duration(seconds: 55),
+      image: "assets/images/background/cloud_01.png",
+      top: 80 / worldHeight,
+      size: 280 / worldWidth,
+      opacity: 0.22,
+      duration: Duration(seconds: 55),
     ),
     _RelativeCloud(
-      Image: "assets/images/background/cloud_02.png",
-      Top: 200 / worldHeight,
-      Size: 220 / worldWidth,
-      Opacity: 0.22,
-      Duration: Duration(seconds: 70),
+      image: "assets/images/background/cloud_02.png",
+      top: 200 / worldHeight,
+      size: 220 / worldWidth,
+      opacity: 0.22,
+      duration: Duration(seconds: 70),
     ),
     _RelativeCloud(
-      Image: "assets/images/background/cloud_03.png",
-      Top: 40 / worldHeight,
-      Size: 170 / worldWidth,
-      Opacity: 0.22,
-      Duration: Duration(seconds: 90),
+      image: "assets/images/background/cloud_03.png",
+      top: 40 / worldHeight,
+      size: 170 / worldWidth,
+      opacity: 0.22,
+      duration: Duration(seconds: 90),
     ),
     _RelativeCloud(
-      Image: "assets/images/background/cloud_04.png",
-      Top: 300 / worldHeight,
-      Size: 240 / worldWidth,
-      Opacity: 0.22,
-      Duration: Duration(seconds: 65),
+      image: "assets/images/background/cloud_04.png",
+      top: 300 / worldHeight,
+      size: 240 / worldWidth,
+      opacity: 0.22,
+      duration: Duration(seconds: 65),
     ),
   ];
 
   @override
-  Void initState() {
-    Super.initState();
+  void initState() {
+    super.initState();
 
-    Islands = PuzzleData.puzzles;
-    AudioPlayer = AudioPlayer();
+    islands = PuzzleData.puzzles;
+    audioPlayer = AudioPlayer();
 
-    WorldController = AnimationController(
-      Vsync: this,
-      Duration: const Duration(seconds: 22),
+    worldController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 22),
     )..forward(from: 0.0);
     
-    WorldController.repeat(reverse: true);
+    worldController.repeat(reverse: true);
 
-    WorldScale = Tween<double>(
-      Begin: 1.00,
-      End: 1.07,
+    worldScale = Tween<double>(
+      begin: 1.00,
+      end: 1.07,
     ).animate(
       CurvedAnimation(
-        Parent: worldController,
-        Curve: Curves.easeInOut,
+        parent: worldController,
+        curve: Curves.easeInOut,
       ),
     );
 
-    WorldTranslateY = Tween<double>(
-      Begin: -22,
-      End: 22,
+    worldTranslateY = Tween<double>(
+      begin: -22,
+      end: 22,
     ).animate(
       CurvedAnimation(
-        Parent: worldController,
-        Curve: Curves.easeInOut,
+        parent: worldController,
+        curve: Curves.easeInOut,
       ),
     );
 
-    CloudControllers = _clouds
+    cloudControllers = _clouds
         .map(
           (cloud) => AnimationController(
-            Vsync: this,
-            Duration: cloud.duration,
+            vsync: this,
+            duration: cloud.duration,
           )..repeat(),
         )
         .toList();
   }
 
   @override
-  Void dispose() {
-    WorldController.dispose();
-    AudioPlayer.dispose();
+  void dispose() {
+    worldController.dispose();
+    audioPlayer.dispose();
 
-    For (final controller in cloudControllers) {
-      Controller.dispose();
+    for (final controller in cloudControllers) {
+      controller.dispose();
     }
 
-    Super.dispose();
+    super.dispose();
   }
 
   PuzzleModel? getIsland(String id) {
-    For (final item in islands) {
-      If (item.id == id) {
-        Return item;
+    for (final item in islands) {
+      if (item.id == id) {
+        return item;
       }
     }
-    Return null;
+    return null;
   }
 
   Future<void> playClickSound() async {
-    Try {
-      Await audioPlayer.play(AssetSource('audio/puzzle_click.mp3'));
+    try {
+      await audioPlayer.play(AssetSource('audio/puzzle_click.mp3'));
     } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
-    Return Scaffold(
-      BackgroundColor: const Color(0xff08182b),
-      Body: LayoutBuilder(
-        Builder: (context, constraints) {
-          Final double screenWidth = constraints.maxWidth;
-          Final double screenHeight = constraints.maxHeight;
+    return Scaffold(
+      backgroundColor: const Color(0xff08182b),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final double screenWidth = constraints.maxWidth;
+          final double screenHeight = constraints.maxHeight;
 
-          If (screenWidth <= 0 || screenHeight <= 0) {
-            Return const SizedBox.shrink();
+          if (screenWidth <= 0 || screenHeight <= 0) {
+            return const SizedBox.shrink();
           }
 
-          Final double scale = math.max(
-            ScreenWidth / worldWidth,
-            ScreenHeight / worldHeight,
+          final double scale = math.max(
+            screenWidth / worldWidth,
+            screenHeight / worldHeight,
           );
 
-          Final double scaledWidth = worldWidth * scale;
-          Final double scaledHeight = worldHeight * scale;
+          final double scaledWidth = worldWidth * scale;
+          final double scaledHeight = worldHeight * scale;
 
-          Final double dx = (screenWidth - scaledWidth) / 2;
-          Final double dy = (screenHeight - scaledHeight) / 2;
+          final double dx = (screenWidth - scaledWidth) / 2;
+          final double dy = (screenHeight - scaledHeight) / 2;
 
-          Return ClipRect(
-            Child: Stack(
-              Children: [
+          return ClipRect(
+            child: Stack(
+              children: [
                 Positioned(
-                  Left: dx,
-                  Top: dy,
-                  Child: Transform.scale(
-                    Scale: scale,
-                    Alignment: Alignment.topLeft,
-                    Child: SizedBox(
-                      Width: worldWidth,
-                      Height: worldHeight,
-                      Child: AnimatedBuilder(
-                        Animation: worldController,
-                        Builder: (context, child) {
-                          Return Transform.translate(
-                            Offset: Offset(0, worldTranslateY.value),
-                            Child: Transform.scale(
-                              Scale: worldScale.value,
-                              Alignment: Alignment.center,
-                              Child: child,
+                  left: dx,
+                  top: dy,
+                  child: Transform.scale(
+                    scale: scale,
+                    alignment: Alignment.topLeft,
+                    child: SizedBox(
+                      width: worldWidth,
+                      height: worldHeight,
+                      child: AnimatedBuilder(
+                        animation: worldController,
+                        builder: (context, child) {
+                          return Transform.translate(
+                            offset: Offset(0, worldTranslateY.value),
+                            child: Transform.scale(
+                              scale: worldScale.value,
+                              alignment: Alignment.center,
+                              child: child,
                             ),
                           );
                         },
-                        Child: SizedBox(
-                          Width: worldWidth,
-                          Height: worldHeight,
-                          Child: Stack(
-                            ClipBehavior: Clip.none,
-                            Children: [
+                        child: SizedBox(
+                          width: worldWidth,
+                          height: worldHeight,
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
                               Positioned.fill(
-                                Child: Image.asset(
-                                  MapImage,
-                                  Fit: BoxFit.cover,
-                                  ErrorBuilder: (context, error, stack) =>
+                                child: Image.asset(
+                                  mapImage,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stack) =>
                                       const SizedBox.shrink(),
                                 ),
                               ),
 
-                              For (int i = 0; i < _clouds.length; i++)
+                              for (int i = 0; i < _clouds.length; i++)
                                 cloudWidget(
-                                  Cloud: _clouds[i],
-                                  Controller: cloudControllers[i],
+                                  cloud: _clouds[i],
+                                  controller: cloudControllers[i],
                                 ),
 
-                              For (final rect in _islandRects)
+                              for (final rect in _islandRects)
                                 islandImage(
-                                  Rect: rect,
+                                  rect: rect,
                                 ),
                             ],
                           ),
@@ -306,60 +308,80 @@ class _WorldMapScreenState
                 
                 // أيقونة المحفظة: أسفل يسار الشاشة مع وهج مشع وآمن لا يغطي الشاشة
                 Positioned(
-                  Bottom: 25,
-                  Left: 20,
-                  Child: GestureDetector(
-                    OnTap: () async {
-                      Await playClickSound();
+                  bottom: 25,
+                  left: 20,
+                  child: GestureDetector(
+                    onTap: () async {
+                      await playClickSound();
                     },
-                    Child: Container(
-                      Decoration: BoxDecoration(
-                        Shape: BoxShape.circle,
-                        BoxShadow: [
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
                           BoxShadow(
-                            Color: Colors.amber.withOpacity(0.85),
-                            BlurRadius: 16,
-                            SpreadRadius: 4,
+                            color: Colors.amber.withOpacity(0.85),
+                            blurRadius: 16,
+                            spreadRadius: 4,
                           ),
                         ],
                       ),
-                      Child: Transform.scale(
-                        Scale: 1.15,
-                        Child: const WalletIconWidget(),
+                      child: Transform.scale(
+                        scale: 1.15,
+                        child: const WalletIconWidget(),
                       ),
                     ),
                   ),
                 ),
 
-                // أيقونة إضافة صورة جديدة: أسفل يمين الشاشة بنفس تنسيق وحجم ومؤثيرات أيقونة المحفظة
+                // أيقونة إضافة صورة جديدة: أسفل يمين الشاشة تفتح الاستوديو وتنتقل لشاشة اللعب
                 Positioned(
-                  Bottom: 25,
-                  Right: 20,
-                  Child: GestureDetector(
-                    OnTap: () async {
-                      Await playClickSound();
-                      // هنا يمكنك إضافة الكود الخاص بفتح استوديو الهاتف لاختيار الصورة
+                  bottom: 25,
+                  right: 20,
+                  child: GestureDetector(
+                    onTap: () async {
+                      await playClickSound();
+                      
+                      // فتح استوديو الهاتف لجلب الصورة
+                      final ImagePicker picker = ImagePicker();
+                      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+                      if (image != null) {
+                        if (!context.mounted) return;
+                        
+                        // الانتقال لشاشة اللعب الخاصة بك مع تمرير المسار وعلامة الصورة المخصصة
+                        /* 
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PuzzleGameScreen(
+                              customImagePath: image.path,
+                              isCustomImage: true,
+                            ),
+                          ),
+                        );
+                        */
+                      }
                     },
-                    Child: Container(
-                      Decoration: BoxDecoration(
-                        Shape: BoxShape.circle,
-                        BoxShadow: [
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
                           BoxShadow(
-                            Color: Colors.amber.withOpacity(0.85),
-                            BlurRadius: 16,
-                            SpreadRadius: 4,
+                            color: Colors.amber.withOpacity(0.85),
+                            blurRadius: 16,
+                            spreadRadius: 4,
                           ),
                         ],
                       ),
-                      Child: Transform.scale(
-                        Scale: 1.15,
-                        Child: SizedBox(
-                          Width: 55, // تحديد حجم متناسق يشبه أيقونة المحفظة
-                          Height: 55,
-                          Child: Image.asset(
-                            "Assets/images/ui/add_pic.png",
-                            Fit: BoxFit.contain,
-                            ErrorBuilder: (context, error, stack) =>
+                      child: Transform.scale(
+                        scale: 1.15,
+                        child: SizedBox(
+                          width: 55, // تحديد حجم متناسق يشبه أيقونة المحفظة
+                          height: 55,
+                          child: Image.asset(
+                            "assets/images/ui/add_pic.png",
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stack) =>
                                 const SizedBox.shrink(),
                           ),
                         ),
@@ -376,76 +398,76 @@ class _WorldMapScreenState
   }
 
   Widget cloudWidget({
-    Required _RelativeCloud cloud,
-    Required AnimationController controller,
+    required _RelativeCloud cloud,
+    required AnimationController controller,
   }) {
-    Final double top = cloud.top * worldHeight;
-    Final double size = cloud.size * worldWidth;
+    final double top = cloud.top * worldHeight;
+    final double size = cloud.size * worldWidth;
 
-    Return AnimatedBuilder(
-      Animation: controller,
-      Builder: (context, child) {
-        Return Positioned(
-          Left: (worldWidth + 100) -
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, child) {
+        return Positioned(
+          left: (worldWidth + 100) -
               (controller.value * (worldWidth + 400)),
-          Top: top,
-          Child: Opacity(
-            Opacity: cloud.opacity,
-            Child: Transform.rotate(
-              Angle: controller.value * 0.15,
-              Child: child,
+          top: top,
+          child: Opacity(
+            opacity: cloud.opacity,
+            child: Transform.rotate(
+              angle: controller.value * 0.15,
+              child: child,
             ),
           ),
         );
       },
-      Child: Image.asset(
-        Cloud.image,
-        Width: size,
-        ErrorBuilder: (context, error, stack) => const SizedBox.shrink(),
+      child: Image.asset(
+        cloud.image,
+        width: size,
+        errorBuilder: (context, error, stack) => const SizedBox.shrink(),
       ),
     );
   }
 
   Widget islandImage({
-    Required _RelativeRect rect,
+    required _RelativeRect rect,
   }) {
-    Final island = getIsland(rect.id);
+    final island = getIsland(rect.id);
 
-    If (island == null) {
-      Return const SizedBox.shrink();
+    if (island == null) {
+      return const SizedBox.shrink();
     }
 
-    Final double left = rect.left * worldWidth;
-    Final double top = rect.top * worldHeight;
-    Final double width = rect.width * worldWidth;
-    Final double height = rect.height * worldHeight;
+    final double left = rect.left * worldWidth;
+    final double top = rect.top * worldHeight;
+    final double width = rect.width * worldWidth;
+    final double height = rect.height * worldHeight;
 
-    Return Positioned(
-      Left: left,
-      Top: top,
-      Width: width,
-      Height: height,
-      Child: GestureDetector(
-        OnTap: () async {
-          Await playClickSound();
-          OpenIsland(island);
+    return Positioned(
+      left: left,
+      top: top,
+      width: width,
+      height: height,
+      child: GestureDetector(
+        onTap: () async {
+          await playClickSound();
+          openIsland(island);
         },
-        Behavior: HitTestBehavior.opaque,
-        Child: Image.asset(
-          Island.image,
-          Fit: BoxFit.contain,
-          ErrorBuilder: (context, error, stack) => const SizedBox.shrink(),
+        behavior: HitTestBehavior.opaque,
+        child: Image.asset(
+          island.image,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stack) => const SizedBox.shrink(),
         ),
       ),
     );
   }
 
-  Void openIsland(PuzzleModel island) {
+  void openIsland(PuzzleModel island) {
     Navigator.push(
-      Context,
+      context,
       MaterialPageRoute(
-        Builder: (_) => IslandScreen(
-          Island: island,
+        builder: (_) => IslandScreen(
+          island: island,
         ),
       ),
     );
