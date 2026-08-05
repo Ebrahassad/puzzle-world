@@ -2,197 +2,100 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-import '../engine/puzzle_generator.dart';
 import '../engine/puzzle_piece.dart';
 
-
 class VictoryPuzzlePreview extends StatelessWidget {
-
   final ui.Image image;
-  final int rows;
-  final int cols;
-  final Rect boardRect;
-
+  final List<PuzzlePiece> pieces;
 
   const VictoryPuzzlePreview({
     super.key,
     required this.image,
-    required this.rows,
-    required this.cols,
-    required this.boardRect,
+    required this.pieces,
   });
-
 
   @override
   Widget build(BuildContext context) {
-
-
-    final pieces = PuzzleGenerator.generate(
-      image: image,
-      rows: rows,
-      cols: cols,
-      boardRect: Rect.fromLTWH(
-        0,
-        0,
-        boardRect.width,
-        boardRect.height,
-      ),
-      scatterArea: Rect.fromLTWH(
-        0,
-        0,
-        boardRect.width,
-        boardRect.height,
-      ),
-      seed: 1,
-    );
-
-
-    // تثبيت القطع في مكان الحل
-    for (final piece in pieces) {
-      piece.currentPosition = piece.correctPosition;
-    }
-
-
-    return SizedBox(
-      width: boardRect.width,
-      height: boardRect.height,
-
-      child: CustomPaint(
-
-        painter: _VictoryPuzzlePainter(
-          pieces: pieces,
-          image: image,
-          boardRect: Rect.fromLTWH(
-            0,
-            0,
-            boardRect.width,
-            boardRect.height,
-          ),
-          rows: rows,
-          cols: cols,
-        ),
-
+    return CustomPaint(
+      size: Size.infinite,
+      painter: _VictoryPuzzlePainter(
+        pieces: pieces,
+        image: image,
       ),
     );
   }
 }
 
 
-
 class _VictoryPuzzlePainter extends CustomPainter {
-
 
   final List<PuzzlePiece> pieces;
   final ui.Image image;
-  final Rect boardRect;
-  final int rows;
-  final int cols;
-
-
 
   _VictoryPuzzlePainter({
     required this.pieces,
     required this.image,
-    required this.boardRect,
-    required this.rows,
-    required this.cols,
   });
 
-
-
-  final Paint _imagePaint = Paint()
+  final Paint _paint = Paint()
     ..filterQuality = FilterQuality.high;
-
-
-
-  final Paint _borderPaint = Paint()
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 0.8
-    ..color = const Color(0x22000000);
-
 
 
   @override
   void paint(Canvas canvas, Size size) {
 
-
-    final pieceWidth =
-        boardRect.width / cols;
-
-
-    final pieceHeight =
-        boardRect.height / rows;
-
-
-
-    final source = Rect.fromLTWH(
-      0,
-      0,
-      image.width.toDouble(),
-      image.height.toDouble(),
-    );
-
-
-
     for (final piece in pieces) {
-
 
       canvas.save();
 
-
-      // موقع القطعة داخل لوحة النصر
       canvas.translate(
-        piece.col * pieceWidth,
-        piece.row * pieceHeight,
+        piece.correctPosition.dx,
+        piece.correctPosition.dy,
       );
 
+      canvas.clipPath(piece.path);
 
 
-      canvas.clipPath(
-        piece.path,
+      final source = Rect.fromLTWH(
+        piece.col *
+            (image.width / _getCols()),
+        piece.row *
+            (image.height / _getRows()),
+        image.width / _getCols(),
+        image.height / _getRows(),
       );
-
-
-
-      final destination = Rect.fromLTWH(
-        -piece.col * pieceWidth,
-        -piece.row * pieceHeight,
-        boardRect.width,
-        boardRect.height,
-      );
-
 
 
       canvas.drawImageRect(
         image,
         source,
-        destination,
-        _imagePaint,
+        Rect.fromLTWH(
+          0,
+          0,
+          piece.width,
+          piece.height,
+        ),
+        _paint,
       );
-
-
-
-      canvas.drawPath(
-        piece.path,
-        _borderPaint,
-      );
-
 
 
       canvas.restore();
     }
-
   }
 
+
+  int _getCols() {
+    return pieces.map((e) => e.col).reduce((a,b)=>a>b?a:b)+1;
+  }
+
+  int _getRows() {
+    return pieces.map((e) => e.row).reduce((a,b)=>a>b?a:b)+1;
+  }
 
 
   @override
   bool shouldRepaint(
-    covariant _VictoryPuzzlePainter oldDelegate,
-  ) {
-
+      covariant _VictoryPuzzlePainter oldDelegate) {
     return true;
-
   }
-
 }
