@@ -34,8 +34,8 @@ class _FloatingRegroupButtonState
 
     controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 8),
-    )..repeat();
+      duration: const Duration(seconds: 14),
+    )..repeat(reverse: true);
 
 
     rotation = Tween<double>(
@@ -50,9 +50,27 @@ class _FloatingRegroupButtonState
   @override
   Widget build(BuildContext context) {
 
-    return Positioned(
-      right: 25,
-      bottom: 180,
+    return AnimatedBuilder(
+      animation: controller,
+
+      builder: (context, child) {
+
+        final screenWidth = MediaQuery.of(context).size.width;
+
+        final x = controller.value * (screenWidth + 130) - 80;
+
+        final y = 180 + sin(controller.value * pi * 4) * 80;
+
+
+        return Positioned(
+          left: x,
+          top: y,
+
+          child: child!,
+        );
+
+      },
+
 
       child: RotationTransition(
         turns: rotation,
@@ -98,7 +116,6 @@ class _FloatingRegroupButtonState
         ),
 
       ),
-
     );
 
   }
