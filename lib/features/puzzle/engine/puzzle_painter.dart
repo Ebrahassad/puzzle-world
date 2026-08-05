@@ -41,15 +41,15 @@ class PuzzlePainter extends CustomPainter {
 
   static final Paint _borderPaint = Paint()
   ..style = PaintingStyle.stroke
-  ..strokeWidth = 1.4
-  ..color = const Color(0x55000000);
+  ..strokeWidth = 0.8
+  ..color = const Color(0x22000000);
 
   static final Paint _imagePaint = Paint()..filterQuality = FilterQuality.high;
 
   static final Paint _boardOutlinePaint = Paint()
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 2
-    ..color = const Color(0x22000000);
+  ..style = PaintingStyle.stroke
+  ..strokeWidth = 0
+  ..color = Colors.transparent;
 
   static final Paint _shadowPaint = Paint()
   ..color = const Color(0x66000000)
