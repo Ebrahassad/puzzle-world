@@ -204,10 +204,11 @@ class PuzzleGenerator {
     // clockwise-wound piece, i.e. into the neighbouring cell.
     final normal = Offset(dir.dy, -dir.dx);
 
-    // Small organic jitter so pieces don't look machine-stamped identical,
-    // the way real cardboard puzzle pieces vary slightly.
-    final amp = knob * (0.85 + random.nextDouble() * 0.3) * sign;
-    final headHalf = length * (0.13 + random.nextDouble() * 0.03);
+    final amp =
+        knob * 0.95 * sign;
+
+    final headHalf =
+        length * 0.14;
 
     final neckL = length * 0.40; // where the straight run ends
     final neckR = length * 0.60; // where the straight run resumes
