@@ -5,11 +5,14 @@ import 'package:flutter/material.dart';
 import '../engine/puzzle_generator.dart';
 import '../engine/puzzle_piece.dart';
 
+
 class VictoryPuzzlePreview extends StatelessWidget {
+
   final ui.Image image;
   final int rows;
   final int cols;
   final Rect boardRect;
+
 
   const VictoryPuzzlePreview({
     super.key,
@@ -19,45 +22,72 @@ class VictoryPuzzlePreview extends StatelessWidget {
     required this.boardRect,
   });
 
+
   @override
   Widget build(BuildContext context) {
+
 
     final pieces = PuzzleGenerator.generate(
       image: image,
       rows: rows,
       cols: cols,
-      boardRect: boardRect,
-      scatterArea: boardRect,
+      boardRect: Rect.fromLTWH(
+        0,
+        0,
+        boardRect.width,
+        boardRect.height,
+      ),
+      scatterArea: Rect.fromLTWH(
+        0,
+        0,
+        boardRect.width,
+        boardRect.height,
+      ),
       seed: 1,
     );
 
-    // نثبت القطع في مكانها الصحيح
+
+    // تثبيت القطع في مكان الحل
     for (final piece in pieces) {
       piece.currentPosition = piece.correctPosition;
     }
 
 
-    return CustomPaint(
-      size: boardRect.size,
-      painter: _VictoryPuzzlePainter(
-        pieces: pieces,
-        image: image,
-        boardRect: boardRect,
-        rows: rows,
-        cols: cols,
+    return SizedBox(
+      width: boardRect.width,
+      height: boardRect.height,
+
+      child: CustomPaint(
+
+        painter: _VictoryPuzzlePainter(
+          pieces: pieces,
+          image: image,
+          boardRect: Rect.fromLTWH(
+            0,
+            0,
+            boardRect.width,
+            boardRect.height,
+          ),
+          rows: rows,
+          cols: cols,
+        ),
+
       ),
     );
   }
 }
 
 
+
 class _VictoryPuzzlePainter extends CustomPainter {
+
 
   final List<PuzzlePiece> pieces;
   final ui.Image image;
   final Rect boardRect;
   final int rows;
   final int cols;
+
 
 
   _VictoryPuzzlePainter({
@@ -69,8 +99,10 @@ class _VictoryPuzzlePainter extends CustomPainter {
   });
 
 
+
   final Paint _imagePaint = Paint()
     ..filterQuality = FilterQuality.high;
+
 
 
   final Paint _borderPaint = Paint()
@@ -83,8 +115,14 @@ class _VictoryPuzzlePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
 
-    final pieceWidth = boardRect.width / cols;
-    final pieceHeight = boardRect.height / rows;
+
+    final pieceWidth =
+        boardRect.width / cols;
+
+
+    final pieceHeight =
+        boardRect.height / rows;
+
 
 
     final source = Rect.fromLTWH(
@@ -95,18 +133,25 @@ class _VictoryPuzzlePainter extends CustomPainter {
     );
 
 
+
     for (final piece in pieces) {
+
 
       canvas.save();
 
 
+      // موقع القطعة داخل لوحة النصر
       canvas.translate(
-        piece.correctPosition.dx - boardRect.left,
-        piece.correctPosition.dy - boardRect.top,
+        piece.col * pieceWidth,
+        piece.row * pieceHeight,
       );
 
 
-      canvas.clipPath(piece.path);
+
+      canvas.clipPath(
+        piece.path,
+      );
+
 
 
       final destination = Rect.fromLTWH(
@@ -117,6 +162,7 @@ class _VictoryPuzzlePainter extends CustomPainter {
       );
 
 
+
       canvas.drawImageRect(
         image,
         source,
@@ -125,21 +171,28 @@ class _VictoryPuzzlePainter extends CustomPainter {
       );
 
 
+
       canvas.drawPath(
         piece.path,
         _borderPaint,
       );
 
 
+
       canvas.restore();
     }
+
   }
+
 
 
   @override
   bool shouldRepaint(
     covariant _VictoryPuzzlePainter oldDelegate,
   ) {
+
     return true;
+
   }
+
 }
