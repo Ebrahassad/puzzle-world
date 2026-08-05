@@ -187,7 +187,7 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         padding: const EdgeInsets.symmetric(
-          horizontal: 14,
+          horizontal: 12,
           vertical: 6,
         ),
         decoration: BoxDecoration(
@@ -215,7 +215,44 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // زر الإعدادات مع تأثير الأنيميشن عند الضغط
+            // العدادات في الطرف الأيمن (العملات مع المحفظة المفتوحة، النجوم، الجواهر)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    openWallet(context);
+                  },
+                  child: Container(
+                    key: widget.coinKey,
+                    child: CoinCounterBox(
+                      value: reward.coins,
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  width: 6,
+                ),
+                Container(
+                  key: widget.starKey,
+                  child: AnimatedStarCounter(
+                    value: reward.stars,
+                  ),
+                ),
+                const SizedBox(
+                  width: 6,
+                ),
+                Container(
+                  key: widget.gemKey,
+                  child: ImageCounterBox(
+                    image: "assets/images/rewards/gem.png",
+                    value: reward.gems,
+                  ),
+                ),
+              ],
+            ),
+
+            // زر الإعدادات في الطرف الأيسر مع تأثير الأنيميشن عند الضغط
             GestureDetector(
               behavior: HitTestBehavior.opaque,
 
@@ -257,43 +294,6 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
                   ),
                 ),
               ),
-            ),
-
-            // العدادات (نجوم، جواهر، عملات) بدون خلفيات/دوائر لتجنب التداخل
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  key: widget.starKey,
-                  child: AnimatedStarCounter(
-                    value: reward.stars,
-                  ),
-                ),
-                const SizedBox(
-                  width: 4,
-                ),
-                Container(
-                  key: widget.gemKey,
-                  child: ImageCounterBox(
-                    image: "assets/images/rewards/gem.png",
-                    value: reward.gems,
-                  ),
-                ),
-                const SizedBox(
-                  width: 4,
-                ),
-                GestureDetector(
-                  onTap: () {
-                    openWallet(context);
-                  },
-                  child: Container(
-                    key: widget.coinKey,
-                    child: CoinCounterBox(
-                      value: reward.coins,
-                    ),
-                  ),
-                ),
-              ],
             ),
           ],
         ),
@@ -364,7 +364,7 @@ class _AnimatedStarCounterState extends State<AnimatedStarCounter>
       scale: scale,
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: 4,
+          horizontal: 2,
           vertical: 2,
         ),
         child: Row(
@@ -372,15 +372,15 @@ class _AnimatedStarCounterState extends State<AnimatedStarCounter>
           children: [
             Image.asset(
               "assets/images/rewards/Star_gold.png",
-              width: 26,
-              height: 26,
+              width: 28,
+              height: 28,
             ),
-            const SizedBox(width: 3),
+            const SizedBox(width: 4),
             Text(
               "${widget.value}",
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 15,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 shadows: [
                   Shadow(
@@ -413,7 +413,7 @@ class ImageCounterBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(
-        horizontal: 4,
+        horizontal: 2,
         vertical: 2,
       ),
       child: Row(
@@ -421,15 +421,15 @@ class ImageCounterBox extends StatelessWidget {
         children: [
           Image.asset(
             image,
-            width: 25,
-            height: 25,
+            width: 28,
+            height: 28,
           ),
-          const SizedBox(width: 3),
+          const SizedBox(width: 4),
           Text(
             "$value",
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 15,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
               shadows: [
                 Shadow(
@@ -457,25 +457,40 @@ class CoinCounterBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: 4,
-        vertical: 2,
+        horizontal: 8,
+        vertical: 4,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // صورة المحفظة المفتوحة
+          Image.asset(
+            "assets/images/ui/open_wallet.png",
+            width: 26,
+            height: 26,
+          ),
+          const SizedBox(width: 5),
+          // صورة العملة
           Image.asset(
             "assets/images/rewards/coin.png",
-            width: 25,
-            height: 25,
+            width: 28,
+            height: 28,
           ),
-          const SizedBox(width: 3),
+          const SizedBox(width: 5),
           Text(
             "$value",
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 15,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
               shadows: [
                 Shadow(
