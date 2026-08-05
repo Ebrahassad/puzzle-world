@@ -1,0 +1,117 @@
+import 'dart:math';
+
+import 'package:flutter/material.dart';
+
+class FloatingRegroupButton extends StatefulWidget {
+
+  final VoidCallback onPressed;
+
+  const FloatingRegroupButton({
+    super.key,
+    required this.onPressed,
+  });
+
+  @override
+  State<FloatingRegroupButton> createState() =>
+      _FloatingRegroupButtonState();
+}
+
+
+class _FloatingRegroupButtonState
+    extends State<FloatingRegroupButton>
+    with SingleTickerProviderStateMixin {
+
+
+  late AnimationController controller;
+
+  late Animation<double> rotation;
+
+
+  @override
+  void initState() {
+    super.initState();
+
+
+    controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat();
+
+
+    rotation = Tween<double>(
+      begin: 0,
+      end: pi * 2,
+    ).animate(controller);
+
+  }
+
+
+
+  @override
+  Widget build(BuildContext context) {
+
+    return Positioned(
+      right: 25,
+      bottom: 180,
+
+      child: RotationTransition(
+        turns: rotation,
+
+        child: GestureDetector(
+
+          onTap: widget.onPressed,
+
+          child: Container(
+
+            width: 65,
+            height: 65,
+
+            decoration: BoxDecoration(
+
+              shape: BoxShape.circle,
+
+              color: Colors.white,
+
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 15,
+                  spreadRadius: 3,
+                ),
+              ],
+
+            ),
+
+
+            child: Padding(
+
+              padding: const EdgeInsets.all(8),
+
+              child: Image.asset(
+                "assets/images/ui/regroup_icon.png",
+              ),
+
+            ),
+
+          ),
+
+        ),
+
+      ),
+
+    );
+
+  }
+
+
+
+  @override
+  void dispose() {
+
+    controller.dispose();
+
+    super.dispose();
+
+  }
+
+}
