@@ -349,15 +349,15 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
         pageBuilder: (_, animation, secondaryAnimation) {
           return VictoryScreen(
-  puzzleImage: image!,
-  island: widget.island,
-  levelNumber: widget.level.levelNumber,
-  isFinalLevel: widget.level.levelNumber == 10,
-  starTargetKey: starKey,
-  onFinished: () {
-    Navigator.pop(context);
-  },
-);
+            puzzleImage: image!,
+            island: widget.island,
+            levelNumber: widget.level.levelNumber,
+            isFinalLevel: widget.level.levelNumber == 10,
+            starTargetKey: starKey,
+            onFinished: () {
+              Navigator.pop(context);
+            },
+          );
         },
 
         transitionsBuilder: (_, animation, __, child) {
@@ -429,14 +429,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xffD8C7A5),
-              Color(0xffF3E7CF),
-            ],
-          ),
+          color: Color(0xFFE8E1F3),
         ),
         child: SafeArea(
           child: Stack(
@@ -459,7 +452,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                           width: boardSize,
                           height: boardSize,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
+                            color: const Color(0xFFDCCFEA),
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
@@ -469,7 +462,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                               ),
                             ],
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.18),
+                              color: const Color(0xFFF7F2FD),
                               width: 2,
                             ),
                           ),
@@ -501,7 +494,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                       horizontal: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.08),
+                      color: const Color(0xFFDCCFEA),
                       borderRadius: BorderRadius.circular(22),
                       boxShadow: [
                         BoxShadow(
@@ -511,7 +504,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                         ),
                       ],
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.15),
+                        color: const Color(0xFFF7F2FD),
                       ),
                     ),
                   ),
@@ -598,7 +591,6 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                   ),
                 ),
 
-              // تم نقل GameToolbar ليصبح آخر عنصر في الـ Stack
               Positioned(
                 top: 0,
                 left: 8,
