@@ -2,32 +2,44 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../engine/puzzle_generator.dart';
 import '../engine/puzzle_piece.dart';
 
 class VictoryPuzzlePreview extends StatelessWidget {
-  final List<PuzzlePiece> pieces;
   final ui.Image image;
-  final Rect boardRect;
   final int rows;
   final int cols;
+  final Rect boardRect;
 
   const VictoryPuzzlePreview({
     super.key,
-    required this.pieces,
     required this.image,
-    required this.boardRect,
     required this.rows,
     required this.cols,
+    required this.boardRect,
   });
 
   @override
   Widget build(BuildContext context) {
+
+    final pieces = PuzzleGenerator.generate(
+      image: image,
+      rows: rows,
+      cols: cols,
+      boardRect: boardRect,
+      scatterArea: boardRect,
+      seed: 1,
+    );
+
+    // نثبت القطع في مكانها الصحيح
+    for (final piece in pieces) {
+      piece.currentPosition = piece.correctPosition;
+    }
+
+
     return CustomPaint(
-      size: Size(
-        boardRect.width,
-        boardRect.height,
-      ),
-      painter: VictoryPuzzlePainter(
+      size: boardRect.size,
+      painter: _VictoryPuzzlePainter(
         pieces: pieces,
         image: image,
         boardRect: boardRect,
@@ -39,7 +51,7 @@ class VictoryPuzzlePreview extends StatelessWidget {
 }
 
 
-class VictoryPuzzlePainter extends CustomPainter {
+class _VictoryPuzzlePainter extends CustomPainter {
 
   final List<PuzzlePiece> pieces;
   final ui.Image image;
@@ -48,7 +60,7 @@ class VictoryPuzzlePainter extends CustomPainter {
   final int cols;
 
 
-  VictoryPuzzlePainter({
+  _VictoryPuzzlePainter({
     required this.pieces,
     required this.image,
     required this.boardRect,
@@ -71,12 +83,11 @@ class VictoryPuzzlePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
 
-
     final pieceWidth = boardRect.width / cols;
     final pieceHeight = boardRect.height / rows;
 
 
-    final src = Rect.fromLTWH(
+    final source = Rect.fromLTWH(
       0,
       0,
       image.width.toDouble(),
@@ -84,22 +95,21 @@ class VictoryPuzzlePainter extends CustomPainter {
     );
 
 
-    for(final piece in pieces){
-
+    for (final piece in pieces) {
 
       canvas.save();
 
 
       canvas.translate(
-        piece.currentPosition.dx - boardRect.left,
-        piece.currentPosition.dy - boardRect.top,
+        piece.correctPosition.dx - boardRect.left,
+        piece.correctPosition.dy - boardRect.top,
       );
 
 
       canvas.clipPath(piece.path);
 
 
-      final dest = Rect.fromLTWH(
+      final destination = Rect.fromLTWH(
         -piece.col * pieceWidth,
         -piece.row * pieceHeight,
         boardRect.width,
@@ -109,8 +119,8 @@ class VictoryPuzzlePainter extends CustomPainter {
 
       canvas.drawImageRect(
         image,
-        src,
-        dest,
+        source,
+        destination,
         _imagePaint,
       );
 
@@ -123,16 +133,13 @@ class VictoryPuzzlePainter extends CustomPainter {
 
       canvas.restore();
     }
-
   }
-
 
 
   @override
   bool shouldRepaint(
-    covariant VictoryPuzzlePainter oldDelegate,
-  ){
+    covariant _VictoryPuzzlePainter oldDelegate,
+  ) {
     return true;
   }
-
 }
