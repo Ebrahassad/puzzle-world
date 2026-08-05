@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 import 'dart:async';
+import 'dart:io'; // <--- أضفنا هذه المكتبة لقراءة ملفات الصور المحلية من الجهاز
 import 'package:flutter/material.dart';
 
 import '../engine/puzzle_controller.dart';
@@ -11,7 +12,6 @@ import '../managers/puzzle_progress_manager.dart';
 
 import '../data/puzzle_level_data.dart';
 
-
 import '../widgets/game_toolbar.dart';
 import '../widgets/flying_coin.dart';
 import '../widgets/floating_regroup_button.dart';
@@ -21,13 +21,17 @@ import '../services/reward_ad_service.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 class PuzzleGameScreen extends StatefulWidget {
-  final PuzzleLevelModel level;
+  final PuzzleLevelModel? level; // جعلناه اختياري لكي يدعم الصور المخصصة
   final PuzzleModel island;
+  final String? customImagePath; // مسار الصورة المخصصة من الاستوديو
+  final bool isCustomImage; // علامة لتحديد ما إذا كانت صورة مخصصة
 
   const PuzzleGameScreen({
     super.key,
-    required this.level,
+    this.level,
     required this.island,
+    this.customImagePath,
+    this.isCustomImage = false,
   });
 
   @override
@@ -76,21 +80,45 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   final GlobalKey gemKey = GlobalKey();
   final GlobalKey coinKey = GlobalKey();
 
+  // الحصول على عدد شبكة القطع (نفس حجم آخر مرحلة أو حجم افتراضي للصور المخصصة مثل 3x3 أو 4x4)
+  int get gridSize {
+    if (widget.isCustomImage) {
+      return 3; // يمكنك تعديل عدد القطع للصور المخصصة حسب رغبتك (مثلاً 3 أو 4)
+    }
+    return widget.level?.gridSize ?? 3;
+  }
+
+  String get currentLevelId {
+    if (widget.isCustomImage) {
+      return "custom_image_puzzle";
+    }
+    return widget.level!.id;
+  }
+
   @override
   void initState() {
     super.initState();
 
     stopwatch = Stopwatch();
 
-    _checkSavedGame();
+    if (widget.isCustomImage) {
+      // الصور المخصصة لا تحتاج فحص حفظ قديم، نبدأ تحميلها فوراً
+      setState(() {
+        checkingSavedGame = false;
+      });
+      _loadImage();
+    } else {
+      _checkSavedGame();
+    }
 
     _startRegroupHelper();
   }
 
   Future<void> _checkSavedGame() async {
+    if (widget.level == null) return;
     final saved = await PuzzleProgressManager.loadProgress();
 
-    if (saved != null && saved["levelId"] == widget.level.id) {
+    if (saved != null && saved["levelId"] == widget.level!.id) {
       savedGameData = saved;
 
       if (!mounted) return;
@@ -154,9 +182,15 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   }
 
   Future<void> _loadImage() async {
-    final provider = AssetImage(
-      widget.level.image,
-    );
+    ImageProvider provider;
+
+    if (widget.isCustomImage && widget.customImagePath != null) {
+      // تحميل الصورة من مسار ملف الهاتف المحلي
+      provider = FileImage(File(widget.customImagePath!));
+    } else {
+      // تحميل الصورة العادية للمرحلة من الأصول
+      provider = AssetImage(widget.level!.image);
+    }
 
     final stream = provider.resolve(
       const ImageConfiguration(),
@@ -178,9 +212,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
           });
         },
         onError: (error, stack) {
-          debugPrint(
-            "IMAGE ERROR ${widget.level.image}",
-          );
+          debugPrint("IMAGE ERROR");
 
           if (mounted) {
             setState(() {
@@ -261,8 +293,8 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
     controller.initialize(
       image: image!,
-      rows: widget.level.gridSize,
-      cols: widget.level.gridSize,
+      rows: gridSize,
+      cols: gridSize,
       boardRect: boardRect,
       scatterArea: scatterArea,
     );
@@ -282,11 +314,11 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   }
 
   Future<void> saveCurrentGame() async {
-    if (!puzzleCreated) return;
+    if (!puzzleCreated || widget.isCustomImage) return;
 
     await PuzzleProgressManager.saveProgress(
       puzzleId: widget.island.id,
-      levelId: widget.level.id,
+      levelId: currentLevelId,
       pieces: controller.pieces,
       moves: moves,
       seconds: stopwatch.elapsed.inSeconds,
@@ -348,9 +380,11 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     gameFinished = true;
     stopwatch.stop();
 
-    await RewardManager.completePuzzle(
-      rewardKey: widget.level.id,
-    );
+    if (!widget.isCustomImage && widget.level != null) {
+      await RewardManager.completePuzzle(
+        rewardKey: widget.level!.id,
+      );
+    }
 
     if (!mounted) return;
 
@@ -359,53 +393,25 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       PageRouteBuilder(
         opaque: false,
         barrierColor: Colors.transparent,
-
         pageBuilder: (_, animation, secondaryAnimation) {
           return VictoryScreen(
             puzzleImage: image!,
             island: widget.island,
-            levelNumber: widget.level.levelNumber,
-            isFinalLevel: widget.level.levelNumber == 10,
+            levelNumber: widget.isCustomImage ? 10 : widget.level!.levelNumber,
+            isFinalLevel: true,
             starTargetKey: starKey,
-
             onFinished: () {
               Navigator.pop(context);
             },
-
-            // زر التالي
             onNext: () {
               Navigator.pop(context);
-
-              final levels = PuzzleLevelData.getLevels(
-                widget.island.id,
-              );
-
-              final currentIndex = levels.indexWhere(
-                (level) => level.id == widget.level.id,
-              );
-
-              if (currentIndex != -1 &&
-                  currentIndex + 1 < levels.length) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => PuzzleGameScreen(
-                      level: levels[currentIndex + 1],
-                      island: widget.island,
-                    ),
-                  ),
-                );
-              }
+              Navigator.pop(context); // العودة للخريطة في حال الصورة المخصصة
             },
-
-            // زر الخريطة
             onMap: () {
-              Navigator.pop(context); // يغلق VictoryScreen
-              Navigator.pop(context); // يرجع من PuzzleGameScreen
-              Navigator.pop(context); // يرجع من IslandScreen إلى WorldMapScreen
+              Navigator.pop(context);
+              Navigator.pop(context);
+              Navigator.pop(context);
             },
-
-            // زر إعادة اللعب
             onReplay: () {
               Navigator.pushReplacement(
                 context,
@@ -413,13 +419,14 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                   builder: (_) => PuzzleGameScreen(
                     level: widget.level,
                     island: widget.island,
+                    customImagePath: widget.customImagePath,
+                    isCustomImage: widget.isCustomImage,
                   ),
                 ),
               );
             },
           );
         },
-
         transitionsBuilder: (_, animation, __, child) {
           return child;
         },
@@ -466,55 +473,6 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     );
   }
 
-  void _showSettingsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF2A1B3D),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text("الإعدادات", style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SwitchListTile(
-                title: const Text("الصوت", style: TextStyle(color: Colors.white)),
-                value: soundEnabled,
-                activeColor: Colors.amber,
-                onChanged: (val) {
-                  setState(() {
-                    soundEnabled = val;
-                  });
-                  _audioPlayer.setVolume(val ? 1 : 0);
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.refresh, color: Colors.amber),
-                title: const Text("إعادة المحاولة", style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(context);
-                  restartGame();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.exit_to_app, color: Colors.amber),
-                title: const Text("خروج وحفظ", style: TextStyle(color: Colors.white)),
-                onTap: () async {
-                  await saveCurrentGame();
-                  stopwatch.stop();
-                  if (!mounted) return;
-                  Navigator.pop(context);
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (checkingSavedGame || image == null || loading) {
@@ -539,7 +497,6 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                   const SizedBox(
                     height: 70,
                   ),
-
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
@@ -569,23 +526,28 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                             borderRadius: BorderRadius.circular(18),
                             child: Opacity(
                               opacity: 0.18,
-                              child: Image.asset(
-                                widget.level.image,
-                                width: boardSize,
-                                height: boardSize,
-                                fit: BoxFit.cover,
-                              ),
+                              child: widget.isCustomImage && widget.customImagePath != null
+                                  ? Image.file(
+                                      File(widget.customImagePath!),
+                                      width: boardSize,
+                                      height: boardSize,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.asset(
+                                      widget.level!.image,
+                                      width: boardSize,
+                                      height: boardSize,
+                                      fit: BoxFit.cover,
+                                    ),
                             ),
                           ),
                         ),
                       ),
                     ),
                   ),
-
                   const SizedBox(
                     height: 15,
                   ),
-
                   Container(
                     key: trayKey,
                     height: trayHeight,
@@ -607,7 +569,6 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                       ),
                     ),
                   ),
-
                   const SizedBox(
                     height: 15,
                   ),
@@ -682,8 +643,8 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                         pieces: controller.pieces,
                         image: image!,
                         boardRect: controller.boardRect,
-                        rows: widget.level.gridSize,
-                        cols: widget.level.gridSize,
+                        rows: gridSize,
+                        cols: gridSize,
                         repaint: controller,
                       ),
                     ),
@@ -753,10 +714,10 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     _audioPlayer.dispose();
     _regroupTimer?.cancel();
 
-    if (puzzleCreated && !gameFinished) {
+    if (puzzleCreated && !gameFinished && !widget.isCustomImage) {
       PuzzleProgressManager.saveProgress(
         puzzleId: widget.island.id,
-        levelId: widget.level.id,
+        levelId: currentLevelId,
         pieces: controller.pieces,
         moves: moves,
         seconds: stopwatch.elapsed.inSeconds,
