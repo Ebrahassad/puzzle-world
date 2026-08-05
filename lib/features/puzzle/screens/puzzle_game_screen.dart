@@ -378,54 +378,42 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   }
 
   void _startRegroupHelper() {
-
     Future.delayed(
       const Duration(minutes: 2),
       () {
-
         if (!mounted || gameFinished) return;
 
         _showRegroupButton();
 
-
         _regroupTimer = Timer.periodic(
           const Duration(seconds: 90),
           (_) {
-
             if (!mounted || gameFinished) return;
 
             _showRegroupButton();
-
           },
         );
-
       },
     );
-
   }
 
-
-
   void _showRegroupButton() {
+    if (!mounted || gameFinished) return;
 
     setState(() {
       showRegroupButton = true;
     });
 
-
     Future.delayed(
       const Duration(seconds: 20),
       () {
-
-        if (!mounted) return;
+        if (!mounted || gameFinished) return;
 
         setState(() {
           showRegroupButton = false;
         });
-
       },
     );
-
   }
 
   void _showSettingsDialog() {
@@ -597,7 +585,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
               if (puzzleCreated)
                 Positioned.fill(
                   child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
+                    behavior: HitTestBehavior.translucent,
                     onPanStart: (details) {
                       controller.onPanStart(details.localPosition);
                     },
