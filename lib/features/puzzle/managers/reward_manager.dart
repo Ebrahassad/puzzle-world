@@ -42,28 +42,14 @@ static final ValueNotifier<int> rewardNotifier =
 
 
 
-  static Future<void> addCoins(
-    int amount,
-) async {
+  static Future<void> addCoins(int amount) async {
+    if (amount <= 0) return;
 
-  if(amount <= 0){
-    return;
+    try {
+      await PuzzleProgressManager.addCoins(amount);
+      rewardNotifier.notifyListeners();
+    } catch (_) {}
   }
-
-  try {
-
-    await PuzzleProgressManager.addCoins(
-      amount,
-    );
-
-
-    // تحديث الواجهة
-    rewardNotifier.notifyListeners();
-
-
-  } catch (_) {}
-
-}
 
 
 //==================================================
@@ -131,33 +117,14 @@ static Future<bool> spendCoins(
 
 
 
-  static Future<void> addGems(
+  static Future<void> addGems(int amount) async {
+    if (amount <= 0) return;
 
-    int amount,
-
-    ) async {
-
-
-  if(amount <= 0){
-
-    return;
-
+    try {
+      await PuzzleProgressManager.addGems(amount);
+      rewardNotifier.notifyListeners();
+    } catch (_) {}
   }
-
-
-  try {
-
-    await PuzzleProgressManager.addGems(
-      amount,
-    );
-
-
-    rewardNotifier.notifyListeners();
-
-
-  } catch (_) {}
-
-}
 
 
 //==================================================
@@ -226,25 +193,14 @@ static Future<bool> spendGems(
 
 
 
-  static Future<void> addStars(
-    int amount,
-) async {
+  static Future<void> addStars(int amount) async {
+    if (amount <= 0) return;
 
-  if(amount <= 0){
-    return;
+    try {
+      await PuzzleProgressManager.addStars(amount);
+      rewardNotifier.notifyListeners();
+    } catch (_) {}
   }
-
-  try {
-
-    await PuzzleProgressManager.addStars(
-      amount,
-    );
-
-    rewardNotifier.notifyListeners();
-
-  } catch (_) {}
-
-}
 
 
 //==================================================
@@ -294,31 +250,32 @@ static Future<bool> spendStars(
 
 
   static Future<void> applyReward(
-
       RewardResultModel reward,
+  ) async {
 
-      ) async {
+    if(reward.coins > 0){
+      await PuzzleProgressManager.addCoins(
+        reward.coins,
+      );
+    }
 
+    if(reward.gems > 0){
+      await PuzzleProgressManager.addGems(
+        reward.gems,
+      );
+    }
 
-    await addCoins(
-      reward.coins,
-    );
+    if(reward.stars > 0){
+      await PuzzleProgressManager.addStars(
+        reward.stars,
+      );
+    }
 
-
-    await addGems(
-      reward.gems,
-    );
-
-
-    await addStars(
-      reward.stars,
-    );
-
-
-    await PuzzleProgressManager.addHints(
-      reward.hints,
-    );
-
+    if(reward.hints > 0){
+      await PuzzleProgressManager.addHints(
+        reward.hints,
+      );
+    }
 
     rewardNotifier.notifyListeners();
 
