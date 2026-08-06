@@ -39,6 +39,8 @@ class _ConfettiSpark {
 class _PieceExplosionData {
   final PuzzlePiece piece;
 
+  Offset position;
+
   double vx = 0;
   double vy = 0;
   double gravity = 0.3;
@@ -49,7 +51,8 @@ class _PieceExplosionData {
   double opacity = 1;
   double scale = 1;
 
-  _PieceExplosionData(this.piece);
+  _PieceExplosionData(this.piece)
+      : position = piece.correctPosition;
 }
 
 /// Cinematic victory sequence.
@@ -248,9 +251,9 @@ class _VictoryScreenState extends State<VictoryScreen>
       piece.currentPosition = piece.correctPosition;
     }
 
-    _explosionPieces = _pieces
-        .map((piece) => _PieceExplosionData(piece))
-        .toList();
+    _explosionPieces = _pieces.map((piece) {
+      return _PieceExplosionData(piece);
+    }).toList();
 
     setState(() {});
   }
@@ -263,10 +266,14 @@ class _VictoryScreenState extends State<VictoryScreen>
     final random = Random();
 
     for (final data in _explosionPieces) {
-      data.vx = (random.nextDouble() - 0.5) * 14;
-      data.vy = -6.0 - random.nextDouble() * 12.0;
-      data.gravity = 0.28 + random.nextDouble() * 0.35;
-      data.rotationSpeed = (random.nextDouble() - 0.5) * 0.06;
+      data.vx = (random.nextDouble() - 0.5) * 10;
+      data.vy = -4.0 - random.nextDouble() * 8.0;
+
+      data.gravity = 0.18 + random.nextDouble() * 0.25;
+
+      data.rotationSpeed =
+          (random.nextDouble() - 0.5) * 0.04;
+
       data.rotation = 0;
       data.opacity = 1;
       data.scale = 1;
@@ -282,22 +289,24 @@ class _VictoryScreenState extends State<VictoryScreen>
     _lastElapsedMs = elapsedMs;
 
     final fadeT = (elapsedMs / kExplosionPhaseMs).clamp(0.0, 1.0);
-    final targetOpacity = (1.0 - fadeT).clamp(0.0, 1.0);
+    final targetOpacity =
+        1.0 - Curves.easeOut.transform(fadeT);
 
     final floorY = widget.boardRect.top + widget.boardRect.height + 260;
 
     for (final data in _explosionPieces) {
-      final piece = data.piece;
-
-      piece.currentPosition += Offset(
+      data.position += Offset(
         data.vx * dt,
         data.vy * dt,
       );
 
       data.vy += data.gravity * dt;
 
-      if (piece.currentPosition.dy > floorY) {
-        piece.currentPosition = Offset(piece.currentPosition.dx, floorY);
+      if (data.position.dy > floorY) {
+        data.position = Offset(
+          data.position.dx,
+          floorY,
+        );
         data.vy *= -0.45;
         data.vx *= 0.8;
       }
@@ -576,7 +585,7 @@ class _VictoryScreenState extends State<VictoryScreen>
                       pieces: _explosionPieces.map((e) {
                         return VictoryPieceRenderData(
                           piece: e.piece,
-                          position: e.piece.currentPosition,
+                          position: e.position,
                           rotation: e.rotation,
                           opacity: e.opacity,
                           scale: e.scale,
