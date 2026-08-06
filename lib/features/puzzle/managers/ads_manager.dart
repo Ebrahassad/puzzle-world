@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:unity_ads_plugin/unity_ads_plugin.dart';
+import '../managers/puzzle_progress_manager.dart';
+
 
 class AdsManager {
   AdsManager._();
@@ -118,15 +120,18 @@ class AdsManager {
     UnityAds.showVideoAd(
       placementId: rewardedPlacementId,
 
-      onComplete: (_) {
+      onComplete: (_) async {
 
-        _isShowing = false;
-        _rewardedReady = false;
-        loadAds();
+  _isShowing = false;
+  _rewardedReady = false;
+  loadAds();
 
-        onRewardEarned();
+  // إضافة مشاهدة واحدة إلى الرصيد العام
+  await PuzzleProgressManager.addAdsBalance(1);
 
-      },
+  onRewardEarned();
+
+},
 
       onFailed: (_, __, ___) {
 
