@@ -9,6 +9,9 @@ import '../models/puzzle_model.dart';
 import '../models/puzzle_level_model.dart';
 import '../widgets/wallet_icon_widget.dart';
 
+import '../managers/puzzle_progress_manager.dart';
+import '../managers/ads_manager.dart';
+
 import 'puzzle_game_screen.dart';
 
 class IslandScreen extends StatefulWidget {
@@ -35,6 +38,7 @@ class _IslandScreenState extends State<IslandScreen>
   static const double islandImageOpacity = 0.65;
 
   late final List<PuzzleLevelModel> levels;
+  bool openingAd = false;
 
   late final AnimationController worldController;
   late final Animation<double> worldScale;
@@ -93,18 +97,199 @@ class _IslandScreenState extends State<IslandScreen>
     super.dispose();
   }
 
-  void openLevel(
+  Future<void> openLevel(
     PuzzleLevelModel level,
-  ) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PuzzleGameScreen(
-          level: level,
-          island: widget.island,
+  ) async {
+
+    final unlocked =
+        await PuzzleProgressManager.isLevelUnlocked(
+          "${widget.island.id}_level_${level.levelNumber}",
+        );
+
+
+    if(unlocked){
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PuzzleGameScreen(
+            level: level,
+            island: widget.island,
+          ),
         ),
-      ),
+      );
+
+      return;
+    }
+
+
+    showUnlockDialog(level);
+  }
+
+  void showUnlockDialog(
+    PuzzleLevelModel level,
+  ){
+
+    showDialog(
+      context: context,
+      builder: (context){
+
+        return AlertDialog(
+
+          title: const Text(
+            "🔒 المرحلة مغلقة",
+          ),
+
+          content: FutureBuilder<int>(
+            future: PuzzleProgressManager.getAdsBalance(),
+            builder:(context,snapshot){
+
+              if(!snapshot.hasData){
+                return const CircularProgressIndicator();
+              }
+
+
+              final balance = snapshot.data!;
+
+              final required =
+              PuzzleProgressManager.getLevelRequiredAds(
+               level.levelNumber,
+              );
+
+
+              return Text(
+                "📺 شاهد الإعلانات لفتح المرحلة\n\n"
+                "رصيدك: $balance / $required مشاهدة",
+              );
+
+            },
+          ),
+
+
+          actions:[
+
+            TextButton(
+              child: const Text("إلغاء"),
+              onPressed:(){
+                Navigator.pop(context);
+              },
+            ),
+
+
+            ElevatedButton(
+
+              child: const Text(
+                "📺 مشاهدة إعلان",
+              ),
+
+
+              onPressed: openingAd ? null : () async {
+
+
+                setState(() {
+                  openingAd=true;
+                });
+
+
+                Navigator.pop(context);
+
+
+                AdsManager().showRewardedAd(
+
+                  onRewardEarned: () async {
+
+
+                    await PuzzleProgressManager.addAdsBalance(1);
+
+
+                    final balance =
+                    await PuzzleProgressManager.getAdsBalance();
+
+
+                    final required =
+                    PuzzleProgressManager.getLevelRequiredAds(
+                     level.levelNumber,
+                    );
+
+
+                    if(balance >= required){
+
+
+                      await PuzzleProgressManager.unlockLevel(
+                        "${widget.island.id}_level_${level.levelNumber}",
+                      );
+
+
+                      if(mounted){
+
+                        setState((){});
+
+
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              "🎉 تم فتح المرحلة!",
+                            ),
+                          ),
+                        );
+
+                      }
+
+
+                    }
+
+                    else{
+
+                      if(mounted){
+
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              "الرصيد: $balance / $required",
+                            ),
+                          ),
+                        );
+
+                      }
+
+                    }
+
+
+                    setState(() {
+                      openingAd=false;
+                    });
+
+
+                  },
+
+
+                  onAdFailed:(){
+
+                    setState(() {
+                      openingAd=false;
+                    });
+
+
+                  },
+
+
+                );
+
+
+              },
+
+            )
+
+          ],
+
+        );
+
+      },
+
     );
+
   }
 
   Widget levelButton(
@@ -133,10 +318,28 @@ class _IslandScreenState extends State<IslandScreen>
           child: Stack(
             alignment: Alignment.center,
             children: [
-              Image.asset(
-  "assets/images/ui/lock_open.png",
-  fit: BoxFit.contain,
-),
+              FutureBuilder<bool>(
+                future: PuzzleProgressManager.isLevelUnlocked(
+                  "${widget.island.id}_level_${level.levelNumber}",
+                ),
+
+                builder:(context,snapshot){
+
+                  final unlocked =
+                      snapshot.data ?? false;
+
+
+                  return Image.asset(
+                    unlocked
+                        ?
+                    "assets/images/ui/lock_open.png"
+                        :
+                    "assets/images/ui/lock.png",
+
+                    fit: BoxFit.contain,
+                  );
+
+                },
               ),
             ],
           ),
