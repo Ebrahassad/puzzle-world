@@ -19,7 +19,6 @@ class VictoryPieceRenderData {
   });
 }
 
-
 class VictoryPuzzlePreview extends StatelessWidget {
   final ui.Image image;
   final List<VictoryPieceRenderData> pieces;
@@ -42,75 +41,57 @@ class VictoryPuzzlePreview extends StatelessWidget {
   }
 }
 
-
-
 class _VictoryPuzzlePainter extends CustomPainter {
-
   final ui.Image image;
   final List<VictoryPieceRenderData> pieces;
-
 
   _VictoryPuzzlePainter({
     required this.image,
     required this.pieces,
   });
 
-
   final Paint _paint = Paint()
     ..filterQuality = FilterQuality.high;
 
-
-
   @override
   void paint(Canvas canvas, Size size) {
-
-
     for (final data in pieces) {
-
       final piece = data.piece;
 
+      // تعريف المتغيرات لتفادي تكرار الكود
+      final w = piece.localBounds.width;
+      final h = piece.localBounds.height;
 
       canvas.save();
 
-
       canvas.translate(
-        data.position.dx + piece.width / 2,
-        data.position.dy + piece.height / 2,
+        data.position.dx + w / 2,
+        data.position.dy + h / 2,
       );
-
 
       canvas.rotate(data.rotation);
 
-
       canvas.scale(data.scale);
 
-
       canvas.translate(
-        -piece.width / 2,
-        -piece.height / 2,
+        -w / 2,
+        -h / 2,
       );
 
-
       canvas.clipPath(piece.path);
-
 
       final source = Rect.fromLTWH(
         piece.col *
             (image.width / _getCols()),
         piece.row *
             (image.height / _getRows()),
-
         image.width / _getCols(),
         image.height / _getRows(),
       );
 
-
-
       _paint.color = Colors.white.withOpacity(
         data.opacity.clamp(0.0, 1.0),
       );
-
-
 
       canvas.drawImageRect(
         image,
@@ -118,39 +99,31 @@ class _VictoryPuzzlePainter extends CustomPainter {
         Rect.fromLTWH(
           0,
           0,
-          piece.width,
-          piece.height,
+          w,
+          h,
         ),
         _paint,
       );
-
 
       canvas.restore();
     }
   }
 
-
-
   int _getCols() {
     return pieces
         .map((e) => e.piece.col)
-        .reduce((a,b)=>a>b?a:b)+1;
+        .reduce((a, b) => a > b ? a : b) + 1;
   }
-
-
 
   int _getRows() {
     return pieces
         .map((e) => e.piece.row)
-        .reduce((a,b)=>a>b?a:b)+1;
+        .reduce((a, b) => a > b ? a : b) + 1;
   }
-
-
 
   @override
   bool shouldRepaint(
       covariant _VictoryPuzzlePainter oldDelegate) {
-
     return true;
   }
 }
