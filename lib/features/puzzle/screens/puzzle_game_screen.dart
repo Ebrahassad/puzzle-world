@@ -22,16 +22,18 @@ import 'package:audioplayers/audioplayers.dart';
 
 class PuzzleGameScreen extends StatefulWidget {
   final PuzzleLevelModel? level; // جعلناه اختياري لكي يدعم الصور المخصصة
-  final PuzzleModel island;
+  final PuzzleModel? island;
   final String? customImagePath; // مسار الصورة المخصصة من الاستوديو
   final bool isCustomImage; // علامة لتحديد ما إذا كانت صورة مخصصة
+  final int? customGridSize;
 
   const PuzzleGameScreen({
     super.key,
     this.level,
-    required this.island,
+    this.island,
     this.customImagePath,
     this.isCustomImage = false,
+    this.customGridSize,
   });
 
   @override
@@ -83,8 +85,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   // الحصول على عدد شبكة القطع (نفس حجم آخر مرحلة أو حجم افتراضي للصور المخصصة مثل 3x3 أو 4x4)
   int get gridSize {
     if (widget.isCustomImage) {
-      return 3; // يمكنك تعديل عدد القطع للصور المخصصة حسب رغبتك (مثلاً 3 أو 4)
+      return widget.customGridSize ?? 3;
     }
+
     return widget.level?.gridSize ?? 3;
   }
 
@@ -334,7 +337,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     if (!puzzleCreated || widget.isCustomImage) return;
 
     await PuzzleProgressManager.saveProgress(
-      puzzleId: widget.island.id,
+      puzzleId: widget.island?.id ?? "custom_island",
       levelId: currentLevelId,
       pieces: controller.pieces,
       moves: moves,
@@ -442,6 +445,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                     island: widget.island,
                     customImagePath: widget.customImagePath,
                     isCustomImage: widget.isCustomImage,
+                    customGridSize: widget.customGridSize,
                   ),
                 ),
               );
@@ -752,7 +756,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
     if (puzzleCreated && !gameFinished && !widget.isCustomImage) {
       PuzzleProgressManager.saveProgress(
-        puzzleId: widget.island.id,
+        puzzleId: widget.island?.id ?? "custom_island",
         levelId: currentLevelId,
         pieces: controller.pieces,
         moves: moves,
