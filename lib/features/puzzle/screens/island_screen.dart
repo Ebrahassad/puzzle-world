@@ -137,22 +137,12 @@ class _IslandScreenState extends State<IslandScreen>
                 "assets/images/ui/level_piece.png",
                 fit: BoxFit.contain,
               ),
-              Text(
-                "${level.levelNumber}",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: size * 0.34,
-                  fontWeight: FontWeight.bold,
-                  height: 1.0,
-                  shadows: const [
-                    Shadow(
-                      color: Colors.black,
-                      blurRadius: 6,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
+              // تم إزالة الأرقام والنص ووضع الصورة المطلوبة بدلاً منها دون تغيير البنية أو الترتيب
+              Image.asset(
+                "assets/images/ui/lock_open.png",
+                width: size * 0.45,
+                height: size * 0.45,
+                fit: BoxFit.contain,
               ),
             ],
           ),
@@ -278,41 +268,35 @@ class _IslandScreenState extends State<IslandScreen>
                   ),
                 ),
 
-                // زر الرجوع في الأعلى
+                // زر الرجوع في الأعلى (تم استبداله بالصورة المطلوبة مع مطابقة تأثير الوهج والحجم للمحفظة)
                 Positioned(
                   top: 20,
                   left: 20,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF8A2BE2),
-                          Color(0xFF4B0082),
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.amber.withOpacity(0.85),
+                            blurRadius: 16,
+                            spreadRadius: 4,
+                          ),
                         ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF9400D3).withOpacity(0.8),
-                          blurRadius: 12,
-                          spreadRadius: 2,
+                      child: Transform.scale(
+                        scale: 1.15,
+                        child: SizedBox(
+                          width: 56,
+                          height: 56,
+                          child: Image.asset(
+                            "assets/images/ui/back_screen.png",
+                            fit: BoxFit.contain,
+                          ),
                         ),
-                      ],
-                    ),
-                    child: CircleAvatar(
-                      radius: 28,
-                      backgroundColor: Colors.transparent,
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.arrow_back,
-                          color: Colors.white,
-                          size: 32,
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
                       ),
                     ),
                   ),
