@@ -280,6 +280,23 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     });
   }
 
+  Offset? getCoinTargetPosition() {
+    final context = coinKey.currentContext;
+
+    if (context == null) return null;
+
+    final box = context.findRenderObject() as RenderBox;
+
+    final global = box.localToGlobal(
+      box.size.center(Offset.zero),
+    );
+
+    final overlayBox =
+        overlayKey.currentContext!.findRenderObject() as RenderBox;
+
+    return overlayBox.globalToLocal(global);
+  }
+
   void _createPuzzle() {
     if (image == null || puzzleCreated) {
       return;
@@ -579,20 +596,27 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
               ),
 
               if (showCoinAnimation && coinAnimationStart != null)
-                FlyingCoin(
-                  start: coinAnimationStart!,
-                  end: Offset(
-                    MediaQuery.of(context).size.width - 50,
-                    35,
-                  ),
-                  onFinished: () async {
-                    await RewardManager.addCoins(1);
+                Builder(
+                  builder: (context) {
+                    final target = getCoinTargetPosition();
 
-                    if (!mounted) return;
+                    if (target == null) {
+                      return const SizedBox.shrink();
+                    }
 
-                    setState(() {
-                      showCoinAnimation = false;
-                    });
+                    return FlyingCoin(
+                      start: coinAnimationStart!,
+                      end: target,
+                      onFinished: () async {
+                        await RewardManager.addCoins(1);
+
+                        if (!mounted) return;
+
+                        setState(() {
+                          showCoinAnimation = false;
+                        });
+                      },
+                    );
                   },
                 ),
 
@@ -631,9 +655,17 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                         );
 
                         if (controller.lastPlacedPosition != null) {
+                          final RenderBox overlayBox =
+                              overlayKey.currentContext!.findRenderObject() as RenderBox;
+
+                          final start = overlayBox.localToGlobal(
+                            controller.lastPlacedPosition!,
+                          );
+
+                          final localStart = overlayBox.globalToLocal(start);
+
                           setState(() {
-                            coinAnimationStart =
-                                controller.lastPlacedPosition;
+                            coinAnimationStart = localStart;
                             showCoinAnimation = true;
                           });
                         }
