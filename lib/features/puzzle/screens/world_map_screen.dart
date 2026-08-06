@@ -8,6 +8,7 @@ import '../models/puzzle_model.dart';
 import '../widgets/wallet_icon_widget.dart';
 import 'island_screen.dart';
 import '../managers/puzzle_progress_manager.dart';
+import '../managers/ads_manager.dart';
 // import 'puzzle_game_screen.dart'; // <--- قم بإلغاء التعليق واستيراد شاشة اللعب الخاصة بك إذا لزم الأمر
 
 class _RelativeRect {
@@ -162,6 +163,8 @@ class _WorldMapScreenState
 
     islands = PuzzleData.puzzles;
     audioPlayer = AudioPlayer();
+
+    AdsManager().initAds();
 
     worldController = AnimationController(
       vsync: this,
@@ -484,8 +487,25 @@ class _WorldMapScreenState
             "🔒 الجزيرة مغلقة",
           ),
 
-          content: Text(
-            "شاهد ${PuzzleProgressManager.getIslandRequiredAds(island.id)} إعلان لفتح هذه الجزيرة",
+          content: FutureBuilder<int>(
+            future: PuzzleProgressManager.getIslandRequiredAds(
+              island.id,
+            ),
+            builder: (context, snapshot) {
+
+              if (!snapshot.hasData) {
+                return const SizedBox(
+                  height: 40,
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+
+              return Text(
+                "شاهد ${snapshot.data} إعلان لفتح هذه الجزيرة",
+              );
+            },
           ),
 
 
@@ -507,9 +527,9 @@ class _WorldMapScreenState
                 "📺 مشاهدة إعلان",
               ),
 
-              onPressed: () async {
+              onPressed: openingAd ? null : () async {
 
-                if(openingAd) return;
+                if (openingAd) return;
 
                 setState(() {
                   openingAd = true;
@@ -518,60 +538,87 @@ class _WorldMapScreenState
                 Navigator.pop(context);
 
 
-                final opened =
-                await PuzzleProgressManager
-                    .watchIslandAd(
-                      island.id,
-                    );
-
-
-                if(!mounted) return;
-
-                setState(() {
-                  openingAd = false;
-                });
-
-
-                if(opened){
-
-                  if(!mounted) return;
-
-
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        "🎉 تم فتح الجزيرة!",
-                      ),
-                    ),
-                  );
-
-
-                  setState((){});
-
+                if (!AdsManager().isInitialized) {
+                  await AdsManager().initAds();
                 }
-                else {
-
-                  if(!mounted) return;
 
 
-                  final current =
-                  await PuzzleProgressManager
-                      .getIslandAds(
-                        island.id,
+                AdsManager().showRewardedAd(
+
+                  onRewardEarned: () async {
+
+                    final opened =
+                        await PuzzleProgressManager.watchIslandAd(
+                          island.id,
+                        );
+
+
+                    if(!mounted) return;
+
+
+                    setState(() {
+                      openingAd = false;
+                    });
+
+
+                    if(opened){
+
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            "🎉 تم فتح الجزيرة!",
+                          ),
+                        ),
                       );
 
+                      setState((){});
 
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        "شاهدت $current إعلان من المطلوب",
+                    }
+                    else {
+
+                      final current =
+                          await PuzzleProgressManager.getIslandAds(
+                            island.id,
+                          );
+
+
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            "شاهدت $current إعلان من المطلوب",
+                          ),
+                        ),
+                      );
+
+                    }
+
+                  },
+
+
+                  onAdFailed: () {
+
+                    if(!mounted) return;
+
+
+                    setState(() {
+                      openingAd = false;
+                    });
+
+
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          "الإعلان غير متوفر حالياً",
+                        ),
                       ),
-                    ),
-                  );
+                    );
 
-                }
+                  },
+
+                );
 
               },
             ),
