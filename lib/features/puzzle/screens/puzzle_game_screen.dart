@@ -463,7 +463,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
         _showRegroupButton();
 
         _regroupTimer = Timer.periodic(
-          const Duration(seconds: 1),
+          const Duration(seconds: 60),
           (_) {
             if (!mounted || gameFinished) return;
 
