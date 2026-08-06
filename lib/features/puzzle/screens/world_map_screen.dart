@@ -484,27 +484,8 @@ class _WorldMapScreenState
             "🔒 الجزيرة مغلقة",
           ),
 
-          content: FutureBuilder<int>(
-            future: PuzzleProgressManager.getIslandRequiredAds(
-              island.id,
-            ),
-            builder: (context, snapshot) {
-
-              if (!snapshot.hasData) {
-                return const SizedBox(
-                  height: 40,
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-              }
-
-              final ads = snapshot.data ?? 0;
-
-              return Text(
-                "شاهد $ads إعلان لفتح هذه الجزيرة",
-              );
-            },
+          content: Text(
+            "شاهد ${PuzzleProgressManager.getIslandRequiredAds(island.id)} إعلان لفتح هذه الجزيرة",
           ),
 
 
