@@ -582,6 +582,8 @@ class _VictoryScreenState extends State<VictoryScreen>
                     scale: _introVisible ? 1 : 0.9,
                     child: VictoryPuzzlePreview(
                       image: widget.puzzleImage,
+                      rows: widget.rows,
+                      cols: widget.cols,
                       pieces: _explosionPieces.map((e) {
                         return VictoryPieceRenderData(
                           piece: e.piece,
