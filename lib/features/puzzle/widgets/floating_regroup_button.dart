@@ -76,35 +76,12 @@ class _FloatingRegroupButtonState extends State<FloatingRegroupButton>
           turns: _rotation,
           child: GestureDetector(
             onTap: widget.onPressed,
-            child: Container(
+            child: SizedBox(
               width: 55,
               height: 55,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF7A6899), Color(0xFF4D3F6B)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                border: Border.all(
-                  color: const Color(0xFFD4AF37), // إطار ذهبي فاخر متوافق مع ثيم اللعبة
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.4),
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Image.asset(
-                  "assets/images/ui/regroup_icon.png",
-                  fit: BoxFit.contain,
-                ),
+              child: Image.asset(
+                "assets/images/ui/regroup_icon.png",
+                fit: BoxFit.contain,
               ),
             ),
           ),
