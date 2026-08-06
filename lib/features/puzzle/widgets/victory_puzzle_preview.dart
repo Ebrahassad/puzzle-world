@@ -22,11 +22,15 @@ class VictoryPieceRenderData {
 class VictoryPuzzlePreview extends StatelessWidget {
   final ui.Image image;
   final List<VictoryPieceRenderData> pieces;
+  final int rows;
+  final int cols;
 
   const VictoryPuzzlePreview({
     super.key,
     required this.image,
     required this.pieces,
+    required this.rows,
+    required this.cols,
   });
 
   @override
@@ -36,6 +40,8 @@ class VictoryPuzzlePreview extends StatelessWidget {
       painter: _VictoryPuzzlePainter(
         image: image,
         pieces: pieces,
+        rows: rows,
+        cols: cols,
       ),
     );
   }
@@ -44,10 +50,14 @@ class VictoryPuzzlePreview extends StatelessWidget {
 class _VictoryPuzzlePainter extends CustomPainter {
   final ui.Image image;
   final List<VictoryPieceRenderData> pieces;
+  final int rows;
+  final int cols;
 
   _VictoryPuzzlePainter({
     required this.image,
     required this.pieces,
+    required this.rows,
+    required this.cols,
   });
 
   final Paint _paint = Paint()
@@ -84,10 +94,10 @@ class _VictoryPuzzlePainter extends CustomPainter {
       );
 
       final source = Rect.fromLTWH(
-        piece.sourceRect.left,
-        piece.sourceRect.top,
-        piece.sourceRect.width,
-        piece.sourceRect.height,
+        piece.col * (image.width / cols),
+        piece.row * (image.height / rows),
+        image.width / cols,
+        image.height / rows,
       );
 
       canvas.drawImageRect(
