@@ -17,8 +17,6 @@ import '../widgets/game_toolbar.dart';
 import '../widgets/flying_coin.dart';
 import '../widgets/floating_regroup_button.dart';
 import 'victory_screen.dart';
-
-import '../services/reward_ad_service.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 class PuzzleGameScreen extends StatefulWidget {
@@ -151,14 +149,22 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                 ),
               ),
               TextButton(
-                onPressed: () async {
-                  final result = await RewardAdService.showContinueAd();
-
-                  if (!context.mounted) return;
-
-                  Navigator.pop(
-                    context,
-                    result,
+                onPressed: () {
+                  AdsManager().showRewardedAd(
+                    onRewardEarned: () {
+                      if (!context.mounted) return;
+                      Navigator.pop(
+                        context,
+                        true,
+                      );
+                    },
+                    onAdFailed: () {
+                      if (!context.mounted) return;
+                      Navigator.pop(
+                        context,
+                        false,
+                      );
+                    },
                   );
                 },
                 child: const Text(
