@@ -418,7 +418,8 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
             boardRect: boardRect,
             island: widget.island,
             levelNumber: widget.isCustomImage ? 10 : widget.level!.levelNumber,
-            isFinalLevel: true,
+            isFinalLevel: widget.isCustomImage ||
+    widget.level?.levelNumber == 10,
             starTargetKey: starKey,
             onFinished: () {
               Navigator.pop(context);
