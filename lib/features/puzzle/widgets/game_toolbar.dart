@@ -219,15 +219,25 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                GestureDetector(
-                  onTap: () {
-                    openWallet(context);
-                  },
-                  child: Container(
-                    key: widget.coinKey,
-                    child: CoinCounterBox(
-                      value: reward.coins,
+                Transform.translate(
+                  offset: const Offset(-6, 0),
+                  child: Transform.scale(
+                    scale: 1.35,
+                    child: Image.asset(
+                      "assets/images/ui/open_wallet.png",
+                      width: 42,
+                      height: 42,
+                      fit: BoxFit.contain,
                     ),
+                  ),
+                ),
+
+                const SizedBox(width: 4),
+
+                Container(
+                  key: widget.coinKey,
+                  child: CoinCounterBox(
+                    value: reward.coins,
                   ),
                 ),
                 const SizedBox(
@@ -472,13 +482,6 @@ class CoinCounterBox extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // صورة المحفظة المفتوحة
-          Image.asset(
-            "assets/images/ui/open_wallet.png",
-            width: 26,
-            height: 26,
-          ),
-          const SizedBox(width: 5),
           // صورة العملة
           Image.asset(
             "assets/images/rewards/coin.png",
