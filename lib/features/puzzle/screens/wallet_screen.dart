@@ -61,7 +61,6 @@ class _WalletScreenState extends State<WalletScreen>
 
     if(isChestOpen || openingAd) return;
 
-
     setState(() {
       openingAd = true;
     });
@@ -73,10 +72,6 @@ class _WalletScreenState extends State<WalletScreen>
       onRewardEarned: () async {
 
         if(!mounted) return;
-
-        setState(() {
-          isChestOpen = true;
-        });
 
 
         try {
@@ -90,13 +85,27 @@ class _WalletScreenState extends State<WalletScreen>
         }catch(_){}
 
 
-
         await chestController.forward();
+
+
+        if(!mounted) return;
+
+        setState(() {
+          isChestOpen = true;
+        });
 
 
 
         final reward =
             await RewardManager.openRewardChest();
+
+        if(reward == null){
+          setState(() {
+            openingAd = false;
+            isChestOpen = false;
+          });
+          return;
+        }
 
 
 
