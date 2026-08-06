@@ -487,10 +487,13 @@ class _WorldMapScreenState
             "🔒 الجزيرة مغلقة",
           ),
 
-          content: FutureBuilder<int>(
-            future: PuzzleProgressManager.getIslandRequiredAds(
-              island.id,
-            ),
+          content: FutureBuilder<List<dynamic>>(
+            future: Future.wait([
+              Future.value(
+                PuzzleProgressManager.getIslandRequiredAds(island.id),
+              ),
+              PuzzleProgressManager.getAdsBalance(),
+            ]),
             builder: (context, snapshot) {
 
               if (!snapshot.hasData) {
@@ -502,8 +505,12 @@ class _WorldMapScreenState
                 );
               }
 
+              final required = snapshot.data![0] as int;
+              final balance = snapshot.data![1] as int;
+
               return Text(
-                "شاهد ${snapshot.data} إعلان لفتح هذه الجزيرة",
+                "رصيدك: $balance مشاهدة\n"
+                "المطلوب: $required مشاهدة",
               );
             },
           ),
@@ -547,52 +554,24 @@ class _WorldMapScreenState
 
                   onRewardEarned: () async {
 
-                    final opened =
-                        await PuzzleProgressManager.watchIslandAd(
-                          island.id,
-                        );
+                    await PuzzleProgressManager.addAdsBalance(1);
 
+                    final balance =
+                        await PuzzleProgressManager.getAdsBalance();
 
-                    if(!mounted) return;
-
+                    if (!mounted) return;
 
                     setState(() {
                       openingAd = false;
                     });
 
-
-                    if(opened){
-
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            "🎉 تم فتح الجزيرة!",
-                          ),
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          "تمت إضافة مشاهدة الإعلان\nرصيدك: $balance",
                         ),
-                      );
-
-                      setState((){});
-
-                    }
-                    else {
-
-                      final current =
-                          await PuzzleProgressManager.getIslandAds(
-                            island.id,
-                          );
-
-
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            "شاهدت $current إعلان من المطلوب",
-                          ),
-                        ),
-                      );
-
-                    }
+                      ),
+                    );
 
                   },
 
