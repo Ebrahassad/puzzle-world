@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:image_picker/image_picker.dart'; // <--- استيراد مكتبة اختيار الصور
 import 'private_island_screen.dart';
 import '../data/puzzle_data.dart';
 import '../models/puzzle_model.dart';
@@ -333,31 +332,23 @@ class _WorldMapScreenState
                   ),
                 ),
 
-                // أيقونة إضافة صورة جديدة: أسفل يمين الشاشة تفتح الاستوديو وتنتقل لشاشة اللعب
+                // أيقونة الجزيرة الخاصة: تفتح استوديو الصور
                 Positioned(
                   bottom: 25,
                   right: 20,
                   child: GestureDetector(
                     onTap: () async {
                       await playClickSound();
-                      
-                      // فتح استوديو الهاتف لجلب الصورة
-                      final ImagePicker picker = ImagePicker();
-                      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
-                      if (image != null) {
-  if (!context.mounted) return;
+                      if (!context.mounted) return;
 
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => PrivateIslandScreen(
-        customImagePath: image.path,
-      ),
-    ),
-  );
-}  
-                  },
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PrivateIslandScreen(),
+                        ),
+                      );
+                    },
                     child: Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
@@ -372,7 +363,7 @@ class _WorldMapScreenState
                       child: Transform.scale(
                         scale: 1.15,
                         child: SizedBox(
-                          width: 55, // تحديد حجم متناسق يشبه أيقونة المحفظة
+                          width: 55,
                           height: 55,
                           child: Image.asset(
                             "assets/images/ui/add_pic.png",
