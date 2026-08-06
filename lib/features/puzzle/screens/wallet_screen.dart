@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../managers/reward_manager.dart';
+import '../managers/puzzle_progress_manager.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -14,6 +15,7 @@ class _WalletScreenState extends State<WalletScreen>
   int stars = 0;
   int gems = 0;
   int coins = 0;
+  int adsBalance = 0;
 
   bool loading = true;
   bool isChestOpen = false;
@@ -41,11 +43,13 @@ class _WalletScreenState extends State<WalletScreen>
 
   Future<void> loadWallet() async {
     final reward = await RewardManager.getReward();
+    final ads = await PuzzleProgressManager.getAdsBalance();
     if (!mounted) return;
     setState(() {
       stars = reward.stars;
       gems = reward.gems;
       coins = reward.coins;
+      adsBalance = ads;
       loading = false;
     });
   }
@@ -300,9 +304,14 @@ class _WalletScreenState extends State<WalletScreen>
                       assetPath: "assets/images/rewards/Star_gold.png",
                     ),
                     walletCard(
-                      title: "رصيد الجوهر",
+                      title: "رصيد الجواهر",
                       value: gems,
                       assetPath: "assets/images/rewards/gem.png",
+                    ),
+                    walletCard(
+                      title: "رصيد الإعلانات",
+                      value: adsBalance,
+                      assetPath: "assets/images/rewards/ad.png",
                     ),
                   ],
                 ),
