@@ -7,6 +7,8 @@ import '../managers/reward_manager.dart';
 import '../engine/puzzle_piece.dart';
 import '../engine/puzzle_generator.dart';
 import '../widgets/victory_puzzle_preview.dart';
+import '../models/puzzle_model.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 /// Decorative sparkle particle for the chest-opening celebration burst.
 /// Purely cosmetic — kept private to this file.
@@ -73,7 +75,7 @@ class VictoryScreen extends StatefulWidget {
   final int cols;
   final Rect boardRect;
 
-  final dynamic island;
+  final PuzzleModel? island;
   final int levelNumber;
   final bool isFinalLevel;
 
@@ -93,7 +95,7 @@ class VictoryScreen extends StatefulWidget {
     required this.rows,
     required this.cols,
     required this.boardRect,
-    required this.island,
+    this.island,
     required this.levelNumber,
     this.isFinalLevel = false,
     this.starTargetKey,
@@ -185,6 +187,8 @@ class _VictoryScreenState extends State<VictoryScreen>
   bool _showButtons = false;
   late AnimationController _buttonsFloatController;
 
+  final AudioPlayer _victoryAudio = AudioPlayer();
+
   @override
   void initState() {
     super.initState();
@@ -220,6 +224,9 @@ class _VictoryScreenState extends State<VictoryScreen>
       if (!mounted) return;
       _preparePieces();
       _runSequence();
+      _victoryAudio.play(
+        AssetSource('audio/puzzle_win.mp3'),
+      );
     });
   }
 
@@ -755,6 +762,7 @@ class _VictoryScreenState extends State<VictoryScreen>
 
   @override
   void dispose() {
+    _victoryAudio.dispose();
     if (_physicsTicker.isActive) {
       _physicsTicker.stop();
     }
