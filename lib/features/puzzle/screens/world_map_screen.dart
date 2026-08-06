@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'private_island_screen.dart';
 import '../data/puzzle_data.dart';
 import '../models/puzzle_model.dart';
@@ -9,6 +10,7 @@ import '../widgets/wallet_icon_widget.dart';
 import 'island_screen.dart';
 import '../managers/puzzle_progress_manager.dart';
 import '../managers/ads_manager.dart';
+import '../managers/reward_manager.dart';
 // import 'puzzle_game_screen.dart'; // <--- قم بإلغاء التعليق واستيراد شاشة اللعب الخاصة بك إذا لزم الأمر
 
 class _RelativeRect {
@@ -63,6 +65,12 @@ class _WorldMapScreenState
   static const double worldWidth = 896;
   static const double worldHeight = 1350;
 
+  static const int privateIslandCoinCost = 500;
+  static const int privateIslandGemCost = 100;
+
+  static const String privateIslandKey =
+      "private_island_unlocked";
+
   late final List<PuzzleModel> islands;
 
   late final AnimationController worldController;
@@ -74,6 +82,8 @@ class _WorldMapScreenState
 
   bool openingAd = false;
   bool spaceUnlocked = false;
+  bool privateIslandUnlocked = false;
+  bool unlockingPrivateIsland = false;
 
   // تم تعديل إحداثيات الجزر بدقة:
   // 1. المعالم والسيارات مرفوعة قليلاً للأعلى.
@@ -133,28 +143,28 @@ class _WorldMapScreenState
       top: 80 / worldHeight,
       size: 280 / worldWidth,
       opacity: 0.22,
-      duration: Duration(seconds: 55),
+      duration: const Duration(seconds: 55),
     ),
     _RelativeCloud(
       image: "assets/images/background/cloud_02.png",
       top: 200 / worldHeight,
       size: 220 / worldWidth,
       opacity: 0.22,
-      duration: Duration(seconds: 70),
+      duration: const Duration(seconds: 70),
     ),
     _RelativeCloud(
       image: "assets/images/background/cloud_03.png",
       top: 40 / worldHeight,
       size: 170 / worldWidth,
       opacity: 0.22,
-      duration: Duration(seconds: 90),
+      duration: const Duration(seconds: 90),
     ),
     _RelativeCloud(
       image: "assets/images/background/cloud_04.png",
       top: 300 / worldHeight,
       size: 240 / worldWidth,
       opacity: 0.22,
-      duration: Duration(seconds: 65),
+      duration: const Duration(seconds: 65),
     ),
   ];
 
@@ -165,8 +175,12 @@ class _WorldMapScreenState
     islands = PuzzleData.puzzles;
     audioPlayer = AudioPlayer();
 
-    AdsManager().initAds();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AdsManager().initAds();
+    });
+
     loadIslandState();
+    loadPrivateIslandState();
 
     worldController = AnimationController(
       vsync: this,
@@ -177,7 +191,7 @@ class _WorldMapScreenState
 
     worldScale = Tween<double>(
       begin: 1.00,
-      end: 1.07,
+      end: 1.035,
     ).animate(
       CurvedAnimation(
         parent: worldController,
@@ -186,8 +200,8 @@ class _WorldMapScreenState
     );
 
     worldTranslateY = Tween<double>(
-      begin: -22,
-      end: 22,
+      begin: -10,
+      end: 10,
     ).animate(
       CurvedAnimation(
         parent: worldController,
@@ -206,18 +220,66 @@ class _WorldMapScreenState
   }
 
   Future<void> loadIslandState() async {
-
     final unlocked =
-        await PuzzleProgressManager.isIslandUnlocked(
-          "space",
-        );
+        await PuzzleProgressManager.isIslandUnlocked("space");
 
     if(!mounted) return;
 
     setState(() {
       spaceUnlocked = unlocked;
     });
+  }
 
+  Future<void> loadPrivateIslandState() async {
+
+    final prefs = await SharedPreferences.getInstance();
+
+    final unlocked =
+        prefs.getBool(privateIslandKey) ?? false;
+
+    if(!mounted) return;
+
+    setState(() {
+      privateIslandUnlocked = unlocked;
+    });
+
+  }
+
+  Future<void> unlockPrivateIsland() async {
+
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setBool(
+      privateIslandKey,
+      true,
+    );
+
+    if(!mounted) return;
+
+    setState(() {
+      privateIslandUnlocked = true;
+      unlockingPrivateIsland = false;
+    });
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+      const SnackBar(
+        content: Text("🏝️ تم فتح جزيرتك الخاصة!"),
+      ),
+    );
+
+    await Future.delayed(
+      const Duration(milliseconds: 600),
+    );
+
+    if (!mounted) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const PrivateIslandScreen(),
+      ),
+    );
   }
 
   @override
@@ -249,6 +311,8 @@ class _WorldMapScreenState
 
   @override
   Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
       backgroundColor: const Color(0xff08182b),
       body: LayoutBuilder(
@@ -330,7 +394,7 @@ class _WorldMapScreenState
                 
                 // أيقونة المحفظة: أسفل يسار الشاشة مع وهج مشع وآمن لا يغطي الشاشة
                 Positioned(
-                  bottom: 25,
+                  bottom: bottomPadding + 20,
                   left: 20,
                   child: GestureDetector(
                     onTap: () async {
@@ -357,7 +421,7 @@ class _WorldMapScreenState
 
                 // أيقونة الجزيرة الخاصة: تفتح استوديو الصور
                 Positioned(
-                  bottom: 25,
+                  bottom: bottomPadding + 20,
                   right: 20,
                   child: GestureDetector(
                     onTap: () async {
@@ -365,11 +429,144 @@ class _WorldMapScreenState
 
                       if (!context.mounted) return;
 
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const PrivateIslandScreen(),
-                        ),
+                      if(privateIslandUnlocked){
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const PrivateIslandScreen(),
+                          ),
+                        );
+
+                        return;
+                      }
+
+                      final coins = await RewardManager.getCoins();
+                      final gems = await RewardManager.getGems();
+
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+
+                          return AlertDialog(
+                            title: const Text(
+                              "🏝️ الجزيرة الخاصة",
+                            ),
+
+                            content: const Text(
+                              "افتح جزيرتك الخاصة واختر المكافأة:\n\n"
+                              "🪙 500 عملة\n"
+                              "أو\n"
+                              "💎 100 جوهرة",
+                            ),
+
+                            actions: [
+
+                              TextButton(
+                                child: const Text("إلغاء"),
+                                onPressed: (){
+                                  Navigator.pop(context);
+                                },
+                              ),
+
+
+                              ElevatedButton(
+                                child: const Text("🪙 500"),
+                                onPressed: unlockingPrivateIsland ? null : () async {
+
+                                  if(coins >= privateIslandCoinCost && !unlockingPrivateIsland){
+
+                                    setState(() {
+                                      unlockingPrivateIsland = true;
+                                    });
+
+                                    try {
+
+                                      await RewardManager.spendCoins(
+                                        privateIslandCoinCost,
+                                      );
+
+                                      if(!context.mounted) return;
+
+                                      Navigator.pop(context);
+
+                                      await unlockPrivateIsland();
+
+                                    } catch(e){
+
+                                      setState(() {
+                                        unlockingPrivateIsland = false;
+                                      });
+
+                                    }
+
+                                  } else {
+
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          "لا تملك عملات كافية",
+                                        ),
+                                      ),
+                                    );
+
+                                  }
+
+                                },
+                              ),
+
+
+                              ElevatedButton(
+                                child: const Text("💎 100"),
+                                onPressed: unlockingPrivateIsland ? null : () async {
+
+                                  if(gems >= privateIslandGemCost && !unlockingPrivateIsland){
+
+                                    setState(() {
+                                      unlockingPrivateIsland = true;
+                                    });
+
+                                    try {
+
+                                      await RewardManager.spendGems(
+                                        privateIslandGemCost,
+                                      );
+
+                                      if(!context.mounted) return;
+
+                                      Navigator.pop(context);
+
+                                      await unlockPrivateIsland();
+
+                                    } catch(e){
+
+                                      setState(() {
+                                        unlockingPrivateIsland = false;
+                                      });
+
+                                    }
+
+                                  } else {
+
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          "لا تملك جواهر كافية",
+                                        ),
+                                      ),
+                                    );
+
+                                  }
+
+                                },
+                              ),
+
+                            ],
+                          );
+
+                        },
                       );
                     },
                     child: Container(
@@ -614,7 +811,9 @@ class _WorldMapScreenState
 
                       if(!mounted) return;
 
-                      loadIslandState();
+                      await loadIslandState();
+
+                      if(!mounted) return;
 
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
