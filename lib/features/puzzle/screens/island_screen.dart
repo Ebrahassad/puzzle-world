@@ -134,15 +134,9 @@ class _IslandScreenState extends State<IslandScreen>
             alignment: Alignment.center,
             children: [
               Image.asset(
-                "assets/images/ui/level_piece.png",
-                fit: BoxFit.contain,
-              ),
-              // تم إزالة الأرقام والنص ووضع الصورة المطلوبة بدلاً منها دون تغيير البنية أو الترتيب
-              Image.asset(
-                "assets/images/ui/lock_open.png",
-                width: size * 0.45,
-                height: size * 0.45,
-                fit: BoxFit.contain,
+  "assets/images/ui/lock_open.png",
+  fit: BoxFit.contain,
+),
               ),
             ],
           ),
