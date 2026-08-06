@@ -58,7 +58,6 @@ class _VictoryPuzzlePainter extends CustomPainter {
     for (final data in pieces) {
       final piece = data.piece;
 
-      // تعريف المتغيرات لتفادي تكرار الكود
       final w = piece.localBounds.width;
       final h = piece.localBounds.height;
 
@@ -80,17 +79,15 @@ class _VictoryPuzzlePainter extends CustomPainter {
 
       canvas.clipPath(piece.path);
 
-      final source = Rect.fromLTWH(
-        piece.col *
-            (image.width / _getCols()),
-        piece.row *
-            (image.height / _getRows()),
-        image.width / _getCols(),
-        image.height / _getRows(),
-      );
-
       _paint.color = Colors.white.withOpacity(
         data.opacity.clamp(0.0, 1.0),
+      );
+
+      final source = Rect.fromLTWH(
+        piece.sourceRect.left,
+        piece.sourceRect.top,
+        piece.sourceRect.width,
+        piece.sourceRect.height,
       );
 
       canvas.drawImageRect(
@@ -107,18 +104,6 @@ class _VictoryPuzzlePainter extends CustomPainter {
 
       canvas.restore();
     }
-  }
-
-  int _getCols() {
-    return pieces
-        .map((e) => e.piece.col)
-        .reduce((a, b) => a > b ? a : b) + 1;
-  }
-
-  int _getRows() {
-    return pieces
-        .map((e) => e.piece.row)
-        .reduce((a, b) => a > b ? a : b) + 1;
   }
 
   @override
