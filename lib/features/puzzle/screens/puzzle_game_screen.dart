@@ -396,6 +396,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
         pageBuilder: (_, animation, secondaryAnimation) {
           return VictoryScreen(
             puzzleImage: image!,
+            rows: gridSize,
+            cols: gridSize,
+            boardRect: boardRect,
             island: widget.island,
             levelNumber: widget.isCustomImage ? 10 : widget.level!.levelNumber,
             isFinalLevel: true,
