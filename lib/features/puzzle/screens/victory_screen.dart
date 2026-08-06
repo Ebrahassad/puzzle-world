@@ -726,22 +726,21 @@ class _VictoryScreenState extends State<VictoryScreen>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _VictoryActionButton(
-                        icon: Icons.arrow_back_rounded,
-                        label: 'التالي',
-                        filled: true,
+                      // زر المستوى التالي (next_play.png)
+                      _VictoryImageActionButton(
+                        imagePath: 'assets/images/ui/next_play.png',
                         onTap: widget.onNext ?? widget.onFinished,
                       ),
-                      const SizedBox(width: 14),
-                      _VictoryActionButton(
-                        icon: Icons.map_rounded,
-                        label: 'الخريطة',
+                      const SizedBox(width: 16),
+                      // زر الخريطة (home_map.png)
+                      _VictoryImageActionButton(
+                        imagePath: 'assets/images/ui/home_map.png',
                         onTap: widget.onMap ?? widget.onFinished,
                       ),
-                      const SizedBox(width: 14),
-                      _VictoryActionButton(
-                        icon: Icons.replay_rounded,
-                        label: 'إعادة اللعب',
+                      const SizedBox(width: 16),
+                      // زر إعادة اللعب (again_play.png)
+                      _VictoryImageActionButton(
+                        imagePath: 'assets/images/ui/again_play.png',
                         onTap: widget.onReplay ?? widget.onFinished,
                       ),
                     ],
@@ -776,50 +775,25 @@ class _VictoryScreenState extends State<VictoryScreen>
   }
 }
 
-class _VictoryActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
+class _VictoryImageActionButton extends StatelessWidget {
+  final String imagePath;
   final VoidCallback onTap;
-  final bool filled;
 
-  const _VictoryActionButton({
-    required this.icon,
-    required this.label,
+  const _VictoryImageActionButton({
+    required this.imagePath,
     required this.onTap,
-    this.filled = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: filled
-          ? Colors.amber
-          : Colors.black.withOpacity(0.55),
-      borderRadius: BorderRadius.circular(30),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(30),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                color: filled ? Colors.black : Colors.white,
-                size: 20,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  color: filled ? Colors.black : Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 70,
+        height: 70,
+        child: Image.asset(
+          imagePath,
+          fit: BoxFit.contain,
         ),
       ),
     );
