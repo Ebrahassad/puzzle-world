@@ -101,6 +101,10 @@ static const String purchasedGemsKey =
     "puzzle_gem_unlocks";
 
 
+static const String levelAdsKey =
+    "puzzle_level_ads";
+
+
 
 
   //==================================================
@@ -2237,50 +2241,29 @@ static Future<bool> useGemsForUnlock(
 
 
   static int getIslandRequiredAds(
-
       String islandId,
-
-      ) {
-
-
+  ) {
 
     switch(islandId){
 
-
       case "animals":
-
         return 0;
 
+      case "nature":
+        return 50;
 
       case "cars":
-
-        return 5;
-
-
-      case "nature":
-
-        return 10;
-
+        return 75;
 
       case "landmarks":
-
-        return 15;
-
+        return 100;
 
       case "space":
-
-        return 20;
-
-
+        return 150;
 
       default:
-
         return 9999;
-
-
     }
-
-
   }
 
 
@@ -2336,6 +2319,77 @@ static Future<bool> useGemsForUnlock(
     return false;
 
 
+  }
+
+
+
+
+
+  //==================================================
+  // 📺 فتح المراحل بالإعلانات
+  //==================================================
+
+  static int getLevelRequiredAds(
+      int levelNumber,
+  ) {
+
+    if(levelNumber <= 1){
+      return 0;
+    }
+
+    if(levelNumber >= 2 && levelNumber <= 5){
+      return 5;
+    }
+
+    if(levelNumber >= 6 && levelNumber <= 10){
+      return 10;
+    }
+
+    return 20;
+  }
+
+  static Future<int> addLevelAd(
+      String levelId,
+  ) async {
+
+    final prefs = await _prefs;
+
+    final data = jsonDecode(
+      prefs.getString(levelAdsKey) ?? "{}",
+    );
+
+    int count = data[levelId] ?? 0;
+
+    count++;
+
+    data[levelId] = count;
+
+    await prefs.setString(
+      levelAdsKey,
+      jsonEncode(data),
+    );
+
+    return count;
+  }
+
+  static Future<bool> watchLevelAd(
+      String levelId,
+      int levelNumber,
+  ) async {
+
+    final count = await addLevelAd(levelId);
+
+    final required =
+        getLevelRequiredAds(levelNumber);
+
+    if(count >= required){
+
+      await unlockLevel(levelId);
+
+      return true;
+    }
+
+    return false;
   }
 
 
@@ -2506,6 +2560,8 @@ static Future<bool> useGemsForUnlock(
     await prefs.remove(islandAdsKey);
 
     await prefs.remove(gameStateKey);
+
+    await prefs.remove(levelAdsKey);
 
 
   }
