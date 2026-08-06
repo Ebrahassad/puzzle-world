@@ -9,6 +9,7 @@ import '../models/puzzle_level_model.dart';
 import '../models/puzzle_model.dart';
 import '../managers/reward_manager.dart';
 import '../managers/puzzle_progress_manager.dart';
+import '../managers/ads_manager.dart'; // <--- إضافة مكتبة إدارة الإعلانات
 
 import '../data/puzzle_level_data.dart';
 
@@ -735,11 +736,36 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
               if (showRegroupButton)
                 FloatingRegroupButton(
                   onPressed: () {
-                    controller.regroupPieces();
 
-                    setState(() {
-                      showRegroupButton = false;
-                    });
+                    AdsManager().showRewardedAd(
+                      onRewardEarned: () {
+
+                        if (!mounted) return;
+
+                        controller.regroupPieces();
+
+                        setState(() {
+                          showRegroupButton = false;
+                        });
+
+                      },
+
+                      onAdFailed: () {
+
+                        if (!mounted) return;
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              "لم يتم تشغيل الإعلان، حاول مرة أخرى",
+                            ),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+
+                      },
+                    );
+
                   },
                 ),
             ],
