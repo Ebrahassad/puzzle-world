@@ -2097,42 +2097,21 @@ static Future<bool> useGemsForUnlock(
 
 
   static Future<bool> isIslandUnlocked(
-
       String islandId,
+  ) async {
 
-      ) async {
-
-
+    if(islandId == "animals"){
+      return true;
+    }
 
     final prefs = await _prefs;
 
-
-
     final islands =
-
-    prefs.getStringList(
-
-      unlockedIslandsKey,
-
-    ) ?? [];
-
-
-
-
-
-    // 🐻 الجزيرة الأولى مفتوحة
-
-    if(islandId == "animals"){
-
-      return true;
-
-    }
-
-
+        prefs.getStringList(
+          unlockedIslandsKey,
+        ) ?? [];
 
     return islands.contains(islandId);
-
-
   }
 
 
@@ -2272,53 +2251,28 @@ static Future<bool> useGemsForUnlock(
 
 
   static Future<bool> watchIslandAd(
-
       String islandId,
-
-      ) async {
-
-
+  ) async {
 
     final count =
-
-    await addIslandAd(
-
-      islandId,
-
-    );
-
+        await addIslandAd(islandId);
 
 
     final required =
-
-    getIslandRequiredAds(
-
-      islandId,
-
-    );
-
+        getIslandRequiredAds(islandId);
 
 
     if(count >= required){
 
-
       await unlockIsland(
-
         islandId,
-
       );
 
-
       return true;
-
-
     }
 
 
-
     return false;
-
-
   }
 
 
