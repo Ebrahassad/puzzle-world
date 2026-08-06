@@ -174,38 +174,47 @@ class _WalletScreenState extends State<WalletScreen>
 
      builder:(context){
 
-     return AlertDialog(
+       Future.delayed(
+         const Duration(seconds:3),
+         (){
+           if(Navigator.canPop(context)){
+             Navigator.pop(context);
+           }
+         },
+       );
 
-      backgroundColor:
-      const Color(0xff2A1B3D),
+       return AlertDialog(
 
-
-      title:const Text(
-        "🎁 مكافأة الصندوق",
-        style:
-        TextStyle(
-          color:Colors.amber,
-        ),
-      ),
-
-
-      content:Text(
-
-        "🪙 العملات: ${reward.coins}\n"
-        "⭐ النجوم: ${reward.stars}\n"
-        "💎 الجواهر: ${reward.gems}",
+        backgroundColor:
+        const Color(0xff2A1B3D),
 
 
-        style:
-        const TextStyle(
-          color:Colors.white,
-          fontSize:18,
+        title:const Text(
+          "🎁 مكافأة الصندوق",
+          style:
+          TextStyle(
+            color:Colors.amber,
+          ),
         ),
 
-      ),
+
+        content:Text(
+
+          "🪙 العملات: ${reward.coins}\n"
+          "⭐ النجوم: ${reward.stars}\n"
+          "💎 الجواهر: ${reward.gems}",
 
 
-     );
+          style:
+          const TextStyle(
+            color:Colors.white,
+            fontSize:18,
+          ),
+
+        ),
+
+
+       );
 
      },
 
