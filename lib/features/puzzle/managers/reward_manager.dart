@@ -320,6 +320,8 @@ static Future<bool> spendStars(
     );
 
 
+    rewardNotifier.notifyListeners();
+
   }
 
   //==================================================
@@ -412,6 +414,44 @@ static Future<bool> spendStars(
 
     }
 
+
+  }
+
+
+
+
+
+
+
+
+  //==================================================
+  // 🎁 فتح صندوق المكافأة الملكي
+  //==================================================
+
+  static Future<RewardResultModel?> openRewardChest() async {
+
+    try {
+
+      const reward = RewardResultModel(
+        coins: 100,
+        gems: 1,
+        stars: 1,
+      );
+
+
+      await applyReward(
+        reward,
+      );
+
+
+      return reward;
+
+
+    } catch (_) {
+
+      return null;
+
+    }
 
   }
 
