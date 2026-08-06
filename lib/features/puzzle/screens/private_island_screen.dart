@@ -1,105 +1,272 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'puzzle_game_screen.dart';
 
+/// شاشة "جزيرتك الخاصة" — نقطة الدخول لتحويل صور المستخدم الخاصة
+/// إلى ألغاز قابلة للعب. مستقلة تماماً عن GameToolbar ونظام
+/// النجوم / العملات، وقابلة للتوسع لاحقاً بمستويات خاصة إضافية.
 class PrivateIslandScreen extends StatefulWidget {
-  final String? customImagePath;
-
-  const PrivateIslandScreen({
-    super.key,
-    this.customImagePath,
-  });
+  const PrivateIslandScreen({super.key});
 
   @override
-  State<PrivateIslandScreen> createState() =>
-      _PrivateIslandScreenState();
+  State<PrivateIslandScreen> createState() => _PrivateIslandScreenState();
 }
 
-class _PrivateIslandScreenState
-    extends State<PrivateIslandScreen> {
+class _PrivateIslandScreenState extends State<PrivateIslandScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ambientController;
+  final ImagePicker _imagePicker = ImagePicker();
 
-  void openStudio() {
-    // هنا سنضع اختيار الصورة من الجهاز
-    // وبعد الاختيار نرجع إلى PuzzleGameScreen
+  bool _isPicking = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _ambientController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 6),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _ambientController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _openImageStudio() async {
+    if (_isPicking) return;
+    setState(() => _isPicking = true);
+
+    try {
+      final XFile? picked = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 90,
+      );
+
+      if (!mounted) return;
+
+      if (picked == null) {
+        setState(() => _isPicking = false);
+        return;
+      }
+
+      final int? gridSize = await _showDifficultyDialog();
+
+      if (!mounted) return;
+      setState(() => _isPicking = false);
+
+      if (gridSize == null) return;
+
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => PuzzleGameScreen(
+            customImagePath: picked.path,
+            isCustomImage: true,
+            customGridSize: gridSize,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isPicking = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('تعذر اختيار الصورة. حاول مرة أخرى.'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+    }
+  }
+
+  Future<int?> _showDifficultyDialog() {
+    return showDialog<int>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: const Color(0xFF1B2A3A),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'اختر مستوى الصعوبة',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'حدد حجم الشبكة التي تريد اللعب بها',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.6),
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                _DifficultyOption(
+                  label: 'سهل',
+                  subtitle: '3×3',
+                  icon: Icons.sentiment_satisfied_alt,
+                  color: const Color(0xFF4CAF7D),
+                  onTap: () => Navigator.of(dialogContext).pop(3),
+                ),
+                const SizedBox(height: 12),
+                _DifficultyOption(
+                  label: 'متوسط',
+                  subtitle: '4×4',
+                  icon: Icons.extension,
+                  color: const Color(0xFFE0A63A),
+                  onTap: () => Navigator.of(dialogContext).pop(4),
+                ),
+                const SizedBox(height: 12),
+                _DifficultyOption(
+                  label: 'صعب',
+                  subtitle: '5×5',
+                  icon: Icons.local_fire_department,
+                  color: const Color(0xFFD9534F),
+                  onTap: () => Navigator.of(dialogContext).pop(5),
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: Text(
+                    'إلغاء',
+                    style: TextStyle(color: Colors.white.withOpacity(0.5)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-
-          // خلفية الجزيرة الخاصة
-          Positioned.fill(
-            child: Image.asset(
-              "assets/images/islands/private_island.png",
-              fit: BoxFit.cover,
-            ),
-          ),
-
-
-          SafeArea(
-            child: Column(
+      backgroundColor: const Color(0xFF0D1B2A),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            _buildAmbientBackground(),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                _buildHeader(context),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 12),
+                        _buildStudioCard(),
+                        const SizedBox(height: 32),
+                        _buildFutureLevelsSection(),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-                const SizedBox(height: 40),
+  Widget _buildAmbientBackground() {
+    return Positioned.fill(
+      child: AnimatedBuilder(
+        animation: _ambientController,
+        builder: (context, child) {
+          final double t = _ambientController.value;
+          return Stack(
+            children: [
+              Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0xFF0D1B2A),
+                      Color(0xFF14283D),
+                      Color(0xFF0D1B2A),
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(
+                top: -60 + (t * 20),
+                right: -40,
+                child: _glow(220, const Color(0xFF3A6FA8).withOpacity(0.18)),
+              ),
+              Positioned(
+                bottom: -80 + (t * 15),
+                left: -50,
+                child: _glow(260, const Color(0xFFE0A63A).withOpacity(0.10)),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
-                const Text(
-                  "مملكتك الخاصة 👑",
+  Widget _glow(double size, Color color) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [color, color.withOpacity(0)],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 20, 8),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: () => Navigator.of(context).maybePop(),
+            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white70, size: 20),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'مملكتك الخاصة',
                   style: TextStyle(
-                    fontSize: 32,
+                    color: Colors.white,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
+                    letterSpacing: 0.3,
                   ),
                 ),
-
-
-                const Spacer(),
-
-
-                // زر الاستوديو
-                GestureDetector(
-                  onTap: openStudio,
-                  child: Container(
-                    width: 180,
-                    height: 80,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius:
-                      BorderRadius.circular(25),
-                    ),
-                    child: const Text(
-                      "🧩 الاستوديو",
-                      style: TextStyle(
-                        fontSize: 24,
-                      ),
-                    ),
+                const SizedBox(height: 2),
+                Text(
+                  'حوّل صورك الخاصة إلى ألغاز فريدة',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.55),
+                    fontSize: 13,
                   ),
                 ),
-
-
-                const SizedBox(height: 40),
-
-
-                // أماكن المستويات
-                Row(
-                  mainAxisAlignment:
-                  MainAxisAlignment.center,
-                  children: [
-
-                    levelButton(1),
-
-                    levelButton(2),
-
-                    levelButton(3),
-
-                  ],
-                ),
-
-
-                const Spacer(),
-
               ],
             ),
           ),
@@ -108,23 +275,256 @@ class _PrivateIslandScreenState
     );
   }
 
-
-  Widget levelButton(int number) {
+  Widget _buildStudioCard() {
     return Container(
-      margin: const EdgeInsets.all(8),
-      width: 80,
-      height: 80,
-      alignment: Alignment.center,
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.amber,
-        shape: BoxShape.circle,
-      ),
-      child: Text(
-        "$number",
-        style: const TextStyle(
-          fontSize: 30,
-          fontWeight: FontWeight.bold,
+        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1B3A57), Color(0xFF12293F)],
         ),
+        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.35),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [Color(0xFFE0A63A), Color(0xFFC97A2B)],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFE0A63A).withOpacity(0.35),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: const Icon(Icons.photo_camera_back_outlined,
+                color: Colors.white, size: 34),
+          ),
+          const SizedBox(height: 18),
+          const Text(
+            'استوديو الصور',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'اختر صورة من جهازك وحوّلها إلى لغز تفاعلي بحجم\nالشبكة الذي تختاره',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.55),
+              fontSize: 13,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 22),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton(
+              onPressed: _isPicking ? null : _openImageStudio,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE0A63A),
+                disabledBackgroundColor:
+                    const Color(0xFFE0A63A).withOpacity(0.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 0,
+              ),
+              child: _isPicking
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.4,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'فتح استوديو الصور',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFutureLevelsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'مستويات الجزيرة',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.85),
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'قريباً',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.6),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: 6,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 0.85,
+          ),
+          itemBuilder: (context, index) {
+            return _FutureLevelSlot(index: index + 1);
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _DifficultyOption extends StatelessWidget {
+  final String label;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _DifficultyOption({
+    required this.label,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.04),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white.withOpacity(0.08)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color.withOpacity(0.18),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Text(
+              subtitle,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.5),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(Icons.arrow_forward_ios,
+                color: Colors.white.withOpacity(0.3), size: 14),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// عنصر نائب لمستوى خاص مستقبلي داخل الجزيرة.
+/// حالياً معطّل بصرياً فقط (مقفل)، ليس له منطق فتح أو حفظ بعد،
+/// لكنه يوضّح المكان الذي ستُبنى فيه المستويات الخاصة لاحقاً.
+class _FutureLevelSlot extends StatelessWidget {
+  final int index;
+
+  const _FutureLevelSlot({required this.index});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.06),
+          style: BorderStyle.solid,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.lock_outline, color: Colors.white.withOpacity(0.25), size: 26),
+          const SizedBox(height: 8),
+          Text(
+            'مستوى $index',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.35),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
