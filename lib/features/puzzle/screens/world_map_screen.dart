@@ -73,6 +73,7 @@ class _WorldMapScreenState
   late final AudioPlayer audioPlayer;
 
   bool openingAd = false;
+  bool spaceUnlocked = false;
 
   // تم تعديل إحداثيات الجزر بدقة:
   // 1. المعالم والسيارات مرفوعة قليلاً للأعلى.
@@ -165,6 +166,7 @@ class _WorldMapScreenState
     audioPlayer = AudioPlayer();
 
     AdsManager().initAds();
+    loadIslandState();
 
     worldController = AnimationController(
       vsync: this,
@@ -201,6 +203,21 @@ class _WorldMapScreenState
           )..repeat(),
         )
         .toList();
+  }
+
+  Future<void> loadIslandState() async {
+
+    final unlocked =
+        await PuzzleProgressManager.isIslandUnlocked(
+          "space",
+        );
+
+    if(!mounted) return;
+
+    setState(() {
+      spaceUnlocked = unlocked;
+    });
+
   }
 
   @override
@@ -446,10 +463,33 @@ class _WorldMapScreenState
           openIsland(island);
         },
         behavior: HitTestBehavior.opaque,
-        child: Image.asset(
-          island.image,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+
+            Image.asset(
+              island.image,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stack) =>
+                  const SizedBox.shrink(),
+            ),
+
+
+            if(island.id == "space" && !spaceUnlocked)
+              Positioned(
+                right: 20,
+                top: 20,
+                child: Image.asset(
+                  "assets/images/ui/lock.png",
+                  width: 70,
+                  height: 70,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stack) =>
+                      const SizedBox.shrink(),
+                ),
+              ),
+
+          ],
         ),
       ),
     );
@@ -559,19 +599,53 @@ class _WorldMapScreenState
                     final balance =
                         await PuzzleProgressManager.getAdsBalance();
 
-                    if (!mounted) return;
+                    final required =
+                        PuzzleProgressManager.getIslandRequiredAds(
+                          island.id,
+                        );
+
+
+                    // إذا وصل الرصيد للحد المطلوب افتح الجزيرة
+                    if(balance >= required){
+
+                      await PuzzleProgressManager.unlockIsland(
+                        island.id,
+                      );
+
+                      if(!mounted) return;
+
+                      loadIslandState();
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            "🎉 تم فتح الجزيرة!",
+                          ),
+                        ),
+                      );
+
+                    }
+                    else {
+
+                      if(!mounted) return;
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            "تمت إضافة مشاهدة الإعلان\n"
+                            "الرصيد: $balance / $required",
+                          ),
+                        ),
+                      );
+
+                    }
+
+
+                    if(!mounted) return;
 
                     setState(() {
                       openingAd = false;
                     });
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          "تمت إضافة مشاهدة الإعلان\nرصيدك: $balance",
-                        ),
-                      ),
-                    );
 
                   },
 
