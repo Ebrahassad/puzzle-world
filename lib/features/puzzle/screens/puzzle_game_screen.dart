@@ -456,14 +456,14 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
   void _startRegroupHelper() {
     Future.delayed(
-      const Duration(minutes: 2),
+      const Duration(minutes: 1),
       () {
         if (!mounted || gameFinished) return;
 
         _showRegroupButton();
 
         _regroupTimer = Timer.periodic(
-          const Duration(seconds: 90),
+          const Duration(seconds: 1),
           (_) {
             if (!mounted || gameFinished) return;
 
