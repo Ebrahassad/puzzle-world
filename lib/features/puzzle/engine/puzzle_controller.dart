@@ -280,7 +280,7 @@ void regroupPieces() {
         _scatterArea.top +
         random.nextDouble() * (maxY - _scatterArea.top);
 
-    piece.currentPosition = Offset(dx, dy);
+    piece.currentPosition = ui.Offset(dx, dy);
     piece.isDragging = false;
   }
 
