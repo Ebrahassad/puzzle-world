@@ -4,6 +4,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/material.dart';
 import 'final_victory_screen.dart';
 import '../managers/reward_manager.dart';
+import '../managers/ads_manager.dart';
 import '../engine/puzzle_piece.dart';
 import '../engine/puzzle_generator.dart';
 import '../widgets/victory_puzzle_preview.dart';
@@ -189,6 +190,7 @@ class _VictoryScreenState extends State<VictoryScreen>
 
   bool _showButtons = false;
   late AnimationController _buttonsFloatController;
+  bool _doubleRewardAsked = false;
 
   final AudioPlayer _victoryAudio = AudioPlayer();
 
@@ -385,7 +387,11 @@ class _VictoryScreenState extends State<VictoryScreen>
 
         setState(() {
           _chestOpened = true;
-          _showStarPreview = true;
+
+          // النجمة تظهر فقط في المراحل 1 - 9
+          if (!widget.isFinalLevel) {
+            _showStarPreview = true;
+          }
         });
 
         _glowController.repeat(reverse: true);
@@ -500,7 +506,11 @@ class _VictoryScreenState extends State<VictoryScreen>
     await _rewardController.forward();
     if (!mounted) return;
 
-    RewardManager.addStars(1);
+    // المرحلة 10 لا تأخذ المكافأة هنا
+    // FinalVictoryScreen هو المسؤول عن النجمة + العملة + الجوهرة
+    if (!widget.isFinalLevel) {
+      RewardManager.addStars(1);
+    }
 
     setState(() {
       _showReward = false;
@@ -541,10 +551,15 @@ class _VictoryScreenState extends State<VictoryScreen>
     await Future.delayed(const Duration(milliseconds: 500));
     if (!mounted) return;
 
-    await _startRewardFlight();
-    if (!mounted) return;
-
     if (widget.isFinalLevel) {
+
+      // اترك الصندوق المفتوح والاحتفال يظهر
+      await Future.delayed(
+        const Duration(seconds: 3),
+      );
+
+      if (!mounted) return;
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -553,8 +568,15 @@ class _VictoryScreenState extends State<VictoryScreen>
           ),
         ),
       );
+
       return;
     }
+
+    await _startRewardFlight();
+    if (!mounted) return;
+
+    // المراحل 1 - 9 فقط
+    await _showDoubleRewardDialog();
 
     await Future.delayed(const Duration(milliseconds: 300));
     if (!mounted) return;
@@ -562,6 +584,94 @@ class _VictoryScreenState extends State<VictoryScreen>
     setState(() {
       _showButtons = true;
     });
+  }
+
+  Future<void> _showDoubleRewardDialog() async {
+
+    if (_doubleRewardAsked) return;
+
+    _doubleRewardAsked = true;
+
+
+    final doubleReward = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context){
+
+        return AlertDialog(
+
+          title: const Text(
+            "🎁 مكافأة إضافية",
+          ),
+
+          content: const Text(
+            "هل تريد مضاعفة مكافأتك؟\n\n"
+            "شاهد إعلاناً واحصل على مكافأة إضافية.",
+          ),
+
+          actions: [
+
+            TextButton(
+              child: const Text(
+                "لاحقاً",
+              ),
+              onPressed: (){
+                Navigator.pop(context,false);
+              },
+            ),
+
+
+            ElevatedButton(
+              child: const Text(
+                "📺 مضاعفة",
+              ),
+              onPressed: (){
+                Navigator.pop(context,true);
+              },
+            ),
+
+          ],
+        );
+      },
+    );
+
+
+    if(doubleReward != true) return;
+
+
+    if(!AdsManager().isInitialized){
+      await AdsManager().initAds();
+    }
+
+
+    AdsManager().showRewardedAd(
+
+      onRewardEarned: () async {
+
+        // إضافة النصف الثاني فقط
+        RewardManager.addStars(1);
+        RewardManager.addCoins(10);
+
+      },
+
+
+      onAdFailed: (){
+
+        if(!mounted) return;
+
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
+          const SnackBar(
+            content: Text(
+              "الإعلان غير متوفر حالياً",
+            ),
+          ),
+        );
+
+      },
+
+    );
+
   }
 
   @override
