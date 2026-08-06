@@ -7,6 +7,7 @@ import '../data/puzzle_data.dart';
 import '../models/puzzle_model.dart';
 import '../widgets/wallet_icon_widget.dart';
 import 'island_screen.dart';
+import '../managers/puzzle_progress_manager.dart';
 // import 'puzzle_game_screen.dart'; // <--- قم بإلغاء التعليق واستيراد شاشة اللعب الخاصة بك إذا لزم الأمر
 
 class _RelativeRect {
@@ -69,6 +70,8 @@ class _WorldMapScreenState
 
   late final List<AnimationController> cloudControllers;
   late final AudioPlayer audioPlayer;
+
+  bool openingAd = false;
 
   // تم تعديل إحداثيات الجزر بدقة:
   // 1. المعالم والسيارات مرفوعة قليلاً للأعلى.
@@ -449,14 +452,154 @@ class _WorldMapScreenState
     );
   }
 
-  void openIsland(PuzzleModel island) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => IslandScreen(
-          island: island,
+  Future<void> openIsland(PuzzleModel island) async {
+
+    final unlocked =
+        await PuzzleProgressManager.isIslandUnlocked(
+          island.id,
+        );
+
+
+    if(unlocked){
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => IslandScreen(
+            island: island,
+          ),
         ),
-      ),
+      );
+
+      return;
+    }
+
+
+    showDialog(
+      context: context,
+      builder: (context){
+
+        return AlertDialog(
+          title: const Text(
+            "🔒 الجزيرة مغلقة",
+          ),
+
+          content: FutureBuilder<int>(
+            future: PuzzleProgressManager.getIslandRequiredAds(
+              island.id,
+            ),
+            builder: (context, snapshot) {
+
+              if (!snapshot.hasData) {
+                return const SizedBox(
+                  height: 40,
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+
+              final ads = snapshot.data ?? 0;
+
+              return Text(
+                "شاهد $ads إعلان لفتح هذه الجزيرة",
+              );
+            },
+          ),
+
+
+          actions: [
+
+            TextButton(
+              child: const Text(
+                "إلغاء",
+              ),
+
+              onPressed: (){
+                Navigator.pop(context);
+              },
+            ),
+
+
+            ElevatedButton(
+              child: const Text(
+                "📺 مشاهدة إعلان",
+              ),
+
+              onPressed: () async {
+
+                if(openingAd) return;
+
+                setState(() {
+                  openingAd = true;
+                });
+
+                Navigator.pop(context);
+
+
+                final opened =
+                await PuzzleProgressManager
+                    .watchIslandAd(
+                      island.id,
+                    );
+
+
+                if(!mounted) return;
+
+                setState(() {
+                  openingAd = false;
+                });
+
+
+                if(opened){
+
+                  if(!mounted) return;
+
+
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        "🎉 تم فتح الجزيرة!",
+                      ),
+                    ),
+                  );
+
+
+                  setState((){});
+
+                }
+                else {
+
+                  if(!mounted) return;
+
+
+                  final current =
+                  await PuzzleProgressManager
+                      .getIslandAds(
+                        island.id,
+                      );
+
+
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        "شاهدت $current إعلان من المطلوب",
+                      ),
+                    ),
+                  );
+
+                }
+
+              },
+            ),
+
+          ],
+        );
+
+      },
     );
+
   }
 }
