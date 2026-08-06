@@ -744,4 +744,22 @@ static Future<bool> spendStars(
 
   }
 
+//==================================================
+// 📺 إضافة تلميحة من الإعلان
+//==================================================
+
+static Future<void> addHintFromAd() async {
+
+  try {
+
+    await PuzzleProgressManager.addHints(
+      1,
+    );
+
+    rewardNotifier.notifyListeners();
+
+  } catch (_) {}
+
+}
+
 }
