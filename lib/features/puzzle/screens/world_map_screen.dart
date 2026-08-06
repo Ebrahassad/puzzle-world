@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:image_picker/image_picker.dart'; // <--- استيراد مكتبة اختيار الصور
-
+import 'private_island_screen.dart';
 import '../data/puzzle_data.dart';
 import '../models/puzzle_model.dart';
 import '../widgets/wallet_icon_widget.dart';
@@ -346,22 +346,18 @@ class _WorldMapScreenState
                       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
                       if (image != null) {
-                        if (!context.mounted) return;
-                        
-                        // الانتقال لشاشة اللعب الخاصة بك مع تمرير المسار وعلامة الصورة المخصصة
-                        /* 
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => PuzzleGameScreen(
-                              customImagePath: image.path,
-                              isCustomImage: true,
-                            ),
-                          ),
-                        );
-                        */
-                      }
-                    },
+  if (!context.mounted) return;
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => PrivateIslandScreen(
+        customImagePath: image.path,
+      ),
+    ),
+  );
+}  
+                  },
                     child: Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
