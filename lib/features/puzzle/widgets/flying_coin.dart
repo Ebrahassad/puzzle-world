@@ -78,12 +78,11 @@ class _FlyingCoinState extends State<FlyingCoin>
 
 
 
-    controller.forward()
-      .then((_){
-
-        widget.onFinished();
-
-      });
+    controller.forward().then((_) {
+  if (mounted) {
+    widget.onFinished();
+  }
+});
 
   }
 
