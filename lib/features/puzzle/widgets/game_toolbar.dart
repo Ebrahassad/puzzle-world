@@ -484,10 +484,10 @@ class CoinCounterBox extends StatelessWidget {
         children: [
           // صورة العملة
           Image.asset(
-            "assets/images/rewards/coin.png",
-            width: 28,
-            height: 28,
-          ),
+  "assets/images/rewards/puzzle_coin.png",
+  width: 28,
+  height: 28,
+),
           const SizedBox(width: 5),
           Text(
             "$value",
