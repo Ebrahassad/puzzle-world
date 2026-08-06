@@ -89,7 +89,7 @@ class _WorldMapScreenState
     _RelativeRect(
       id: "landmarks",
       left: 100 / worldWidth,
-      top: 410 / worldHeight,
+      top: 408 / worldHeight,
       width: 335 / worldWidth,
       height: 365 / worldHeight,
     ),
@@ -98,7 +98,7 @@ class _WorldMapScreenState
     _RelativeRect(
       id: "cars",
       left: 460 / worldWidth,
-      top: 410 / worldHeight,
+      top: 408 / worldHeight,
       width: 335 / worldWidth,
       height: 365 / worldHeight,
     ),
@@ -107,7 +107,7 @@ class _WorldMapScreenState
     _RelativeRect(
       id: "nature",
       left: 268 / worldWidth,
-      top: 605 / worldHeight,
+      top: 600 / worldHeight,
       width: 360 / worldWidth,
       height: 380 / worldHeight,
     ),
