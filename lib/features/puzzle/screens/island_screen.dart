@@ -323,19 +323,14 @@ class _IslandScreenState extends State<IslandScreen>
                   "${widget.island.id}_level_${level.levelNumber}",
                 ),
 
-                builder:(context,snapshot){
+                builder: (context, snapshot) {
 
-                  final unlocked =
-                      snapshot.data ?? false;
-
+                  final unlocked = snapshot.data ?? false;
 
                   return Image.asset(
                     unlocked
-                        ?
-                    "assets/images/ui/lock_open.png"
-                        :
-                    "assets/images/ui/lock.png",
-
+                        ? "assets/images/ui/lock_open.png"
+                        : "assets/images/ui/lock_close.png",
                     fit: BoxFit.contain,
                   );
 
