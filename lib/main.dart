@@ -7,7 +7,6 @@ import 'features/puzzle/screens/world_map_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // تهيئة Unity Ads
   await AdsManager().initAds();
 
   runApp(
@@ -16,9 +15,7 @@ Future<void> main() async {
 }
 
 class PuzzleWorldApp extends StatelessWidget {
-  const PuzzleWorldApp({
-    super.key,
-  });
+  const PuzzleWorldApp({super.key});
 
   @override
   Widget build(BuildContext context) {
