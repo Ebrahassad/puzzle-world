@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../managers/daily_reward_manager.dart';
-import '../../managers/ads_manager.dart';
+import '../managers/reward_manager.dart';
+import '../managers/ads_manager.dart';
 
 class DailyRewardPopup extends StatefulWidget {
   final VoidCallback onRewardClaimed;
@@ -23,14 +23,13 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   bool _isClaimed = false;
   bool _showRewardUI = false;
 
-  // أرقام المكافأة الوهمية
   int _displayCoins = 0;
   int _displayStars = 0;
   int _displayGems = 0;
 
-  final int _targetCoins = 500;
-  final int _targetStars = 10;
-  final int _targetGems = 5;
+  final int _targetCoins = 100;
+  final int _targetStars = 1;
+  final int _targetGems = 1;
 
   @override
   void initState() {
@@ -59,13 +58,13 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
       ),
     );
 
-    // حركة الانتقال من المنتصف إلى أعلى يسار الشاشة
+    // حركة تبدأ من أسفل اليسار (مكان المحفظة أو الصندوق) إلى منتصف الشاشة
     _positionAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(-1.2, -1.8),
+      begin: const Offset(-2.0, 2.0),
+      end: Offset.zero,
     ).animate(CurvedAnimation(
       parent: _mainController,
-      curve: const Interval(0.7, 1.0, curve: Curves.easeInOutCubic),
+      curve: const Interval(0.0, 1.0, curve: Curves.easeInOutCubic),
     ));
 
     _mainController.forward();
@@ -80,11 +79,14 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   void _onBoxTap() async {
     if (_isOpen || _isClaimed) return;
 
+    // استدعاء دالة المطالبة بالمكافأة اليومية من مدير المكافآت الموجود لديك
+    final reward = await RewardManager.claimDailyReward();
+    if (reward == null) return;
+
     setState(() {
       _isOpen = true;
     });
 
-    // بدء عداد زيادة الرصيد تدريجياً ببطء
     _startCountingReward();
   }
 
@@ -94,12 +96,12 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     Timer.periodic(duration, (timer) {
       step++;
       setState(() {
-        _displayCoins = (_targetCoins * (step / 30)).clamp(0, _targetCoins).toInt();
-        _displayStars = (_targetStars * (step / 30)).clamp(0, _targetStars).toInt();
-        _displayGems = (_targetGems * (step / 30)).clamp(0, _targetGems).toInt();
+        _displayCoins = (_targetCoins * (step / 20)).clamp(0, _targetCoins).toInt();
+        _displayStars = (_targetStars * (step / 20)).clamp(0, _targetStars).toInt();
+        _displayGems = (_targetGems * (step / 20)).clamp(0, _targetGems).toInt();
       });
 
-      if (step >= 30) {
+      if (step >= 20) {
         timer.cancel();
         setState(() {
           _showRewardUI = true;
@@ -108,13 +110,11 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     });
   }
 
-  void _claimReward({bool doubled = false}) async {
-    await DailyRewardManager.saveClaimTime();
+  void _claimReward() {
     setState(() {
       _isClaimed = true;
     });
 
-    // تشغيل حركة الإغلاق والعودة للخلف
     _mainController.reverse().then((_) {
       widget.onRewardClaimed();
       Navigator.of(context).pop();
@@ -123,13 +123,26 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
 
   void _watchAdToDouble() {
     AdsManager().showRewardedAd(
-      onRewarded: () {
+      onRewardEarned: () async {
+        // مضاعفة المكافأة عبر RewardManager
+        final currentReward = await RewardManager.getReward();
+        // أو مضاعفة القيم المعروضة مباشرة وإضافتها
         setState(() {
           _displayCoins *= 2;
           _displayStars *= 2;
           _displayGems *= 2;
         });
-        _claimReward(doubled: true);
+        
+        await RewardManager.addCoins(_targetCoins);
+        await RewardManager.addGems(_targetGems);
+        await RewardManager.addStars(_targetStars);
+
+        _claimReward();
+      },
+      onAdFailed: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("الإعلان غير متوفر حالياً")),
+        );
       },
     );
   }
@@ -142,12 +155,9 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // طبقة خلفية معتمة
           Container(
             color: Colors.black.withOpacity(0.7),
           ),
-          
-          // محتوى الصندوق والحركات
           SlideTransition(
             position: _positionAnimation,
             child: ScaleTransition(
@@ -160,20 +170,25 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       SizedBox(
-                        width: 220,
-                        height: 220,
+                        width: 200,
+                        height: 200,
                         child: Image.asset(
                           _isOpen
-                              ? 'assets/images/rewards/daly_box_open.png'
-                              : 'assets/images/rewards/daly_box_close.png',
+                              ? 'assets/images/ui/open_wallet.png'
+                              : 'assets/images/ui/close_wallet.png',
                           fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => Icon(
+                            _isOpen ? Icons.lock_open : Icons.lock,
+                            size: 100,
+                            color: Colors.amber,
+                          ),
                         ),
                       ),
                       if (!_isOpen)
                         const Padding(
                           padding: EdgeInsets.only(top: 16),
                           child: Text(
-                            'انقر لفتح الصندوق!',
+                            'انقر لفتح المحفظة والمكافأة!',
                             style: TextStyle(
                               color: Colors.amber,
                               fontSize: 18,
@@ -187,14 +202,12 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
               ),
             ),
           ),
-
-          // واجهة المحفظة والزيادة التدريجية للعملات عند فتح الصندوق
           if (_isOpen)
             Positioned(
-              bottom: 80,
+              bottom: 100,
               child: TweenAnimationBuilder<double>(
                 tween: Tween<double>(begin: 0.0, end: 1.0),
-                duration: const Duration(milliseconds: 500),
+                duration: const Duration(milliseconds: 400),
                 builder: (context, value, child) {
                   return Transform.scale(
                     scale: value,
@@ -208,7 +221,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
                   padding: const EdgeInsets.all(20),
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1B2A3A),
+                    color: const Color(0xFF2A1B3D),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: Colors.amber, width: 2),
                     boxShadow: [
@@ -223,7 +236,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
-                        'مبروك! حصلت على مكافأتك اليومية',
+                        'مبروك! حصلت على مكافأتك',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -250,7 +263,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          onPressed: () => _claimReward(),
+                          onPressed: _claimReward,
                           child: const Text(
                             'استلام المكافأة',
                             style: TextStyle(
