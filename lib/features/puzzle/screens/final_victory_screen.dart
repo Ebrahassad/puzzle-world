@@ -99,13 +99,9 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   bool _showChest = false;
   bool _showTitle = false;
   bool _showRewardFlights = false;
-  bool _showButtons = false;
   bool _running = true;
   bool _doubleAsked = false;
   bool _adInProgress = false;
-  bool _replayFlightAfterAd = false;
-
-  Offset _chestCenter = Offset.zero;
 
   final List<_RewardType> _rewardOrder = const [
     _RewardType.star,
@@ -265,12 +261,11 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
     await _showDoubleRewardDialog();
 
-    await Future.delayed(const Duration(milliseconds: 350));
     if (!mounted) return;
 
-    setState(() {
-      _showButtons = true;
-    });
+    if (!_adInProgress) {
+      _goHome();
+    }
   }
 
   Future<void> _playRewardFlights({
@@ -530,7 +525,10 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
       },
     );
 
-    if (wantDouble != true) return;
+    if (wantDouble != true) {
+      _goHome();
+      return;
+    }
 
     if (!AdsManager().isInitialized) {
       await AdsManager().initAds();
@@ -793,53 +791,6 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
               ),
             ),
 
-          if (_showButtons)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 28,
-              child: AnimatedBuilder(
-                animation: _floatController,
-                builder: (context, child) {
-                  final bob = math.sin(_floatController.value * 2 * math.pi) * 5;
-                  return Transform.translate(
-                    offset: Offset(0, bob),
-                    child: child,
-                  );
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _ActionButton(
-                      imagePath: 'assets/images/ui/next_play.png',
-                      onTap: _goHome,
-                    ),
-                    const SizedBox(width: 14),
-                    _ActionButton(
-                      imagePath: 'assets/images/ui/home_map.png',
-                      onTap: _goHome,
-                    ),
-                    const SizedBox(width: 14),
-                    _ActionButton(
-                      imagePath: 'assets/images/ui/again_play.png',
-                      onTap: () async {
-                        if (!mounted) return;
-                        setState(() {
-                          _showButtons = false;
-                          _doubleAsked = false;
-                          _adInProgress = false;
-                        });
-                        await _chestController.reset();
-                        await _titleController.reset();
-                        await _flashController.reset();
-                        await _runSequence();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
           Positioned.fill(
             child: IgnorePointer(
               child: AnimatedBuilder(
@@ -892,31 +843,6 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     _confettiTicker.dispose();
 
     super.dispose();
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  final String imagePath;
-  final VoidCallback onTap;
-
-  const _ActionButton({
-    required this.imagePath,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: SizedBox(
-        width: 72,
-        height: 72,
-        child: Image.asset(
-          imagePath,
-          fit: BoxFit.contain,
-        ),
-      ),
-    );
   }
 }
 
