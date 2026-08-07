@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/scheduler.dart';
@@ -156,6 +157,8 @@ class _VictoryScreenState extends State<VictoryScreen>
 
   bool _showChest = false;
   bool _chestOpened = false;
+  bool _hideChestAfterReward = false;
+  bool _chestDisappearing = false;
 
   final GlobalKey _chestKey = GlobalKey();
 
@@ -180,6 +183,8 @@ class _VictoryScreenState extends State<VictoryScreen>
 
   bool _showReward = false;
   bool _rewardSent = false;
+  bool _rewardGranted = false;
+  bool _doubleRewardCompleted = false;
 
   Offset _rewardStart = Offset.zero;
   Offset _rewardEnd = Offset.zero;
@@ -191,6 +196,7 @@ class _VictoryScreenState extends State<VictoryScreen>
   bool _showButtons = false;
   late AnimationController _buttonsFloatController;
   bool _doubleRewardAsked = false;
+  bool _rewardAdFinished = false;
 
   final AudioPlayer _victoryAudio = AudioPlayer();
 
@@ -213,7 +219,7 @@ class _VictoryScreenState extends State<VictoryScreen>
     _starPreviewController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
+    );
 
     _rewardController = AnimationController(
       vsync: this,
@@ -229,9 +235,11 @@ class _VictoryScreenState extends State<VictoryScreen>
       if (!mounted) return;
       _preparePieces();
       _runSequence();
-      _victoryAudio.play(
-        AssetSource('audio/puzzle_win.mp3'),
-      );
+      Future.microtask(() async {
+        await _victoryAudio.play(
+          AssetSource('audio/puzzle_win.mp3'),
+        );
+      });
     });
   }
 
@@ -325,6 +333,10 @@ class _VictoryScreenState extends State<VictoryScreen>
     if (mounted) {
       setState(() {});
     }
+
+    if (elapsedMs >= kExplosionPhaseMs) {
+      _physicsTicker.stop();
+    }
   }
 
   //==============================
@@ -391,6 +403,11 @@ class _VictoryScreenState extends State<VictoryScreen>
           // النجمة تظهر فقط في المراحل 1 - 9
           if (!widget.isFinalLevel) {
             _showStarPreview = true;
+            _starPreviewController.repeat(
+              reverse: true,
+            );
+          } else {
+            _showStarPreview = false;
           }
         });
 
@@ -499,6 +516,7 @@ class _VictoryScreenState extends State<VictoryScreen>
 
     setState(() {
       _showStarPreview = false;
+      _starPreviewController.stop();
       _showReward = true;
     });
 
@@ -508,8 +526,10 @@ class _VictoryScreenState extends State<VictoryScreen>
 
     // المرحلة 10 لا تأخذ المكافأة هنا
     // FinalVictoryScreen هو المسؤول عن النجمة + العملة + الجوهرة
-    if (!widget.isFinalLevel) {
-      RewardManager.addStars(1);
+    if (!widget.isFinalLevel && !_rewardGranted) {
+      _rewardGranted = true;
+
+      await RewardManager.addStars(1);
     }
 
     setState(() {
@@ -531,7 +551,9 @@ class _VictoryScreenState extends State<VictoryScreen>
     await Future.delayed(const Duration(milliseconds: kExplosionPhaseMs));
     if (!mounted) return;
 
-    _physicsTicker.stop();
+    if (_physicsTicker.isActive) {
+      _physicsTicker.stop();
+    }
     setState(() {
       _showChest = true;
     });
@@ -552,13 +574,18 @@ class _VictoryScreenState extends State<VictoryScreen>
     if (!mounted) return;
 
     if (widget.isFinalLevel) {
-
-      // اترك الصندوق المفتوح والاحتفال يظهر
       await Future.delayed(
-        const Duration(seconds: 3),
+        const Duration(seconds: 5),
       );
 
       if (!mounted) return;
+
+      _chestController.stop();
+      _glowController.stop();
+
+      if (_sparkleTicker.isActive) {
+        _sparkleTicker.stop();
+      }
 
       Navigator.pushReplacement(
         context,
@@ -573,105 +600,118 @@ class _VictoryScreenState extends State<VictoryScreen>
     }
 
     await _startRewardFlight();
+
     if (!mounted) return;
 
-    // المراحل 1 - 9 فقط
+    // عرض إعلان المضاعفة
     await _showDoubleRewardDialog();
 
-    await Future.delayed(const Duration(milliseconds: 300));
     if (!mounted) return;
 
     setState(() {
+      _chestDisappearing = true;
+    });
+
+    await Future.delayed(
+      const Duration(milliseconds: 500),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _hideChestAfterReward = true;
       _showButtons = true;
     });
   }
 
   Future<void> _showDoubleRewardDialog() async {
-
     if (_doubleRewardAsked) return;
 
     _doubleRewardAsked = true;
 
-
     final doubleReward = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context){
-
+      builder: (context) {
         return AlertDialog(
-
           title: const Text(
             "🎁 مكافأة إضافية",
           ),
-
           content: const Text(
             "هل تريد مضاعفة مكافأتك؟\n\n"
             "شاهد إعلاناً واحصل على مكافأة إضافية.",
           ),
-
           actions: [
-
             TextButton(
-              child: const Text(
-                "لاحقاً",
-              ),
-              onPressed: (){
-                Navigator.pop(context,false);
+              child: const Text("لاحقاً"),
+              onPressed: () {
+                Navigator.pop(context, false);
               },
             ),
-
-
             ElevatedButton(
-              child: const Text(
-                "📺 مضاعفة",
-              ),
-              onPressed: (){
-                Navigator.pop(context,true);
+              child: const Text("📺 مضاعفة"),
+              onPressed: () {
+                Navigator.pop(context, true);
               },
             ),
-
           ],
         );
       },
     );
 
+    if (doubleReward != true) {
+      return;
+    }
 
-    if(doubleReward != true) return;
+    _rewardAdFinished = false;
 
-
-    if(!AdsManager().isInitialized){
+    if (!AdsManager().isInitialized) {
       await AdsManager().initAds();
     }
 
-
     AdsManager().showRewardedAd(
-
       onRewardEarned: () async {
+        if (!_doubleRewardCompleted) {
+          _doubleRewardCompleted = true;
 
-        // إضافة النصف الثاني فقط
-        RewardManager.addStars(1);
-        RewardManager.addCoins(10);
+          await RewardManager.addStars(1);
+          await RewardManager.addCoins(100);
+        }
 
+        _rewardAdFinished = true;
       },
+      onAdFailed: () {
+        _rewardAdFinished = true;
 
+        if (!mounted) return;
 
-      onAdFailed: (){
-
-        if(!mounted) return;
-
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
               "الإعلان غير متوفر حالياً",
             ),
           ),
         );
-
       },
-
     );
 
+    int waitTime = 0;
+
+    while (!_rewardAdFinished) {
+      await Future.delayed(
+        const Duration(milliseconds: 200),
+      );
+
+      waitTime += 200;
+
+      if (!mounted) {
+        return;
+      }
+
+      if (waitTime >= 15000) {
+        break;
+      }
+    }
   }
 
   @override
@@ -709,7 +749,7 @@ class _VictoryScreenState extends State<VictoryScreen>
               ),
             ),
 
-          if (_showChest && _chestOpened)
+          if (_showChest && _chestOpened && !_hideChestAfterReward)
             IgnorePointer(
               child: Center(
                 child: AnimatedBuilder(
@@ -743,20 +783,22 @@ class _VictoryScreenState extends State<VictoryScreen>
               ),
             ),
 
-          if (_showChest)
+          if (_showChest && !_hideChestAfterReward)
             Center(
               child: AnimatedBuilder(
                 animation: _chestController,
                 builder: (context, child) {
                   return Transform.translate(
                     offset: Offset(0, _chestFall.value),
-                    child: Transform.scale(
-                      scale: _chestScale.value,
-                      child: Transform.rotate(
-                        angle: _chestShake.value,
-                        child: Container(
-                          key: _chestKey,
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 500),
+                      opacity: _chestDisappearing ? 0 : 1,
+                      child: Transform.scale(
+                        scale: _chestScale.value,
+                        child: Transform.rotate(
+                          angle: _chestShake.value,
                           child: SizedBox(
+                            key: _chestKey,
                             width: 250,
                             height: 250,
                             child: Image.asset(
@@ -808,13 +850,16 @@ class _VictoryScreenState extends State<VictoryScreen>
 
                 final x = _rewardStart.dx + (_rewardEnd.dx - _rewardStart.dx) * t;
                 final y = _rewardStart.dy + (_rewardEnd.dy - _rewardStart.dy) * t;
-                final currentScale = 1.0 - (_rewardController.value * 0.35);
+                final currentScale =
+                    1.0 - Curves.easeIn.transform(
+                      _rewardController.value
+                    ) * 0.45;
 
                 return Positioned(
                   left: x - 35,
                   top: y - 35,
                   child: Transform.scale(
-                    scale: currentScale.clamp(0.65, 1.0),
+                    scale: currentScale.clamp(0.55, 1.0),
                     child: Image.asset(
                       'assets/images/rewards/Star_gold.png',
                       width: 70,
@@ -825,53 +870,74 @@ class _VictoryScreenState extends State<VictoryScreen>
             ),
 
           if (_showButtons)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 56,
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: 1),
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.easeOut,
-                builder: (context, fadeT, child) {
-                  return Opacity(
-                    opacity: fadeT,
-                    child: Transform.translate(
-                      offset: Offset(0, (1 - fadeT) * 20),
-                      child: child,
-                    ),
-                  );
-                },
-                child: AnimatedBuilder(
-                  animation: _buttonsFloatController,
-                  builder: (context, child) {
-                    final bob = sin(_buttonsFloatController.value * 2 * pi) * 6;
-                    return Transform.translate(
-                      offset: Offset(0, bob),
-                      child: child,
+            Positioned.fill(
+              child: Center(
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: 1),
+                  duration: const Duration(milliseconds: 600),
+                  curve: Curves.easeOutBack,
+                  builder: (context, fadeT, child) {
+                    return Opacity(
+                      opacity: fadeT,
+                      child: Transform.translate(
+                        offset: Offset(
+                          0,
+                          (1 - fadeT) * 50,
+                        ),
+                        child: child,
+                      ),
                     );
                   },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // زر المستوى التالي (next_play.png)
-                      _VictoryImageActionButton(
-                        imagePath: 'assets/images/ui/next_play.png',
-                        onTap: widget.onNext ?? widget.onFinished,
-                      ),
-                      const SizedBox(width: 16),
-                      // زر الخريطة (home_map.png)
-                      _VictoryImageActionButton(
-                        imagePath: 'assets/images/ui/home_map.png',
-                        onTap: widget.onMap ?? widget.onFinished,
-                      ),
-                      const SizedBox(width: 16),
-                      // زر إعادة اللعب (again_play.png)
-                      _VictoryImageActionButton(
-                        imagePath: 'assets/images/ui/again_play.png',
-                        onTap: widget.onReplay ?? widget.onFinished,
-                      ),
-                    ],
+                  child: AnimatedBuilder(
+                    animation: _buttonsFloatController,
+                    builder: (context, child) {
+                      final bob =
+                          sin(
+                            _buttonsFloatController.value * 2 * pi,
+                          ) * 4;
+
+                      return Transform.translate(
+                        offset: Offset(0, bob),
+                        child: child,
+                      );
+                    },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // المستوى التالي
+                        _VictoryImageActionButton(
+                          imagePath:
+                              'assets/images/ui/next_play.png',
+                          onTap: () {
+                            if (widget.onNext != null) {
+                              widget.onNext!();
+                            } else {
+                              widget.onFinished();
+                            }
+                          },
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // إعادة اللعب
+                        _VictoryImageActionButton(
+                          imagePath:
+                              'assets/images/ui/again_play.png',
+                          onTap:
+                              widget.onReplay ?? widget.onFinished,
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // شاشة البداية
+                        _VictoryImageActionButton(
+                          imagePath:
+                              'assets/images/ui/home_map.png',
+                          onTap:
+                              widget.onMap ?? widget.onFinished,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -883,7 +949,6 @@ class _VictoryScreenState extends State<VictoryScreen>
 
   @override
   void dispose() {
-    _victoryAudio.dispose();
     if (_physicsTicker.isActive) {
       _physicsTicker.stop();
     }
@@ -900,6 +965,9 @@ class _VictoryScreenState extends State<VictoryScreen>
     _rewardController.dispose();
     _buttonsFloatController.dispose();
 
+    _victoryAudio.stop();
+    _victoryAudio.dispose();
+
     super.dispose();
   }
 }
@@ -915,11 +983,14 @@ class _VictoryImageActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = (MediaQuery.of(context).size.width * 0.25)
+        .clamp(90.0, 130.0);
+
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        width: 70,
-        height: 70,
+        width: size,
+        height: size,
         child: Image.asset(
           imagePath,
           fit: BoxFit.contain,
