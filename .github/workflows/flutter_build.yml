@@ -43,44 +43,6 @@ jobs:
         run: flutter pub deps | grep unity_ads_plugin
 
 
-      - name: Fix Unity Ads Java Compatibility
-        run: |
-          python3 <<'PY'
-          import glob
-
-          paths = glob.glob("/home/runner/.pub-cache/hosted/pub.dev/unity_ads_plugin-*")
-
-          if not paths:
-              raise Exception("Unity Ads plugin not found")
-
-          path = paths[0]
-
-          print("Unity Ads directory:")
-          print(path)
-
-          gradle = path + "/android/build.gradle"
-
-          with open(gradle, "a") as f:
-              f.write("""
-
-android {
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
-}
-
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-}
-""")
-
-          print("Unity Ads patched successfully")
-          PY
-
-
       - name: Generate App Icon
         run: dart run flutter_launcher_icons
 
