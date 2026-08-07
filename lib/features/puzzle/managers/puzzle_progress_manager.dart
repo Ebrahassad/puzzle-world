@@ -2195,6 +2195,41 @@ static Future<bool> useGemsForUnlock(
   }
 
 
+//==================================================
+// 🏝️ فتح الجزيرة التالية بعد إنهاء آخر مرحلة
+//==================================================
+
+static Future<void> unlockNextIsland(
+    String currentIsland,
+) async {
+
+  switch(currentIsland){
+
+    case "animals":
+      await unlockIsland("nature");
+      break;
+
+    case "nature":
+      await unlockIsland("cars");
+      break;
+
+    case "cars":
+      await unlockIsland("landmarks");
+      break;
+
+    case "landmarks":
+      await unlockIsland("space");
+      break;
+
+    case "space":
+      await unlockIsland("private_island");
+      break;
+
+  }
+
+}
+
+
 
 
 
