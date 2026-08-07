@@ -481,6 +481,24 @@ class CoinCounterBox extends StatelessWidget {
     required this.value,
   });
 
+  String formatNumber(int number) {
+    if (number >= 1000000) {
+      double result = number / 1000000;
+      return "${result.toStringAsFixed(
+        result % 1 == 0 ? 0 : 1,
+      )}M";
+    }
+
+    if (number >= 1000) {
+      double result = number / 1000;
+      return "${result.toStringAsFixed(
+        result % 1 == 0 ? 0 : 1,
+      )}K";
+    }
+
+    return number.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -498,18 +516,22 @@ class CoinCounterBox extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // صورة العملة
+
           Image.asset(
-  "assets/images/rewards/puzzle_coin.png",
-  width: 28,
-  height: 28,
-),
-          const SizedBox(width: 5),
+            "assets/images/rewards/puzzle_coin.png",
+            width: 28,
+            height: 28,
+          ),
+
+          const SizedBox(
+            width: 5,
+          ),
+
           Text(
-            "$value",
+            formatNumber(value),
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.bold,
               shadows: [
                 Shadow(
