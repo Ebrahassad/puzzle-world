@@ -51,6 +51,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   bool gameFinished = false;
   bool checkingSavedGame = true;
   bool soundEnabled = true;
+  bool showBoardImage = true;
 
   Timer? _regroupTimer;
 
@@ -387,6 +388,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       gameFinished = false;
       moves = 0;
       lastPlacedCount = 0;
+      showBoardImage = true;
     });
 
     stopwatch
@@ -432,7 +434,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     gameFinished = true;
     stopwatch.stop();
 
-    
+    setState(() {
+      showBoardImage = false;
+    });
 
     if (!mounted) return;
 
@@ -588,25 +592,28 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                               width: 2,
                             ),
                           ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(18),
-                            child: Opacity(
-                              opacity: 0.18,
-                              child: widget.isCustomImage && widget.customImagePath != null
-                                  ? Image.file(
-                                      File(widget.customImagePath!),
-                                      width: boardSize,
-                                      height: boardSize,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Image.asset(
-                                      widget.level!.image,
-                                      width: boardSize,
-                                      height: boardSize,
-                                      fit: BoxFit.cover,
-                                    ),
-                            ),
-                          ),
+                          child: showBoardImage
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(18),
+                                  child: Opacity(
+                                    opacity: 0.18,
+                                    child: widget.isCustomImage &&
+                                            widget.customImagePath != null
+                                        ? Image.file(
+                                            File(widget.customImagePath!),
+                                            width: boardSize,
+                                            height: boardSize,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Image.asset(
+                                            widget.level!.image,
+                                            width: boardSize,
+                                            height: boardSize,
+                                            fit: BoxFit.cover,
+                                          ),
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
                         ),
                       ),
                     ),
