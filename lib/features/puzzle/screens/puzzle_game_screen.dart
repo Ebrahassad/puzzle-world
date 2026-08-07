@@ -453,6 +453,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                 : widget.level!.levelNumber,
             isFinalLevel: false,
             starTargetKey: starKey,
+            pieces: controller.pieces,
             onFinished: () {
               Navigator.pop(context);
             },
