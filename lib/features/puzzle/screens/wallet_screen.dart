@@ -275,7 +275,6 @@ class _WalletScreenState extends State<WalletScreen>
       body: LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(
-            physics: const NeverScrollableScrollPhysics(),
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
               child: Padding(
@@ -394,6 +393,12 @@ class _WalletScreenState extends State<WalletScreen>
                         ],
                       ),
                     ),
+
+                    const SizedBox(height: 10),
+
+                    AdsManager().banner(),
+
+                    const SizedBox(height: 10),
 
                     walletCard(
                       title: "رصيد العملات",
