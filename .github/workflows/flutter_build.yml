@@ -45,15 +45,23 @@ jobs:
 
       - name: Fix Unity Ads Java Compatibility
         run: |
-          UNITY_DIR=$(find ~/.pub-cache/hosted/pub.dev -maxdepth 1 -type d -name "unity_ads_plugin-*" | head -1)
+          python3 <<'PY'
+          import glob
 
-          echo "Unity Ads directory:"
-          echo "$UNITY_DIR"
+          paths = glob.glob("/home/runner/.pub-cache/hosted/pub.dev/unity_ads_plugin-*")
 
-          if [ -d "$UNITY_DIR/android" ]; then
-            echo "Patching Unity Ads..."
+          if not paths:
+              raise Exception("Unity Ads plugin not found")
 
-            cat <<EOF >> "$UNITY_DIR/android/build.gradle"
+          path = paths[0]
+
+          print("Unity Ads directory:")
+          print(path)
+
+          gradle = path + "/android/build.gradle"
+
+          with open(gradle, "a") as f:
+              f.write("""
 
 android {
     compileOptions {
@@ -67,13 +75,10 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
         jvmTarget = "17"
     }
 }
-EOF
+""")
 
-            echo "Unity Ads patched successfully"
-          else
-            echo "Unity Ads plugin not found"
-            exit 1
-          fi
+          print("Unity Ads patched successfully")
+          PY
 
 
       - name: Generate App Icon
