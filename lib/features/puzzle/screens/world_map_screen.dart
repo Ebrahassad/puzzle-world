@@ -122,7 +122,7 @@ _RelativeRect(
 _RelativeRect(  
   id: "nature",  
   left: 268 / worldWidth,  
-  top: 600 / worldHeight,  
+  top: 595 / worldHeight,  
   width: 360 / worldWidth,  
   height: 380 / worldHeight,  
 ),  
