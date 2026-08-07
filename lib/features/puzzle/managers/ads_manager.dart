@@ -38,41 +38,6 @@ class AdsManager {
 
     final completer = Completer<void>();
 
-    UnityAds.setListener(
-      UnityAdsListener(
-        onUnityAdsReady: (placementId) {
-
-          if (placementId == rewardedPlacementId) {
-            _rewardedReady = true;
-          }
-
-          if (placementId == interstitialPlacementId) {
-            _interstitialReady = true;
-          }
-
-          if (placementId == bannerPlacementId) {
-            _bannerReady = true;
-          }
-
-        },
-
-        onUnityAdsFailedToLoad: (placementId, error, message) {
-          debugPrint(
-            "Ad failed loading: $placementId $message",
-          );
-        },
-
-        onUnityAdsShowComplete: (placementId, state) {},
-
-        onUnityAdsShowFailure: (placementId, error, message) {},
-
-        onUnityAdsShowStart: (placementId) {},
-
-        onUnityAdsShowClick: (placementId) {},
-
-      ),
-    );
-
     UnityAds.init(
       gameId: _gameId,
       testMode: testMode,
@@ -97,10 +62,23 @@ class AdsManager {
 
     UnityAds.load(
       placementId: rewardedPlacementId,
+      onComplete: (placementId) {
+        _rewardedReady = true;
+      },
+      onFailed: (placementId, error, message) {
+        debugPrint("Rewarded failed: $message");
+      },
     );
+
 
     UnityAds.load(
       placementId: interstitialPlacementId,
+      onComplete: (placementId) {
+        _interstitialReady = true;
+      },
+      onFailed: (placementId, error, message) {
+        debugPrint("Interstitial failed: $message");
+      },
     );
 
   }
