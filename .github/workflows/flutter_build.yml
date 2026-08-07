@@ -39,6 +39,39 @@ jobs:
         run: flutter pub get
 
 
+      - name: Patch Unity Ads Java 17
+        run: |
+          PLUGIN_DIR="$HOME/.pub-cache/hosted/pub.dev/unity_ads_plugin-0.3.24/android"
+
+          echo "Unity Ads path:"
+          echo "$PLUGIN_DIR"
+
+          if [ -d "$PLUGIN_DIR" ]; then
+
+            echo "Unity Ads plugin found"
+
+            find "$PLUGIN_DIR" -type f \( -name "*.gradle" -o -name "*.gradle.kts" \) -print
+
+            find "$PLUGIN_DIR" -type f \( -name "*.gradle" -o -name "*.gradle.kts" \) -exec sed -i \
+            -e 's/VERSION_1_8/VERSION_17/g' \
+            -e 's/JavaVersion.VERSION_1_8/JavaVersion.VERSION_17/g' \
+            -e 's/sourceCompatibility *= *1.8/sourceCompatibility = 17/g' \
+            -e 's/targetCompatibility *= *1.8/targetCompatibility = 17/g' \
+            {} \;
+
+            echo "Patch completed"
+
+            echo "Checking remaining Java 8:"
+            grep -R "VERSION_1_8\|1.8" "$PLUGIN_DIR" || true
+
+          else
+
+            echo "Unity Ads plugin not found"
+            exit 1
+
+          fi
+
+
       - name: Check Unity Ads version
         run: flutter pub deps | grep unity_ads_plugin
 
