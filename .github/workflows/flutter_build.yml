@@ -1,101 +1,73 @@
 name: Flutter Android Build
 
-
 on:
-
   push:
-
     branches:
-
       - main
-
 
   workflow_dispatch:
 
-
-
-
 jobs:
-
   build:
-
 
     runs-on: ubuntu-latest
 
-
-
     steps:
-
-
 
       - name: Checkout repository
         uses: actions/checkout@v4
 
 
-
-
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
-
         with:
-
           flutter-version: '3.44.8'
-
           channel: stable
 
 
-
-
-
       - name: Check pubspec.yaml
-
         run: |
-
           pwd
-
           ls -la
-
           echo "===================="
-
           sed -n '1,120p' pubspec.yaml
-
           echo "===================="
-
-
-
 
 
       - name: Flutter pub get
-
         run: flutter pub get
 
 
+      - name: Fix Unity Ads JVM target
+        run: |
+          UNITY_DIR=$(find ~/.pub-cache -path "*unity_ads_plugin*" -type d | head -1)
+          echo "Unity plugin path: $UNITY_DIR"
 
+          if [ -d "$UNITY_DIR/android" ]; then
+            echo "Fixing Unity Ads Gradle settings..."
+
+            find "$UNITY_DIR/android" -name "*.gradle" -o -name "*.gradle.kts" | while read file
+            do
+              sed -i 's/JavaVersion.VERSION_1_8/JavaVersion.VERSION_17/g' "$file"
+              sed -i 's/jvmTarget = "1.8"/jvmTarget = "17"/g' "$file"
+            done
+
+            echo "Unity Ads patch completed."
+          else
+            echo "Unity Ads plugin directory not found."
+          fi
 
 
       - name: Generate App Icon
-
         run: dart run flutter_launcher_icons
 
 
-
-
-
       - name: Build APK
-
         run: flutter build apk --release
 
 
-
-
-
       - name: Upload APK
-
         uses: actions/upload-artifact@v4
-
         with:
-
           name: puzzle-world-apk
-
           path: build/app/outputs/flutter-apk/app-release.apk
