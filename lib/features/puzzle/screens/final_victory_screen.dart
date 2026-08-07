@@ -1,18 +1,32 @@
 import 'dart:math' as math;
-import 'dart:ui' as ui;
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-import '../engine/puzzle_generator.dart';
-import '../engine/puzzle_piece.dart';
 import '../managers/ads_manager.dart';
 import '../managers/reward_manager.dart';
-import '../models/puzzle_model.dart';
+import '../widgets/game_toolbar.dart';
 import 'world_map_screen.dart';
 
-enum _RewardKind { coins, stars, gems }
+enum _RewardType { star, coin, gem }
+
+class _FlightParticle {
+  final GlobalKey key;
+  final String asset;
+  final double size;
+  final Offset start;
+  final Offset end;
+  final double arcHeight;
+
+  const _FlightParticle({
+    required this.key,
+    required this.asset,
+    required this.size,
+    required this.start,
+    required this.end,
+    required this.arcHeight,
+  });
+}
 
 class _ConfettiParticle {
   double x;
@@ -38,46 +52,8 @@ class _ConfettiParticle {
   });
 }
 
-class _FlyingReward {
-  final _RewardKind kind;
-  final int amount;
-  final String assetPath;
-  final Offset start;
-  final Offset end;
-  final double arcHeight;
-  final double delay;
-  final double rotationTurns;
-  final double scale;
-
-  const _FlyingReward({
-    required this.kind,
-    required this.amount,
-    required this.assetPath,
-    required this.start,
-    required this.end,
-    required this.arcHeight,
-    required this.delay,
-    required this.rotationTurns,
-    required this.scale,
-  });
-}
-
-class _PieceExplosionData {
-  final PuzzlePiece piece;
-  Offset position;
-  double vx = 0;
-  double vy = 0;
-  double gravity = 0.3;
-  double rotation = 0;
-  double rotationSpeed = 0;
-  double opacity = 1;
-  double scale = 1;
-
-  _PieceExplosionData(this.piece) : position = piece.correctPosition;
-}
-
 class FinalVictoryScreen extends StatefulWidget {
-  final PuzzleModel? island;
+  final dynamic island;
 
   const FinalVictoryScreen({
     super.key,
@@ -90,74 +66,120 @@ class FinalVictoryScreen extends StatefulWidget {
 
 class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     with TickerProviderStateMixin {
-  static const int _kChestPhaseMs = 2500;
-  static const int _kConfettiPhaseMs = 2200;
-  static const int _kHeroTextDelayMs = 500;
+  final GlobalKey _starKey = GlobalKey();
+  final GlobalKey _coinKey = GlobalKey();
+  final GlobalKey _gemKey = GlobalKey();
 
-  static const int _baseCoins = 100;
-  static const int _baseStars = 1;
-  static const int _baseGems = 1;
+  final GlobalKey _chestKey = GlobalKey();
 
   late final AudioPlayer _audioPlayer;
+
+  late final AnimationController _bgController;
+  late final Animation<double> _bgScale;
+  late final Animation<double> _bgShift;
 
   late final AnimationController _chestController;
   late final Animation<double> _chestDrop;
   late final Animation<double> _chestScale;
-  late final Animation<double> _shake;
+  late final Animation<double> _chestShake;
 
   late final AnimationController _flashController;
   late final AnimationController _glowController;
   late final AnimationController _titleController;
-  late final Animation<double> _titleOpacity;
-  late final Animation<Offset> _titleSlide;
-  late final AnimationController _badgePunchController;
-  late final Animation<double> _badgePunchScale;
 
   late final AnimationController _flightController;
+  late final AnimationController _floatController;
+  late final AnimationController _badgePunchController;
 
-  late final Ticker _confettiTicker;
+  late Ticker _confettiTicker;
   final List<_ConfettiParticle> _confetti = [];
   bool _confettiActive = false;
 
-  late final Ticker _physicsTicker;
-  double _lastElapsedMs = 0;
-
-  List<PuzzlePiece> _pieces = [];
-  List<_PieceExplosionData> _explosionPieces = [];
-
   bool _opened = false;
   bool _showChest = false;
-  bool _showHeroText = false;
-  bool _showFlight = false;
-  bool _isBusy = false;
-  bool _hasFinished = false;
-  bool _doubleRewardAsked = false;
+  bool _showTitle = false;
+  bool _showRewardFlights = false;
+  bool _showButtons = false;
+  bool _running = true;
+  bool _doubleAsked = false;
+  bool _adInProgress = false;
+  bool _replayFlightAfterAd = false;
 
   Offset _chestCenter = Offset.zero;
 
-  final GlobalKey _chestKey = GlobalKey();
-  final GlobalKey _coinBadgeKey = GlobalKey();
-  final GlobalKey _starBadgeKey = GlobalKey();
-  final GlobalKey _gemBadgeKey = GlobalKey();
-
-  int _coins = 0;
-  int _stars = 0;
-  int _gems = 0;
-
-  final List<_FlyingReward> _flightRewards = [];
+  final List<_RewardType> _rewardOrder = const [
+    _RewardType.star,
+    _RewardType.coin,
+    _RewardType.gem,
+  ];
 
   @override
   void initState() {
     super.initState();
-
     _audioPlayer = AudioPlayer();
 
-    _physicsTicker = createTicker(_updateExplosion);
-    _confettiTicker = createTicker((_) => _updateConfetti());
+    _bgController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 18),
+    )..repeat(reverse: true);
+
+    _bgScale = Tween<double>(
+      begin: 1.0,
+      end: 1.04,
+    ).animate(CurvedAnimation(parent: _bgController, curve: Curves.easeInOut));
+
+    _bgShift = Tween<double>(
+      begin: -10,
+      end: 10,
+    ).animate(CurvedAnimation(parent: _bgController, curve: Curves.easeInOut));
 
     _chestController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2600),
+    );
+
+    _chestDrop = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween(begin: -700.0, end: 0.0).chain(
+          CurveTween(curve: Curves.easeInCubic),
+        ),
+        weight: 55,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 0.0, end: -75.0).chain(
+          CurveTween(curve: Curves.easeOut),
+        ),
+        weight: 15,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: -75.0, end: 0.0).chain(
+          CurveTween(curve: Curves.bounceOut),
+        ),
+        weight: 30,
+      ),
+    ]).animate(_chestController);
+
+    _chestScale = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween(begin: 0.72, end: 1.22).chain(
+          CurveTween(curve: Curves.easeOutBack),
+        ),
+        weight: 55,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 1.22, end: 1.0),
+        weight: 45,
+      ),
+    ]).animate(_chestController);
+
+    _chestShake = Tween<double>(
+      begin: -0.08,
+      end: 0.08,
+    ).animate(
+      CurvedAnimation(
+        parent: _chestController,
+        curve: const Interval(0.62, 0.84, curve: Curves.easeInOut),
+      ),
     );
 
     _flashController = AnimationController(
@@ -168,400 +190,267 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     _glowController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
-    )..repeat(reverse: true);
+    );
 
     _titleController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-
-    _badgePunchController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 380),
+      duration: const Duration(milliseconds: 900),
     );
 
     _flightController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 950),
     );
 
-    _chestDrop = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween(begin: -680.0, end: 0.0).chain(
-          CurveTween(curve: Curves.easeInCubic),
-        ),
-        weight: 60,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: 0.0, end: -60.0).chain(
-          CurveTween(curve: Curves.easeOut),
-        ),
-        weight: 12,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: -60.0, end: 0.0).chain(
-          CurveTween(curve: Curves.bounceOut),
-        ),
-        weight: 28,
-      ),
-    ]).animate(_chestController);
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat();
 
-    _chestScale = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween(begin: 0.68, end: 1.22).chain(
-          CurveTween(curve: Curves.easeOutBack),
-        ),
-        weight: 58,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: 1.22, end: 1.0),
-        weight: 42,
-      ),
-    ]).animate(_chestController);
-
-    _shake = Tween<double>(
-      begin: -0.08,
-      end: 0.08,
-    ).animate(
-      CurvedAnimation(
-        parent: _chestController,
-        curve: const Interval(0.56, 0.82, curve: Curves.easeInOut),
-      ),
+    _badgePunchController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
     );
 
-    _titleOpacity = CurvedAnimation(
-      parent: _titleController,
-      curve: Curves.easeOut,
-    );
-
-    _titleSlide = Tween<Offset>(
-      begin: const Offset(0, 0.24),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _titleController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+    _confettiTicker = createTicker((_) => _updateConfetti());
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      await _loadWallet();
-      _preparePieces();
-      await _startSequence();
+      await _runSequence();
     });
   }
 
-  Future<void> _loadWallet() async {
-    try {
-      final reward = await RewardManager.getReward();
-      if (!mounted) return;
-      setState(() {
-        _coins = reward.coins;
-        _stars = reward.stars;
-        _gems = reward.gems;
-      });
-    } catch (_) {}
-  }
-
-  void _preparePieces() {
-    _pieces = PuzzleGenerator.generate(
-      image: ui.Image(1, 1), // not used in this screen; kept for API safety
-      rows: 1,
-      cols: 1,
-      boardRect: const Rect.fromLTWH(0, 0, 1, 1),
-      scatterArea: const Rect.fromLTWH(0, 0, 1, 1),
-      seed: 1,
-    );
-
-    _explosionPieces = [];
-    setState(() {});
-  }
-
-  Future<void> _startSequence() async {
-    await Future.delayed(const Duration(milliseconds: 550));
+  Future<void> _runSequence() async {
+    await Future.delayed(const Duration(milliseconds: 500));
     if (!mounted) return;
+
+    setState(() {
+      _showChest = true;
+    });
+
+    try {
+      await _audioPlayer.play(AssetSource('audio/puzzle_win.mp3'));
+    } catch (_) {}
 
     await _chestController.forward();
     if (!mounted) return;
 
     setState(() {
       _opened = true;
-      _showChest = true;
     });
 
-    try {
-      await _audioPlayer.play(AssetSource('audio/puzzle_reward.mp3'));
-    } catch (_) {}
-
     _spawnConfetti();
-    await _flashController.forward();
-    await Future.delayed(const Duration(milliseconds: 140));
-    if (!mounted) return;
-    _flashController.reset();
+    _glowController.repeat(reverse: true);
+    _flashController.forward(from: 0);
 
     await Future.delayed(const Duration(milliseconds: 250));
     if (!mounted) return;
 
-    _captureChestCenter();
+    setState(() {
+      _showTitle = true;
+    });
+    _titleController.forward(from: 0);
 
-    await _playRewardFlightOnce();
-
+    await Future.delayed(const Duration(milliseconds: 450));
     if (!mounted) return;
 
-    await _offerDoubleReward();
-
+    await _playRewardFlights(
+      grantRewards: true,
+      replayOnly: false,
+    );
     if (!mounted) return;
 
-    await Future.delayed(const Duration(milliseconds: 850));
+    await Future.delayed(const Duration(milliseconds: 250));
     if (!mounted) return;
 
-    await _showHeroTextSequence();
+    await _showDoubleRewardDialog();
 
+    await Future.delayed(const Duration(milliseconds: 350));
     if (!mounted) return;
 
-    await Future.delayed(const Duration(milliseconds: 1200));
-    if (!mounted) return;
-
-    await _returnToWorldMap();
+    setState(() {
+      _showButtons = true;
+    });
   }
 
-  void _captureChestCenter() {
-    final size = MediaQuery.of(context).size;
-    if (_chestKey.currentContext != null) {
-      final box = _chestKey.currentContext!.findRenderObject() as RenderBox;
-      _chestCenter = box.localToGlobal(box.size.center(Offset.zero));
-    } else {
-      _chestCenter = Offset(size.width / 2, size.height / 2);
+  Future<void> _playRewardFlights({
+    required bool grantRewards,
+    required bool replayOnly,
+  }) async {
+    setState(() {
+      _showRewardFlights = true;
+    });
+
+    await _waitForToolbarTargets();
+
+    if (!mounted) return;
+
+    for (final reward in _rewardOrder) {
+      await _flyOneReward(reward);
+      if (!mounted) return;
+      await Future.delayed(const Duration(milliseconds: 120));
     }
-  }
 
-  Offset _centerOf(GlobalKey key, Offset fallback) {
-    if (key.currentContext == null) return fallback;
-    final renderObject = key.currentContext!.findRenderObject();
-    if (renderObject is! RenderBox) return fallback;
-    return renderObject.localToGlobal(renderObject.size.center(Offset.zero));
-  }
+    if (grantRewards && !replayOnly) {
+      await RewardManager.addStars(1);
+      await RewardManager.addCoins(100);
+      await RewardManager.addGems(1);
+    }
 
-  Future<void> _playRewardFlightOnce() async {
-    if (_isBusy) return;
-    _isBusy = true;
+    _badgePunchController.forward(from: 0);
 
-    final coinEnd = _centerOf(
-      _coinBadgeKey,
-      Offset(MediaQuery.of(context).size.width - 170, 34),
-    );
-    final starEnd = _centerOf(
-      _starBadgeKey,
-      Offset(MediaQuery.of(context).size.width - 112, 34),
-    );
-    final gemEnd = _centerOf(
-      _gemBadgeKey,
-      Offset(MediaQuery.of(context).size.width - 54, 34),
-    );
-
-    final coinStart = _chestCenter + const Offset(-36, 10);
-    final starStart = _chestCenter + const Offset(0, -8);
-    final gemStart = _chestCenter + const Offset(36, 10);
-
-    _flightRewards
-      ..clear()
-      ..addAll([
-        _FlyingReward(
-          kind: _RewardKind.coins,
-          amount: _baseCoins,
-          assetPath: 'assets/images/rewards/puzzle_coin.png',
-          start: coinStart,
-          end: coinEnd,
-          arcHeight: 140,
-          delay: 0.00,
-          rotationTurns: 1.2,
-          scale: 1.0,
-        ),
-        _FlyingReward(
-          kind: _RewardKind.stars,
-          amount: _baseStars,
-          assetPath: 'assets/images/rewards/Star_gold.png',
-          start: starStart,
-          end: starEnd,
-          arcHeight: 125,
-          delay: 0.06,
-          rotationTurns: 1.0,
-          scale: 1.0,
-        ),
-        _FlyingReward(
-          kind: _RewardKind.gems,
-          amount: _baseGems,
-          assetPath: 'assets/images/rewards/gem.png',
-          start: gemStart,
-          end: gemEnd,
-          arcHeight: 150,
-          delay: 0.12,
-          rotationTurns: 1.4,
-          scale: 1.0,
-        ),
-      ]);
+    await Future.delayed(const Duration(milliseconds: 120));
 
     if (mounted) {
       setState(() {
-        _showFlight = true;
+        _showRewardFlights = false;
       });
     }
+  }
+
+  Future<void> _flyOneReward(_RewardType type) async {
+    final target = _rewardTarget(type);
+    if (target == null) return;
+
+    final start = _getChestCenter();
+    final asset = _rewardAsset(type);
+    final size = _rewardSize(type);
+    final arc = _rewardArc(type);
+
+    final particle = _FlightParticle(
+      key: GlobalKey(),
+      asset: asset,
+      size: size,
+      start: start,
+      end: target,
+      arcHeight: arc,
+    );
+
+    final overlayEntry = OverlayEntry(
+      builder: (context) {
+        return AnimatedBuilder(
+          animation: _flightController,
+          builder: (context, child) {
+            final t = Curves.easeInOutCubic.transform(_flightController.value);
+            final x = particle.start.dx + (particle.end.dx - particle.start.dx) * t;
+            final y = particle.start.dy +
+                (particle.end.dy - particle.start.dy) * t +
+                (-particle.arcHeight * math.sin(math.pi * t));
+            final scale = 1.0 - (t * 0.4);
+
+            return Positioned(
+              left: x - particle.size / 2,
+              top: y - particle.size / 2,
+              child: Transform.scale(
+                scale: scale.clamp(0.55, 1.0),
+                child: child,
+              ),
+            );
+          },
+          child: Image.asset(
+            particle.asset,
+            key: particle.key,
+            width: particle.size,
+            height: particle.size,
+            fit: BoxFit.contain,
+          ),
+        );
+      },
+    );
+
+    final overlay = Overlay.of(context);
+    overlay.insert(overlayEntry);
 
     _flightController.reset();
     await _flightController.forward();
 
-    if (!mounted) return;
-
-    await Future.wait([
-      RewardManager.addCoins(_baseCoins),
-      RewardManager.addStars(_baseStars),
-      RewardManager.addGems(_baseGems),
-    ]);
-
-    await _loadWallet();
-
-    if (!mounted) return;
-
-    _badgePunchController.forward(from: 0);
-
-    setState(() {
-      _showFlight = false;
-    });
-
-    _isBusy = false;
+    overlayEntry.remove();
   }
 
-  Future<void> _offerDoubleReward() async {
-    if (_doubleRewardAsked) return;
-    _doubleRewardAsked = true;
+  Offset? _rewardTarget(_RewardType type) {
+    final key = switch (type) {
+      _RewardType.star => _starKey,
+      _RewardType.coin => _coinKey,
+      _RewardType.gem => _gemKey,
+    };
 
-    final wantsDouble = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1B1430),
-          title: const Text(
-            "🎁 مضاعفة المكافأة",
-            style: TextStyle(
-              color: Colors.amber,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: const Text(
-            "شاهد إعلاناً واحصل على نفس الحركة مرة أخرى.",
-            style: TextStyle(color: Colors.white70, height: 1.4),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text("لاحقاً"),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text("📺 مضاعفة"),
-            ),
-          ],
-        );
-      },
-    );
+    final context = key.currentContext;
+    if (context == null) return null;
 
-    if (wantsDouble != true) return;
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return null;
 
-    if (!AdsManager().isInitialized) {
-      await AdsManager().initAds();
+    return box.localToGlobal(box.size.center(Offset.zero));
+  }
+
+  String _rewardAsset(_RewardType type) {
+    return switch (type) {
+      _RewardType.star => 'assets/images/rewards/Star_gold.png',
+      _RewardType.coin => 'assets/images/rewards/puzzle_coin.png',
+      _RewardType.gem => 'assets/images/rewards/gem.png',
+    };
+  }
+
+  double _rewardSize(_RewardType type) {
+    return switch (type) {
+      _RewardType.star => 68,
+      _RewardType.coin => 62,
+      _RewardType.gem => 58,
+    };
+  }
+
+  double _rewardArc(_RewardType type) {
+    return switch (type) {
+      _RewardType.star => 130,
+      _RewardType.coin => 100,
+      _RewardType.gem => 116,
+    };
+  }
+
+  Offset _getChestCenter() {
+    final ctx = _chestKey.currentContext;
+    if (ctx == null) {
+      return Offset(MediaQuery.of(context).size.width / 2, MediaQuery.of(context).size.height / 2);
     }
-
-    final completer = Completer<void>();
-
-    AdsManager().showRewardedAd(
-      onRewardEarned: () async {
-        if (!mounted) {
-          if (!completer.isCompleted) completer.complete();
-          return;
-        }
-
-        await _playRewardFlightOnce();
-
-        if (!mounted) {
-          if (!completer.isCompleted) completer.complete();
-          return;
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("🎉 تمت مضاعفة المكافأة!"),
-          ),
-        );
-
-        if (!completer.isCompleted) completer.complete();
-      },
-      onAdFailed: () {
-        if (!mounted) {
-          if (!completer.isCompleted) completer.complete();
-          return;
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("الإعلان غير متوفر حالياً"),
-          ),
-        );
-
-        if (!completer.isCompleted) completer.complete();
-      },
-    );
-
-    await completer.future;
+    final box = ctx.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) {
+      return Offset(MediaQuery.of(context).size.width / 2, MediaQuery.of(context).size.height / 2);
+    }
+    return box.localToGlobal(box.size.center(Offset.zero));
   }
 
-  Future<void> _showHeroTextSequence() async {
-    if (!mounted) return;
-
-    setState(() {
-      _showHeroText = true;
-    });
-
-    await _titleController.forward(from: 0);
-  }
-
-  Future<void> _returnToWorldMap() async {
-    if (_hasFinished) return;
-    _hasFinished = true;
-
-    if (!mounted) return;
-
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const WorldMapScreen(),
-      ),
-      (route) => false,
-    );
+  Future<void> _waitForToolbarTargets() async {
+    for (int i = 0; i < 60; i++) {
+      if (!mounted) return;
+      if (_starKey.currentContext != null &&
+          _coinKey.currentContext != null &&
+          _gemKey.currentContext != null) {
+        return;
+      }
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
   }
 
   void _spawnConfetti() {
     if (!mounted) return;
 
     final size = MediaQuery.of(context).size;
-    final origin = Offset(size.width / 2, size.height / 2 - 40);
+    final origin = Offset(size.width / 2, size.height / 2 - 30);
     final random = math.Random();
 
     const colors = [
       Color(0xFFFFD54F),
       Color(0xFFFFFFFF),
-      Color(0xFFFFE082),
       Color(0xFF64B5F6),
-      Color(0xFF81C784),
       Color(0xFFFF8A65),
+      Color(0xFF81C784),
     ];
 
     _confetti.clear();
 
-    for (var i = 0; i < 72; i++) {
+    for (var i = 0; i < 64; i++) {
       final angle = random.nextDouble() * math.pi * 2;
-      final speed = 3.5 + random.nextDouble() * 8.5;
+      final speed = 4 + random.nextDouble() * 8;
 
       _confetti.add(
         _ConfettiParticle(
@@ -570,7 +459,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
           vx: math.cos(angle) * speed,
           vy: math.sin(angle) * speed - 4,
           rotation: random.nextDouble() * math.pi,
-          rotationSpeed: (random.nextDouble() - 0.5) * 0.35,
+          rotationSpeed: (random.nextDouble() - 0.5) * 0.36,
           opacity: 1,
           size: 5 + random.nextDouble() * 8,
           color: colors[random.nextInt(colors.length)],
@@ -587,11 +476,10 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
     for (final p in _confetti) {
       if (p.opacity <= 0) continue;
-
       active = true;
       p.x += p.vx;
       p.y += p.vy;
-      p.vy += 0.18;
+      p.vy += 0.17;
       p.vx *= 0.985;
       p.rotation += p.rotationSpeed;
       p.opacity -= 0.012;
@@ -607,30 +495,107 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     }
   }
 
-  void _updateExplosion(Duration elapsed) {
-    final elapsedMs = elapsed.inMilliseconds.toDouble();
-    final dt = ((elapsedMs - _lastElapsedMs) / (1000 / 60)).clamp(0.2, 3.0);
-    _lastElapsedMs = elapsedMs;
+  Future<void> _showDoubleRewardDialog() async {
+    if (_doubleAsked || _adInProgress) return;
+    _doubleAsked = true;
 
-    final fadeT = (elapsedMs / _kConfettiPhaseMs).clamp(0.0, 1.0);
-    final targetOpacity = 1.0 - Curves.easeOut.transform(fadeT);
+    final wantDouble = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xff1D1730),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+          ),
+          title: const Text(
+            "🎁 مضاعفة المكافأة",
+            style: TextStyle(color: Colors.amber),
+          ),
+          content: const Text(
+            "يمكنك مضاعفة المكافأة عبر مشاهدة إعلان.",
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("لاحقاً"),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text("شاهد إعلان"),
+            ),
+          ],
+        );
+      },
+    );
 
-    for (final data in _explosionPieces) {
-      data.position += Offset(
-        data.vx * dt,
-        data.vy * dt,
-      );
+    if (wantDouble != true) return;
 
-      data.vy += data.gravity * dt;
-
-      data.rotation += data.rotationSpeed * dt;
-      data.opacity = targetOpacity;
-      data.scale = math.max(0.82, data.scale - 0.0006 * dt);
+    if (!AdsManager().isInitialized) {
+      await AdsManager().initAds();
     }
 
-    if (mounted) {
-      setState(() {});
-    }
+    if (!mounted) return;
+
+    setState(() {
+      _adInProgress = true;
+    });
+
+    AdsManager().showRewardedAd(
+      onRewardEarned: () async {
+        await RewardManager.addStars(1);
+        await RewardManager.addCoins(100);
+        await RewardManager.addGems(1);
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("🎉 تمت مضاعفة المكافأة!"),
+          ),
+        );
+
+        await _playRewardFlights(
+          grantRewards: false,
+          replayOnly: true,
+        );
+
+        if (!mounted) return;
+
+        setState(() {
+          _adInProgress = false;
+        });
+
+        _goHome();
+      },
+      onAdFailed: () {
+        if (!mounted) return;
+
+        setState(() {
+          _adInProgress = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("الإعلان غير متوفر حالياً"),
+          ),
+        );
+
+        _goHome();
+      },
+    );
+  }
+
+  void _goHome() {
+    if (!_running || !mounted) return;
+    _running = false;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const WorldMapScreen()),
+      (route) => false,
+    );
   }
 
   @override
@@ -641,220 +606,250 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          Positioned.fill(child: _buildBackground(size)),
-          SafeArea(
-            child: Stack(
-              children: [
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  top: 10,
-                  child: AnimatedBuilder(
-                    animation: _badgePunchController,
-                    builder: (context, child) {
-                      final scale = _badgePunchController.isAnimating
-                          ? _badgePunchScale.value
-                          : 1.0;
-                      return Transform.scale(
-                        scale: scale,
-                        child: child,
-                      );
-                    },
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _RewardBadge(
-                            key: _coinBadgeKey,
-                            title: "العملات",
-                            value: _coins,
-                            assetPath: 'assets/images/rewards/puzzle_coin.png',
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _RewardBadge(
-                            key: _starBadgeKey,
-                            title: "النجوم",
-                            value: _stars,
-                            assetPath: 'assets/images/rewards/Star_gold.png',
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _RewardBadge(
-                            key: _gemBadgeKey,
-                            title: "الجواهر",
-                            value: _gems,
-                            assetPath: 'assets/images/rewards/gem.png',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        if (_showChest)
-                          AnimatedBuilder(
-                            animation: _chestController,
-                            builder: (context, child) {
-                              return Transform.translate(
-                                offset: Offset(0, _chestDrop.value),
-                                child: Transform.scale(
-                                  scale: _chestScale.value,
-                                  child: Transform.rotate(
-                                    angle: _opened ? 0 : _shake.value,
-                                    child: Image.asset(
-                                      _opened
-                                          ? 'assets/images/rewards/reward_chest_open.png'
-                                          : 'assets/images/rewards/reward_chest_closed.png',
-                                      key: _chestKey,
-                                      width: 240,
-                                      fit: BoxFit.contain,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-
-                        AnimatedBuilder(
-                          animation: _glowController,
-                          builder: (context, child) {
-                            final glow = 0.14 + (_glowController.value * 0.24);
-                            return Container(
-                              width: 460,
-                              height: 460,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: RadialGradient(
-                                  colors: [
-                                    Colors.amber.withOpacity(glow),
-                                    Colors.transparent,
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-
-                        if (_confettiActive || _confetti.isNotEmpty)
-                          Positioned.fill(
-                            child: CustomPaint(
-                              painter: _ConfettiPainter(List.of(_confetti)),
-                            ),
-                          ),
-
-                        if (_showFlight)
-                          AnimatedBuilder(
-                            animation: _flightController,
-                            builder: (context, child) {
-                              final overallT = Curves.easeInOutCubic.transform(
-                                _flightController.value,
-                              );
-
-                              return Stack(
-                                children: [
-                                  for (final reward in _flightRewards)
-                                    _buildFlyingReward(reward, overallT),
-                                ],
-                              );
-                            },
-                          ),
-
-                        if (_showHeroText)
-                          FadeTransition(
-                            opacity: _titleOpacity,
-                            child: SlideTransition(
-                              position: _titleSlide,
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 270),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      widget.island?.id == null
-                                          ? "لقد أكملت اللعبة!"
-                                          : "لقد أكملت ${widget.island!.id}!",
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                        shadows: [
-                                          Shadow(
-                                            color: Colors.amber,
-                                            blurRadius: 18,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    const Text(
-                                      "استمر لفتح مزايا جديدة!",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBackground(Size size) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF091A36),
-            Color(0xFF040814),
-          ],
-        ),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: -60,
-            left: -40,
-            child: _blurOrb(const Color(0xFFFFD54F).withOpacity(0.18), 230),
-          ),
-          Positioned(
-            top: 120,
-            right: -70,
-            child: _blurOrb(const Color(0xFF64B5F6).withOpacity(0.14), 260),
-          ),
-          Positioned(
-            bottom: 100,
-            left: -80,
-            child: _blurOrb(const Color(0xFF81C784).withOpacity(0.10), 240),
-          ),
-          Positioned.fill(
-            child: CustomPaint(
-              painter: _StarDustPainter(),
-            ),
-          ),
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.12),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xff06101E),
+                    Color(0xff020509),
+                  ],
+                ),
+              ),
+              child: AnimatedBuilder(
+                animation: _bgController,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, _bgShift.value),
+                    child: Transform.scale(
+                      scale: _bgScale.value,
+                      child: child,
+                    ),
+                  );
+                },
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: -60,
+                      top: 70,
+                      child: _softGlow(180, Colors.blueAccent.withOpacity(0.10)),
+                    ),
+                    Positioned(
+                      right: -40,
+                      top: 160,
+                      child: _softGlow(220, Colors.amber.withOpacity(0.10)),
+                    ),
+                    Positioned(
+                      left: 30,
+                      bottom: 140,
+                      child: _softGlow(260, Colors.purpleAccent.withOpacity(0.08)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: GameToolbar(
+              starKey: _starKey,
+              gemKey: _gemKey,
+              coinKey: _coinKey,
+              onExit: _goHome,
+              soundEnabled: true,
+            ),
+          ),
+
+          if (_showChest)
+            Center(
+              child: AnimatedBuilder(
+                animation: _chestController,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, _chestDrop.value),
+                    child: Transform.scale(
+                      scale: _chestScale.value,
+                      child: Transform.rotate(
+                        angle: _opened ? 0 : _chestShake.value,
+                        child: Container(
+                          key: _chestKey,
+                          width: 240,
+                          height: 240,
+                          alignment: Alignment.center,
+                          child: Image.asset(
+                            _opened
+                                ? 'assets/images/rewards/reward_chest_open.png'
+                                : 'assets/images/rewards/reward_chest_closed.png',
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+          if (_opened)
+            IgnorePointer(
+              child: Center(
+                child: AnimatedBuilder(
+                  animation: _glowController,
+                  builder: (context, child) {
+                    final glow = 0.18 + (_glowController.value * 0.26);
+                    return Container(
+                      width: 460,
+                      height: 460,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            Colors.amber.withOpacity(glow),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+
+          if (_confettiActive || _confetti.isNotEmpty)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: CustomPaint(
+                  painter: _ConfettiPainter(List.of(_confetti)),
+                ),
+              ),
+            ),
+
+          if (_showTitle)
+            Positioned(
+              left: 24,
+              right: 24,
+              top: size.height * 0.18,
+              child: FadeTransition(
+                opacity: _titleController,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.2),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: _titleController,
+                      curve: Curves.easeOutCubic,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Text(
+                        "لقد أكملت المرحلة العاشرة",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          shadows: [
+                            Shadow(
+                              color: Colors.amber,
+                              blurRadius: 16,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        "تم فتح عالمك بالكامل",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+          if (_showRewardFlights)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: AnimatedBuilder(
+                  animation: _floatController,
+                  builder: (context, child) {
+                    final bob = math.sin(_floatController.value * 2 * math.pi) * 4;
+                    return Transform.translate(offset: Offset(0, bob), child: child);
+                  },
+                  child: const SizedBox.shrink(),
+                ),
+              ),
+            ),
+
+          if (_showButtons)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 28,
+              child: AnimatedBuilder(
+                animation: _floatController,
+                builder: (context, child) {
+                  final bob = math.sin(_floatController.value * 2 * math.pi) * 5;
+                  return Transform.translate(
+                    offset: Offset(0, bob),
+                    child: child,
+                  );
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _ActionButton(
+                      imagePath: 'assets/images/ui/next_play.png',
+                      onTap: _goHome,
+                    ),
+                    const SizedBox(width: 14),
+                    _ActionButton(
+                      imagePath: 'assets/images/ui/home_map.png',
+                      onTap: _goHome,
+                    ),
+                    const SizedBox(width: 14),
+                    _ActionButton(
+                      imagePath: 'assets/images/ui/again_play.png',
+                      onTap: () async {
+                        if (!mounted) return;
+                        setState(() {
+                          _showButtons = false;
+                          _doubleAsked = false;
+                          _adInProgress = false;
+                        });
+                        await _chestController.reset();
+                        await _titleController.reset();
+                        await _flashController.reset();
+                        await _runSequence();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          Positioned.fill(
+            child: IgnorePointer(
+              child: AnimatedBuilder(
+                animation: _flashController,
+                builder: (context, child) {
+                  return Container(
+                    color: Colors.white.withOpacity(_flashController.value * 0.9),
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -862,7 +857,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     );
   }
 
-  Widget _blurOrb(Color color, double size) {
+  Widget _softGlow(double size, Color color) {
     return Container(
       width: size,
       height: size,
@@ -878,161 +873,51 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     );
   }
 
-  Widget _buildFlyingReward(_FlyingReward reward, double overallT) {
-    final startT = ((overallT - reward.delay) / (1.0 - reward.delay))
-        .clamp(0.0, 1.0);
-    final t = Curves.easeInOutCubic.transform(startT);
-
-    if (startT <= 0) {
-      return const SizedBox.shrink();
-    }
-
-    final x = ui.lerpDouble(reward.start.dx, reward.end.dx, t) ?? reward.end.dx;
-    final baseY =
-        ui.lerpDouble(reward.start.dy, reward.end.dy, t) ?? reward.end.dy;
-    final arc = -reward.arcHeight * math.sin(math.pi * t);
-    final y = baseY + arc;
-
-    final scale = (reward.scale - (t * 0.45)).clamp(0.45, 1.0);
-    final rotation = reward.rotationTurns * math.pi * 2 * t;
-
-    return Positioned(
-      left: x - 34,
-      top: y - 34,
-      child: Transform.rotate(
-        angle: rotation,
-        child: Transform.scale(
-          scale: scale,
-          child: Opacity(
-            opacity: 0.95,
-            child: Image.asset(
-              reward.assetPath,
-              width: 68,
-              height: 68,
-              fit: BoxFit.contain,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   void dispose() {
+    _running = false;
     _audioPlayer.dispose();
-
-    if (_physicsTicker.isActive) {
-      _physicsTicker.stop();
-    }
-    if (_confettiTicker.isActive) {
-      _confettiTicker.stop();
-    }
-
-    _physicsTicker.dispose();
-    _confettiTicker.dispose();
-
+    _bgController.dispose();
     _chestController.dispose();
     _flashController.dispose();
     _glowController.dispose();
     _titleController.dispose();
-    _badgePunchController.dispose();
     _flightController.dispose();
+    _floatController.dispose();
+    _badgePunchController.dispose();
+
+    if (_confettiTicker.isActive) {
+      _confettiTicker.stop();
+    }
+    _confettiTicker.dispose();
 
     super.dispose();
   }
 }
 
-class _RewardBadge extends StatelessWidget {
-  final String title;
-  final int value;
-  final String assetPath;
+class _ActionButton extends StatelessWidget {
+  final String imagePath;
+  final VoidCallback onTap;
 
-  const _RewardBadge({
-    super.key,
-    required this.title,
-    required this.value,
-    required this.assetPath,
+  const _ActionButton({
+    required this.imagePath,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.38),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: Colors.amber.withOpacity(0.35),
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 72,
+        height: 72,
+        child: Image.asset(
+          imagePath,
+          fit: BoxFit.contain,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.22),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Image.asset(
-            assetPath,
-            width: 28,
-            height: 28,
-            fit: BoxFit.contain,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  value.toString(),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.amber,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
-}
-
-class _StarDustPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final random = math.Random(42);
-    final paint = Paint();
-
-    for (var i = 0; i < 120; i++) {
-      final x = random.nextDouble() * size.width;
-      final y = random.nextDouble() * size.height;
-      final r = 0.8 + random.nextDouble() * 1.6;
-      final opacity = 0.10 + random.nextDouble() * 0.18;
-
-      paint.color = Colors.white.withOpacity(opacity);
-      canvas.drawCircle(Offset(x, y), r, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _ConfettiPainter extends CustomPainter {
