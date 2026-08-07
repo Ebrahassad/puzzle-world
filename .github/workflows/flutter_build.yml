@@ -38,24 +38,8 @@ jobs:
         run: flutter pub get
 
 
-      - name: Fix Unity Ads JVM target
-        run: |
-          UNITY_DIR=$(find ~/.pub-cache -path "*unity_ads_plugin*" -type d | head -1)
-          echo "Unity plugin path: $UNITY_DIR"
-
-          if [ -d "$UNITY_DIR/android" ]; then
-            echo "Fixing Unity Ads Gradle settings..."
-
-            find "$UNITY_DIR/android" -name "*.gradle" -o -name "*.gradle.kts" | while read file
-            do
-              sed -i 's/JavaVersion.VERSION_1_8/JavaVersion.VERSION_17/g' "$file"
-              sed -i 's/jvmTarget = "1.8"/jvmTarget = "17"/g' "$file"
-            done
-
-            echo "Unity Ads patch completed."
-          else
-            echo "Unity Ads plugin directory not found."
-          fi
+      - name: Check Unity Ads version
+        run: flutter pub deps | grep unity_ads_plugin
 
 
       - name: Generate App Icon
