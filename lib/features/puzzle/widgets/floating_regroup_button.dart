@@ -61,7 +61,7 @@ class _FloatingRegroupButtonState extends State<FloatingRegroupButton>
         final screenWidth = MediaQuery.of(context).size.width;
         
         // حركة التجوال في الأعلى (تحت شريط الأدوات مباشرة وفوق لوحة البازل)
-        final x = _moveController.value * (screenWidth - 100) + 20;
+        final x = _moveController.value * (screenWidth - 120) + 20;
         final y = 110 + sin(_moveController.value * pi * 4) * 10;
 
         return Positioned(
@@ -77,8 +77,8 @@ class _FloatingRegroupButtonState extends State<FloatingRegroupButton>
           child: GestureDetector(
             onTap: widget.onPressed,
             child: SizedBox(
-              width: 55,
-              height: 55,
+              width: 90,
+              height: 90,
               child: Image.asset(
                 "assets/images/ui/regroup_icon.png",
                 fit: BoxFit.contain,
