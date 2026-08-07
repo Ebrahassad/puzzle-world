@@ -405,11 +405,14 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
     final currentNumber = widget.level!.levelNumber;
 
-    final nextLevel = puzzleLevels.firstWhere(
-      (level) =>
-          level.levelNumber == currentNumber + 1,
-      orElse: () => widget.level!,
-    );
+    final nextLevel = PuzzleLevelData
+        .getLevels(widget.island!.id)
+        .firstWhere(
+          (level) =>
+              level.levelNumber ==
+              currentNumber + 1,
+          orElse: () => widget.level!,
+        );
 
     Navigator.pushReplacement(
       context,
@@ -433,6 +436,15 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
     gameFinished = true;
     stopwatch.stop();
+
+    await PuzzleProgressManager.completeLevel(
+      currentLevelId,
+    );
+
+    await PuzzleProgressManager.unlockNextLevel(
+      widget.island!.id,
+      widget.level!.levelNumber,
+    );
 
     setState(() {
       showBoardImage = false;
@@ -461,16 +473,18 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
             onFinished: () {
               Navigator.pop(context);
             },
-            onNext: () {
+            onNext: () async {
+
               Navigator.pop(context);
 
-              Future.delayed(
+              await Future.delayed(
                 const Duration(milliseconds: 100),
-                () {
-                  if (!mounted) return;
-                  openNextLevel();
-                },
               );
+
+              if (!mounted) return;
+
+              openNextLevel();
+
             },
             onMap: () {
               Navigator.pushAndRemoveUntil(
