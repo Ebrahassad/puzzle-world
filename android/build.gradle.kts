@@ -1,4 +1,4 @@
-Allprojects {
+allprojects {
     repositories {
         google()
         mavenCentral()
@@ -13,35 +13,25 @@ val newBuildDir: Directory =
 rootProject.layout.buildDirectory.value(newBuildDir)
 
 subprojects {
-
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 
     project.evaluationDependsOn(":app")
 
-    // إجبار كل الحزم والمشاريع الفرعية (مثل unity_ads_plugin) على استخدام Java 17
-    plugins.withId("com.android.library") {
-        afterEvaluate {
-            extensions.configure<com.android.build.gradle.BaseExtension> {
-                compileOptions {
+    // توحيد إعدادات الجافا والكوتلن لكل الموديولات والحزم الخارجية لتجنب التعارض
+    afterEvaluate {
+        extensions.findByName("android")?.let { androidExt ->
+            if (androidExt is com.android.build.gradle.BaseExtension) {
+                androidExt.compileOptions {
                     sourceCompatibility = JavaVersion.VERSION_17
                     targetCompatibility = JavaVersion.VERSION_17
                 }
             }
         }
     }
+}
 
-    plugins.withId("com.android.application") {
-        afterEvaluate {
-            extensions.configure<com.android.build.gradle.BaseExtension> {
-                compileOptions {
-                    sourceCompatibility = JavaVersion.VERSION_17
-                    targetCompatibility = JavaVersion.VERSION_17
-                }
-            }
-        }
-    }
-
+subprojects {
     tasks.withType<JavaCompile>().configureEach {
         sourceCompatibility = "17"
         targetCompatibility = "17"
@@ -49,9 +39,7 @@ subprojects {
 
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
         compilerOptions {
-            jvmTarget.set(
-                org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
-            )
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         }
     }
 }
