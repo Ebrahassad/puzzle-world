@@ -7,7 +7,6 @@ import 'final_victory_screen.dart';
 import '../managers/reward_manager.dart';
 import '../managers/ads_manager.dart';
 import '../engine/puzzle_piece.dart';
-import '../engine/puzzle_generator.dart';
 import '../widgets/victory_puzzle_preview.dart';
 import '../models/puzzle_model.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -80,6 +79,8 @@ class VictoryScreen extends StatefulWidget {
   final int cols;
   final Rect boardRect;
 
+  final List<PuzzlePiece> pieces;
+
   final PuzzleModel? island;
   final int levelNumber;
   final bool isFinalLevel;
@@ -100,6 +101,7 @@ class VictoryScreen extends StatefulWidget {
     required this.rows,
     required this.cols,
     required this.boardRect,
+    required this.pieces,
     this.island,
     required this.levelNumber,
     this.isFinalLevel = false,
@@ -248,18 +250,9 @@ class _VictoryScreenState extends State<VictoryScreen>
   //==============================
 
   void _preparePieces() {
-    _pieces = PuzzleGenerator.generate(
-      image: widget.puzzleImage,
-      rows: widget.rows,
-      cols: widget.cols,
-      boardRect: widget.boardRect,
-      scatterArea: widget.boardRect,
-      seed: 1,
-    );
-
-    for (final piece in _pieces) {
-      piece.currentPosition = piece.correctPosition;
-    }
+    _pieces = widget.pieces.map((piece) {
+      return piece;
+    }).toList();
 
     _explosionPieces = _pieces.map((piece) {
       return _PieceExplosionData(piece);
