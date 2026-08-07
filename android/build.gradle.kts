@@ -18,20 +18,7 @@ subprojects {
 
     project.evaluationDependsOn(":app")
 
-    // توحيد إعدادات الجافا والكوتلن لكل الموديولات والحزم الخارجية لتجنب التعارض
-    afterEvaluate {
-        extensions.findByName("android")?.let { androidExt ->
-            if (androidExt is com.android.build.gradle.BaseExtension) {
-                androidExt.compileOptions {
-                    sourceCompatibility = JavaVersion.VERSION_17
-                    targetCompatibility = JavaVersion.VERSION_17
-                }
-            }
-        }
-    }
-}
-
-subprojects {
+    // توحيد إصدار الجافا والكوتلن لكل المهام (Tasks) مباشرة وبدون استخدام BaseExtension القديم
     tasks.withType<JavaCompile>().configureEach {
         sourceCompatibility = "17"
         targetCompatibility = "17"
