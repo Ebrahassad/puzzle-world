@@ -1,4 +1,4 @@
-allprojects {
+Allprojects {
     repositories {
         google()
         mavenCentral()
@@ -18,6 +18,29 @@ subprojects {
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 
     project.evaluationDependsOn(":app")
+
+    // إجبار كل الحزم والمشاريع الفرعية (مثل unity_ads_plugin) على استخدام Java 17
+    plugins.withId("com.android.library") {
+        afterEvaluate {
+            extensions.configure<com.android.build.gradle.BaseExtension> {
+                compileOptions {
+                    sourceCompatibility = JavaVersion.VERSION_17
+                    targetCompatibility = JavaVersion.VERSION_17
+                }
+            }
+        }
+    }
+
+    plugins.withId("com.android.application") {
+        afterEvaluate {
+            extensions.configure<com.android.build.gradle.BaseExtension> {
+                compileOptions {
+                    sourceCompatibility = JavaVersion.VERSION_17
+                    targetCompatibility = JavaVersion.VERSION_17
+                }
+            }
+        }
+    }
 
     tasks.withType<JavaCompile>().configureEach {
         sourceCompatibility = "17"
