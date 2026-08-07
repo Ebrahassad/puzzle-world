@@ -407,11 +407,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     gameFinished = true;
     stopwatch.stop();
 
-    if (!widget.isCustomImage && widget.level != null) {
-      await RewardManager.completePuzzle(
-        rewardKey: widget.level!.id,
-      );
-    }
+    
 
     if (!mounted) return;
 
