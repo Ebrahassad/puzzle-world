@@ -1,9 +1,10 @@
-import 'dart:io';
+
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'puzzle_game_screen.dart';
+import '../managers/ads_manager.dart';
 
 /// شاشة "جزيرتك الخاصة" — نقطة الدخول لتحويل صور المستخدم الخاصة
 /// إلى ألغاز قابلة للعب. مستقلة تماماً عن GameToolbar ونظام
@@ -116,26 +117,30 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                 const SizedBox(height: 24),
                 _DifficultyOption(
                   label: 'سهل',
-                  subtitle: '3×3',
+                  subtitle: '4×4 (16 قطعة)',
                   icon: Icons.sentiment_satisfied_alt,
                   color: const Color(0xFF4CAF7D),
-                  onTap: () => Navigator.of(dialogContext).pop(3),
-                ),
-                const SizedBox(height: 12),
-                _DifficultyOption(
-                  label: 'متوسط',
-                  subtitle: '4×4',
-                  icon: Icons.extension,
-                  color: const Color(0xFFE0A63A),
                   onTap: () => Navigator.of(dialogContext).pop(4),
                 ),
+
                 const SizedBox(height: 12),
+
                 _DifficultyOption(
-                  label: 'صعب',
-                  subtitle: '5×5',
+                  label: 'متوسط',
+                  subtitle: '6×6 (36 قطعة)',
+                  icon: Icons.extension,
+                  color: const Color(0xFFE0A63A),
+                  onTap: () => Navigator.of(dialogContext).pop(6),
+                ),
+
+                const SizedBox(height: 12),
+
+                _DifficultyOption(
+                  label: 'خبير',
+                  subtitle: '8×8 (64 قطعة)',
                   icon: Icons.local_fire_department,
                   color: const Color(0xFFD9534F),
-                  onTap: () => Navigator.of(dialogContext).pop(5),
+                  onTap: () => Navigator.of(dialogContext).pop(8),
                 ),
                 const SizedBox(height: 16),
                 TextButton(
@@ -366,6 +371,14 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                         fontWeight: FontWeight.w700,
                       ),
                     ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 60,
+            width: double.infinity,
+            child: Center(
+              child: AdsManager().banner(),
             ),
           ),
         ],
