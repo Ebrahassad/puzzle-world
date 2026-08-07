@@ -17,6 +17,7 @@ import '../widgets/game_toolbar.dart';
 import '../widgets/flying_coin.dart';
 import '../widgets/floating_regroup_button.dart';
 import 'victory_screen.dart';
+import 'world_map_screen.dart'; // <--- استيراد شاشة خريطة العالم
 import 'package:audioplayers/audioplayers.dart';
 
 class PuzzleGameScreen extends StatefulWidget {
@@ -467,9 +468,13 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
               );
             },
             onMap: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-              Navigator.pop(context);
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const WorldMapScreen(),
+                ),
+                (route) => false,
+              );
             },
             onReplay: () {
               Navigator.pushReplacement(
