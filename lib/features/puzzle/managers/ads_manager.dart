@@ -12,7 +12,7 @@ class AdsManager {
 
   factory AdsManager() => _instance;
 
-  static const String _gameId = '80019478';
+  static const String _gameId = '800194786';
 
   static const String rewardedPlacementId = 'Rewarded_Android';
   static const String interstitialPlacementId = 'Interstitial_Android';
