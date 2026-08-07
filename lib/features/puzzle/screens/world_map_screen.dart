@@ -590,7 +590,7 @@ return Scaffold(
                       width: 55,  
                       height: 55,  
                       child: Image.asset(  
-                        "assets/images/ui/add_pic.png",  
+                        "assets/images/ui/private_island.png",  
                         fit: BoxFit.contain,  
                         errorBuilder: (context, error, stack) =>  
                             const SizedBox.shrink(),  
