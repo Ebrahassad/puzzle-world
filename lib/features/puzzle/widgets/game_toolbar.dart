@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../screens/wallet_screen.dart';
 import '../managers/reward_manager.dart';
 import '../models/reward_result_model.dart';
+import '../managers/ads_manager.dart';
 
 class GameToolbar extends StatefulWidget {
   final VoidCallback? onBack;
@@ -117,62 +118,77 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
                   ),
                 ],
               ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SwitchListTile(
-                    title: const Text(
-                      "الصوت",
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SwitchListTile(
+                      title: const Text(
+                        "الصوت",
+                      ),
+                      secondary: Icon(
+                        sound ? Icons.volume_up : Icons.volume_off,
+                      ),
+                      value: sound,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          sound = value;
+                        });
+                        widget.onSoundChanged?.call(value);
+                      },
                     ),
-                    secondary: Icon(
-                      sound ? Icons.volume_up : Icons.volume_off,
+
+                    const SizedBox(height: 10),
+
+                    SizedBox(
+                      height: 50,
+                      width: double.infinity,
+                      child: Center(
+                        child: AdsManager().banner(),
+                      ),
                     ),
-                    value: sound,
-                    onChanged: (value) {
-                      setDialogState(() {
-                        sound = value;
-                      });
-                      widget.onSoundChanged?.call(value);
-                    },
-                  ),
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.save_rounded),
-                    title: const Text("حفظ اللعبة"),
-                    onTap: () async {
-                      Navigator.pop(context);
-                      await Future.delayed(
-                        const Duration(milliseconds: 200),
-                      );
-                      widget.onSave?.call();
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.restart_alt_rounded),
-                    title: const Text("إعادة اللعبة"),
-                    onTap: () {
-                      Navigator.pop(context);
-                      widget.onRestart?.call();
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.exit_to_app_rounded,
+
+                    const SizedBox(height: 10),
+
+                    const Divider(),
+                    ListTile(
+                      leading: const Icon(Icons.save_rounded),
+                      title: const Text("حفظ اللعبة"),
+                      onTap: () async {
+                        Navigator.pop(context);
+                        await Future.delayed(
+                          const Duration(milliseconds: 200),
+                        );
+                        widget.onSave?.call();
+                      },
                     ),
-                    title: const Text(
-                      "خروج",
+                    ListTile(
+                      leading: const Icon(Icons.restart_alt_rounded),
+                      title: const Text("إعادة اللعبة"),
+                      onTap: () {
+                        Navigator.pop(context);
+                        widget.onRestart?.call();
+                      },
                     ),
-                    onTap: () {
-                      Navigator.pop(context);
-                      widget.onExit?.call();
-                    },
-                  ),
-                  const Divider(),
-                  const Text(
-                    "Puzzle World\nالإصدار 1.0.0",
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+                    ListTile(
+                      leading: const Icon(
+                        Icons.exit_to_app_rounded,
+                      ),
+                      title: const Text(
+                        "خروج",
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        widget.onExit?.call();
+                      },
+                    ),
+                    const Divider(),
+                    const Text(
+                      "Puzzle World\nالإصدار 1.0.0",
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
             );
           },
