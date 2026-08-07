@@ -101,12 +101,17 @@ class _IslandScreenState extends State<IslandScreen>
     PuzzleLevelModel level,
   ) async {
 
+    final levelKey =
+        "${widget.island.id}_level_${level.levelNumber}";
+
+
     final unlocked =
         await PuzzleProgressManager.isLevelUnlocked(
-          "${widget.island.id}_level_${level.levelNumber}",
+          levelKey,
         );
 
 
+    // مفتوحة
     if(unlocked){
 
       Navigator.push(
@@ -123,7 +128,49 @@ class _IslandScreenState extends State<IslandScreen>
     }
 
 
+    // فحص المرحلة السابقة
+    if(level.levelNumber > 1){
+
+      final previousCompleted =
+          await PuzzleProgressManager.isCompleted(
+            "${widget.island.id}_level_${level.levelNumber - 1}",
+          );
+
+
+      if(previousCompleted){
+
+        await PuzzleProgressManager.unlockLevel(
+          levelKey,
+        );
+
+
+        if(mounted){
+
+          setState((){});
+
+        }
+
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PuzzleGameScreen(
+              level: level,
+              island: widget.island,
+            ),
+          ),
+        );
+
+
+        return;
+      }
+
+    }
+
+
+    // إذا لم تنته المرحلة السابقة يظهر إعلان
     showUnlockDialog(level);
+
   }
 
   void showUnlockDialog(
@@ -298,8 +345,14 @@ class _IslandScreenState extends State<IslandScreen>
   }) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () {
-        openLevel(level);
+      onTap: () async {
+
+        await openLevel(level);
+
+        if(mounted){
+          setState((){});
+        }
+
       },
       child: SizedBox(
         width: size,
