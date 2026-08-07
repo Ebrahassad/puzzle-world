@@ -30,6 +30,7 @@ class AdsManager {
 
   bool _rewardedReady = false;
   bool _interstitialReady = false;
+  bool _bannerReady = false;
 
   Future<void> initAds() async {
 
@@ -47,6 +48,10 @@ class AdsManager {
 
           if (placementId == interstitialPlacementId) {
             _interstitialReady = true;
+          }
+
+          if (placementId == bannerPlacementId) {
+            _bannerReady = true;
           }
 
         },
