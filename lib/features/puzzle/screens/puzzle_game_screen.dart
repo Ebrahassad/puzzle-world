@@ -395,6 +395,30 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     _calculateBoardPosition();
   }
 
+  void openNextLevel() {
+    if (widget.isCustomImage) {
+      return;
+    }
+
+    final currentNumber = widget.level!.levelNumber;
+
+    final nextLevel = puzzleLevels.firstWhere(
+      (level) =>
+          level.levelNumber == currentNumber + 1,
+      orElse: () => widget.level!,
+    );
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PuzzleGameScreen(
+          level: nextLevel,
+          island: widget.island,
+        ),
+      ),
+    );
+  }
+
   Future<void> checkWin() async {
     if (gameFinished) {
       return;
@@ -423,16 +447,24 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
             cols: gridSize,
             boardRect: boardRect,
             island: widget.island,
-            levelNumber: widget.isCustomImage ? 10 : widget.level!.levelNumber,
-            isFinalLevel: widget.isCustomImage ||
-    widget.level?.levelNumber == 10,
+            levelNumber: widget.isCustomImage 
+                ? 10 
+                : widget.level!.levelNumber,
+            isFinalLevel: false,
             starTargetKey: starKey,
             onFinished: () {
               Navigator.pop(context);
             },
             onNext: () {
               Navigator.pop(context);
-              Navigator.pop(context); // العودة للخريطة في حال الصورة المخصصة
+
+              Future.delayed(
+                const Duration(milliseconds: 100),
+                () {
+                  if (!mounted) return;
+                  openNextLevel();
+                },
+              );
             },
             onMap: () {
               Navigator.pop(context);
