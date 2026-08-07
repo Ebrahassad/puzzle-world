@@ -92,6 +92,15 @@ static const String gameStateKey =
 static const String purchasedLevelsKey =
     "puzzle_purchased_levels";
 
+static const String purchasedIslandsKey =
+    "puzzle_purchased_islands";
+
+static const String privateIslandKey =
+    "private_island_unlocked";
+
+static const String adsBalanceKey =
+    "puzzle_ads_balance";
+
 
 static const String purchasedStarsKey =
     "puzzle_star_unlocks";
@@ -103,10 +112,6 @@ static const String purchasedGemsKey =
 
 static const String levelAdsKey =
     "puzzle_level_ads";
-
-
-static const String adsBalanceKey =
-    "puzzle_ads_balance";
 
 
 
@@ -964,25 +969,57 @@ static Future<bool> spendGems(
 
 
 //==================================================
-// 🪙 تكلفة فتح المرحلة
+// 🪙 أسعار فتح المراحل بالعملات
 //==================================================
 
-static int getLevelUnlockCost(
+static int getLevelCoinCost(
     int level,
 ) {
 
-  if(level <= 1){
-
+  if (level <= 1) {
     return 0;
-
   }
 
+  // المرحلة 2 = 100
+  // المرحلة 3 = 400
+  // المرحلة 4 = 800
+  // المرحلة 5 = 1600
+  // ثم تتضاعف التكلفة تدريجياً
 
-  // كلما تقدم اللاعب تزيد التكلفة
+  switch (level) {
 
-  return 50 + ((level - 2) * 25);
+    case 2:
+      return 100;
 
+    case 3:
+      return 400;
+
+    case 4:
+      return 800;
+
+    case 5:
+      return 1600;
+
+    case 6:
+      return 3200;
+
+    case 7:
+      return 6400;
+
+    case 8:
+      return 12800;
+
+    case 9:
+      return 25600;
+
+    case 10:
+      return 51200;
+
+    default:
+      return 51200;
+  }
 }
+
 
 
 //==================================================
@@ -990,22 +1027,6 @@ static int getLevelUnlockCost(
 //==================================================
 
 
-// 🪙 سعر فتح المرحلة بالعملات
-
-static int getLevelCoinCost(
-    int level,
-) {
-
-  if(level <= 1){
-
-    return 0;
-
-  }
-
-
-  return 50 + ((level - 2) * 25);
-
-}
 
 
 
@@ -1048,114 +1069,96 @@ static int getLevelGemCost(
 
 
 //==================================================
-// 🏝️ أسعار فتح الجزر
+// 🏝️ أسعار فتح الجزر بالنجوم
 //==================================================
-
-static int getIslandCoinCost(
-    String islandId,
-) {
-
-  switch(islandId){
-
-    case "animals":
-      return 0;
-
-
-    case "cars":
-      return 500;
-
-
-    case "nature":
-      return 1000;
-
-
-    case "landmarks":
-      return 1500;
-
-
-    case "space":
-      return 2500;
-
-
-    default:
-      return 99999;
-
-  }
-
-}
-
-
-
-// ⭐ سعر الجزيرة بالنجوم
 
 static int getIslandStarCost(
     String islandId,
 ) {
 
-  switch(islandId){
+  switch (islandId) {
 
     case "animals":
       return 0;
 
-
-    case "cars":
-      return 10;
-
-
     case "nature":
-      return 20;
-
-
-    case "landmarks":
-      return 30;
-
-
-    case "space":
       return 50;
 
+    case "cars":
+      return 75;
+
+    case "landmarks":
+      return 100;
+
+    case "space":
+      return 150;
 
     default:
-      return 9999;
-
+      return 999999;
   }
-
 }
 
 
 
-// 💎 سعر الجزيرة بالجواهر
+// ⭐ شراء / فتح الجزيرة بالنجوم
+//==================================================
 
-static int getIslandGemCost(
+static Future<bool> buyIslandWithStars(
     String islandId,
-) {
+) async {
 
-  switch(islandId){
+  // الحيوانات مفتوحة تلقائياً
+  if (islandId == "animals") {
 
-    case "animals":
-      return 0;
+    await unlockIsland(islandId);
 
-
-    case "cars":
-      return 5;
-
-
-    case "nature":
-      return 10;
-
-
-    case "landmarks":
-      return 15;
-
-
-    case "space":
-      return 25;
-
-
-    default:
-      return 9999;
-
+    return true;
   }
 
+  // إذا كانت الجزيرة مفتوحة مسبقاً
+  final unlocked =
+      await isIslandUnlocked(islandId);
+
+  if (unlocked) {
+    return true;
+  }
+
+  final cost =
+      getIslandStarCost(islandId);
+
+  if (cost <= 0) {
+    return false;
+  }
+
+  // الخصم الثاني:
+  // خصم النجوم عند فتح الجزيرة
+  final paid =
+      await spendStars(cost);
+
+  if (!paid) {
+    return false;
+  }
+
+  await unlockIsland(islandId);
+
+  final prefs = await _prefs;
+
+  final purchased =
+      prefs.getStringList(
+        purchasedIslandsKey,
+      ) ?? [];
+
+  if (!purchased.contains(islandId)) {
+
+    purchased.add(islandId);
+
+    await prefs.setStringList(
+      purchasedIslandsKey,
+      purchased,
+    );
+  }
+
+  return true;
 }
 
   //==================================================
@@ -1268,92 +1271,64 @@ static int getIslandGemCost(
 
 
 //==================================================
-// 🔓 شراء مرحلة بالعملات
+// 🪙 شراء / فتح المرحلة بالعملات
 //==================================================
 
 static Future<bool> buyLevelWithCoins(
-
     String levelId,
-
     int levelNumber,
-
 ) async {
 
-
-  final alreadyPurchased =
-      await isLevelPurchased(
-        levelId,
-      );
-
-
-  if(alreadyPurchased){
-
+  // المرحلة الأولى مفتوحة دائماً
+  if (levelNumber <= 1) {
+    await unlockLevel(levelId);
     return true;
-
   }
 
+  // إذا كانت مفتوحة مسبقاً لا نخصم شيئاً
+  final unlocked =
+      await isLevelUnlocked(levelId);
 
+  if (unlocked) {
+    return true;
+  }
 
   final cost =
-      getLevelUnlockCost(
-        levelNumber,
-      );
+      getLevelCoinCost(levelNumber);
 
-
-
-  if(cost <= 0){
-
-    return true;
-
-  }
-
-
-
-  final paid =
-      await spendCoins(
-        cost,
-      );
-
-
-
-  if(!paid){
-
+  if (cost <= 0) {
     return false;
-
   }
 
+  // الخصم الثاني:
+  // خصم العملات عند استخدام العملة لفتح المرحلة
+  final paid =
+      await spendCoins(cost);
 
+  if (!paid) {
+    return false;
+  }
 
-  await unlockLevel(
-    levelId,
-  );
+  await unlockLevel(levelId);
 
+  final prefs = await _prefs;
 
-  final prefs =
-      await _prefs;
-
-
-  final levels =
+  final purchased =
       prefs.getStringList(
         purchasedLevelsKey,
       ) ?? [];
 
+  if (!purchased.contains(levelId)) {
 
-
-  if(!levels.contains(levelId)){
-
-    levels.add(levelId);
+    purchased.add(levelId);
 
     await prefs.setStringList(
       purchasedLevelsKey,
-      levels,
+      purchased,
     );
-
   }
 
-
   return true;
-
 }
 
 //==================================================
@@ -2112,6 +2087,91 @@ static Future<bool> useGemsForUnlock(
   }
 
 
+  //==================================================
+  // 📺➡️🪙 شراء العملات برصيد الإعلانات
+  //==================================================
+
+  static const int coinsPurchaseAdsCost = 50;
+  static const int coinsPurchaseAmount = 100;
+
+  static Future<bool> buyCoinsWithAds() async {
+
+    // الخصم الأول:
+    // خصم 50 مشاهدة من رصيد الإعلانات
+    final paid =
+        await spendAdsBalance(
+          coinsPurchaseAdsCost,
+        );
+
+    if (!paid) {
+      return false;
+    }
+
+    // إضافة 100 عملة
+    await addCoins(
+      coinsPurchaseAmount,
+    );
+
+    return true;
+  }
+
+
+  //==================================================
+  // 📺➡️⭐ شراء نجمة برصيد الإعلانات
+  //==================================================
+
+  static const int starPurchaseAdsCost = 50;
+  static const int starPurchaseAmount = 1;
+
+  static Future<bool> buyStarWithAds() async {
+
+    // خصم 50 مشاهدة
+    final paid =
+        await spendAdsBalance(
+          starPurchaseAdsCost,
+        );
+
+    if (!paid) {
+      return false;
+    }
+
+    // إضافة نجمة واحدة
+    await addStars(
+      starPurchaseAmount,
+    );
+
+    return true;
+  }
+
+
+  //==================================================
+  // 📺➡️💎 شراء جوهرة برصيد الإعلانات
+  //==================================================
+
+  static const int gemPurchaseAdsCost = 100;
+  static const int gemPurchaseAmount = 1;
+
+  static Future<bool> buyGemWithAds() async {
+
+    // خصم 100 مشاهدة
+    final paid =
+        await spendAdsBalance(
+          gemPurchaseAdsCost,
+        );
+
+    if (!paid) {
+      return false;
+    }
+
+    // إضافة جوهرة واحدة
+    await addGems(
+      gemPurchaseAmount,
+    );
+
+    return true;
+  }
+
+
 
 
 
@@ -2234,133 +2294,45 @@ static Future<void> unlockNextIsland(
 
 
   //==================================================
-  // 📺 فتح الجزيرة بالإعلانات العامة
+  // 🏝️ الجزيرة الخاصة
   //==================================================
 
+  static const int privateIslandGemCost = 100;
 
-  static int getIslandRequiredAds(
-      String islandId,
-  ) {
+  static Future<bool> buyPrivateIslandWithGems() async {
 
-    switch(islandId){
+    final prefs = await _prefs;
 
-      case "animals":
-        return 0;
+    final alreadyUnlocked =
+        prefs.getBool(privateIslandKey) ?? false;
 
-      case "nature":
-        return 50;
-
-      case "cars":
-        return 75;
-
-      case "landmarks":
-        return 100;
-
-      case "space":
-        return 150;
-
-      default:
-        return 9999;
+    if (alreadyUnlocked) {
+      return true;
     }
-  }
 
-
-
-
-
-
-  static Future<bool> unlockIslandWithAds(
-      String islandId,
-  ) async {
-
-
-    final cost =
-        getIslandRequiredAds(
-          islandId,
-        );
-
-
+    // خصم الجواهر عند الشراء
     final paid =
-        await spendAdsBalance(
-          cost,
-        );
+        await spendGems(privateIslandGemCost);
 
-
-    if(!paid){
-
+    if (!paid) {
       return false;
-
     }
 
-
-    await unlockIsland(
-      islandId,
+    await prefs.setBool(
+      privateIslandKey,
+      true,
     );
 
-
     return true;
-
   }
 
+  static Future<bool> isPrivateIslandUnlocked() async {
 
+    final prefs = await _prefs;
 
-
-
-  //==================================================
-  // 📺 فتح المراحل بالإعلانات
-  //==================================================
-
-  static int getLevelRequiredAds(
-      int levelNumber,
-  ) {
-
-    if(levelNumber <= 1){
-      return 0;
-    }
-
-    if(levelNumber >= 2 && levelNumber <= 5){
-      return 5;
-    }
-
-    if(levelNumber >= 6 && levelNumber <= 10){
-      return 10;
-    }
-
-    return 20;
-  }
-
-  static Future<bool> unlockLevelWithAds(
-      String levelId,
-      int levelNumber,
-  ) async {
-
-
-    final cost =
-        getLevelRequiredAds(
-          levelNumber,
-        );
-
-
-    final paid =
-        await spendAdsBalance(
-          cost,
-        );
-
-
-    if(!paid){
-
-      return false;
-
-    }
-
-
-    await unlockLevel(
-      levelId,
-    );
-
-
-    return true;
-
+    return prefs.getBool(
+      privateIslandKey,
+    ) ?? false;
   }
 
 
@@ -2533,6 +2505,12 @@ static Future<void> unlockNextIsland(
     await prefs.remove(gameStateKey);
 
     await prefs.remove(levelAdsKey);
+
+    await prefs.remove(purchasedLevelsKey);
+
+    await prefs.remove(purchasedIslandsKey);
+
+    await prefs.remove(privateIslandKey);
 
 
   }
