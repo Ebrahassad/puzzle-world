@@ -109,7 +109,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   }
 
   //==================================================
-  // 🏁 هل هذه هي المرحلة العاشرة؟
+  // 🏁 هل هذه هي المرحلة الأخيرة في الجزيرة؟
   //==================================================
 
   bool get isFinalLevelOfIsland {
@@ -117,15 +117,19 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       return false;
     }
 
-    if (widget.level == null) {
+    if (widget.level == null || widget.island == null) {
       return false;
     }
 
-    return widget.level!.levelNumber == 10;
+    final levels = PuzzleLevelData.getLevels(
+      widget.island!.id,
+    );
+
+    return widget.level!.levelNumber == levels.length;
   }
 
   //==================================================
-  // 🏝️ فتح الجزيرة التالية
+  // 🏝️ فتح الجزيرة التالية بعد المرحلة الأخيرة
   //==================================================
 
   Future<void> _unlockNextIslandIfNeeded() async {
@@ -587,8 +591,6 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       return;
     }
 
-    // المرحلة 10 هي آخر مرحلة في الجزيرة.
-    // لا يوجد Level 11.
     if (isFinalLevelOfIsland) {
       _returnToWorldMap();
       return;
@@ -649,13 +651,6 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
     //==================================================
     // 🔓 نظام المراحل
-    //
-    // 1 → 9:
-    // يفتح المرحلة التالية.
-    //
-    // 10:
-    // لا يوجد Level 11.
-    // بدلاً من ذلك تفتح الجزيرة التالية.
     //==================================================
 
     if (isFinalLevelOfIsland) {
@@ -705,24 +700,12 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                     ? 10
                     : widget.level!.levelNumber,
 
-            // ⭐ المرحلة 10 = Final Victory
             isFinalLevel:
                 isFinalLevelOfIsland,
 
             starTargetKey: starKey,
 
             pieces: controller.pieces,
-
-            //==================================================
-            // عند انتهاء شاشة الفوز
-            //
-            // المرحلة 1-9:
-            // يعود إلى PuzzleGameScreen
-            //
-            // المرحلة 10:
-            // يعود مباشرة إلى WorldMapScreen
-            // لأن الجزيرة التالية مفتوحة بالفعل.
-            //==================================================
 
             onFinished: () {
               Navigator.pop(context);
@@ -742,13 +725,6 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                 );
               }
             },
-
-            //==================================================
-            // ➡️ التالي
-            //
-            // لا نستخدمه فعلياً في Final Victory.
-            // لكن نضع حماية إضافية.
-            //==================================================
 
             onNext: () async {
               Navigator.pop(context);
@@ -770,17 +746,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
               }
             },
 
-            //==================================================
-            // 🗺️ خريطة العالم
-            //==================================================
-
             onMap: () {
               _returnToWorldMap();
             },
-
-            //==================================================
-            // 🔄 إعادة المرحلة
-            //==================================================
 
             onReplay: () {
               Navigator.pushReplacement(
