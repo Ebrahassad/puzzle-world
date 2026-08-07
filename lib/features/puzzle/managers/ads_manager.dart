@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:unity_ads_plugin/unity_ads_plugin.dart';
-import '../managers/puzzle_progress_manager.dart';
 
+import '../managers/puzzle_progress_manager.dart';
 
 class AdsManager {
   AdsManager._();
@@ -12,13 +12,26 @@ class AdsManager {
 
   factory AdsManager() => _instance;
 
+  //==================================================
+  // 🎮 Unity Ads
+  //==================================================
+
   static const String _gameId = '800194786';
 
-  static const String rewardedPlacementId = 'Rewarded_Android';
-  static const String interstitialPlacementId = 'Interstitial_Android';
-  static const String bannerPlacementId = 'Banner_Android';
+  static const String rewardedPlacementId =
+      'Rewarded_Android';
+
+  static const String interstitialPlacementId =
+      'Interstitial_Android';
+
+  static const String bannerPlacementId =
+      'Banner_Android';
 
   static const bool testMode = true;
+
+  //==================================================
+  // ⚙️ الحالة
+  //==================================================
 
   bool _initialized = false;
 
@@ -29,12 +42,17 @@ class AdsManager {
   bool get isShowing => _isShowing;
 
   bool _rewardedReady = false;
+
   bool _interstitialReady = false;
-  bool _bannerReady = false;
+
+  //==================================================
+  // 🚀 تهيئة الإعلانات
+  //==================================================
 
   Future<void> initAds() async {
-
-    if (_initialized) return;
+    if (_initialized) {
+      return;
+    }
 
     final completer = Completer<void>();
 
@@ -44,51 +62,113 @@ class AdsManager {
 
       onComplete: () {
         _initialized = true;
-        debugPrint('✅ Unity Ads initialized');
+
+        debugPrint(
+          '✅ Unity Ads initialized',
+        );
+
         loadAds();
-        completer.complete();
+
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
       },
 
       onFailed: (error, message) {
-        debugPrint('❌ Unity Ads init failed: $message');
-        completer.complete();
+        debugPrint(
+          '❌ Unity Ads init failed: $message',
+        );
+
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
       },
     );
 
     return completer.future;
   }
 
-  void loadAds() {
+  //==================================================
+  // 📦 تحميل الإعلانات
+  //==================================================
 
+  void loadAds() {
+    // Rewarded
     UnityAds.load(
       placementId: rewardedPlacementId,
+
       onComplete: (placementId) {
         _rewardedReady = true;
+
+        debugPrint(
+          '✅ Rewarded ad ready',
+        );
       },
-      onFailed: (placementId, error, message) {
-        debugPrint("Rewarded failed: $message");
+
+      onFailed: (
+        placementId,
+        error,
+        message,
+      ) {
+        _rewardedReady = false;
+
+        debugPrint(
+          '❌ Rewarded ad failed: $message',
+        );
       },
     );
 
-
+    // Interstitial
     UnityAds.load(
       placementId: interstitialPlacementId,
+
       onComplete: (placementId) {
         _interstitialReady = true;
+
+        debugPrint(
+          '✅ Interstitial ad ready',
+        );
       },
-      onFailed: (placementId, error, message) {
-        debugPrint("Interstitial failed: $message");
+
+      onFailed: (
+        placementId,
+        error,
+        message,
+      ) {
+        _interstitialReady = false;
+
+        debugPrint(
+          '❌ Interstitial ad failed: $message',
+        );
       },
     );
-
   }
+
+  //==================================================
+  // 📺 الإعلان المكافئ
+  //
+  // كل إعلان مكتمل = مشاهدة واحدة فقط
+  // لا يفتح مرحلة أو جزيرة مباشرة.
+  //
+  // المشاهدة تذهب إلى:
+  // PuzzleProgressManager.adsBalance
+  //
+  // ثم يستخدمها المتجر لشراء:
+  // 🪙 العملات
+  // ⭐ النجوم
+  // 💎 الجواهر
+  //==================================================
 
   void showRewardedAd({
     required VoidCallback onRewardEarned,
     VoidCallback? onAdFailed,
   }) {
+    if (!_initialized) {
+      onAdFailed?.call();
+      return;
+    }
 
-    if (!_initialized || !_rewardedReady) {
+    if (!_rewardedReady) {
       onAdFailed?.call();
       return;
     }
@@ -104,36 +184,54 @@ class AdsManager {
       placementId: rewardedPlacementId,
 
       onComplete: (_) async {
+        // منع تكرار المكافأة
+        _isShowing = false;
+        _rewardedReady = false;
 
-  _isShowing = false;
-  _rewardedReady = false;
-  loadAds();
+        // إعادة تحميل إعلان جديد
+        loadAds();
 
-  // إضافة مشاهدة واحدة إلى الرصيد العام
-  await PuzzleProgressManager.addAdsBalance(1);
+        // مشاهدة واحدة فقط
+        await PuzzleProgressManager.addAdsBalance(1);
 
-  onRewardEarned();
+        debugPrint(
+          '📺 +1 ad balance',
+        );
 
-},
+        // إبلاغ الشاشة أن المكافأة وصلت
+        onRewardEarned();
+      },
 
       onFailed: (_, __, ___) {
-
         _isShowing = false;
         _rewardedReady = false;
 
         loadAds();
 
-        onAdFailed?.call();
+        debugPrint(
+          '❌ Rewarded ad failed',
+        );
 
+        onAdFailed?.call();
       },
     );
   }
 
+  //==================================================
+  // 📺 إعلان Interstitial
+  //
+  // لا يمنح أي عملة أو مشاهدة.
+  //==================================================
+
   void showInterstitialAd({
     required VoidCallback onAdClosed,
   }) {
+    if (!_initialized) {
+      onAdClosed();
+      return;
+    }
 
-    if (!_initialized || !_interstitialReady) {
+    if (!_interstitialReady) {
       onAdClosed();
       return;
     }
@@ -149,28 +247,28 @@ class AdsManager {
       placementId: interstitialPlacementId,
 
       onComplete: (_) {
-
         _isShowing = false;
         _interstitialReady = false;
+
         loadAds();
 
         onAdClosed();
-
       },
 
       onFailed: (_, __, ___) {
-
         _isShowing = false;
         _interstitialReady = false;
 
         loadAds();
 
         onAdClosed();
-
       },
-
     );
   }
+
+  //==================================================
+  // 📢 Banner
+  //==================================================
 
   Widget banner() {
     return SizedBox(
