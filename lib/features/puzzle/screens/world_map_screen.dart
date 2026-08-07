@@ -7,6 +7,7 @@ import 'private_island_screen.dart';
 import '../data/puzzle_data.dart';
 import '../models/puzzle_model.dart';
 import '../widgets/wallet_icon_widget.dart';
+import '../widgets/daily_reward_popup.dart';
 import 'island_screen.dart';
 import '../managers/puzzle_progress_manager.dart';
 import '../managers/ads_manager.dart';
@@ -175,8 +176,22 @@ super.initState();
 islands = PuzzleData.puzzles;  
 audioPlayer = AudioPlayer();  
 
-WidgetsBinding.instance.addPostFrameCallback((_) {  
+WidgetsBinding.instance.addPostFrameCallback((_) async {  
   AdsManager().initAds();  
+
+  // التحقق من إمكانية استلام المكافأة اليومية وإظهار الودجيت تلقائياً
+  final canClaim = await RewardManager.canClaimDailyReward();
+  if (canClaim && mounted) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => DailyRewardPopup(
+        onRewardClaimed: () {
+          // تحديث الواجهة بعد استلام المكافأة إن احتجت
+        },
+      ),
+    );
+  }
 });  
 
 loadIslandState();  
