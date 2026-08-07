@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -17,10 +15,12 @@ class PrivateIslandScreen extends StatefulWidget {
 }
 
 class _PrivateIslandScreenState extends State<PrivateIslandScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _ambientController;
+  late final AnimationController _floatingController;
+  late final Animation<double> _floatingAnimation;
+  
   final ImagePicker _imagePicker = ImagePicker();
-
   bool _isPicking = false;
 
   @override
@@ -30,11 +30,24 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
       vsync: this,
       duration: const Duration(seconds: 6),
     )..repeat(reverse: true);
+
+    _floatingController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+
+    _floatingAnimation = Tween<double>(begin: -8.0, end: 8.0).animate(
+      CurvedAnimation(
+        parent: _floatingController,
+        curve: Curves.easeInOut,
+      ),
+    );
   }
 
   @override
   void dispose() {
     _ambientController.dispose();
+    _floatingController.dispose();
     super.dispose();
   }
 
@@ -193,51 +206,22 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
   Widget _buildAmbientBackground() {
     return Positioned.fill(
-      child: AnimatedBuilder(
-        animation: _ambientController,
-        builder: (context, child) {
-          final double t = _ambientController.value;
-          return Stack(
-            children: [
-              Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Color(0xFF0D1B2A),
-                      Color(0xFF14283D),
-                      Color(0xFF0D1B2A),
-                    ],
-                  ),
-                ),
-              ),
-              Positioned(
-                top: -60 + (t * 20),
-                right: -40,
-                child: _glow(220, const Color(0xFF3A6FA8).withOpacity(0.18)),
-              ),
-              Positioned(
-                bottom: -80 + (t * 15),
-                left: -50,
-                child: _glow(260, const Color(0xFFE0A63A).withOpacity(0.10)),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _glow(double size, Color color) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(
-          colors: [color, color.withOpacity(0)],
-        ),
+      child: Stack(
+        children: [
+          // خلفية الجزيرة فوق السحاب
+          Positioned.fill(
+            child: Image.asset(
+              'Assets/images/background/prave_bacgraund.png',
+              fit: BoxFit.cover,
+            ),
+          ),
+          // طبقة تعتيم خفيفة جداً لضمان وضوح العناصر والنصوص فوق الصورة
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.25),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -268,7 +252,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                 Text(
                   'حوّل صورك الخاصة إلى ألغاز فريدة',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.55),
+                    color: Colors.white.withOpacity(0.7),
                     fontSize: 13,
                   ),
                 ),
@@ -290,10 +274,10 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
           end: Alignment.bottomRight,
           colors: [Color(0xFF1B3A57), Color(0xFF12293F)],
         ),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: Colors.white.withOpacity(0.12)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.35),
+            color: Colors.black.withOpacity(0.45),
             blurRadius: 24,
             offset: const Offset(0, 12),
           ),
@@ -301,24 +285,23 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
       ),
       child: Column(
         children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [Color(0xFFE0A63A), Color(0xFFC97A2B)],
+          // استخدام صورة الخزنة بدلاً من الأيقونة التقليدية مع حركة القفز الخفيفة
+          AnimatedBuilder(
+            animation: _floatingAnimation,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: Offset(0, _floatingAnimation.value),
+                child: child,
+              );
+            },
+            child: SizedBox(
+              width: 85,
+              height: 85,
+              child: Image.asset(
+                'assets/images/ui/add_pic.png',
+                fit: BoxFit.contain,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFE0A63A).withOpacity(0.35),
-                  blurRadius: 20,
-                  spreadRadius: 2,
-                ),
-              ],
             ),
-            child: const Icon(Icons.photo_camera_back_outlined,
-                color: Colors.white, size: 34),
           ),
           const SizedBox(height: 18),
           const Text(
@@ -334,7 +317,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
             'اختر صورة من جهازك وحوّلها إلى لغز تفاعلي بحجم\nالشبكة الذي تختاره',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.55),
+              color: Colors.white.withOpacity(0.7),
               fontSize: 13,
               height: 1.5,
             ),
@@ -395,7 +378,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
             Text(
               'مستويات الجزيرة',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withOpacity(0.9),
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
               ),
@@ -404,13 +387,13 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 'قريباً',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withOpacity(0.7),
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
