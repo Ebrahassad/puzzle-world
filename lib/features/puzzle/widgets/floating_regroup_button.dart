@@ -10,13 +10,16 @@ class FloatingRegroupButton extends StatefulWidget {
   });
 
   @override
-  State<FloatingRegroupButton> createState() => _FloatingRegroupButtonState();
+  State<FloatingRegroupButton> createState() =>
+      _FloatingRegroupButtonState();
 }
 
-class _FloatingRegroupButtonState extends State<FloatingRegroupButton>
+class _FloatingRegroupButtonState
+    extends State<FloatingRegroupButton>
     with TickerProviderStateMixin {
   late AnimationController _moveController;
   late AnimationController _fadeController;
+
   late Animation<double> _rotation;
   late Animation<double> _opacity;
 
@@ -24,25 +27,45 @@ class _FloatingRegroupButtonState extends State<FloatingRegroupButton>
   void initState() {
     super.initState();
 
-    // 1. متحكم حركة التجوال والدوران المستمرة طوال فترة ظهور الزر
+    // ============================================================
+    // 🎈 حركة التجوال والدوران
+    //
+    // الدوران أصبح أبطأ:
+    // 30 ثانية لدورة كاملة
+    // ============================================================
+
     _moveController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 12),
+      duration: const Duration(seconds: 30),
     )..repeat(reverse: true);
 
     _rotation = Tween<double>(
       begin: 0,
       end: pi * 2,
-    ).animate(_moveController);
+    ).animate(
+      CurvedAnimation(
+        parent: _moveController,
+        curve: Curves.linear,
+      ),
+    );
 
-    // 2. متحكم الظهور والتلاشي عند إظهار وإخفاء الزر من الشاشة الرئيسية
+    // ============================================================
+    // ✨ الظهور والتلاشي
+    // ============================================================
+
     _fadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
-    )..forward(); // يبدأ بالظهور فور إنشائه
+    )..forward();
 
-    _opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
+    _opacity = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _fadeController,
+        curve: Curves.easeInOut,
+      ),
     );
   }
 
@@ -58,11 +81,28 @@ class _FloatingRegroupButtonState extends State<FloatingRegroupButton>
     return AnimatedBuilder(
       animation: _moveController,
       builder: (context, child) {
-        final screenWidth = MediaQuery.of(context).size.width;
-        
-        // حركة التجوال في الأعلى (تحت شريط الأدوات مباشرة وفوق لوحة البازل)
-        final x = _moveController.value * (screenWidth - 120) + 20;
-        final y = 110 + sin(_moveController.value * pi * 4) * 10;
+        final screenWidth =
+            MediaQuery.of(context).size.width;
+
+        // ========================================================
+        // 📍 حركة الزر
+        //
+        // تم رفع الزر قليلاً.
+        // ========================================================
+
+        final x =
+            _moveController.value *
+                (screenWidth - 100) +
+            15;
+
+        final y =
+            90 +
+            sin(
+                  _moveController.value *
+                      pi *
+                      4,
+                ) *
+                8;
 
         return Positioned(
           left: x,
@@ -70,15 +110,24 @@ class _FloatingRegroupButtonState extends State<FloatingRegroupButton>
           child: child!,
         );
       },
+
       child: FadeTransition(
         opacity: _opacity,
+
         child: RotationTransition(
           turns: _rotation,
+
           child: GestureDetector(
             onTap: widget.onPressed,
+
             child: SizedBox(
-              width: 90,
-              height: 90,
+              // ==================================================
+              // 🔽 تصغير الزر
+              // ==================================================
+
+              width: 70,
+              height: 70,
+
               child: Image.asset(
                 "assets/images/ui/regroup_icon.png",
                 fit: BoxFit.contain,
