@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../../core/app_language_manager.dart';
+import '../../../core/language/app_language_manager.dart';
 
 import '../data/island_background_data.dart';
 import '../data/puzzle_level_data.dart';
