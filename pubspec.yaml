@@ -4,7 +4,7 @@ description: Jigsaw Puzzle Game
 
 publish_to: "none"
 
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: ">=3.12.0 <4.0.0"
@@ -30,32 +30,19 @@ flutter:
   uses-material-design: true
 
   assets:
-    # خريطة العالم
     - assets/images/world/
-
-    # الجزر
     - assets/images/islands/
 
-    # صور مراحل البازل
     - assets/images/Puzzle/animals/
     - assets/images/Puzzle/cars/
     - assets/images/Puzzle/space/
     - assets/images/Puzzle/nature/
     - assets/images/Puzzle/landmarks/
 
-    # الخلفيات
     - assets/images/background/
-
-    # واجهة اللعبة
     - assets/images/ui/
-
-    # المكافآت
     - assets/images/rewards/
-
-    # الأيقونات
     - assets/icon/
-
-    # الأصوات
     - assets/audio/
 
   fonts:
