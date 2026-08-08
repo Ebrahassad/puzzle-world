@@ -125,11 +125,9 @@ class _GameToolbarState extends State<GameToolbar>
       barrierDismissible: true,
       builder: (dialogContext) {
         return StatefulBuilder(
-          builder: (
-            context,
-            setDialogState,
-          ) {
+          builder: (context, setDialogState) {
             return AlertDialog(
+              backgroundColor: const Color(0xFF2A1B3D),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(25),
               ),
@@ -137,12 +135,15 @@ class _GameToolbarState extends State<GameToolbar>
                 children: [
                   Icon(
                     Icons.settings_rounded,
+                    color: Colors.amber,
                   ),
-                  SizedBox(
-                    width: 8,
-                  ),
+                  SizedBox(width: 8),
                   Text(
                     "الإعدادات",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -151,60 +152,45 @@ class _GameToolbarState extends State<GameToolbar>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // ==================================================
-                    // 🔊 Sound
+                    // 🔊 الصوت
                     // ==================================================
-
                     SwitchListTile(
                       title: const Text(
                         "الصوت",
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
                       ),
                       secondary: Icon(
-                        sound
-                            ? Icons.volume_up
-                            : Icons.volume_off,
+                        sound ? Icons.volume_up : Icons.volume_off,
+                        color: Colors.amber,
                       ),
                       value: sound,
                       onChanged: (value) {
                         setDialogState(() {
                           sound = value;
                         });
-
                         widget.onSoundChanged?.call(value);
                       },
                     ),
 
-                    const SizedBox(
-                      height: 10,
+                    const Divider(
+                      color: Colors.white24,
                     ),
 
                     // ==================================================
-                    // 📺 Banner
+                    // 💾 حفظ اللعبة
                     // ==================================================
-
-                    SizedBox(
-                      height: 50,
-                      width: double.infinity,
-                      child: Center(
-                        child: AdsManager().banner(),
-                      ),
-                    ),
-
-                    const SizedBox(
-                      height: 10,
-                    ),
-
-                    const Divider(),
-
-                    // ==================================================
-                    // 💾 Save
-                    // ==================================================
-
                     ListTile(
                       leading: const Icon(
                         Icons.save_rounded,
+                        color: Colors.white,
                       ),
                       title: const Text(
                         "حفظ اللعبة",
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
                       ),
                       onTap: () async {
                         Navigator.pop(dialogContext);
@@ -220,15 +206,18 @@ class _GameToolbarState extends State<GameToolbar>
                     ),
 
                     // ==================================================
-                    // 🔄 Restart
+                    // 🔄 إعادة اللعبة
                     // ==================================================
-
                     ListTile(
                       leading: const Icon(
                         Icons.restart_alt_rounded,
+                        color: Colors.white,
                       ),
                       title: const Text(
                         "إعادة اللعبة",
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
                       ),
                       onTap: () {
                         Navigator.pop(dialogContext);
@@ -238,15 +227,18 @@ class _GameToolbarState extends State<GameToolbar>
                     ),
 
                     // ==================================================
-                    // 🚪 Exit
+                    // 🚪 خروج
                     // ==================================================
-
                     ListTile(
                       leading: const Icon(
                         Icons.exit_to_app_rounded,
+                        color: Colors.white,
                       ),
                       title: const Text(
                         "خروج",
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
                       ),
                       onTap: () {
                         Navigator.pop(dialogContext);
@@ -255,11 +247,16 @@ class _GameToolbarState extends State<GameToolbar>
                       },
                     ),
 
-                    const Divider(),
+                    const Divider(
+                      color: Colors.white24,
+                    ),
 
                     const Text(
                       "Puzzle World\nالإصدار 1.0.0",
                       textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white70,
+                      ),
                     ),
                   ],
                 ),
@@ -341,14 +338,14 @@ class _GameToolbarState extends State<GameToolbar>
                   child: Transform.translate(
                     offset: const Offset(-4, 0),
                     child: Transform.scale(
-  scale: 1.05,
-  child: Image.asset(
-    "assets/images/ui/open_wallet.png",
-    width: 36,
-    height: 36,
-    fit: BoxFit.contain,
-  ),
-),
+                      scale: 1.05,
+                      child: Image.asset(
+                        "assets/images/ui/open_wallet.png",
+                        width: 36,
+                        height: 36,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                   ),
                 ),
 
@@ -393,8 +390,7 @@ class _GameToolbarState extends State<GameToolbar>
                 Container(
                   key: widget.gemKey,
                   child: ImageCounterBox(
-                    image:
-                        "assets/images/rewards/gem.png",
+                    image: "assets/images/rewards/gem.png",
                     value: reward.gems,
                   ),
                 ),
@@ -467,12 +463,10 @@ class AnimatedStarCounter extends StatefulWidget {
   });
 
   @override
-  State<AnimatedStarCounter> createState() =>
-      _AnimatedStarCounterState();
+  State<AnimatedStarCounter> createState() => _AnimatedStarCounterState();
 }
 
-class _AnimatedStarCounterState
-    extends State<AnimatedStarCounter>
+class _AnimatedStarCounterState extends State<AnimatedStarCounter>
     with SingleTickerProviderStateMixin {
   late AnimationController controller;
   late Animation<double> scale;
@@ -536,11 +530,9 @@ class _AnimatedStarCounterState
               width: 28,
               height: 28,
             ),
-
             const SizedBox(
               width: 4,
             ),
-
             Text(
               "${widget.value}",
               style: const TextStyle(
@@ -592,11 +584,9 @@ class ImageCounterBox extends StatelessWidget {
             width: 28,
             height: 28,
           ),
-
           const SizedBox(
             width: 4,
           ),
-
           Text(
             "$value",
             style: const TextStyle(
@@ -672,11 +662,9 @@ class CoinCounterBox extends StatelessWidget {
             width: 28,
             height: 28,
           ),
-
           const SizedBox(
             width: 5,
           ),
-
           Text(
             formatNumber(value),
             style: const TextStyle(
