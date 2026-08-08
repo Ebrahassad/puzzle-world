@@ -71,15 +71,15 @@ class _PieceExplosionData {
 /// 🏆 VictoryScreen
 ///
 /// Levels 1 - 9:
-///   ⭐ Star
-///   🪙 Coins
+///   ⭐ 1 Star
+///   🪙 100 Coins
+///
+/// Optional rewarded ad:
+///   ⭐ +1 Star
+///   🪙 +100 Coins
 ///
 /// Level 10:
-///   ❌ No rewards here
-///   ➜ FinalVictoryScreen handles:
-///      ⭐ Star
-///      🪙 Coins
-///      💎 Gem
+///   FinalVictoryScreen handles all final rewards.
 /// ============================================================
 
 class VictoryScreen extends StatefulWidget {
@@ -146,16 +146,24 @@ class _VictoryScreenState extends State<VictoryScreen>
   // ============================================================
 
   List<PuzzlePiece> _pieces = [];
+
   List<_PieceExplosionData> _explosionPieces = [];
 
   bool _introVisible = false;
   bool _showPieces = true;
 
   // ============================================================
+  // 🎯 Centering
+  // ============================================================
+
+  Offset _puzzleCenterOffset = Offset.zero;
+
+  // ============================================================
   // 💥 Explosion
   // ============================================================
 
   late Ticker _physicsTicker;
+
   double _lastElapsedMs = 0;
 
   // ============================================================
@@ -232,11 +240,20 @@ class _VictoryScreenState extends State<VictoryScreen>
 
   final AudioPlayer _victoryAudio = AudioPlayer();
 
+  // ============================================================
+  // 🚦 Sequence protection
+  // ============================================================
+
+  bool _sequenceFinished = false;
+  bool _finalNavigationStarted = false;
+
+  // ============================================================
+  // INIT
+  // ============================================================
+
   @override
   void initState() {
     super.initState();
-
-    _rewardSent = false;
 
     _physicsTicker = createTicker(_updateExplosion);
     _sparkleTicker = createTicker(_updateSparkles);
@@ -282,20 +299,120 @@ class _VictoryScreenState extends State<VictoryScreen>
 
   // ============================================================
   // 🧩 Prepare puzzle pieces
+  //
+  // يتم حساب مركز القطع فعليًا ثم نقلها إلى مركز الشاشة.
   // ============================================================
 
   void _preparePieces() {
-    _pieces = widget.pieces.map((piece) {
-      return piece;
-    }).toList();
+    _pieces = widget.pieces.toList();
 
-    _explosionPieces = _pieces.map((piece) {
-      return _PieceExplosionData(piece);
-    }).toList();
+    _explosionPieces = _pieces
+        .map(
+          (piece) => _PieceExplosionData(piece),
+        )
+        .toList();
+
+    _calculatePuzzleCenter();
 
     if (mounted) {
       setState(() {});
     }
+  }
+
+  // ============================================================
+  // 🎯 Calculate puzzle center
+  // ============================================================
+
+  void _calculatePuzzleCenter() {
+    if (_explosionPieces.isEmpty) {
+      _puzzleCenterOffset = Offset.zero;
+      return;
+    }
+
+    double minX = double.infinity;
+    double maxX = double.negativeInfinity;
+
+    double minY = double.infinity;
+    double maxY = double.negativeInfinity;
+
+    for (final data in _explosionPieces) {
+      final p = data.position;
+
+      minX = min(minX, p.dx);
+      maxX = max(maxX, p.dx);
+
+      minY = min(minY, p.dy);
+      maxY = max(maxY, p.dy);
+    }
+
+    final puzzleCenter = Offset(
+      (minX + maxX) / 2,
+      (minY + maxY) / 2,
+    );
+
+    final screenSize = WidgetsBinding
+        .instance
+        .platformDispatcher
+        .views
+        .firstOrNull
+        ?.physicalSize;
+
+    if (screenSize == null) {
+      _puzzleCenterOffset = Offset.zero;
+      return;
+    }
+
+    final devicePixelRatio = WidgetsBinding
+        .instance
+        .platformDispatcher
+        .views
+        .first
+        .devicePixelRatio;
+
+    final logicalSize = Size(
+      screenSize.width / devicePixelRatio,
+      screenSize.height / devicePixelRatio,
+    );
+
+    final screenCenter = Offset(
+      logicalSize.width / 2,
+      logicalSize.height / 2,
+    );
+
+    _puzzleCenterOffset =
+        screenCenter - puzzleCenter;
+
+    // ----------------------------------------------------------
+    // تصحيح إضافي:
+    // إذا كان الـ boardRect معروفًا، نستخدم مركزه أيضًا
+    // لتجنب ظهور الصورة أعلى أو أسفل الشاشة.
+    // ----------------------------------------------------------
+
+    final boardCenter = widget.boardRect.center;
+
+    final boardToScreenCenter =
+        screenCenter - boardCenter;
+
+    // نأخذ متوسط التصحيحين حتى يكون المشهد ثابتًا
+    // حتى لو كانت إحداثيات القطع مختلفة قليلًا عن boardRect.
+    _puzzleCenterOffset = Offset(
+      (_puzzleCenterOffset.dx +
+              boardToScreenCenter.dx) /
+          2,
+      (_puzzleCenterOffset.dy +
+              boardToScreenCenter.dy) /
+          2,
+    );
+  }
+
+  // ============================================================
+  // 🎯 Get centered piece position
+  // ============================================================
+
+  Offset _centeredPosition(
+    Offset original,
+  ) {
+    return original + _puzzleCenterOffset;
   }
 
   // ============================================================
@@ -306,6 +423,10 @@ class _VictoryScreenState extends State<VictoryScreen>
     final random = Random();
 
     for (final data in _explosionPieces) {
+      data.position = _centeredPosition(
+        data.piece.correctPosition,
+      );
+
       data.vx =
           (random.nextDouble() - 0.5) * 10;
 
@@ -351,9 +472,8 @@ class _VictoryScreenState extends State<VictoryScreen>
         1.0 - Curves.easeOut.transform(fadeT);
 
     final floorY =
-        widget.boardRect.top +
-        widget.boardRect.height +
-        260;
+        MediaQuery.of(context).size.height +
+        250;
 
     for (final data in _explosionPieces) {
       data.position += Offset(
@@ -384,11 +504,10 @@ class _VictoryScreenState extends State<VictoryScreen>
 
       data.opacity = targetOpacity;
 
-      data.scale =
-          max(
-            0.82,
-            data.scale - 0.0006 * dt,
-          );
+      data.scale = max(
+        0.82,
+        data.scale - 0.0006 * dt,
+      );
     }
 
     if (mounted) {
@@ -494,10 +613,6 @@ class _VictoryScreenState extends State<VictoryScreen>
         setState(() {
           _chestOpened = true;
 
-          // ====================================================
-          // ⭐ النجمة تظهر فقط في المراحل 1 - 9
-          // ====================================================
-
           if (!widget.isFinalLevel) {
             _showStarPreview = true;
 
@@ -548,13 +663,10 @@ class _VictoryScreenState extends State<VictoryScreen>
 
     for (var i = 0; i < 45; i++) {
       final angle =
-          random.nextDouble() *
-          pi *
-          2;
+          random.nextDouble() * pi * 2;
 
       final speed =
-          3 +
-          random.nextDouble() * 7;
+          3 + random.nextDouble() * 7;
 
       _sparkles.add(
         _ConfettiSpark(
@@ -565,18 +677,13 @@ class _VictoryScreenState extends State<VictoryScreen>
           rotation:
               random.nextDouble() * pi,
           rotationSpeed:
-              (random.nextDouble() - 0.5) *
-                  0.3,
+              (random.nextDouble() - 0.5) * 0.3,
           opacity: 1,
           size:
-              5 +
-              random.nextDouble() * 7,
-          color:
-              colors[
-                random.nextInt(
-                  colors.length,
-                )
-              ],
+              5 + random.nextDouble() * 7,
+          color: colors[
+            random.nextInt(colors.length)
+          ],
         ),
       );
     }
@@ -602,8 +709,7 @@ class _VictoryScreenState extends State<VictoryScreen>
       s.vy += 0.16;
       s.vx *= 0.985;
 
-      s.rotation +=
-          s.rotationSpeed;
+      s.rotation += s.rotationSpeed;
 
       s.opacity -= 0.014;
     }
@@ -619,13 +725,46 @@ class _VictoryScreenState extends State<VictoryScreen>
   }
 
   // ============================================================
-  // ⭐ Star flight
+  // ⭐ Find reward target
+  // ============================================================
+
+  Offset _getRewardTarget() {
+    final targetKey = widget.starTargetKey;
+
+    if (targetKey != null &&
+        targetKey.currentContext != null) {
+      try {
+        final renderObject =
+            targetKey.currentContext!
+                .findRenderObject();
+
+        if (renderObject is RenderBox &&
+            renderObject.hasSize) {
+          return renderObject.localToGlobal(
+            renderObject.size.center(
+              Offset.zero,
+            ),
+          );
+        }
+      } catch (_) {}
+    }
+
+    final size =
+        MediaQuery.of(context).size;
+
+    return Offset(
+      size.width - 50,
+      40,
+    );
+  }
+
+  // ============================================================
+  // ⭐ Start reward flight
   // ============================================================
 
   Future<void> _startRewardFlight() async {
     if (_rewardSent) return;
 
-    // المرحلة 10 لا تستخدم هذا النظام.
     if (widget.isFinalLevel) return;
 
     _rewardSent = true;
@@ -635,47 +774,44 @@ class _VictoryScreenState extends State<VictoryScreen>
     final size =
         MediaQuery.of(context).size;
 
-    if (_chestKey.currentContext != null) {
-      final box =
-          _chestKey.currentContext!
-              .findRenderObject()
-              as RenderBox;
+    // ----------------------------------------------------------
+    // نقطة بداية النجمة
+    // ----------------------------------------------------------
 
-      _rewardStart =
-          box.localToGlobal(
-        box.size.center(
-          Offset.zero,
-        ),
-      );
-    } else {
+    try {
+      if (_chestKey.currentContext != null) {
+        final renderObject =
+            _chestKey.currentContext!
+                .findRenderObject();
+
+        if (renderObject is RenderBox &&
+            renderObject.hasSize) {
+          _rewardStart =
+              renderObject.localToGlobal(
+            renderObject.size.center(
+              Offset.zero,
+            ),
+          );
+        } else {
+          _rewardStart = Offset(
+            size.width / 2,
+            size.height / 2,
+          );
+        }
+      } else {
+        _rewardStart = Offset(
+          size.width / 2,
+          size.height / 2,
+        );
+      }
+    } catch (_) {
       _rewardStart = Offset(
         size.width / 2,
         size.height / 2,
       );
     }
 
-    final targetKey =
-        widget.starTargetKey;
-
-    if (targetKey != null &&
-        targetKey.currentContext != null) {
-      final box =
-          targetKey.currentContext!
-              .findRenderObject()
-              as RenderBox;
-
-      _rewardEnd =
-          box.localToGlobal(
-        box.size.center(
-          Offset.zero,
-        ),
-      );
-    } else {
-      _rewardEnd = Offset(
-        size.width - 50,
-        40,
-      );
-    }
+    _rewardEnd = _getRewardTarget();
 
     setState(() {
       _showStarPreview = false;
@@ -685,25 +821,275 @@ class _VictoryScreenState extends State<VictoryScreen>
       _showReward = true;
     });
 
-    _rewardController.reset();
+    // ----------------------------------------------------------
+    // ⭐ حركة النجمة
+    // ----------------------------------------------------------
 
-    await _rewardController.forward();
+    try {
+      _rewardController.reset();
+
+      await _rewardController.forward();
+    } catch (_) {}
 
     if (!mounted) return;
 
-    // ==========================================================
-    // ⭐🪙 مكافآت المراحل 1 - 9 فقط
-    // ==========================================================
+    // ----------------------------------------------------------
+    // ⭐ المكافأة الأساسية
+    //
+    // نعطيها مرة واحدة فقط.
+    // ----------------------------------------------------------
 
-    if (!_rewardGranted) {
-      _rewardGranted = true;
+    await _grantBaseReward();
 
-      await RewardManager.addStars(1);
-      await RewardManager.addCoins(100);
-    }
+    if (!mounted) return;
 
     setState(() {
       _showReward = false;
+    });
+  }
+
+  // ============================================================
+  // ⭐ Base reward
+  // ============================================================
+
+  Future<void> _grantBaseReward() async {
+    if (_rewardGranted) return;
+
+    _rewardGranted = true;
+
+    try {
+      await RewardManager.addStars(1);
+    } catch (_) {}
+
+    try {
+      await RewardManager.addCoins(100);
+    } catch (_) {}
+  }
+
+  // ============================================================
+  // 📺 Double reward dialog
+  // ============================================================
+
+  Future<void> _showDoubleRewardDialog() async {
+    if (_doubleRewardAsked) return;
+
+    _doubleRewardAsked = true;
+
+    if (!mounted) return;
+
+    bool? doubleReward;
+
+    try {
+      doubleReward = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          final lang =
+              AppLanguageManager.instance;
+
+          return AlertDialog(
+            backgroundColor:
+                const Color(0xff1D1730),
+
+            shape:
+                RoundedRectangleBorder(
+              borderRadius:
+                  BorderRadius.circular(22),
+            ),
+
+            title: Text(
+              lang.text(
+                ar: 'مكافأة إضافية',
+                en: 'Extra Reward',
+              ),
+              style: const TextStyle(
+                color: Colors.amber,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            content: Text(
+              lang.text(
+                ar:
+                    'هل تريد مضاعفة مكافأتك؟\n\n'
+                    'شاهد إعلاناً واحصل على مكافأة إضافية.',
+                en:
+                    'Do you want to double your reward?\n\n'
+                    'Watch an ad to receive an extra reward.',
+              ),
+              style: const TextStyle(
+                color: Colors.white70,
+                height: 1.5,
+              ),
+            ),
+
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(
+                    dialogContext,
+                    false,
+                  );
+                },
+                child: Text(
+                  lang.text(
+                    ar: 'لاحقاً',
+                    en: 'Later',
+                  ),
+                ),
+              ),
+
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(
+                    dialogContext,
+                    true,
+                  );
+                },
+                child: Text(
+                  lang.text(
+                    ar: 'مضاعفة',
+                    en: 'Double',
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (_) {
+      doubleReward = false;
+    }
+
+    if (!mounted || doubleReward != true) {
+      return;
+    }
+
+    await _watchDoubleRewardAd();
+  }
+
+  // ============================================================
+  // 📺 Watch rewarded ad
+  //
+  // مهم:
+  // لا نعتمد على callback وحده.
+  // يوجد timeout حتى لا تتجمد VictoryScreen.
+  // ============================================================
+
+  Future<void> _watchDoubleRewardAd() async {
+    _rewardAdFinished = false;
+
+    try {
+      final ads = AdsManager();
+
+      if (!ads.isInitialized) {
+        await ads.initAds();
+      }
+
+      ads.showRewardedAd(
+        onRewardEarned: () async {
+          if (_doubleRewardCompleted) {
+            _rewardAdFinished = true;
+            return;
+          }
+
+          _doubleRewardCompleted = true;
+
+          // المكافأة الإضافية فقط.
+          try {
+            await RewardManager.addStars(1);
+          } catch (_) {}
+
+          try {
+            await RewardManager.addCoins(100);
+          } catch (_) {}
+
+          _rewardAdFinished = true;
+        },
+        onAdFailed: () {
+          _rewardAdFinished = true;
+
+          if (!mounted) return;
+
+          final lang =
+              AppLanguageManager.instance;
+
+          ScaffoldMessenger.of(context)
+              .showSnackBar(
+            SnackBar(
+              content: Text(
+                lang.text(
+                  ar: 'الإعلان غير متوفر حالياً',
+                  en:
+                      'The ad is not available right now',
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    } catch (_) {
+      _rewardAdFinished = true;
+    }
+
+    // ----------------------------------------------------------
+    // ⏳ Timeout حماية
+    // ----------------------------------------------------------
+
+    const maxWait =
+        Duration(seconds: 15);
+
+    final stopwatch = Stopwatch()
+      ..start();
+
+    while (!_rewardAdFinished &&
+        stopwatch.elapsed < maxWait) {
+      await Future.delayed(
+        const Duration(milliseconds: 200),
+      );
+
+      if (!mounted) {
+        return;
+      }
+    }
+
+    stopwatch.stop();
+
+    // ----------------------------------------------------------
+    // مهما حدث، لا نبقي الشاشة معلقة.
+    // ----------------------------------------------------------
+
+    _rewardAdFinished = true;
+  }
+
+  // ============================================================
+  // 🏆 Finish normal victory sequence
+  // ============================================================
+
+  Future<void> _finishNormalVictory() async {
+    if (_sequenceFinished) return;
+
+    _sequenceFinished = true;
+
+    if (!mounted) return;
+
+    // ----------------------------------------------------------
+    // إخفاء الصندوق
+    // ----------------------------------------------------------
+
+    setState(() {
+      _chestDisappearing = true;
+    });
+
+    await Future.delayed(
+      const Duration(milliseconds: 500),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _hideChestAfterReward = true;
+      _showButtons = true;
     });
   }
 
@@ -712,9 +1098,15 @@ class _VictoryScreenState extends State<VictoryScreen>
   // ============================================================
 
   Future<void> _runSequence() async {
+    if (!mounted) return;
+
     setState(() {
       _introVisible = true;
     });
+
+    // ----------------------------------------------------------
+    // 🧩 صورة البازل كاملة
+    // ----------------------------------------------------------
 
     await Future.delayed(
       const Duration(
@@ -723,6 +1115,10 @@ class _VictoryScreenState extends State<VictoryScreen>
     );
 
     if (!mounted) return;
+
+    // ----------------------------------------------------------
+    // 💥 الانفجار
+    // ----------------------------------------------------------
 
     _startExplosion();
 
@@ -738,14 +1134,16 @@ class _VictoryScreenState extends State<VictoryScreen>
       _physicsTicker.stop();
     }
 
+    // ----------------------------------------------------------
+    // 🎁 الصندوق
+    // ----------------------------------------------------------
+
     setState(() {
       _showChest = true;
     });
 
     await Future.delayed(
-      const Duration(
-        milliseconds: 120,
-      ),
+      const Duration(milliseconds: 120),
     );
 
     if (!mounted) return;
@@ -754,7 +1152,13 @@ class _VictoryScreenState extends State<VictoryScreen>
       _showPieces = false;
     });
 
-    _chestController.forward();
+    try {
+      await _chestController.forward();
+    } catch (_) {}
+
+    // ----------------------------------------------------------
+    // ⏳ وقت عرض الصندوق المفتوح
+    // ----------------------------------------------------------
 
     await Future.delayed(
       const Duration(
@@ -764,30 +1168,57 @@ class _VictoryScreenState extends State<VictoryScreen>
 
     if (!mounted) return;
 
-    await Future.delayed(
-      const Duration(
-        milliseconds: 500,
-      ),
-    );
-
-    if (!mounted) return;
-
-    // ==========================================================
-    // 💎 المرحلة 10
-    //
-    // VictoryScreen لا يعطي أي مكافأة.
-    // ينتقل فقط إلى FinalVictoryScreen.
-    // ==========================================================
+    // ----------------------------------------------------------
+    // 💎 المرحلة النهائية
+    // ----------------------------------------------------------
 
     if (widget.isFinalLevel) {
       await Future.delayed(
-        const Duration(
-          seconds: 5,
-        ),
+        const Duration(seconds: 5),
       );
 
       if (!mounted) return;
 
+      _goToFinalVictory();
+
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // ⭐ تسليم النجمة إلى الـ Toolbar
+    // ----------------------------------------------------------
+
+    await _startRewardFlight();
+
+    if (!mounted) return;
+
+    // ----------------------------------------------------------
+    // 📺 عرض خيار المضاعفة
+    // ----------------------------------------------------------
+
+    await _showDoubleRewardDialog();
+
+    if (!mounted) return;
+
+    // ----------------------------------------------------------
+    // 🎮 إنهاء المشهد
+    //
+    // حتى لو فشل الإعلان، نصل هنا.
+    // ----------------------------------------------------------
+
+    await _finishNormalVictory();
+  }
+
+  // ============================================================
+  // 💎 Navigate to final victory
+  // ============================================================
+
+  void _goToFinalVictory() {
+    if (_finalNavigationStarted) return;
+
+    _finalNavigationStarted = true;
+
+    try {
       _chestController.stop();
       _glowController.stop();
 
@@ -804,186 +1235,8 @@ class _VictoryScreenState extends State<VictoryScreen>
           ),
         ),
       );
-
-      return;
-    }
-
-    // ==========================================================
-    // ⭐🪙 المراحل 1 - 9
-    // ==========================================================
-
-    await _startRewardFlight();
-
-    if (!mounted) return;
-
-    await _showDoubleRewardDialog();
-
-    if (!mounted) return;
-
-    setState(() {
-      _chestDisappearing = true;
-    });
-
-    await Future.delayed(
-      const Duration(
-        milliseconds: 500,
-      ),
-    );
-
-    if (!mounted) return;
-
-    setState(() {
-      _hideChestAfterReward = true;
-      _showButtons = true;
-    });
-  }
-
-  // ============================================================
-  // 📺 Double reward dialog
-  // ============================================================
-
-  Future<void> _showDoubleRewardDialog() async {
-    if (_doubleRewardAsked) return;
-
-    _doubleRewardAsked = true;
-
-    final doubleReward =
-        await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        final lang =
-            AppLanguageManager.instance;
-
-        return AlertDialog(
-          backgroundColor:
-              const Color(0xff1D1730),
-          shape:
-              RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(22),
-          ),
-          title: Text(
-            lang.text(
-              ar: 'مكافأة إضافية',
-              en: 'Extra Reward',
-            ),
-            style: const TextStyle(
-              color: Colors.amber,
-              fontWeight:
-                  FontWeight.bold,
-            ),
-          ),
-          content: Text(
-            lang.text(
-              ar: 'هل تريد مضاعفة مكافأتك؟\n\nشاهد إعلاناً واحصل على مكافأة إضافية.',
-              en: 'Do you want to double your reward?\n\nWatch an ad to receive an extra reward.',
-            ),
-            style: const TextStyle(
-              color: Colors.white70,
-              height: 1.5,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(
-                  context,
-                  false,
-                );
-              },
-              child: Text(
-                lang.text(
-                  ar: 'لاحقاً',
-                  en: 'Later',
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(
-                  context,
-                  true,
-                );
-              },
-              child: Text(
-                lang.text(
-                  ar: 'مضاعفة',
-                  en: 'Double',
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (doubleReward != true) {
-      return;
-    }
-
-    _rewardAdFinished = false;
-
-    if (!AdsManager().isInitialized) {
-      await AdsManager().initAds();
-    }
-
-    AdsManager().showRewardedAd(
-      onRewardEarned: () async {
-        if (!_doubleRewardCompleted) {
-          _doubleRewardCompleted = true;
-
-          // المراحل 1 - 9:
-          // المكافأة الأساسية موجودة بالفعل.
-          // الإعلان يعطي المكافأة الإضافية.
-
-          await RewardManager.addStars(1);
-          await RewardManager.addCoins(100);
-        }
-
-        _rewardAdFinished = true;
-      },
-      onAdFailed: () {
-        _rewardAdFinished = true;
-
-        if (!mounted) return;
-
-        final lang =
-            AppLanguageManager.instance;
-
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
-          SnackBar(
-            content: Text(
-              lang.text(
-                ar: 'الإعلان غير متوفر حالياً',
-                en: 'The ad is not available right now',
-              ),
-            ),
-          ),
-        );
-      },
-    );
-
-    int waitTime = 0;
-
-    while (!_rewardAdFinished) {
-      await Future.delayed(
-        const Duration(
-          milliseconds: 200,
-        ),
-      );
-
-      waitTime += 200;
-
-      if (!mounted) {
-        return;
-      }
-
-      if (waitTime >= 15000) {
-        break;
-      }
+    } catch (_) {
+      _finalNavigationStarted = false;
     }
   }
 
@@ -997,6 +1250,7 @@ class _VictoryScreenState extends State<VictoryScreen>
   ) {
     return Material(
       type: MaterialType.transparency,
+
       child: Stack(
         children: [
           // ======================================================
@@ -1009,30 +1263,32 @@ class _VictoryScreenState extends State<VictoryScreen>
               child: IgnorePointer(
                 child: AnimatedOpacity(
                   duration:
-                      const Duration(
-                    milliseconds: 500,
-                  ),
+                      const Duration(milliseconds: 500),
+
                   opacity:
                       _introVisible ? 1 : 0,
+
                   child: AnimatedScale(
                     duration:
-                        const Duration(
-                      milliseconds: 500,
-                    ),
+                        const Duration(milliseconds: 500),
+
                     curve:
                         Curves.easeOutBack,
+
                     scale:
-                        _introVisible
-                            ? 1
-                            : 0.9,
+                        _introVisible ? 1 : 0.9,
+
                     child:
                         VictoryPuzzlePreview(
                       image:
                           widget.puzzleImage,
+
                       rows:
                           widget.rows,
+
                       cols:
                           widget.cols,
+
                       pieces:
                           _explosionPieces
                               .map(
@@ -1040,12 +1296,16 @@ class _VictoryScreenState extends State<VictoryScreen>
                           return VictoryPieceRenderData(
                             piece:
                                 e.piece,
+
                             position:
                                 e.position,
+
                             rotation:
                                 e.rotation,
+
                             opacity:
                                 e.opacity,
+
                             scale:
                                 e.scale,
                           );
@@ -1069,6 +1329,7 @@ class _VictoryScreenState extends State<VictoryScreen>
                 child: AnimatedBuilder(
                   animation:
                       _glowController,
+
                   builder:
                       (context, child) {
                     final glow =
@@ -1080,10 +1341,12 @@ class _VictoryScreenState extends State<VictoryScreen>
                     return Container(
                       width: 460,
                       height: 460,
+
                       decoration:
                           BoxDecoration(
                         shape:
                             BoxShape.circle,
+
                         gradient:
                             RadialGradient(
                           colors: [
@@ -1091,8 +1354,7 @@ class _VictoryScreenState extends State<VictoryScreen>
                                 .withOpacity(
                               glow,
                             ),
-                            Colors
-                                .transparent,
+                            Colors.transparent,
                           ],
                         ),
                       ),
@@ -1129,6 +1391,7 @@ class _VictoryScreenState extends State<VictoryScreen>
               child: AnimatedBuilder(
                 animation:
                     _chestController,
+
                 builder:
                     (context, child) {
                   return Transform.translate(
@@ -1136,36 +1399,43 @@ class _VictoryScreenState extends State<VictoryScreen>
                       0,
                       _chestFall.value,
                     ),
+
                     child:
                         AnimatedOpacity(
                       duration:
                           const Duration(
                         milliseconds: 500,
                       ),
+
                       opacity:
                           _chestDisappearing
                               ? 0
                               : 1,
+
                       child:
                           Transform.scale(
                         scale:
                             _chestScale.value,
+
                         child:
                             Transform.rotate(
                           angle:
-                              _chestShake
-                                  .value,
+                              _chestShake.value,
+
                           child:
                               SizedBox(
                             key:
                                 _chestKey,
+
                             width: 250,
                             height: 250,
+
                             child:
                                 Image.asset(
                               _chestOpened
                                   ? 'assets/images/rewards/reward_chest_open.png'
                                   : 'assets/images/rewards/reward_chest_closed.png',
+
                               fit:
                                   BoxFit.contain,
                             ),
@@ -1180,8 +1450,6 @@ class _VictoryScreenState extends State<VictoryScreen>
 
           // ======================================================
           // ⭐ Star preview
-          //
-          // Only levels 1 - 9.
           // ======================================================
 
           if (_showStarPreview &&
@@ -1191,6 +1459,7 @@ class _VictoryScreenState extends State<VictoryScreen>
                 child: AnimatedBuilder(
                   animation:
                       _starPreviewController,
+
                   builder:
                       (context, child) {
                     final t =
@@ -1198,8 +1467,7 @@ class _VictoryScreenState extends State<VictoryScreen>
                             .value;
 
                     final scale =
-                        0.9 +
-                        (t * 0.2);
+                        0.9 + (t * 0.2);
 
                     return Transform.translate(
                       offset:
@@ -1207,16 +1475,20 @@ class _VictoryScreenState extends State<VictoryScreen>
                         0,
                         -110,
                       ),
+
                       child: Opacity(
                         opacity:
                             0.85 +
                             (t * 0.15),
+
                         child:
                             Transform.scale(
                           scale: scale,
+
                           child:
                               Image.asset(
                             'assets/images/rewards/Star_gold.png',
+
                             width: 60,
                           ),
                         ),
@@ -1229,8 +1501,6 @@ class _VictoryScreenState extends State<VictoryScreen>
 
           // ======================================================
           // ⭐ Star flight
-          //
-          // Only levels 1 - 9.
           // ======================================================
 
           if (_showReward &&
@@ -1238,6 +1508,7 @@ class _VictoryScreenState extends State<VictoryScreen>
             AnimatedBuilder(
               animation:
                   _rewardController,
+
               builder:
                   (context, child) {
                 final t =
@@ -1269,10 +1540,9 @@ class _VictoryScreenState extends State<VictoryScreen>
                         0.45;
 
                 return Positioned(
-                  left:
-                      x - 35,
-                  top:
-                      y - 35,
+                  left: x - 35,
+                  top: y - 35,
+
                   child:
                       Transform.scale(
                     scale:
@@ -1280,9 +1550,11 @@ class _VictoryScreenState extends State<VictoryScreen>
                       0.55,
                       1.0,
                     ),
+
                     child:
                         Image.asset(
                       'assets/images/rewards/Star_gold.png',
+
                       width: 70,
                     ),
                   ),
@@ -1304,12 +1576,15 @@ class _VictoryScreenState extends State<VictoryScreen>
                     begin: 0,
                     end: 1,
                   ),
+
                   duration:
                       const Duration(
                     milliseconds: 600,
                   ),
+
                   curve:
                       Curves.easeOutBack,
+
                   builder: (
                     context,
                     fadeT,
@@ -1317,21 +1592,24 @@ class _VictoryScreenState extends State<VictoryScreen>
                   ) {
                     return Opacity(
                       opacity: fadeT,
+
                       child:
                           Transform.translate(
                         offset: Offset(
                           0,
-                          (1 - fadeT) *
-                              50,
+                          (1 - fadeT) * 50,
                         ),
+
                         child: child,
                       ),
                     );
                   },
+
                   child:
                       AnimatedBuilder(
                     animation:
                         _buttonsFloatController,
+
                     builder:
                         (context, child) {
                       final bob =
@@ -1348,26 +1626,27 @@ class _VictoryScreenState extends State<VictoryScreen>
                           0,
                           bob,
                         ),
+
                         child: child,
                       );
                     },
+
                     child: Column(
                       mainAxisSize:
                           MainAxisSize.min,
+
                       children: [
                         // المستوى التالي
                         _VictoryImageActionButton(
                           imagePath:
                               'assets/images/ui/next_play.png',
+
                           onTap: () {
-                            if (widget
-                                    .onNext !=
+                            if (widget.onNext !=
                                 null) {
-                              widget
-                                  .onNext!();
+                              widget.onNext!();
                             } else {
-                              widget
-                                  .onFinished();
+                              widget.onFinished();
                             }
                           },
                         ),
@@ -1380,10 +1659,10 @@ class _VictoryScreenState extends State<VictoryScreen>
                         _VictoryImageActionButton(
                           imagePath:
                               'assets/images/ui/again_play.png',
+
                           onTap:
                               widget.onReplay ??
-                                  widget
-                                      .onFinished,
+                                  widget.onFinished,
                         ),
 
                         const SizedBox(
@@ -1394,10 +1673,10 @@ class _VictoryScreenState extends State<VictoryScreen>
                         _VictoryImageActionButton(
                           imagePath:
                               'assets/images/ui/home_map.png',
+
                           onTap:
                               widget.onMap ??
-                                  widget
-                                      .onFinished,
+                                  widget.onFinished,
                         ),
                       ],
                     ),
@@ -1470,9 +1749,11 @@ class _VictoryImageActionButton
 
     return GestureDetector(
       onTap: onTap,
+
       child: SizedBox(
         width: size,
         height: size,
+
         child: Image.asset(
           imagePath,
           fit: BoxFit.contain,
