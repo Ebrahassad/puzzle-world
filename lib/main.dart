@@ -30,6 +30,10 @@ Future<void> main() async {
   );
 }
 
+// ================================================================
+// 🎮 Puzzle World App
+// ================================================================
+
 class PuzzleWorldApp extends StatelessWidget {
   const PuzzleWorldApp({
     super.key,
@@ -39,7 +43,9 @@ class PuzzleWorldApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<Locale>(
       valueListenable:
-          AppLanguageManager.instance.localeNotifier,
+          AppLanguageManager
+              .instance
+              .localeNotifier,
 
       builder: (
         context,
@@ -50,7 +56,8 @@ class PuzzleWorldApp extends StatelessWidget {
             locale.languageCode == 'ar';
 
         return MaterialApp(
-          debugShowCheckedModeBanner: false,
+          debugShowCheckedModeBanner:
+              false,
 
           title: 'Puzzle World',
 
@@ -77,7 +84,9 @@ class PuzzleWorldApp extends StatelessWidget {
               textDirection: isArabic
                   ? TextDirection.rtl
                   : TextDirection.ltr,
-              child: child ?? const SizedBox.shrink(),
+              child:
+                  child ??
+                  const SizedBox.shrink(),
             );
           },
 
@@ -85,16 +94,21 @@ class PuzzleWorldApp extends StatelessWidget {
           // 🎨 الثيم
           // ======================================================
 
-          theme: AppTheme.lightTheme.copyWith(
-            snackBarTheme: SnackBarThemeData(
+          theme:
+              AppTheme.lightTheme.copyWith(
+            snackBarTheme:
+                SnackBarThemeData(
               backgroundColor:
-                  const Color(0xFF4A247A),
+                  const Color(
+                0xFF4A247A,
+              ),
 
               contentTextStyle:
                   const TextStyle(
                 color: Colors.white,
                 fontSize: 14,
-                fontWeight: FontWeight.w600,
+                fontWeight:
+                    FontWeight.w600,
               ),
 
               behavior:
@@ -103,14 +117,21 @@ class PuzzleWorldApp extends StatelessWidget {
               shape:
                   RoundedRectangleBorder(
                 borderRadius:
-                    BorderRadius.circular(16),
+                    BorderRadius.circular(
+                  16,
+                ),
               ),
 
               elevation: 8,
             ),
           ),
 
-          home: const WorldMapScreen(),
+          // ======================================================
+          // 🌍 الشاشة الأولى
+          // ======================================================
+
+          home:
+              const WorldMapScreen(),
         );
       },
     );
