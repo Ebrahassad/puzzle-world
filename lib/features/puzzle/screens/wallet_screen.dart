@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 
-import '../core/language/app_language_manager.dart';
+import '../../../core/language/app_language_manager.dart';
 import '../managers/reward_manager.dart';
 import '../managers/puzzle_progress_manager.dart';
 import '../managers/ads_manager.dart';
