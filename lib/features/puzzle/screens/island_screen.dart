@@ -51,8 +51,7 @@ class _IslandScreenState extends State<IslandScreen>
   // المراحل 6 - 10 = 10 إعلانات
   // المراحل 11 - 15 = 15 إعلان
   // المراحل 16 وما فوق = 20 إعلان
-  //
-  // الرصيد الموجود في PuzzleProgressManager هو رصيد المشاهدات.
+
   static const int adsForLevels2To5 = 5;
   static const int adsForLevels6To10 = 10;
   static const int adsForLevels11To15 = 15;
@@ -67,6 +66,12 @@ class _IslandScreenState extends State<IslandScreen>
   late final Animation<double> worldTranslateY;
 
   // ============================================================
+  // ✨ حركة وهج الأزرار
+  // ============================================================
+
+  late final AnimationController _uiGlowController;
+
+  // ============================================================
   // 📍 مواقع المراحل
   // ============================================================
 
@@ -79,7 +84,10 @@ class _IslandScreenState extends State<IslandScreen>
     Offset(0.33, 0.46), // 6
     Offset(0.60, 0.37), // 7
     Offset(0.35, 0.28), // 8
-    Offset(0.56, 0.19), // 9
+
+    // المرحلة 9 تم تنزيلها قليلاً
+    Offset(0.56, 0.22), // 9
+
     Offset(0.50, 0.10), // 10
   ];
 
@@ -94,6 +102,10 @@ class _IslandScreenState extends State<IslandScreen>
     levels = PuzzleLevelData.getLevels(
       widget.island.id,
     );
+
+    // ------------------------------------------------------------
+    // 🌍 حركة العالم
+    // ------------------------------------------------------------
 
     worldController = AnimationController(
       vsync: this,
@@ -119,6 +131,17 @@ class _IslandScreenState extends State<IslandScreen>
         curve: Curves.easeInOut,
       ),
     );
+
+    // ------------------------------------------------------------
+    // ✨ حركة الأيقونات
+    //
+    // نفس فكرة الحركة النابضة الخفيفة المستخدمة مع المحفظة.
+    // ------------------------------------------------------------
+
+    _uiGlowController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
   }
 
   // ============================================================
@@ -128,6 +151,8 @@ class _IslandScreenState extends State<IslandScreen>
   @override
   void dispose() {
     worldController.dispose();
+    _uiGlowController.dispose();
+
     super.dispose();
   }
 
@@ -701,6 +726,7 @@ class _IslandScreenState extends State<IslandScreen>
       child: SizedBox(
         width: size,
         height: size,
+
         child: DecoratedBox(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
@@ -718,7 +744,18 @@ class _IslandScreenState extends State<IslandScreen>
 
           child: Stack(
             alignment: Alignment.center,
+
             children: [
+              // =================================================
+              // 🔒 قفل المرحلة
+              //
+              // مهم:
+              // قفل المراحل مختلف عن قفل الجزر.
+              //
+              // مغلقة  -> lock_close.png
+              // مفتوحة  -> lock_open.png
+              // =================================================
+
               FutureBuilder<bool>(
                 future:
                     PuzzleProgressManager
@@ -737,6 +774,7 @@ class _IslandScreenState extends State<IslandScreen>
                     unlocked
                         ? "assets/images/ui/lock_open.png"
                         : "assets/images/ui/lock_close.png",
+
                     fit: BoxFit.contain,
 
                     errorBuilder: (
@@ -766,10 +804,12 @@ class _IslandScreenState extends State<IslandScreen>
                 child: Center(
                   child: Text(
                     "${level.levelNumber}",
+
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: size * 0.28,
                       fontWeight: FontWeight.w900,
+
                       shadows: const [
                         Shadow(
                           color: Colors.black,
@@ -789,13 +829,47 @@ class _IslandScreenState extends State<IslandScreen>
   }
 
   // ============================================================
+  // ✨ مقياس حركة الأيقونات
+  // ============================================================
+
+  double get _uiPulseScale {
+    return 1.10 +
+        (_uiGlowController.value * 0.08);
+  }
+
+  // ============================================================
+  // ✨ وهج المحفظة وزر الرجوع
+  // ============================================================
+
+  BoxDecoration _uiGlowDecoration() {
+    final glowStrength =
+        0.55 +
+        (_uiGlowController.value * 0.30);
+
+    return BoxDecoration(
+      shape: BoxShape.circle,
+
+      boxShadow: [
+        BoxShadow(
+          color: Colors.amber.withOpacity(
+            glowStrength,
+          ),
+          blurRadius: 16,
+          spreadRadius: 4,
+        ),
+      ],
+    );
+  }
+
+  // ============================================================
   // 🗺️ BUILD
   // ============================================================
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xff020b24),
+      backgroundColor:
+          const Color(0xff020b24),
 
       body: SafeArea(
         child: LayoutBuilder(
@@ -1024,54 +1098,50 @@ class _IslandScreenState extends State<IslandScreen>
                   top: 20,
                   left: 20,
 
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
+                  child: AnimatedBuilder(
+                    animation: _uiGlowController,
+
+                    builder: (
+                      context,
+                      child,
+                    ) {
+                      return Container(
+                        decoration:
+                            _uiGlowDecoration(),
+
+                        child:
+                            Transform.scale(
+                          scale: _uiPulseScale,
+
+                          child: child,
+                        ),
+                      );
                     },
 
-                    child: Container(
-                      decoration:
-                          BoxDecoration(
-                        shape:
-                            BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.amber
-                                .withOpacity(
-                              0.85,
-                            ),
-                            blurRadius: 16,
-                            spreadRadius: 4,
-                          ),
-                        ],
-                      ),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
 
-                      child:
-                          Transform.scale(
-                        scale: 1.15,
+                      child: SizedBox(
+                        width: 56,
+                        height: 56,
 
-                        child: SizedBox(
-                          width: 56,
-                          height: 56,
+                        child: Image.asset(
+                          "assets/images/ui/back_screen.png",
+                          fit: BoxFit.contain,
 
-                          child:
-                              Image.asset(
-                            "assets/images/ui/back_screen.png",
-                            fit: BoxFit.contain,
-
-                            errorBuilder: (
-                              context,
-                              error,
-                              stackTrace,
-                            ) {
-                              return const Icon(
-                                Icons.arrow_back,
-                                color:
-                                    Colors.white,
-                                size: 42,
-                              );
-                            },
-                          ),
+                          errorBuilder: (
+                            context,
+                            error,
+                            stackTrace,
+                          ) {
+                            return const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                              size: 42,
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -1086,31 +1156,27 @@ class _IslandScreenState extends State<IslandScreen>
                   bottom: 20,
                   left: 20,
 
-                  child: Container(
-                    decoration:
-                        BoxDecoration(
-                      shape:
-                          BoxShape.circle,
+                  child: AnimatedBuilder(
+                    animation: _uiGlowController,
 
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.amber
-                              .withOpacity(
-                            0.85,
-                          ),
-                          blurRadius: 16,
-                          spreadRadius: 4,
+                    builder: (
+                      context,
+                      child,
+                    ) {
+                      return Container(
+                        decoration:
+                            _uiGlowDecoration(),
+
+                        child:
+                            Transform.scale(
+                          scale: _uiPulseScale,
+
+                          child: child,
                         ),
-                      ],
-                    ),
+                      );
+                    },
 
-                    child:
-                        Transform.scale(
-                      scale: 1.15,
-
-                      child:
-                          const WalletIconWidget(),
-                    ),
+                    child: const WalletIconWidget(),
                   ),
                 ),
 
