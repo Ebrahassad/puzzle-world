@@ -3,8 +3,7 @@ import 'package:image_picker/image_picker.dart';
 
 import 'puzzle_game_screen.dart';
 import '../managers/ads_manager.dart';
-import '../managers/app_language_manager.dart';
-
+import '../../../core/language/app_language_manager.dart';
 /// شاشة "جزيرتك الخاصة".
 ///
 /// تسمح للمستخدم باختيار صورة من الجهاز وتحويلها إلى
