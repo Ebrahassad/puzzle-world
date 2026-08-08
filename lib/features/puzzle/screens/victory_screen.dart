@@ -300,19 +300,36 @@ class _VictoryScreenState extends State<VictoryScreen>
   // ============================================================
   // 🧩 Prepare puzzle pieces
   //
-  // يتم حساب مركز القطع فعليًا ثم نقلها إلى مركز الشاشة.
+  // مهم:
+  // يتم حساب مركز اللغز أولاً ثم تطبيق التوسيط مباشرة
+  // على جميع القطع.
+  //
+  // بهذا تكون الصورة كاملة ومرتبة ومتمركزة منذ أول ظهور
+  // وقبل بداية الانفجار.
   // ============================================================
 
   void _preparePieces() {
     _pieces = widget.pieces.toList();
 
-    _explosionPieces = _pieces
-        .map(
-          (piece) => _PieceExplosionData(piece),
-        )
-        .toList();
+    // ----------------------------------------------------------
+    // حساب الإزاحة أولاً
+    // ----------------------------------------------------------
 
     _calculatePuzzleCenter();
+
+    // ----------------------------------------------------------
+    // إنشاء بيانات القطع مع تطبيق التوسيط مباشرة
+    // ----------------------------------------------------------
+
+    _explosionPieces = _pieces.map((piece) {
+      final data = _PieceExplosionData(piece);
+
+      data.position = _centeredPosition(
+        piece.correctPosition,
+      );
+
+      return data;
+    }).toList();
 
     if (mounted) {
       setState(() {});
@@ -321,88 +338,39 @@ class _VictoryScreenState extends State<VictoryScreen>
 
   // ============================================================
   // 🎯 Calculate puzzle center
+  //
+  // نعتمد فقط على boardRect كمصدر موثوق لمركز البازل.
+  //
+  // لا نستخدم:
+  // physicalSize
+  // devicePixelRatio
+  // minX / maxX / minY / maxY
+  // أو متوسط أكثر من نظام إحداثيات.
   // ============================================================
 
   void _calculatePuzzleCenter() {
-    if (_explosionPieces.isEmpty) {
+    if (!mounted) {
       _puzzleCenterOffset = Offset.zero;
       return;
     }
 
-    double minX = double.infinity;
-    double maxX = double.negativeInfinity;
-
-    double minY = double.infinity;
-    double maxY = double.negativeInfinity;
-
-    for (final data in _explosionPieces) {
-      final p = data.position;
-
-      minX = min(minX, p.dx);
-      maxX = max(maxX, p.dx);
-
-      minY = min(minY, p.dy);
-      maxY = max(maxY, p.dy);
-    }
-
-    final puzzleCenter = Offset(
-      (minX + maxX) / 2,
-      (minY + maxY) / 2,
-    );
-
-    final screenSize = WidgetsBinding
-        .instance
-        .platformDispatcher
-        .views
-        .firstOrNull
-        ?.physicalSize;
-
-    if (screenSize == null) {
-      _puzzleCenterOffset = Offset.zero;
-      return;
-    }
-
-    final devicePixelRatio = WidgetsBinding
-        .instance
-        .platformDispatcher
-        .views
-        .first
-        .devicePixelRatio;
-
-    final logicalSize = Size(
-      screenSize.width / devicePixelRatio,
-      screenSize.height / devicePixelRatio,
-    );
+    final screenSize = MediaQuery.of(context).size;
 
     final screenCenter = Offset(
-      logicalSize.width / 2,
-      logicalSize.height / 2,
+      screenSize.width / 2,
+      screenSize.height / 2,
     );
-
-    _puzzleCenterOffset =
-        screenCenter - puzzleCenter;
-
-    // ----------------------------------------------------------
-    // تصحيح إضافي:
-    // إذا كان الـ boardRect معروفًا، نستخدم مركزه أيضًا
-    // لتجنب ظهور الصورة أعلى أو أسفل الشاشة.
-    // ----------------------------------------------------------
 
     final boardCenter = widget.boardRect.center;
 
-    final boardToScreenCenter =
-        screenCenter - boardCenter;
+    // ----------------------------------------------------------
+    // إزاحة واحدة فقط:
+    //
+    // مركز الشاشة - مركز البورد
+    // ----------------------------------------------------------
 
-    // نأخذ متوسط التصحيحين حتى يكون المشهد ثابتًا
-    // حتى لو كانت إحداثيات القطع مختلفة قليلًا عن boardRect.
-    _puzzleCenterOffset = Offset(
-      (_puzzleCenterOffset.dx +
-              boardToScreenCenter.dx) /
-          2,
-      (_puzzleCenterOffset.dy +
-              boardToScreenCenter.dy) /
-          2,
-    );
+    _puzzleCenterOffset =
+        screenCenter - boardCenter;
   }
 
   // ============================================================
@@ -693,6 +661,10 @@ class _VictoryScreenState extends State<VictoryScreen>
     _sparkleTicker.start();
   }
 
+  // ============================================================
+  // ✨ Update sparkles
+  // ============================================================
+
   void _updateSparkles(
     Duration elapsed,
   ) {
@@ -835,8 +807,6 @@ class _VictoryScreenState extends State<VictoryScreen>
 
     // ----------------------------------------------------------
     // ⭐ المكافأة الأساسية
-    //
-    // نعطيها مرة واحدة فقط.
     // ----------------------------------------------------------
 
     await _grantBaseReward();
@@ -970,10 +940,6 @@ class _VictoryScreenState extends State<VictoryScreen>
 
   // ============================================================
   // 📺 Watch rewarded ad
-  //
-  // مهم:
-  // لا نعتمد على callback وحده.
-  // يوجد timeout حتى لا تتجمد VictoryScreen.
   // ============================================================
 
   Future<void> _watchDoubleRewardAd() async {
@@ -995,7 +961,6 @@ class _VictoryScreenState extends State<VictoryScreen>
 
           _doubleRewardCompleted = true;
 
-          // المكافأة الإضافية فقط.
           try {
             await RewardManager.addStars(1);
           } catch (_) {}
@@ -1033,7 +998,7 @@ class _VictoryScreenState extends State<VictoryScreen>
     }
 
     // ----------------------------------------------------------
-    // ⏳ Timeout حماية
+    // ⏳ Timeout protection
     // ----------------------------------------------------------
 
     const maxWait =
@@ -1055,10 +1020,6 @@ class _VictoryScreenState extends State<VictoryScreen>
 
     stopwatch.stop();
 
-    // ----------------------------------------------------------
-    // مهما حدث، لا نبقي الشاشة معلقة.
-    // ----------------------------------------------------------
-
     _rewardAdFinished = true;
   }
 
@@ -1072,10 +1033,6 @@ class _VictoryScreenState extends State<VictoryScreen>
     _sequenceFinished = true;
 
     if (!mounted) return;
-
-    // ----------------------------------------------------------
-    // إخفاء الصندوق
-    // ----------------------------------------------------------
 
     setState(() {
       _chestDisappearing = true;
@@ -1185,7 +1142,7 @@ class _VictoryScreenState extends State<VictoryScreen>
     }
 
     // ----------------------------------------------------------
-    // ⭐ تسليم النجمة إلى الـ Toolbar
+    // ⭐ تسليم النجمة إلى Toolbar
     // ----------------------------------------------------------
 
     await _startRewardFlight();
@@ -1202,8 +1159,6 @@ class _VictoryScreenState extends State<VictoryScreen>
 
     // ----------------------------------------------------------
     // 🎮 إنهاء المشهد
-    //
-    // حتى لو فشل الإعلان، نصل هنا.
     // ----------------------------------------------------------
 
     await _finishNormalVictory();
