@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/theme/app_theme.dart';
-import 'core/language/language_manager.dart';
+import 'core/language/app_language_manager.dart';
 
 import 'features/puzzle/managers/ads_manager.dart';
 import 'features/puzzle/screens/world_map_screen.dart';
@@ -10,10 +10,10 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // ============================================================
-  // 🌐 تحميل لغة التطبيق قبل تشغيل الواجهة
+  // 🌐 تحميل اللغة المحفوظة
   // ============================================================
 
-  await LanguageManager.instance.loadLanguage();
+  await AppLanguageManager.instance.load();
 
   // ============================================================
   // 📺 تهيئة الإعلانات
@@ -37,33 +37,36 @@ class PuzzleWorldApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: LanguageManager.instance,
+    return ValueListenableBuilder<Locale>(
+      valueListenable:
+          AppLanguageManager.instance.localeNotifier,
+
       builder: (
         context,
+        locale,
         child,
       ) {
-        final languageManager =
-            LanguageManager.instance;
+        final bool isArabic =
+            locale.languageCode == 'ar';
 
         return MaterialApp(
           debugShowCheckedModeBanner: false,
 
-          title: "Puzzle World",
-
-          theme: AppTheme.lightTheme,
+          title: 'Puzzle World',
 
           // ======================================================
           // 🌐 اللغة الحالية
           // ======================================================
 
-          locale: languageManager.locale,
+          locale: locale,
+
+          supportedLocales: const [
+            Locale('ar'),
+            Locale('en'),
+          ],
 
           // ======================================================
-          // ↔️ اتجاه التطبيق بالكامل
-          //
-          // العربية  → RTL
-          // الإنجليزية → LTR
+          // 🧭 اتجاه التطبيق بالكامل
           // ======================================================
 
           builder: (
@@ -71,15 +74,43 @@ class PuzzleWorldApp extends StatelessWidget {
             child,
           ) {
             return Directionality(
-              textDirection:
-                  languageManager.textDirection,
-              child:
-                  child ?? const SizedBox.shrink(),
+              textDirection: isArabic
+                  ? TextDirection.rtl
+                  : TextDirection.ltr,
+              child: child ?? const SizedBox.shrink(),
             );
           },
 
-          home:
-              const WorldMapScreen(),
+          // ======================================================
+          // 🎨 الثيم
+          // ======================================================
+
+          theme: AppTheme.lightTheme.copyWith(
+            snackBarTheme: SnackBarThemeData(
+              backgroundColor:
+                  const Color(0xFF4A247A),
+
+              contentTextStyle:
+                  const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+
+              behavior:
+                  SnackBarBehavior.floating,
+
+              shape:
+                  RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(16),
+              ),
+
+              elevation: 8,
+            ),
+          ),
+
+          home: const WorldMapScreen(),
         );
       },
     );
