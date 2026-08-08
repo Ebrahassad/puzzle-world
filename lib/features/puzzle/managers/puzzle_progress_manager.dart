@@ -85,6 +85,16 @@ class PuzzleProgressManager {
   static const int gemPurchaseAmount = 1;
 
   //==================================================
+  // 📺 رصيد الإعلانات التجريبي
+  //==================================================
+
+  /// رصيد تجريبي مبدئي لاختبار عمليات الشراء داخل التطبيق.
+  ///
+  /// عند عدم وجود رصيد محفوظ في SharedPreferences،
+  /// يبدأ اللاعب بـ 1000 مشاهدة إعلان.
+  static const int initialAdsBalance = 1000;
+
+  //==================================================
   // 🏝️ أسعار الجزيرة الخاصة
   //==================================================
 
@@ -1217,7 +1227,8 @@ class PuzzleProgressManager {
   static Future<int> getAdsBalance() async {
     final prefs = await _prefs;
 
-    return prefs.getInt(adsBalanceKey) ?? 0;
+    return prefs.getInt(adsBalanceKey) ??
+        initialAdsBalance;
   }
 
   static Future<void> addAdsBalance(
@@ -1248,7 +1259,8 @@ class PuzzleProgressManager {
     final prefs = await _prefs;
 
     final current =
-        prefs.getInt(adsBalanceKey) ?? 0;
+        prefs.getInt(adsBalanceKey) ??
+            initialAdsBalance;
 
     if (current < amount) {
       return false;
