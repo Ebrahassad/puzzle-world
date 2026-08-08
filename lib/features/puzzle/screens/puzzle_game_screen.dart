@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 
+import '../core/app_language_manager.dart';
+
 import '../engine/puzzle_controller.dart';
 import '../engine/puzzle_painter.dart';
 import '../models/puzzle_level_model.dart';
@@ -39,10 +41,23 @@ class PuzzleGameScreen extends StatefulWidget {
   });
 
   @override
-  State<PuzzleGameScreen> createState() => _PuzzleGameScreenState();
+  State<PuzzleGameScreen> createState() =>
+      _PuzzleGameScreenState();
 }
 
-class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
+class _PuzzleGameScreenState
+    extends State<PuzzleGameScreen> {
+  //==================================================
+  // 🌐 نظام اللغة
+  //==================================================
+
+  AppLanguageManager get language =>
+      AppLanguageManager.instance;
+
+  //==================================================
+  // 🖼️ الصورة
+  //==================================================
+
   ui.Image? image;
 
   late PuzzleController controller;
@@ -68,21 +83,32 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   Offset? coinAnimationStart;
   bool showCoinAnimation = false;
 
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _audioPlayer =
+      AudioPlayer();
 
   final double boardSize = 350;
   final double trayHeight = 110;
 
-  final GlobalKey overlayKey = GlobalKey();
-  final GlobalKey boardKey = GlobalKey();
-  final GlobalKey trayKey = GlobalKey();
+  final GlobalKey overlayKey =
+      GlobalKey();
+
+  final GlobalKey boardKey =
+      GlobalKey();
+
+  final GlobalKey trayKey =
+      GlobalKey();
 
   Rect boardRect = Rect.zero;
   Rect scatterArea = Rect.zero;
 
-  final GlobalKey starKey = GlobalKey();
-  final GlobalKey gemKey = GlobalKey();
-  final GlobalKey coinKey = GlobalKey();
+  final GlobalKey starKey =
+      GlobalKey();
+
+  final GlobalKey gemKey =
+      GlobalKey();
+
+  final GlobalKey coinKey =
+      GlobalKey();
 
   //==================================================
   // 🔢 حجم الشبكة
@@ -109,7 +135,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   }
 
   //==================================================
-  // 🏁 هل هذه هي المرحلة الأخيرة في الجزيرة؟
+  // 🏁 هل هذه المرحلة الأخيرة؟
   //==================================================
 
   bool get isFinalLevelOfIsland {
@@ -117,22 +143,26 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       return false;
     }
 
-    if (widget.level == null || widget.island == null) {
+    if (widget.level == null ||
+        widget.island == null) {
       return false;
     }
 
-    final levels = PuzzleLevelData.getLevels(
+    final levels =
+        PuzzleLevelData.getLevels(
       widget.island!.id,
     );
 
-    return widget.level!.levelNumber == levels.length;
+    return widget.level!.levelNumber ==
+        levels.length;
   }
 
   //==================================================
-  // 🏝️ فتح الجزيرة التالية بعد المرحلة الأخيرة
+  // 🏝️ فتح الجزيرة التالية
   //==================================================
 
-  Future<void> _unlockNextIslandIfNeeded() async {
+  Future<void>
+      _unlockNextIslandIfNeeded() async {
     if (!isFinalLevelOfIsland) {
       return;
     }
@@ -141,7 +171,8 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       return;
     }
 
-    await PuzzleProgressManager.unlockNextIsland(
+    await PuzzleProgressManager
+        .unlockNextIsland(
       widget.island!.id,
     );
   }
@@ -158,14 +189,15 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (_) => const WorldMapScreen(),
+        builder: (_) =>
+            const WorldMapScreen(),
       ),
       (route) => false,
     );
   }
 
   //==================================================
-  // INIT
+  // 🚀 INIT
   //==================================================
 
   @override
@@ -175,10 +207,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     stopwatch = Stopwatch();
 
     if (widget.isCustomImage) {
-      setState(() {
-        checkingSavedGame = false;
-      });
-
+      checkingSavedGame = false;
       _loadImage();
     } else {
       _checkSavedGame();
@@ -196,25 +225,38 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       return;
     }
 
-    final saved = await PuzzleProgressManager.loadProgress();
+    final saved =
+        await PuzzleProgressManager
+            .loadProgress();
 
-    if (saved != null && saved["levelId"] == widget.level!.id) {
+    if (saved != null &&
+        saved["levelId"] ==
+            widget.level!.id) {
       savedGameData = saved;
 
       if (!mounted) {
         return;
       }
 
-      final resume = await showDialog<bool>(
+      final resume =
+          await showDialog<bool>(
         context: context,
         barrierDismissible: false,
         builder: (context) {
           return AlertDialog(
-            title: const Text(
-              "توجد لعبة محفوظة",
+            title: Text(
+              language.text(
+                ar: "توجد لعبة محفوظة",
+                en: "Saved Game Found",
+              ),
             ),
-            content: const Text(
-              "هل تريد الاستمرار في اللعبة السابقة؟",
+            content: Text(
+              language.text(
+                ar:
+                    "هل تريد الاستمرار في اللعبة السابقة؟",
+                en:
+                    "Do you want to continue the previous game?",
+              ),
             ),
             actions: [
               TextButton(
@@ -224,13 +266,17 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                     false,
                   );
                 },
-                child: const Text(
-                  "لعبة جديدة",
+                child: Text(
+                  language.text(
+                    ar: "لعبة جديدة",
+                    en: "New Game",
+                  ),
                 ),
               ),
               TextButton(
                 onPressed: () {
-                  AdsManager().showRewardedAd(
+                  AdsManager()
+                      .showRewardedAd(
                     onRewardEarned: () {
                       if (!context.mounted) {
                         return;
@@ -253,8 +299,11 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                     },
                   );
                 },
-                child: const Text(
-                  "استمرار",
+                child: Text(
+                  language.text(
+                    ar: "استمرار",
+                    en: "Continue",
+                  ),
                 ),
               ),
             ],
@@ -263,7 +312,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       );
 
       if (resume != true) {
-        await PuzzleProgressManager.clearProgress();
+        await PuzzleProgressManager
+            .clearProgress();
+
         savedGameData = null;
       }
     }
@@ -314,7 +365,8 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
             loading = false;
           });
 
-          WidgetsBinding.instance.addPostFrameCallback(
+          WidgetsBinding.instance
+              .addPostFrameCallback(
             (_) {
               _calculateBoardPosition();
             },
@@ -340,7 +392,8 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   //==================================================
 
   void _calculateBoardPosition() {
-    WidgetsBinding.instance.addPostFrameCallback(
+    WidgetsBinding.instance
+        .addPostFrameCallback(
       (_) {
         if (!mounted) {
           return;
@@ -359,7 +412,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
             boardContext == null ||
             trayContext == null) {
           Future.delayed(
-            const Duration(milliseconds: 100),
+            const Duration(
+              milliseconds: 100,
+            ),
             () {
               if (mounted) {
                 _calculateBoardPosition();
@@ -371,15 +426,18 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
         }
 
         final RenderBox overlayBox =
-            overlayContext.findRenderObject()
+            overlayContext
+                    .findRenderObject()
                 as RenderBox;
 
         final RenderBox boardBox =
-            boardContext.findRenderObject()
+            boardContext
+                    .findRenderObject()
                 as RenderBox;
 
         final RenderBox trayBox =
-            trayContext.findRenderObject()
+            trayContext
+                    .findRenderObject()
                 as RenderBox;
 
         final boardLocal =
@@ -420,14 +478,16 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   //==================================================
 
   Offset? getCoinTargetPosition() {
-    final context = coinKey.currentContext;
+    final context =
+        coinKey.currentContext;
 
     if (context == null) {
       return null;
     }
 
     final box =
-        context.findRenderObject() as RenderBox;
+        context.findRenderObject()
+            as RenderBox;
 
     final global =
         box.localToGlobal(
@@ -438,7 +498,8 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
     final overlayBox =
         overlayKey.currentContext!
-            .findRenderObject() as RenderBox;
+                .findRenderObject()
+            as RenderBox;
 
     return overlayBox.globalToLocal(
       global,
@@ -450,7 +511,8 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   //==================================================
 
   void _createPuzzle() {
-    if (image == null || puzzleCreated) {
+    if (image == null ||
+        puzzleCreated) {
       return;
     }
 
@@ -498,10 +560,11 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       return;
     }
 
-    await PuzzleProgressManager.saveProgress(
+    await PuzzleProgressManager
+        .saveProgress(
       puzzleId:
           widget.island?.id ??
-          "custom_island",
+              "custom_island",
       levelId: currentLevelId,
       pieces: controller.pieces,
       moves: moves,
@@ -520,11 +583,19 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text(
-            "إعادة اللعبة",
+          title: Text(
+            language.text(
+              ar: "إعادة اللعبة",
+              en: "Restart Game",
+            ),
           ),
-          content: const Text(
-            "هل تريد إعادة اللعبة من البداية؟",
+          content: Text(
+            language.text(
+              ar:
+                  "هل تريد إعادة اللعبة من البداية؟",
+              en:
+                  "Do you want to restart the game from the beginning?",
+            ),
           ),
           actions: [
             TextButton(
@@ -533,8 +604,11 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                 context,
                 false,
               ),
-              child: const Text(
-                "لا",
+              child: Text(
+                language.text(
+                  ar: "لا",
+                  en: "No",
+                ),
               ),
             ),
             ElevatedButton(
@@ -543,8 +617,11 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                 context,
                 true,
               ),
-              child: const Text(
-                "نعم",
+              child: Text(
+                language.text(
+                  ar: "نعم",
+                  en: "Yes",
+                ),
               ),
             ),
           ],
@@ -600,17 +677,15 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
         widget.level!.levelNumber;
 
     final nextLevel =
-        PuzzleLevelData
-            .getLevels(
-              widget.island!.id,
-            )
-            .firstWhere(
-              (level) =>
-                  level.levelNumber ==
-                  currentNumber + 1,
-              orElse: () =>
-                  widget.level!,
-            );
+        PuzzleLevelData.getLevels(
+      widget.island!.id,
+    ).firstWhere(
+      (level) =>
+          level.levelNumber ==
+          currentNumber + 1,
+      orElse: () =>
+          widget.level!,
+    );
 
     Navigator.pushReplacement(
       context,
@@ -641,30 +716,20 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
     stopwatch.stop();
 
-    //==================================================
-    // 🏆 حفظ المرحلة كمكتملة
-    //==================================================
-
-    await PuzzleProgressManager.completeLevel(
+    await PuzzleProgressManager
+        .completeLevel(
       currentLevelId,
     );
-
-    //==================================================
-    // 🔓 نظام المراحل
-    //==================================================
 
     if (isFinalLevelOfIsland) {
       await _unlockNextIslandIfNeeded();
     } else {
-      await PuzzleProgressManager.unlockNextLevel(
+      await PuzzleProgressManager
+          .unlockNextLevel(
         widget.island!.id,
         widget.level!.levelNumber,
       );
     }
-
-    //==================================================
-    // إخفاء صورة اللوحة
-    //==================================================
 
     if (mounted) {
       setState(() {
@@ -676,16 +741,12 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       return;
     }
 
-    //==================================================
-    // 🏆 شاشة الفوز
-    //==================================================
-
     Navigator.push(
       context,
       PageRouteBuilder(
         opaque: false,
-        barrierColor: Colors.transparent,
-
+        barrierColor:
+            Colors.transparent,
         pageBuilder:
             (_, animation, secondaryAnimation) {
           return VictoryScreen(
@@ -694,19 +755,15 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
             cols: gridSize,
             boardRect: boardRect,
             island: widget.island,
-
             levelNumber:
                 widget.isCustomImage
                     ? 10
-                    : widget.level!.levelNumber,
-
+                    : widget.level!
+                        .levelNumber,
             isFinalLevel:
                 isFinalLevelOfIsland,
-
             starTargetKey: starKey,
-
             pieces: controller.pieces,
-
             onFinished: () {
               Navigator.pop(context);
 
@@ -725,7 +782,6 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                 );
               }
             },
-
             onNext: () async {
               Navigator.pop(context);
 
@@ -745,11 +801,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                 openNextLevel();
               }
             },
-
             onMap: () {
               _returnToWorldMap();
             },
-
             onReplay: () {
               Navigator.pushReplacement(
                 context,
@@ -770,7 +824,6 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
             },
           );
         },
-
         transitionsBuilder:
             (_, animation, __, child) {
           return child;
@@ -787,16 +840,21 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     Future.delayed(
       const Duration(minutes: 1),
       () {
-        if (!mounted || gameFinished) {
+        if (!mounted ||
+            gameFinished) {
           return;
         }
 
         _showRegroupButton();
 
-        _regroupTimer = Timer.periodic(
-          const Duration(seconds: 60),
+        _regroupTimer =
+            Timer.periodic(
+          const Duration(
+            seconds: 60,
+          ),
           (_) {
-            if (!mounted || gameFinished) {
+            if (!mounted ||
+                gameFinished) {
               return;
             }
 
@@ -808,7 +866,8 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   }
 
   void _showRegroupButton() {
-    if (!mounted || gameFinished) {
+    if (!mounted ||
+        gameFinished) {
       return;
     }
 
@@ -819,7 +878,8 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     Future.delayed(
       const Duration(seconds: 20),
       () {
-        if (!mounted || gameFinished) {
+        if (!mounted ||
+            gameFinished) {
           return;
         }
 
@@ -838,51 +898,157 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   Widget build(
     BuildContext context,
   ) {
-    if (checkingSavedGame ||
-        image == null ||
-        loading) {
-      return const Scaffold(
-        body: Center(
-          child:
-              CircularProgressIndicator(),
-        ),
-      );
-    }
+    return ValueListenableBuilder<Locale>(
+      valueListenable:
+          language.localeNotifier,
+      builder: (
+        context,
+        locale,
+        child,
+      ) {
+        if (checkingSavedGame ||
+            image == null ||
+            loading) {
+          return Directionality(
+            textDirection:
+                language.textDirection,
+            child: Scaffold(
+              body: Center(
+                child:
+                    CircularProgressIndicator(),
+              ),
+            ),
+          );
+        }
 
-    return Scaffold(
-      body: Container(
-        decoration:
-            const BoxDecoration(
-          color: Color(
-            0xFFE8E1F3,
-          ),
-        ),
-        child: SafeArea(
-          child: Stack(
-            key: overlayKey,
-            children: [
-              //==================================================
-              // BOARD + TRAY
-              //==================================================
+        return Directionality(
+          textDirection:
+              language.textDirection,
+          child: Scaffold(
+            body: Container(
+              decoration:
+                  const BoxDecoration(
+                color: Color(
+                  0xFFE8E1F3,
+                ),
+              ),
+              child: SafeArea(
+                child: Stack(
+                  key: overlayKey,
+                  children: [
+                    //==================================================
+                    // BOARD + TRAY
+                    //==================================================
 
-              Column(
-                children: [
-                  const SizedBox(
-                    height: 70,
-                  ),
+                    Column(
+                      children: [
+                        const SizedBox(
+                          height: 70,
+                        ),
 
-                  Expanded(
-                    child: Padding(
-                      padding:
-                          const EdgeInsets
-                              .symmetric(
-                        horizontal: 8,
-                      ),
-                      child: Center(
-                        child: Container(
-                          key: boardKey,
-                          width: boardSize,
-                          height: boardSize,
+                        Expanded(
+                          child: Padding(
+                            padding:
+                                const EdgeInsets
+                                    .symmetric(
+                              horizontal: 8,
+                            ),
+                            child: Center(
+                              child:
+                                  Container(
+                                key: boardKey,
+                                width:
+                                    boardSize,
+                                height:
+                                    boardSize,
+                                decoration:
+                                    BoxDecoration(
+                                  color:
+                                      const Color(
+                                    0xFFDCCFEA,
+                                  ),
+                                  borderRadius:
+                                      BorderRadius
+                                          .circular(
+                                    24,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors
+                                          .black
+                                          .withOpacity(
+                                        0.35,
+                                      ),
+                                      blurRadius:
+                                          25,
+                                      spreadRadius:
+                                          2,
+                                    ),
+                                  ],
+                                  border:
+                                      Border.all(
+                                    color:
+                                        const Color(
+                                      0xFFF7F2FD,
+                                    ),
+                                    width: 2,
+                                  ),
+                                ),
+                                child:
+                                    showBoardImage
+                                        ? ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(
+                                              18,
+                                            ),
+                                            child:
+                                                Opacity(
+                                              opacity:
+                                                  0.18,
+                                              child: widget.isCustomImage &&
+                                                      widget.customImagePath !=
+                                                          null
+                                                  ? Image.file(
+                                                      File(
+                                                        widget.customImagePath!,
+                                                      ),
+                                                      width:
+                                                          boardSize,
+                                                      height:
+                                                          boardSize,
+                                                      fit:
+                                                          BoxFit.cover,
+                                                    )
+                                                  : Image.asset(
+                                                      widget.level!.image,
+                                                      width:
+                                                          boardSize,
+                                                      height:
+                                                          boardSize,
+                                                      fit:
+                                                          BoxFit.cover,
+                                                    ),
+                                            ),
+                                          )
+                                        : const SizedBox
+                                            .shrink(),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(
+                          height: 15,
+                        ),
+
+                        Container(
+                          key: trayKey,
+                          height: trayHeight,
+                          margin:
+                              const EdgeInsets
+                                  .symmetric(
+                            horizontal: 12,
+                          ),
                           decoration:
                               BoxDecoration(
                             color:
@@ -892,17 +1058,22 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                             borderRadius:
                                 BorderRadius
                                     .circular(
-                              24,
+                              22,
                             ),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors
                                     .black
                                     .withOpacity(
-                                  0.35,
+                                  0.25,
                                 ),
-                                blurRadius: 25,
-                                spreadRadius: 2,
+                                blurRadius:
+                                    20,
+                                offset:
+                                    const Offset(
+                                  0,
+                                  8,
+                                ),
                               ),
                             ],
                             border:
@@ -911,408 +1082,330 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                                   const Color(
                                 0xFFF7F2FD,
                               ),
-                              width: 2,
                             ),
                           ),
-                          child:
-                              showBoardImage
-                                  ? ClipRRect(
-                                      borderRadius:
-                                          BorderRadius.circular(
-                                        18,
-                                      ),
-                                      child:
-                                          Opacity(
-                                        opacity:
-                                            0.18,
-                                        child: widget
-                                                    .isCustomImage &&
-                                                widget.customImagePath !=
-                                                    null
-                                            ? Image
-                                                .file(
-                                                File(
-                                                  widget
-                                                      .customImagePath!,
-                                                ),
-                                                width:
-                                                    boardSize,
-                                                height:
-                                                    boardSize,
-                                                fit:
-                                                    BoxFit.cover,
-                                              )
-                                            : Image
-                                                .asset(
-                                                widget
-                                                    .level!
-                                                    .image,
-                                                width:
-                                                    boardSize,
-                                                height:
-                                                    boardSize,
-                                                fit:
-                                                    BoxFit.cover,
-                                              ),
-                                      ),
-                                    )
-                                  : const SizedBox
-                                      .shrink(),
                         ),
-                      ),
-                    ),
-                  ),
 
-                  const SizedBox(
-                    height: 15,
-                  ),
-
-                  Container(
-                    key: trayKey,
-                    height: trayHeight,
-                    margin:
-                        const EdgeInsets
-                            .symmetric(
-                      horizontal: 12,
-                    ),
-                    decoration:
-                        BoxDecoration(
-                      color:
-                          const Color(
-                        0xFFDCCFEA,
-                      ),
-                      borderRadius:
-                          BorderRadius
-                              .circular(
-                        22,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors
-                              .black
-                              .withOpacity(
-                            0.25,
-                          ),
-                          blurRadius: 20,
-                          offset:
-                              const Offset(
-                            0,
-                            8,
-                          ),
+                        const SizedBox(
+                          height: 15,
                         ),
                       ],
-                      border:
-                          Border.all(
-                        color:
-                            const Color(
-                          0xFFF7F2FD,
-                        ),
-                      ),
                     ),
-                  ),
 
-                  const SizedBox(
-                    height: 15,
-                  ),
-                ],
-              ),
+                    //==================================================
+                    // 🪙 حركة العملة
+                    //==================================================
 
-              //==================================================
-              // 🪙 حركة العملة
-              //==================================================
+                    if (showCoinAnimation &&
+                        coinAnimationStart !=
+                            null)
+                      Builder(
+                        builder:
+                            (context) {
+                          final target =
+                              getCoinTargetPosition();
 
-              if (showCoinAnimation &&
-                  coinAnimationStart != null)
-                Builder(
-                  builder:
-                      (context) {
-                    final target =
-                        getCoinTargetPosition();
+                          if (target ==
+                              null) {
+                            return const SizedBox
+                                .shrink();
+                          }
 
-                    if (target ==
-                        null) {
-                      return const SizedBox
-                          .shrink();
-                    }
+                          return FlyingCoin(
+                            start:
+                                coinAnimationStart!,
+                            end: target,
+                            onFinished:
+                                () async {
+                              await RewardManager
+                                  .addCoins(
+                                1,
+                              );
 
-                    return FlyingCoin(
-                      start:
-                          coinAnimationStart!,
-                      end: target,
-                      onFinished:
-                          () async {
-                        await RewardManager
-                            .addCoins(
-                          1,
-                        );
+                              if (!mounted) {
+                                return;
+                              }
 
-                        if (!mounted) {
-                          return;
-                        }
-
-                        setState(() {
-                          showCoinAnimation =
-                              false;
-                        });
-                      },
-                    );
-                  },
-                ),
-
-              //==================================================
-              // 🧩 البازل
-              //==================================================
-
-              if (puzzleCreated)
-                Positioned.fill(
-                  child:
-                      GestureDetector(
-                    behavior:
-                        HitTestBehavior
-                            .translucent,
-
-                    onPanStart:
-                        (details) {
-                      controller
-                          .onPanStart(
-                        details
-                            .localPosition,
-                      );
-                    },
-
-                    onPanUpdate:
-                        (details) {
-                      controller
-                          .onPanUpdate(
-                        details
-                            .localPosition,
-                      );
-                    },
-
-                    onPanEnd:
-                        (_) async {
-                      controller
-                          .onPanEnd();
-
-                      moves++;
-
-                      await Future.delayed(
-                        const Duration(
-                          milliseconds:
-                              100,
-                        ),
-                      );
-
-                      if (!mounted) {
-                        return;
-                      }
-
-                      final placedCount =
-                          controller
-                              .pieces
-                              .where(
-                                (p) =>
-                                    p.isPlaced,
-                              )
-                              .length;
-
-                      if (placedCount >
-                          lastPlacedCount) {
-                        lastPlacedCount =
-                            placedCount;
-
-                        await _audioPlayer
-                            .play(
-                          AssetSource(
-                            'audio/piece_correct.mp3',
-                          ),
-                        );
-
-                        if (controller
-                                .lastPlacedPosition !=
-                            null) {
-                          final RenderBox
-                              overlayBox =
-                              overlayKey
-                                  .currentContext!
-                                  .findRenderObject()
-                                  as RenderBox;
-
-                          final start =
-                              overlayBox
-                                  .localToGlobal(
-                            controller
-                                .lastPlacedPosition!,
+                              setState(() {
+                                showCoinAnimation =
+                                    false;
+                              });
+                            },
                           );
-
-                          final localStart =
-                              overlayBox
-                                  .globalToLocal(
-                            start,
-                          );
-
-                          setState(() {
-                            coinAnimationStart =
-                                localStart;
-
-                            showCoinAnimation =
-                                true;
-                          });
-                        }
-                      }
-
-                      await checkWin();
-                    },
-
-                    child:
-                        CustomPaint(
-                      painter:
-                          PuzzlePainter(
-                        pieces:
-                            controller
-                                .pieces,
-                        image: image!,
-                        boardRect:
-                            controller
-                                .boardRect,
-                        rows: gridSize,
-                        cols: gridSize,
-                        repaint:
-                            controller,
+                        },
                       ),
-                    ),
-                  ),
-                ),
 
-              //==================================================
-              // 🎮 Toolbar
-              //==================================================
+                    //==================================================
+                    // 🧩 البازل
+                    //==================================================
 
-              Positioned(
-                top: 0,
-                left: 8,
-                right: 8,
-                child:
-                    GameToolbar(
-                  starKey:
-                      starKey,
-                  gemKey:
-                      gemKey,
-                  coinKey:
-                      coinKey,
-                  soundEnabled:
-                      soundEnabled,
+                    if (puzzleCreated)
+                      Positioned.fill(
+                        child:
+                            GestureDetector(
+                          behavior:
+                              HitTestBehavior
+                                  .translucent,
 
-                  onSave:
-                      () async {
-                    await saveCurrentGame();
+                          onPanStart:
+                              (details) {
+                            controller
+                                .onPanStart(
+                              details
+                                  .localPosition,
+                            );
+                          },
 
-                    if (!mounted) {
-                      return;
-                    }
+                          onPanUpdate:
+                              (details) {
+                            controller
+                                .onPanUpdate(
+                              details
+                                  .localPosition,
+                            );
+                          },
 
-                    ScaffoldMessenger
-                        .of(context)
-                        .showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          "تم الحفظ بنجاح",
-                        ),
-                        behavior:
-                            SnackBarBehavior
-                                .floating,
-                      ),
-                    );
-                  },
+                          onPanEnd:
+                              (_) async {
+                            controller
+                                .onPanEnd();
 
-                  onRestart:
-                      () {
-                    restartGame();
-                  },
+                            moves++;
 
-                  onExit:
-                      () async {
-                    await saveCurrentGame();
+                            await Future.delayed(
+                              const Duration(
+                                milliseconds:
+                                    100,
+                              ),
+                            );
 
-                    stopwatch.stop();
+                            if (!mounted) {
+                              return;
+                            }
 
-                    if (!mounted) {
-                      return;
-                    }
+                            final placedCount =
+                                controller
+                                    .pieces
+                                    .where(
+                                      (p) =>
+                                          p.isPlaced,
+                                    )
+                                    .length;
 
-                    Navigator.pop(
-                      context,
-                    );
-                  },
+                            if (placedCount >
+                                lastPlacedCount) {
+                              lastPlacedCount =
+                                  placedCount;
 
-                  onSoundChanged:
-                      (enabled) {
-                    setState(() {
-                      soundEnabled =
-                          enabled;
-                    });
+                              await _audioPlayer
+                                  .play(
+                                AssetSource(
+                                  'audio/piece_correct.mp3',
+                                ),
+                              );
 
-                    _audioPlayer
-                        .setVolume(
-                      enabled
-                          ? 1
-                          : 0,
-                    );
-                  },
-                ),
-              ),
+                              if (controller
+                                      .lastPlacedPosition !=
+                                  null) {
+                                final RenderBox
+                                    overlayBox =
+                                    overlayKey
+                                        .currentContext!
+                                        .findRenderObject()
+                                        as RenderBox;
 
-              //==================================================
-              // 🔀 زر إعادة التجميع
-              //==================================================
+                                final start =
+                                    overlayBox
+                                        .localToGlobal(
+                                  controller
+                                      .lastPlacedPosition!,
+                                );
 
-              if (showRegroupButton)
-                FloatingRegroupButton(
-                  onPressed: () {
-                    AdsManager()
-                        .showRewardedAd(
-                      onRewardEarned:
-                          () {
-                        if (!mounted) {
-                          return;
-                        }
+                                final localStart =
+                                    overlayBox
+                                        .globalToLocal(
+                                  start,
+                                );
 
-                        controller
-                            .regroupPieces();
+                                setState(() {
+                                  coinAnimationStart =
+                                      localStart;
 
-                        setState(() {
-                          showRegroupButton =
-                              false;
-                        });
-                      },
+                                  showCoinAnimation =
+                                      true;
+                                });
+                              }
+                            }
 
-                      onAdFailed:
-                          () {
-                        if (!mounted) {
-                          return;
-                        }
+                            await checkWin();
+                          },
 
-                        ScaffoldMessenger
-                            .of(context)
-                            .showSnackBar(
-                          const SnackBar(
-                            content:
-                                Text(
-                              "لم يتم تشغيل الإعلان، حاول مرة أخرى",
+                          child:
+                              CustomPaint(
+                            painter:
+                                PuzzlePainter(
+                              pieces:
+                                  controller
+                                      .pieces,
+                              image:
+                                  image!,
+                              boardRect:
+                                  controller
+                                      .boardRect,
+                              rows:
+                                  gridSize,
+                              cols:
+                                  gridSize,
+                              repaint:
+                                  controller,
                             ),
-                            behavior:
-                                SnackBarBehavior
-                                    .floating,
                           ),
-                        );
-                      },
-                    );
-                  },
+                        ),
+                      ),
+
+                    //==================================================
+                    // 🎮 Toolbar
+                    //==================================================
+
+                    Positioned(
+                      top: 0,
+                      left: 8,
+                      right: 8,
+                      child:
+                          GameToolbar(
+                        starKey:
+                            starKey,
+                        gemKey:
+                            gemKey,
+                        coinKey:
+                            coinKey,
+                        soundEnabled:
+                            soundEnabled,
+
+                        onSave:
+                            () async {
+                          await saveCurrentGame();
+
+                          if (!mounted) {
+                            return;
+                          }
+
+                          ScaffoldMessenger
+                              .of(context)
+                              .showSnackBar(
+                            SnackBar(
+                              content:
+                                  Text(
+                                language.text(
+                                  ar:
+                                      "تم الحفظ بنجاح",
+                                  en:
+                                      "Game saved successfully",
+                                ),
+                              ),
+                              behavior:
+                                  SnackBarBehavior
+                                      .floating,
+                            ),
+                          );
+                        },
+
+                        onRestart:
+                            () {
+                          restartGame();
+                        },
+
+                        onExit:
+                            () async {
+                          await saveCurrentGame();
+
+                          stopwatch.stop();
+
+                          if (!mounted) {
+                            return;
+                          }
+
+                          Navigator.pop(
+                            context,
+                          );
+                        },
+
+                        onSoundChanged:
+                            (enabled) {
+                          setState(() {
+                            soundEnabled =
+                                enabled;
+                          });
+
+                          _audioPlayer
+                              .setVolume(
+                            enabled
+                                ? 1
+                                : 0,
+                          );
+                        },
+                      ),
+                    ),
+
+                    //==================================================
+                    // 🔀 زر إعادة التجميع
+                    //==================================================
+
+                    if (showRegroupButton)
+                      FloatingRegroupButton(
+                        onPressed: () {
+                          AdsManager()
+                              .showRewardedAd(
+                            onRewardEarned:
+                                () {
+                              if (!mounted) {
+                                return;
+                              }
+
+                              controller
+                                  .regroupPieces();
+
+                              setState(() {
+                                showRegroupButton =
+                                    false;
+                              });
+                            },
+
+                            onAdFailed:
+                                () {
+                              if (!mounted) {
+                                return;
+                              }
+
+                              ScaffoldMessenger
+                                  .of(context)
+                                  .showSnackBar(
+                                SnackBar(
+                                  content:
+                                      Text(
+                                    language.text(
+                                      ar:
+                                          "لم يتم تشغيل الإعلان، حاول مرة أخرى",
+                                      en:
+                                          "The ad could not be played. Please try again.",
+                                    ),
+                                  ),
+                                  behavior:
+                                      SnackBarBehavior
+                                          .floating,
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                  ],
                 ),
-            ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -1334,13 +1427,13 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
         puzzleId:
             widget.island?.id ??
                 "custom_island",
-        levelId: currentLevelId,
+        levelId:
+            currentLevelId,
         pieces:
             controller.pieces,
         moves: moves,
         seconds:
-            stopwatch.elapsed
-                .inSeconds,
+            stopwatch.elapsed.inSeconds,
       );
     }
 
