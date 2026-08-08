@@ -2213,84 +2213,56 @@ return Container(
 // ================================================================
 
 class _AnimatedRoyalImageIcon extends StatelessWidget {
-final Animation<double> controller;
-final String image;
-final VoidCallback onTap;
+  final Animation<double> controller;
+  final String image;
+  final VoidCallback onTap;
 
-const _AnimatedRoyalImageIcon({
-required this.controller,
-required this.image,
-required this.onTap,
-});
+  const _AnimatedRoyalImageIcon({
+    required this.controller,
+    required this.image,
+    required this.onTap,
+  });
 
-@override
-Widget build(
-BuildContext context,
-) {
-return AnimatedBuilder(
-animation: controller,
-builder: (
-context,
-child,
-) {
-final pulse = controller.value;
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (
+        context,
+        child,
+      ) {
+        final pulse = controller.value;
 
-return GestureDetector(  
-      onTap: onTap,  
-      child: Container(  
-        width: 56,  
-        height: 56,  
-        decoration: BoxDecoration(  
-          shape: BoxShape.circle,  
-          color: const Color(  
-            0xFF4A247A,  
-          ).withOpacity(0.76),  
-          border: Border.all(  
-            color: const Color(  
-              0xFFD0A8FF,  
-            ).withOpacity(0.28),  
-            width: 1.2,  
-          ),  
-          boxShadow: [  
-            BoxShadow(  
-              color: const Color(  
-                0xFF6A35C9,  
-              ).withOpacity(  
-                0.22 + pulse * 0.12,  
-              ),  
-              blurRadius: 14 + pulse * 5,  
-              spreadRadius: 2 + pulse * 2,  
-            ),  
-          ],  
-        ),  
-        child: Transform.scale(  
-          scale: 1.0 + pulse * 0.035,  
-          child: Image.asset(  
-            image,  
-            width: 34,  
-            height: 34,  
-            fit: BoxFit.contain,  
-            errorBuilder: (  
-              context,  
-              error,  
-              stack,  
-            ) {  
-              return const Icon(  
-                Icons.settings_rounded,  
-                color: Color(  
-                  0xFFD6B8FF,  
-                ),  
-                size: 29,  
-              );  
-            },  
-          ),  
-        ),  
-      ),  
-    );  
-  },  
-);
-
-}
+        return GestureDetector(
+          onTap: onTap,
+          child: SizedBox(
+            width: 56,
+            height: 56,
+            child: Transform.scale(
+              scale: 1.0 + pulse * 0.035,
+              child: Image.asset(
+                image,
+                width: 34,
+                height: 34,
+                fit: BoxFit.contain,
+                errorBuilder: (
+                  context,
+                  error,
+                  stack,
+                ) {
+                  return const Icon(
+                    Icons.settings_rounded,
+                    color: Color(0xFFD6B8FF),
+                    size: 29,
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 // ================================================================
