@@ -560,13 +560,11 @@ class _WalletScreenState extends State<WalletScreen>
         //================================================
 
         appBar: AppBar(
-          // إزالة زر النظام/المربع غير المعروف
           automaticallyImplyLeading: false,
-
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // أيقونة المحفظة — صورة فقط بدون أي تفاعل
+              // أيقونة المحفظة — صورة فقط بدون تفاعل
               Image.asset(
                 "assets/images/ui/open_wallet.png",
                 width: 46,
@@ -583,7 +581,7 @@ class _WalletScreenState extends State<WalletScreen>
 
               const SizedBox(width: 9),
 
-              // العنوان — المحفظة أولاً ثم المتجر
+              // العنوان
               Text(
                 tr(
                   ar: "المحفظة والمتجر",
@@ -597,13 +595,24 @@ class _WalletScreenState extends State<WalletScreen>
               ),
             ],
           ),
-
           centerTitle: true,
-
           backgroundColor: cardDarkColor,
-
           elevation: 3,
-
+          // زر الرجوع في طرف الشريط
+          leading: Padding(
+            padding: const EdgeInsets.all(9),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.pop(context);
+              },
+              child: Image.asset(
+                "assets/images/ui/back_screen.png",
+                width: 30,
+                height: 30,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
           iconTheme: const IconThemeData(
             color: purpleDark,
           ),
