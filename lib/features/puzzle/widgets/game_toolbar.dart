@@ -36,23 +36,30 @@ class GameToolbar extends StatefulWidget {
   State<GameToolbar> createState() => _GameToolbarState();
 }
 
-class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStateMixin {
+class _GameToolbarState extends State<GameToolbar>
+    with SingleTickerProviderStateMixin {
   RewardResultModel reward = const RewardResultModel();
-  
-  // تعريف متغيرات الأنيميشن لزر الإعدادات
+
+  // ============================================================
+  // ⚙️ Settings animation
+  // ============================================================
+
   late AnimationController _settingsAnimController;
   late Animation<double> _settingsScaleAnimation;
 
   @override
   void initState() {
     super.initState();
-    
-    // تهيئة الأنيميشن
+
     _settingsAnimController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 150),
     );
-    _settingsScaleAnimation = Tween<double>(begin: 1.0, end: 0.85).animate(
+
+    _settingsScaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.86,
+    ).animate(
       CurvedAnimation(
         parent: _settingsAnimController,
         curve: Curves.easeInOut,
@@ -60,19 +67,28 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
     );
 
     RewardManager.rewardNotifier.addListener(refreshReward);
+
     loadToolbarData();
   }
 
   @override
   void dispose() {
     RewardManager.rewardNotifier.removeListener(refreshReward);
+
     _settingsAnimController.dispose();
+
     super.dispose();
   }
 
+  // ============================================================
+  // 💰 Reward data
+  // ============================================================
+
   Future<void> loadToolbarData() async {
     final data = await RewardManager.getReward();
+
     if (!mounted) return;
+
     setState(() {
       reward = data;
     });
@@ -81,6 +97,10 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
   void refreshReward() {
     loadToolbarData();
   }
+
+  // ============================================================
+  // 👛 Wallet
+  // ============================================================
 
   void openWallet(BuildContext context) {
     Navigator.push(
@@ -93,14 +113,22 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
     });
   }
 
+  // ============================================================
+  // ⚙️ Settings
+  // ============================================================
+
   void showSettings(BuildContext context) {
     bool sound = widget.soundEnabled;
 
     showDialog(
       context: context,
-      builder: (context) {
+      barrierDismissible: true,
+      builder: (dialogContext) {
         return StatefulBuilder(
-          builder: (context, setDialogState) {
+          builder: (
+            context,
+            setDialogState,
+          ) {
             return AlertDialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(25),
@@ -122,23 +150,36 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // ==================================================
+                    // 🔊 Sound
+                    // ==================================================
+
                     SwitchListTile(
                       title: const Text(
                         "الصوت",
                       ),
                       secondary: Icon(
-                        sound ? Icons.volume_up : Icons.volume_off,
+                        sound
+                            ? Icons.volume_up
+                            : Icons.volume_off,
                       ),
                       value: sound,
                       onChanged: (value) {
                         setDialogState(() {
                           sound = value;
                         });
+
                         widget.onSoundChanged?.call(value);
                       },
                     ),
 
-                    const SizedBox(height: 10),
+                    const SizedBox(
+                      height: 10,
+                    ),
+
+                    // ==================================================
+                    // 📺 Banner
+                    // ==================================================
 
                     SizedBox(
                       height: 50,
@@ -148,28 +189,58 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
                       ),
                     ),
 
-                    const SizedBox(height: 10),
+                    const SizedBox(
+                      height: 10,
+                    ),
 
                     const Divider(),
+
+                    // ==================================================
+                    // 💾 Save
+                    // ==================================================
+
                     ListTile(
-                      leading: const Icon(Icons.save_rounded),
-                      title: const Text("حفظ اللعبة"),
+                      leading: const Icon(
+                        Icons.save_rounded,
+                      ),
+                      title: const Text(
+                        "حفظ اللعبة",
+                      ),
                       onTap: () async {
-                        Navigator.pop(context);
+                        Navigator.pop(dialogContext);
+
                         await Future.delayed(
-                          const Duration(milliseconds: 200),
+                          const Duration(
+                            milliseconds: 200,
+                          ),
                         );
+
                         widget.onSave?.call();
                       },
                     ),
+
+                    // ==================================================
+                    // 🔄 Restart
+                    // ==================================================
+
                     ListTile(
-                      leading: const Icon(Icons.restart_alt_rounded),
-                      title: const Text("إعادة اللعبة"),
+                      leading: const Icon(
+                        Icons.restart_alt_rounded,
+                      ),
+                      title: const Text(
+                        "إعادة اللعبة",
+                      ),
                       onTap: () {
-                        Navigator.pop(context);
+                        Navigator.pop(dialogContext);
+
                         widget.onRestart?.call();
                       },
                     ),
+
+                    // ==================================================
+                    // 🚪 Exit
+                    // ==================================================
+
                     ListTile(
                       leading: const Icon(
                         Icons.exit_to_app_rounded,
@@ -178,11 +249,14 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
                         "خروج",
                       ),
                       onTap: () {
-                        Navigator.pop(context);
+                        Navigator.pop(dialogContext);
+
                         widget.onExit?.call();
                       },
                     ),
+
                     const Divider(),
+
                     const Text(
                       "Puzzle World\nالإصدار 1.0.0",
                       textAlign: TextAlign.center,
@@ -197,13 +271,20 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
     );
   }
 
+  // ============================================================
+  // 🎨 Build Toolbar
+  // ============================================================
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        margin: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 8,
+        ),
         padding: const EdgeInsets.symmetric(
-          horizontal: 12,
+          horizontal: 10,
           vertical: 6,
         ),
         decoration: BoxDecoration(
@@ -228,27 +309,56 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
             ),
           ],
         ),
+
+        // ========================================================
+        // 🔄 تم عكس ترتيب الشريط
+        //
+        // اليمين  ← الإعدادات
+        // اليسار  ← المحفظة + العملات
+        // ========================================================
+
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // العدادات في الطرف الأيمن (العملات مع المحفظة المفتوحة، النجوم، الجواهر)
+            // ====================================================
+            // 💰 العدادات + المحفظة
+            //
+            // أصبحت الآن في الطرف الأيسر
+            // ====================================================
+
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Transform.translate(
-                  offset: const Offset(-6, 0),
-                  child: Transform.scale(
-                    scale: 1.35,
-                    child: Image.asset(
-                      "assets/images/ui/open_wallet.png",
-                      width: 42,
-                      height: 42,
-                      fit: BoxFit.contain,
-                    ),
+                // ------------------------------------------------
+                // 👛 Wallet
+                // ------------------------------------------------
+
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    openWallet(context);
+                  },
+                  child: Transform.translate(
+                    offset: const Offset(-4, 0),
+                    child: Transform.scale(
+  scale: 1.05,
+  child: Image.asset(
+    "assets/images/ui/open_wallet.png",
+    width: 36,
+    height: 36,
+    fit: BoxFit.contain,
+  ),
+),
                   ),
                 ),
 
-                const SizedBox(width: 4),
+                const SizedBox(
+                  width: 5,
+                ),
+
+                // ------------------------------------------------
+                // 🪙 Coins
+                // ------------------------------------------------
 
                 Container(
                   key: widget.coinKey,
@@ -256,67 +366,83 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
                     value: reward.coins,
                   ),
                 ),
+
                 const SizedBox(
                   width: 6,
                 ),
+
+                // ------------------------------------------------
+                // ⭐ Stars
+                // ------------------------------------------------
+
                 Container(
                   key: widget.starKey,
                   child: AnimatedStarCounter(
                     value: reward.stars,
                   ),
                 ),
+
                 const SizedBox(
                   width: 6,
                 ),
+
+                // ------------------------------------------------
+                // 💎 Gems
+                // ------------------------------------------------
+
                 Container(
                   key: widget.gemKey,
                   child: ImageCounterBox(
-                    image: "assets/images/rewards/gem.png",
+                    image:
+                        "assets/images/rewards/gem.png",
                     value: reward.gems,
                   ),
                 ),
               ],
             ),
 
-            // زر الإعدادات في الطرف الأيسر مع تأثير الأنيميشن عند الضغط
+            // ====================================================
+            // ⚙️ Settings
+            //
+            // الآن في الطرف الأيمن
+            // ====================================================
+
             GestureDetector(
               behavior: HitTestBehavior.opaque,
 
+              // الضغط يبدأ مباشرة
               onTapDown: (_) {
                 _settingsAnimController.forward();
               },
 
+              // إلغاء التأثير عند رفع الإصبع
               onTapUp: (_) {
                 _settingsAnimController.reverse();
-                showSettings(context);
               },
 
+              // إلغاء التأثير إذا خرج الإصبع
               onTapCancel: () {
                 _settingsAnimController.reverse();
               },
+
+              // ⭐ الأهم:
+              // استخدام onTap يضمن فتح القائمة بشكل موثوق
+              onTap: () {
+                showSettings(context);
+              },
+
               child: ScaleTransition(
                 scale: _settingsScaleAnimation,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.2),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.35),
+                child: SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Center(
+                    child: Image.asset(
+                      "assets/images/ui/seting_icon.png",
+                      width: 34,
+                      height: 34,
+                      fit: BoxFit.contain,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.25),
-                        blurRadius: 6,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.settings_rounded,
-                    color: Colors.white,
-                    size: 24,
                   ),
                 ),
               ),
@@ -328,6 +454,10 @@ class _GameToolbarState extends State<GameToolbar> with SingleTickerProviderStat
   }
 }
 
+// ================================================================
+// ⭐ Animated Star Counter
+// ================================================================
+
 class AnimatedStarCounter extends StatefulWidget {
   final int value;
 
@@ -337,10 +467,12 @@ class AnimatedStarCounter extends StatefulWidget {
   });
 
   @override
-  State<AnimatedStarCounter> createState() => _AnimatedStarCounterState();
+  State<AnimatedStarCounter> createState() =>
+      _AnimatedStarCounterState();
 }
 
-class _AnimatedStarCounterState extends State<AnimatedStarCounter>
+class _AnimatedStarCounterState
+    extends State<AnimatedStarCounter>
     with SingleTickerProviderStateMixin {
   late AnimationController controller;
   late Animation<double> scale;
@@ -370,7 +502,9 @@ class _AnimatedStarCounterState extends State<AnimatedStarCounter>
   }
 
   @override
-  void didUpdateWidget(covariant AnimatedStarCounter oldWidget) {
+  void didUpdateWidget(
+    covariant AnimatedStarCounter oldWidget,
+  ) {
     super.didUpdateWidget(oldWidget);
 
     if (oldWidget.value != widget.value) {
@@ -381,6 +515,7 @@ class _AnimatedStarCounterState extends State<AnimatedStarCounter>
   @override
   void dispose() {
     controller.dispose();
+
     super.dispose();
   }
 
@@ -401,7 +536,11 @@ class _AnimatedStarCounterState extends State<AnimatedStarCounter>
               width: 28,
               height: 28,
             ),
-            const SizedBox(width: 4),
+
+            const SizedBox(
+              width: 4,
+            ),
+
             Text(
               "${widget.value}",
               style: const TextStyle(
@@ -424,6 +563,9 @@ class _AnimatedStarCounterState extends State<AnimatedStarCounter>
   }
 }
 
+// ================================================================
+// 💎 Image Counter
+// ================================================================
 
 class ImageCounterBox extends StatelessWidget {
   final String image;
@@ -450,7 +592,11 @@ class ImageCounterBox extends StatelessWidget {
             width: 28,
             height: 28,
           ),
-          const SizedBox(width: 4),
+
+          const SizedBox(
+            width: 4,
+          ),
+
           Text(
             "$value",
             style: const TextStyle(
@@ -472,6 +618,9 @@ class ImageCounterBox extends StatelessWidget {
   }
 }
 
+// ================================================================
+// 🪙 Coin Counter
+// ================================================================
 
 class CoinCounterBox extends StatelessWidget {
   final int value;
@@ -484,6 +633,7 @@ class CoinCounterBox extends StatelessWidget {
   String formatNumber(int number) {
     if (number >= 1000000) {
       double result = number / 1000000;
+
       return "${result.toStringAsFixed(
         result % 1 == 0 ? 0 : 1,
       )}M";
@@ -491,6 +641,7 @@ class CoinCounterBox extends StatelessWidget {
 
     if (number >= 1000) {
       double result = number / 1000;
+
       return "${result.toStringAsFixed(
         result % 1 == 0 ? 0 : 1,
       )}K";
@@ -516,7 +667,6 @@ class CoinCounterBox extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-
           Image.asset(
             "assets/images/rewards/puzzle_coin.png",
             width: 28,
