@@ -453,17 +453,20 @@ class _WalletScreenState extends State<WalletScreen>
           openingAd = false;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: purpleDark,
-            content: Text(
-              tr(
-                ar: "الإعلان غير متوفر حالياً",
-                en: "The ad is currently unavailable",
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              backgroundColor: purpleDark,
+              content: Text(
+                tr(
+                  ar: "الإعلان غير متوفر حالياً",
+                  en: "The ad is currently unavailable",
+                ),
               ),
+              duration: const Duration(seconds: 2),
             ),
-          ),
-        );
+          );
       },
     );
   }
