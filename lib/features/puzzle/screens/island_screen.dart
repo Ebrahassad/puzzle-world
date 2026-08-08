@@ -752,16 +752,6 @@ class _IslandScreenState extends State<IslandScreen>
     // ==========================================================
     // 🪙 الشراء من خلال مدير التقدم
     // ==========================================================
-    //
-    // هذه الدالة تقوم بـ:
-    //
-    // 1. التحقق من المرحلة.
-    // 2. خصم العملات.
-    // 3. فتح المرحلة.
-    // 4. حفظ المرحلة ضمن purchasedLevelsKey.
-    //
-    // لذلك لا نستدعي savePurchasedLevel().
-    // ==========================================================
 
     final purchased =
         await PuzzleProgressManager.buyLevelWithCoins(
@@ -907,20 +897,24 @@ class _IslandScreenState extends State<IslandScreen>
       level.levelNumber,
     );
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    return SizedBox(
+      width: size,
+      height: size,
 
-      onTap: () async {
-        await openLevel(level);
-      },
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
 
-      child: SizedBox(
-        width: size,
-        height: size,
+        onTap: () {
+          openLevel(level);
+        },
 
-        child: DecoratedBox(
+        child: Container(
+          width: size,
+          height: size,
+
           decoration: BoxDecoration(
             shape: BoxShape.circle,
+
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.35),
@@ -954,30 +948,35 @@ class _IslandScreenState extends State<IslandScreen>
                   final unlocked =
                       snapshot.data ?? false;
 
-                  return Image.asset(
-                    unlocked
-                        ? "assets/images/ui/lock_open.png"
-                        : "assets/images/ui/lock_close.png",
+                  return IgnorePointer(
+                    child: Image.asset(
+                      unlocked
+                          ? "assets/images/ui/lock_open.png"
+                          : "assets/images/ui/lock_close.png",
 
-                    fit: BoxFit.contain,
+                      width: size,
+                      height: size,
 
-                    errorBuilder: (
-                      context,
-                      error,
-                      stackTrace,
-                    ) {
-                      return Icon(
-                        unlocked
-                            ? Icons.lock_open
-                            : Icons.lock,
+                      fit: BoxFit.contain,
 
-                        color: unlocked
-                            ? Colors.greenAccent
-                            : Colors.amber,
+                      errorBuilder: (
+                        context,
+                        error,
+                        stackTrace,
+                      ) {
+                        return Icon(
+                          unlocked
+                              ? Icons.lock_open
+                              : Icons.lock,
 
-                        size: size * 0.55,
-                      );
-                    },
+                          color: unlocked
+                              ? Colors.greenAccent
+                              : Colors.amber,
+
+                          size: size * 0.55,
+                        );
+                      },
+                    ),
                   );
                 },
               ),
@@ -987,24 +986,27 @@ class _IslandScreenState extends State<IslandScreen>
               // =================================================
 
               Positioned.fill(
-                child: Center(
-                  child: Text(
-                    "${level.levelNumber}",
+                child: IgnorePointer(
+                  child: Center(
+                    child: Text(
+                      "${level.levelNumber}",
 
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: size * 0.28,
-                      fontWeight: FontWeight.w900,
-                      shadows: const [
-                        Shadow(
-                          color: Colors.black,
-                          blurRadius: 5,
-                          offset: Offset(
-                            1,
-                            2,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: size * 0.28,
+                        fontWeight: FontWeight.w900,
+
+                        shadows: const [
+                          Shadow(
+                            color: Colors.black,
+                            blurRadius: 5,
+                            offset: Offset(
+                              1,
+                              2,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
