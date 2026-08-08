@@ -3,14 +3,14 @@ import 'package:image_picker/image_picker.dart';
 
 import 'puzzle_game_screen.dart';
 import '../managers/ads_manager.dart';
+import '../managers/app_language_manager.dart';
 
 /// شاشة "جزيرتك الخاصة".
 ///
 /// تسمح للمستخدم باختيار صورة من الجهاز وتحويلها إلى
 /// Puzzle قابل للعب بدرجة الصعوبة التي يختارها.
 ///
-/// هذه الشاشة مستقلة عن GameToolbar ونظام النجوم والعملات،
-/// ويمكن توسيعها لاحقاً لإضافة مستويات خاصة محفوظة.
+/// الشاشة تدعم العربية والإنجليزية من خلال AppLanguageManager.
 class PrivateIslandScreen extends StatefulWidget {
   const PrivateIslandScreen({
     super.key,
@@ -37,6 +37,13 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
   final ImagePicker _imagePicker = ImagePicker();
 
   bool _isPicking = false;
+
+  // ============================================================
+  // 🌐 Language
+  // ============================================================
+
+  AppLanguageManager get _language =>
+      AppLanguageManager.instance;
 
   // ============================================================
   // 🚀 INIT
@@ -95,7 +102,6 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
         return;
       }
 
-      // المستخدم ألغى اختيار الصورة.
       if (picked == null) {
         setState(() {
           _isPicking = false;
@@ -104,8 +110,8 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
         return;
       }
 
-      // اختيار درجة الصعوبة.
-      final int? gridSize = await _showDifficultyDialog();
+      final int? gridSize =
+          await _showDifficultyDialog();
 
       if (!mounted) {
         return;
@@ -115,12 +121,10 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
         _isPicking = false;
       });
 
-      // المستخدم ألغى نافذة الصعوبة.
       if (gridSize == null) {
         return;
       }
 
-      // الانتقال إلى لعبة الـ Puzzle بالصورة المختارة.
       await Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => PuzzleGameScreen(
@@ -141,8 +145,11 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(
-            'تعذر اختيار الصورة. حاول مرة أخرى.',
+          content: Text(
+            _language.text(
+              ar: 'تعذر اختيار الصورة. حاول مرة أخرى.',
+              en: 'Unable to select the image. Please try again.',
+            ),
           ),
           backgroundColor: Colors.red.shade700,
           behavior: SnackBarBehavior.floating,
@@ -160,101 +167,119 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) {
-        return Dialog(
-          backgroundColor: const Color(0xFF1B2A3A),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 28,
+        return Directionality(
+          textDirection: _language.textDirection,
+          child: Dialog(
+            backgroundColor: const Color(0xFF1B2A3A),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'اختر مستوى الصعوبة',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  'حدد حجم الشبكة التي تريد اللعب بها',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
-                    fontSize: 13,
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // ------------------------------------------------
-                // 🟢 سهل
-                // ------------------------------------------------
-
-                _DifficultyOption(
-                  label: 'سهل',
-                  subtitle: '4×4 (16 قطعة)',
-                  icon: Icons.sentiment_satisfied_alt,
-                  color: const Color(0xFF4CAF7D),
-                  onTap: () {
-                    Navigator.of(dialogContext).pop(4);
-                  },
-                ),
-
-                const SizedBox(height: 12),
-
-                // ------------------------------------------------
-                // 🟡 متوسط
-                // ------------------------------------------------
-
-                _DifficultyOption(
-                  label: 'متوسط',
-                  subtitle: '6×6 (36 قطعة)',
-                  icon: Icons.extension,
-                  color: const Color(0xFFE0A63A),
-                  onTap: () {
-                    Navigator.of(dialogContext).pop(6);
-                  },
-                ),
-
-                const SizedBox(height: 12),
-
-                // ------------------------------------------------
-                // 🔴 خبير
-                // ------------------------------------------------
-
-                _DifficultyOption(
-                  label: 'خبير',
-                  subtitle: '8×8 (64 قطعة)',
-                  icon: Icons.local_fire_department,
-                  color: const Color(0xFFD9534F),
-                  onTap: () {
-                    Navigator.of(dialogContext).pop(8);
-                  },
-                ),
-
-                const SizedBox(height: 16),
-
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(dialogContext).pop();
-                  },
-                  child: Text(
-                    'إلغاء',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 28,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _language.text(
+                      ar: 'اختر مستوى الصعوبة',
+                      en: 'Choose Difficulty',
+                    ),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-              ],
+
+                  const SizedBox(height: 8),
+
+                  Text(
+                    _language.text(
+                      ar: 'حدد حجم الشبكة التي تريد اللعب بها',
+                      en: 'Choose the grid size you want to play with',
+                    ),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.6),
+                      fontSize: 13,
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  _DifficultyOption(
+                    label: _language.text(
+                      ar: 'سهل',
+                      en: 'Easy',
+                    ),
+                    subtitle: _language.text(
+                      ar: '4×4 (16 قطعة)',
+                      en: '4×4 (16 pieces)',
+                    ),
+                    icon: Icons.sentiment_satisfied_alt,
+                    color: const Color(0xFF4CAF7D),
+                    onTap: () {
+                      Navigator.of(dialogContext).pop(4);
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _DifficultyOption(
+                    label: _language.text(
+                      ar: 'متوسط',
+                      en: 'Medium',
+                    ),
+                    subtitle: _language.text(
+                      ar: '6×6 (36 قطعة)',
+                      en: '6×6 (36 pieces)',
+                    ),
+                    icon: Icons.extension,
+                    color: const Color(0xFFE0A63A),
+                    onTap: () {
+                      Navigator.of(dialogContext).pop(6);
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _DifficultyOption(
+                    label: _language.text(
+                      ar: 'خبير',
+                      en: 'Expert',
+                    ),
+                    subtitle: _language.text(
+                      ar: '8×8 (64 قطعة)',
+                      en: '8×8 (64 pieces)',
+                    ),
+                    icon: Icons.local_fire_department,
+                    color: const Color(0xFFD9534F),
+                    onTap: () {
+                      Navigator.of(dialogContext).pop(8);
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop();
+                    },
+                    child: Text(
+                      _language.text(
+                        ar: 'إلغاء',
+                        en: 'Cancel',
+                      ),
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.5),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -268,53 +293,53 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0D1B2A),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // الخلفية.
-            _buildAmbientBackground(),
+    return ValueListenableBuilder<Locale>(
+      valueListenable: _language.localeNotifier,
+      builder: (context, locale, child) {
+        return Directionality(
+          textDirection: _language.textDirection,
+          child: Scaffold(
+            backgroundColor: const Color(0xFF0D1B2A),
+            body: SafeArea(
+              child: Stack(
+                children: [
+                  _buildAmbientBackground(),
 
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // -----------------------------------------------
-                // Header
-                // -----------------------------------------------
+                  Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.stretch,
+                    children: [
+                      _buildHeader(context),
 
-                _buildHeader(context),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(
+                            20,
+                            12,
+                            20,
+                            32,
+                          ),
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 12),
 
-                // -----------------------------------------------
-                // المحتوى
-                // -----------------------------------------------
+                              _buildStudioCard(),
 
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(
-                      20,
-                      12,
-                      20,
-                      32,
-                    ),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 12),
+                              const SizedBox(height: 32),
 
-                        _buildStudioCard(),
-
-                        const SizedBox(height: 32),
-
-                        _buildFutureLevelsSection(),
-                      ],
-                    ),
+                              _buildFutureLevelsSection(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -326,10 +351,6 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
     return Positioned.fill(
       child: Stack(
         children: [
-          // ----------------------------------------------------
-          // خلفية الجزيرة
-          // ----------------------------------------------------
-
           Positioned.fill(
             child: Image.asset(
               'assets/images/background/prave_bacgraund.png',
@@ -345,10 +366,6 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
               },
             ),
           ),
-
-          // ----------------------------------------------------
-          // طبقة تعتيم
-          // ----------------------------------------------------
 
           Positioned.fill(
             child: Container(
@@ -374,16 +391,14 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
       ),
       child: Row(
         children: [
-          // ----------------------------------------------------
-          // زر الرجوع
-          // ----------------------------------------------------
-
           IconButton(
             onPressed: () {
               Navigator.of(context).maybePop();
             },
-            icon: const Icon(
-              Icons.arrow_back_ios_new,
+            icon: Icon(
+              _language.isArabic
+                  ? Icons.arrow_forward_ios
+                  : Icons.arrow_back_ios_new,
               color: Colors.white70,
               size: 20,
             ),
@@ -391,18 +406,17 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
           const SizedBox(width: 4),
 
-          // ----------------------------------------------------
-          // العنوان
-          // ----------------------------------------------------
-
           Expanded(
             child: Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'مملكتك الخاصة',
-                  style: TextStyle(
+                Text(
+                  _language.text(
+                    ar: 'مملكتك الخاصة',
+                    en: 'Your Private Kingdom',
+                  ),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -413,7 +427,10 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                 const SizedBox(height: 2),
 
                 Text(
-                  'حوّل صورك الخاصة إلى ألغاز فريدة',
+                  _language.text(
+                    ar: 'حوّل صورك الخاصة إلى ألغاز فريدة',
+                    en: 'Turn your photos into unique puzzles',
+                  ),
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.7),
                     fontSize: 13,
@@ -436,7 +453,6 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -445,11 +461,9 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
             Color(0xFF12293F),
           ],
         ),
-
         border: Border.all(
           color: Colors.white.withOpacity(0.12),
         ),
-
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.45),
@@ -460,10 +474,6 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
       ),
       child: Column(
         children: [
-          // ----------------------------------------------------
-          // أيقونة إضافة الصورة
-          // ----------------------------------------------------
-
           AnimatedBuilder(
             animation: _floatingAnimation,
             builder: (context, child) {
@@ -498,13 +508,12 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
           const SizedBox(height: 18),
 
-          // ----------------------------------------------------
-          // عنوان الاستوديو
-          // ----------------------------------------------------
-
-          const Text(
-            'استوديو الصور',
-            style: TextStyle(
+          Text(
+            _language.text(
+              ar: 'استوديو الصور',
+              en: 'Photo Studio',
+            ),
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -513,13 +522,13 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
           const SizedBox(height: 6),
 
-          // ----------------------------------------------------
-          // الوصف
-          // ----------------------------------------------------
-
           Text(
-            'اختر صورة من جهازك وحوّلها إلى لغز تفاعلي بحجم\n'
-            'الشبكة الذي تختاره',
+            _language.text(
+              ar: 'اختر صورة من جهازك وحوّلها إلى لغز تفاعلي بحجم\n'
+                  'الشبكة الذي تختاره',
+              en: 'Choose a photo from your device and turn it into\n'
+                  'an interactive puzzle with your chosen grid size',
+            ),
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withOpacity(0.7),
@@ -530,10 +539,6 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
           const SizedBox(height: 22),
 
-          // ----------------------------------------------------
-          // زر فتح الاستوديو
-          // ----------------------------------------------------
-
           SizedBox(
             width: double.infinity,
             height: 52,
@@ -543,16 +548,13 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor:
                     const Color(0xFFE0A63A),
-
                 disabledBackgroundColor:
                     const Color(0xFFE0A63A)
                         .withOpacity(0.5),
-
                 shape: RoundedRectangleBorder(
                   borderRadius:
                       BorderRadius.circular(16),
                 ),
-
                 elevation: 0,
               ),
               child: _isPicking
@@ -565,9 +567,12 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                         color: Colors.white,
                       ),
                     )
-                  : const Text(
-                      'فتح استوديو الصور',
-                      style: TextStyle(
+                  : Text(
+                      _language.text(
+                        ar: 'فتح استوديو الصور',
+                        en: 'Open Photo Studio',
+                      ),
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -577,10 +582,6 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
           ),
 
           const SizedBox(height: 20),
-
-          // ----------------------------------------------------
-          // إعلان Banner
-          // ----------------------------------------------------
 
           SizedBox(
             height: 60,
@@ -606,7 +607,10 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
         Row(
           children: [
             Text(
-              'مستويات الجزيرة',
+              _language.text(
+                ar: 'مستويات الجزيرة',
+                en: 'Island Levels',
+              ),
               style: TextStyle(
                 color: Colors.white.withOpacity(0.9),
                 fontSize: 16,
@@ -628,7 +632,10 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                     BorderRadius.circular(8),
               ),
               child: Text(
-                'قريباً',
+                _language.text(
+                  ar: 'قريباً',
+                  en: 'Coming Soon',
+                ),
                 style: TextStyle(
                   color:
                       Colors.white.withOpacity(0.7),
@@ -695,7 +702,7 @@ class _DifficultyOption extends StatelessWidget {
           horizontal: 16,
           vertical: 14,
         ),
-        decoration: BoxDecoration(
+      decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.04),
           borderRadius:
               BorderRadius.circular(14),
@@ -705,10 +712,6 @@ class _DifficultyOption extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // --------------------------------------------------
-            // الأيقونة
-            // --------------------------------------------------
-
             Container(
               width: 40,
               height: 40,
@@ -726,10 +729,6 @@ class _DifficultyOption extends StatelessWidget {
 
             const SizedBox(width: 14),
 
-            // --------------------------------------------------
-            // الاسم
-            // --------------------------------------------------
-
             Expanded(
               child: Text(
                 label,
@@ -740,10 +739,6 @@ class _DifficultyOption extends StatelessWidget {
                 ),
               ),
             ),
-
-            // --------------------------------------------------
-            // عدد القطع
-            // --------------------------------------------------
 
             Text(
               subtitle,
@@ -759,7 +754,11 @@ class _DifficultyOption extends StatelessWidget {
             const SizedBox(width: 6),
 
             Icon(
-              Icons.arrow_forward_ios,
+              AppLanguageManager
+                      .instance
+                      .isArabic
+                  ? Icons.arrow_back_ios
+                  : Icons.arrow_forward_ios,
               color:
                   Colors.white.withOpacity(0.3),
               size: 14,
@@ -784,6 +783,9 @@ class _FutureLevelSlot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final language =
+        AppLanguageManager.instance;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.03),
@@ -807,7 +809,10 @@ class _FutureLevelSlot extends StatelessWidget {
           const SizedBox(height: 8),
 
           Text(
-            'مستوى $index',
+            language.text(
+              ar: 'مستوى $index',
+              en: 'Level $index',
+            ),
             style: TextStyle(
               color:
                   Colors.white.withOpacity(0.35),
