@@ -28,6 +28,10 @@ class IslandScreen extends StatefulWidget {
 
 class _IslandScreenState extends State<IslandScreen>
     with TickerProviderStateMixin {
+  // ============================================================
+  // 🌍 أبعاد العالم
+  // ============================================================
+
   static const double worldWidth = 1080;
   static const double worldHeight = 1920;
 
@@ -37,12 +41,34 @@ class _IslandScreenState extends State<IslandScreen>
   static const double islandBackgroundOpacity = 0.55;
   static const double islandImageOpacity = 0.65;
 
+  // ============================================================
+  // 📺 نظام إعلانات فتح المراحل
+  // ============================================================
+
+  // المرحلة 1 مفتوحة تلقائياً.
+  //
+  // المراحل 2 - 5  = 5 إعلانات
+  // المراحل 6 - 10 = 10 إعلانات
+  // المراحل 11 - 15 = 15 إعلان
+  // المراحل 16 وما فوق = 20 إعلان
+  //
+  // الرصيد الموجود في PuzzleProgressManager هو رصيد المشاهدات.
+  static const int adsForLevels2To5 = 5;
+  static const int adsForLevels6To10 = 10;
+  static const int adsForLevels11To15 = 15;
+  static const int adsForAdvancedLevels = 20;
+
   late final List<PuzzleLevelModel> levels;
+
   bool openingAd = false;
 
   late final AnimationController worldController;
   late final Animation<double> worldScale;
   late final Animation<double> worldTranslateY;
+
+  // ============================================================
+  // 📍 مواقع المراحل
+  // ============================================================
 
   final List<Offset> levelPositions = const [
     Offset(0.50, 0.91), // 1
@@ -56,6 +82,10 @@ class _IslandScreenState extends State<IslandScreen>
     Offset(0.56, 0.19), // 9
     Offset(0.50, 0.10), // 10
   ];
+
+  // ============================================================
+  // 🚀 INIT
+  // ============================================================
 
   @override
   void initState() {
@@ -91,269 +121,583 @@ class _IslandScreenState extends State<IslandScreen>
     );
   }
 
+  // ============================================================
+  // 🧹 DISPOSE
+  // ============================================================
+
   @override
   void dispose() {
     worldController.dispose();
     super.dispose();
   }
 
+  // ============================================================
+  // 📺 عدد الإعلانات المطلوبة لفتح المرحلة
+  // ============================================================
+
+  int getRequiredAds(int levelNumber) {
+    // المرحلة الأولى مفتوحة.
+    if (levelNumber <= 1) {
+      return 0;
+    }
+
+    // 2 - 5
+    if (levelNumber <= 5) {
+      return adsForLevels2To5;
+    }
+
+    // 6 - 10
+    if (levelNumber <= 10) {
+      return adsForLevels6To10;
+    }
+
+    // 11 - 15
+    if (levelNumber <= 15) {
+      return adsForLevels11To15;
+    }
+
+    // 16+
+    return adsForAdvancedLevels;
+  }
+
+  // ============================================================
+  // 🔑 مفتاح المرحلة
+  // ============================================================
+
+  String getLevelKey(int levelNumber) {
+    return "${widget.island.id}_level_$levelNumber";
+  }
+
+  // ============================================================
+  // 🎮 فتح المرحلة
+  // ============================================================
+
   Future<void> openLevel(
     PuzzleLevelModel level,
   ) async {
+    final levelKey = getLevelKey(
+      level.levelNumber,
+    );
 
-    final levelKey =
-        "${widget.island.id}_level_${level.levelNumber}";
-
+    // ==========================================================
+    // 🔓 فحص الفتح
+    // ==========================================================
 
     final unlocked =
         await PuzzleProgressManager.isLevelUnlocked(
-          levelKey,
-        );
+      levelKey,
+    );
 
-
-    // مفتوحة
-    if(unlocked){
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => PuzzleGameScreen(
-            level: level,
-            island: widget.island,
-          ),
-        ),
-      );
-
+    if (unlocked) {
+      await openPuzzle(level);
       return;
     }
 
+    // ==========================================================
+    // 🏆 فحص المرحلة السابقة
+    // ==========================================================
 
-    // فحص المرحلة السابقة
-    if(level.levelNumber > 1){
+    if (level.levelNumber > 1) {
+      final previousLevelKey =
+          getLevelKey(
+        level.levelNumber - 1,
+      );
 
       final previousCompleted =
           await PuzzleProgressManager.isCompleted(
-            "${widget.island.id}_level_${level.levelNumber - 1}",
-          );
+        previousLevelKey,
+      );
 
-
-      if(previousCompleted){
-
+      // إذا أنهى اللاعب المرحلة السابقة
+      // نفتح الحالية مباشرة.
+      if (previousCompleted) {
         await PuzzleProgressManager.unlockLevel(
           levelKey,
         );
 
-
-        if(mounted){
-
-          setState((){});
-
+        if (!mounted) {
+          return;
         }
 
+        setState(() {});
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => PuzzleGameScreen(
-              level: level,
-              island: widget.island,
-            ),
-          ),
-        );
-
-
+        await openPuzzle(level);
         return;
       }
-
     }
 
+    // ==========================================================
+    // 📺 المرحلة لا تزال مغلقة
+    // ==========================================================
 
-    // إذا لم تنته المرحلة السابقة يظهر إعلان
-    showUnlockDialog(level);
-
+    await showUnlockDialog(level);
   }
 
-  void showUnlockDialog(
+  // ============================================================
+  // 🎮 الانتقال إلى لعبة البازل
+  // ============================================================
+
+  Future<void> openPuzzle(
     PuzzleLevelModel level,
-  ){
+  ) async {
+    if (!mounted) {
+      return;
+    }
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PuzzleGameScreen(
+          level: level,
+          island: widget.island,
+        ),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {});
+  }
+
+  // ============================================================
+  // 🔒 نافذة فتح المرحلة
+  // ============================================================
+
+  Future<void> showUnlockDialog(
+    PuzzleLevelModel level,
+  ) async {
+    final requiredAds =
+        getRequiredAds(
+      level.levelNumber,
+    );
+
+    final balance =
+        await PuzzleProgressManager.getAdsBalance();
+
+    if (!mounted) {
+      return;
+    }
 
     showDialog(
       context: context,
-      builder: (context){
-
+      barrierDismissible: true,
+      builder: (dialogContext) {
         return AlertDialog(
-
-          title: const Text(
-            "🔒 المرحلة مغلقة",
+          backgroundColor:
+              const Color(0xFF2A1B3D),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
           ),
 
-          content: FutureBuilder<int>(
-            future: PuzzleProgressManager.getAdsBalance(),
-            builder:(context,snapshot){
+          // =====================================================
+          // العنوان
+          // =====================================================
 
-              if(!snapshot.hasData){
-                return const CircularProgressIndicator();
-              }
-
-
-              final balance = snapshot.data!;
-
-              final required =
-              PuzzleProgressManager.getLevelRequiredAds(
-               level.levelNumber,
-              );
-
-
-              return Text(
-                "📺 شاهد الإعلانات لفتح المرحلة\n\n"
-                "رصيدك: $balance / $required مشاهدة",
-              );
-
-            },
-          ),
-
-
-          actions:[
-
-            TextButton(
-              child: const Text("إلغاء"),
-              onPressed:(){
-                Navigator.pop(context);
-              },
-            ),
-
-
-            ElevatedButton(
-
-              child: const Text(
-                "📺 مشاهدة إعلان",
+          title: Row(
+            children: [
+              Image.asset(
+                "assets/images/ui/lock_close.png",
+                width: 42,
+                height: 42,
+                fit: BoxFit.contain,
+                errorBuilder: (
+                  context,
+                  error,
+                  stackTrace,
+                ) {
+                  return const Icon(
+                    Icons.lock,
+                    color: Colors.amber,
+                    size: 38,
+                  );
+                },
               ),
 
+              const SizedBox(width: 10),
 
-              onPressed: openingAd ? null : () async {
+              const Expanded(
+                child: Text(
+                  "المرحلة مغلقة",
+                  style: TextStyle(
+                    color: Colors.amber,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+              ),
+            ],
+          ),
 
+          // =====================================================
+          // المحتوى
+          // =====================================================
 
-                setState(() {
-                  openingAd=true;
-                });
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "المرحلة ${level.levelNumber}",
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
 
+              const SizedBox(height: 14),
 
-                Navigator.pop(context);
+              const Text(
+                "شاهد إعلانات للحصول على رصيد مشاهدة وفتح هذه المرحلة.",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 15,
+                ),
+              ),
 
+              const SizedBox(height: 20),
 
-                AdsManager().showRewardedAd(
+              // =================================================
+              // 📺 المطلوب
+              // =================================================
 
-                  onRewardEarned: () async {
+              Row(
+                mainAxisAlignment:
+                    MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.ondemand_video,
+                    color: Colors.amber,
+                    size: 34,
+                  ),
 
+                  const SizedBox(width: 8),
 
-                    await PuzzleProgressManager.addAdsBalance(1);
+                  Text(
+                    "$requiredAds",
+                    style: const TextStyle(
+                      color: Colors.amber,
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
 
+                  const SizedBox(width: 6),
 
-                    final balance =
-                    await PuzzleProgressManager.getAdsBalance();
+                  const Text(
+                    "مشاهدة",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
 
+              const SizedBox(height: 15),
 
-                    final required =
-                    PuzzleProgressManager.getLevelRequiredAds(
-                     level.levelNumber,
-                    );
+              // =================================================
+              // 📊 الرصيد
+              // =================================================
 
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.20),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: Colors.amber.withOpacity(0.35),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment:
+                      MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.video_library,
+                      color: Colors.amber,
+                      size: 25,
+                    ),
 
-                    if(balance >= required){
+                    const SizedBox(width: 8),
 
+                    Text(
+                      "$balance / $requiredAds",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 19,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-                      await PuzzleProgressManager.unlockLevel(
-                        "${widget.island.id}_level_${level.levelNumber}",
-                      );
+              const SizedBox(height: 10),
 
+              Text(
+                balance >= requiredAds
+                    ? "يمكنك فتح المرحلة الآن."
+                    : "المتبقي: ${requiredAds - balance} مشاهدة",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: balance >= requiredAds
+                      ? Colors.greenAccent
+                      : Colors.white70,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
 
-                      if(mounted){
+          // =====================================================
+          // الأزرار
+          // =====================================================
 
-                        setState((){});
-
-
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              "🎉 تم فتح المرحلة!",
-                            ),
-                          ),
-                        );
-
-                      }
-
-
-                    }
-
-                    else{
-
-                      if(mounted){
-
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              "الرصيد: $balance / $required",
-                            ),
-                          ),
-                        );
-
-                      }
-
-                    }
-
-
-                    setState(() {
-                      openingAd=false;
-                    });
-
-
-                  },
-
-
-                  onAdFailed:(){
-
-                    setState(() {
-                      openingAd=false;
-                    });
-
-
-                  },
-
-
-                );
-
-
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
               },
+              child: const Text(
+                "إلغاء",
+                style: TextStyle(
+                  color: Colors.white70,
+                ),
+              ),
+            ),
 
-            )
+            // ===================================================
+            // 📺 مشاهدة إعلان
+            // ===================================================
 
+            ElevatedButton.icon(
+              icon: const Icon(
+                Icons.ondemand_video,
+              ),
+              label: Text(
+                balance >= requiredAds
+                    ? "فتح المرحلة"
+                    : "مشاهدة إعلان",
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                foregroundColor:
+                    const Color(0xFF1A0B2E),
+                shape: RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: openingAd
+                  ? null
+                  : () async {
+                      await handleUnlockAd(
+                        level,
+                        dialogContext,
+                      );
+                    },
+            ),
           ],
-
         );
-
       },
+    );
+  }
 
+  // ============================================================
+  // 📺 مشاهدة الإعلان / فتح المرحلة
+  // ============================================================
+
+  Future<void> handleUnlockAd(
+    PuzzleLevelModel level,
+    BuildContext dialogContext,
+  ) async {
+    if (openingAd) {
+      return;
+    }
+
+    final requiredAds =
+        getRequiredAds(
+      level.levelNumber,
     );
 
+    final currentBalance =
+        await PuzzleProgressManager.getAdsBalance();
+
+    // ==========================================================
+    // 🔓 إذا كان الرصيد كافياً
+    // ==========================================================
+
+    if (currentBalance >= requiredAds) {
+      await PuzzleProgressManager.unlockLevel(
+        getLevelKey(level.levelNumber),
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      Navigator.pop(dialogContext);
+
+      setState(() {});
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "🎉 تم فتح المرحلة!",
+          ),
+        ),
+      );
+
+      await Future.delayed(
+        const Duration(milliseconds: 400),
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      await openPuzzle(level);
+      return;
+    }
+
+    // ==========================================================
+    // 📺 بدء الإعلان
+    // ==========================================================
+
+    setState(() {
+      openingAd = true;
+    });
+
+    // نغلق نافذة الشراء قبل عرض الإعلان.
+    if (dialogContext.mounted) {
+      Navigator.pop(dialogContext);
+    }
+
+    AdsManager().showRewardedAd(
+      onRewardEarned: () async {
+        // ======================================================
+        // ➕ إضافة مشاهدة واحدة إلى الرصيد
+        // ======================================================
+
+        await PuzzleProgressManager.addAdsBalance(1);
+
+        final balance =
+            await PuzzleProgressManager.getAdsBalance();
+
+        final required =
+            getRequiredAds(
+          level.levelNumber,
+        );
+
+        // ======================================================
+        // 🔓 تحقق من فتح المرحلة
+        // ======================================================
+
+        if (balance >= required) {
+          await PuzzleProgressManager.unlockLevel(
+            getLevelKey(level.levelNumber),
+          );
+
+          if (mounted) {
+            setState(() {
+              openingAd = false;
+            });
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  "🎉 تم فتح المرحلة!",
+                ),
+              ),
+            );
+
+            await Future.delayed(
+              const Duration(milliseconds: 500),
+            );
+
+            if (!mounted) {
+              return;
+            }
+
+            await openPuzzle(level);
+          }
+
+          return;
+        }
+
+        // ======================================================
+        // 📊 لم يكتمل العدد بعد
+        // ======================================================
+
+        if (mounted) {
+          setState(() {
+            openingAd = false;
+          });
+
+          final remaining =
+              required - balance;
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                "📺 تمت إضافة مشاهدة!\n"
+                "الرصيد: $balance / $required\n"
+                "المتبقي: $remaining مشاهدة",
+              ),
+            ),
+          );
+        }
+      },
+
+      onAdFailed: () {
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          openingAd = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "⚠️ تعذر عرض الإعلان. حاول مرة أخرى.",
+            ),
+          ),
+        );
+      },
+    );
   }
+
+  // ============================================================
+  // 🔢 زر المرحلة
+  // ============================================================
 
   Widget levelButton(
     PuzzleLevelModel level, {
     required double size,
   }) {
+    final levelKey =
+        getLevelKey(
+      level.levelNumber,
+    );
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
+
       onTap: () async {
-
         await openLevel(level);
-
-        if(mounted){
-          setState((){});
-        }
-
       },
+
       child: SizedBox(
         width: size,
         height: size,
@@ -364,30 +708,78 @@ class _IslandScreenState extends State<IslandScreen>
               BoxShadow(
                 color: Colors.black.withOpacity(0.35),
                 blurRadius: size * 0.10,
-                offset: Offset(0, size * 0.05),
+                offset: Offset(
+                  0,
+                  size * 0.05,
+                ),
               ),
             ],
           ),
+
           child: Stack(
             alignment: Alignment.center,
             children: [
               FutureBuilder<bool>(
-                future: PuzzleProgressManager.isLevelUnlocked(
-                  "${widget.island.id}_level_${level.levelNumber}",
+                future:
+                    PuzzleProgressManager
+                        .isLevelUnlocked(
+                  levelKey,
                 ),
 
-                builder: (context, snapshot) {
-
-                  final unlocked = snapshot.data ?? false;
+                builder: (
+                  context,
+                  snapshot,
+                ) {
+                  final unlocked =
+                      snapshot.data ?? false;
 
                   return Image.asset(
                     unlocked
                         ? "assets/images/ui/lock_open.png"
                         : "assets/images/ui/lock_close.png",
                     fit: BoxFit.contain,
-                  );
 
+                    errorBuilder: (
+                      context,
+                      error,
+                      stackTrace,
+                    ) {
+                      return Icon(
+                        unlocked
+                            ? Icons.lock_open
+                            : Icons.lock,
+                        color: unlocked
+                            ? Colors.greenAccent
+                            : Colors.amber,
+                        size: size * 0.55,
+                      );
+                    },
+                  );
                 },
+              ),
+
+              // =================================================
+              // 🔢 رقم المرحلة
+              // =================================================
+
+              Positioned.fill(
+                child: Center(
+                  child: Text(
+                    "${level.levelNumber}",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: size * 0.28,
+                      fontWeight: FontWeight.w900,
+                      shadows: const [
+                        Shadow(
+                          color: Colors.black,
+                          blurRadius: 5,
+                          offset: Offset(1, 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -396,108 +788,219 @@ class _IslandScreenState extends State<IslandScreen>
     );
   }
 
+  // ============================================================
+  // 🗺️ BUILD
+  // ============================================================
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xff020b24),
+
       body: SafeArea(
         child: LayoutBuilder(
-          builder: (context, constraints) {
-            final double screenWidth = constraints.maxWidth;
-            final double screenHeight = constraints.maxHeight;
+          builder: (
+            context,
+            constraints,
+          ) {
+            final double screenWidth =
+                constraints.maxWidth;
 
-            if (screenWidth <= 0 || screenHeight <= 0) {
+            final double screenHeight =
+                constraints.maxHeight;
+
+            if (screenWidth <= 0 ||
+                screenHeight <= 0) {
               return const SizedBox.shrink();
             }
+
+            // ==================================================
+            // 📐 حساب مقياس الخريطة
+            // ==================================================
 
             final double scale = math.max(
               screenWidth / worldWidth,
               screenHeight / worldHeight,
             );
 
-            final double scaledWidth = worldWidth * scale;
-            final double scaledHeight = worldHeight * scale;
+            final double scaledWidth =
+                worldWidth * scale;
 
-            final double dx = (screenWidth - scaledWidth) / 2;
-            final double dy = (screenHeight - scaledHeight) / 2;
+            final double scaledHeight =
+                worldHeight * scale;
+
+            final double dx =
+                (screenWidth - scaledWidth) / 2;
+
+            final double dy =
+                (screenHeight - scaledHeight) / 2;
 
             final double levelButtonSize =
-                (80 / scale).clamp(150.0, 260.0);
+                (80 / scale).clamp(
+              150.0,
+              260.0,
+            );
 
             return Stack(
               children: [
+                // =================================================
+                // 🌍 الخريطة
+                // =================================================
+
                 ClipRect(
                   child: Stack(
                     children: [
                       Positioned(
                         left: dx,
                         top: dy,
+
                         child: Transform.scale(
                           scale: scale,
-                          alignment: Alignment.topLeft,
+                          alignment:
+                              Alignment.topLeft,
+
                           child: SizedBox(
                             width: worldWidth,
                             height: worldHeight,
+
                             child: AnimatedBuilder(
-                              animation: worldController,
-                              builder: (context, child) {
+                              animation:
+                                  worldController,
+
+                              builder: (
+                                context,
+                                child,
+                              ) {
                                 return Transform.translate(
-                                  offset: Offset(0, worldTranslateY.value),
-                                  child: Transform.scale(
-                                    scale: worldScale.value,
-                                    alignment: Alignment.center,
+                                  offset: Offset(
+                                    0,
+                                    worldTranslateY
+                                        .value,
+                                  ),
+
+                                  child:
+                                      Transform.scale(
+                                    scale:
+                                        worldScale.value,
+                                    alignment:
+                                        Alignment.center,
                                     child: child,
                                   ),
                                 );
                               },
+
                               child: SizedBox(
                                 width: worldWidth,
                                 height: worldHeight,
+
                                 child: Stack(
-                                  clipBehavior: Clip.none,
+                                  clipBehavior:
+                                      Clip.none,
+
                                   children: [
+                                    // =================================
+                                    // 🌄 خلفية الجزيرة
+                                    // =================================
+
                                     Positioned.fill(
                                       child: Opacity(
-                                        opacity: islandBackgroundOpacity,
-                                        child: Image.asset(
-                                          IslandBackgroundData.getBackground(
-                                            widget.island.id,
+                                        opacity:
+                                            islandBackgroundOpacity,
+
+                                        child:
+                                            Image.asset(
+                                          IslandBackgroundData
+                                              .getBackground(
+                                            widget
+                                                .island
+                                                .id,
                                           ),
                                           fit: BoxFit.cover,
+                                          errorBuilder: (
+                                            context,
+                                            error,
+                                            stackTrace,
+                                          ) {
+                                            return const SizedBox
+                                                .expand();
+                                          },
                                         ),
                                       ),
                                     ),
+
+                                    // =================================
+                                    // 🏝️ صورة الجزيرة
+                                    // =================================
+
                                     Positioned(
                                       left: 0,
                                       top: islandAreaTop,
                                       width: worldWidth,
-                                      height: islandAreaHeight,
+                                      height:
+                                          islandAreaHeight,
+
                                       child: Opacity(
-                                        opacity: islandImageOpacity,
-                                        child: Image.asset(
-                                          widget.island.image,
-                                          fit: BoxFit.contain,
-                                          alignment: Alignment.center,
+                                        opacity:
+                                            islandImageOpacity,
+
+                                        child:
+                                            Image.asset(
+                                          widget
+                                              .island
+                                              .image,
+                                          fit: BoxFit
+                                              .contain,
+                                          alignment:
+                                              Alignment
+                                                  .center,
+                                          errorBuilder: (
+                                            context,
+                                            error,
+                                            stackTrace,
+                                          ) {
+                                            return const SizedBox
+                                                .expand();
+                                          },
                                         ),
                                       ),
                                     ),
+
+                                    // =================================
+                                    // 🔢 المراحل
+                                    // =================================
+
                                     ...List.generate(
                                       levels.length,
                                       (index) {
-                                        if (index >= levelPositions.length) {
-                                          return const SizedBox.shrink();
+                                        if (index >=
+                                            levelPositions
+                                                .length) {
+                                          return const SizedBox
+                                              .shrink();
                                         }
 
-                                        final pos = levelPositions[index];
+                                        final pos =
+                                            levelPositions[
+                                                index];
 
                                         return Positioned(
-                                          left: (worldWidth * pos.dx) -
-                                              (levelButtonSize / 2),
-                                          top: (worldHeight * pos.dy) -
-                                              (levelButtonSize / 2),
-                                          child: levelButton(
+                                          left:
+                                              (worldWidth *
+                                                      pos.dx) -
+                                                  (levelButtonSize /
+                                                      2),
+
+                                          top:
+                                              (worldHeight *
+                                                      pos.dy) -
+                                                  (levelButtonSize /
+                                                      2),
+
+                                          child:
+                                              levelButton(
                                             levels[index],
-                                            size: levelButtonSize,
+                                            size:
+                                                levelButtonSize,
                                           ),
                                         );
                                       },
@@ -513,33 +1016,61 @@ class _IslandScreenState extends State<IslandScreen>
                   ),
                 ),
 
-                // زر الرجوع في الأعلى (تم استبداله بالصورة المطلوبة مع مطابقة تأثير الوهج والحجم للمحفظة)
+                // =================================================
+                // 🔙 زر الرجوع
+                // =================================================
+
                 Positioned(
                   top: 20,
                   left: 20,
+
                   child: GestureDetector(
                     onTap: () {
                       Navigator.pop(context);
                     },
+
                     child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
+                      decoration:
+                          BoxDecoration(
+                        shape:
+                            BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.amber.withOpacity(0.85),
+                            color: Colors.amber
+                                .withOpacity(
+                              0.85,
+                            ),
                             blurRadius: 16,
                             spreadRadius: 4,
                           ),
                         ],
                       ),
-                      child: Transform.scale(
+
+                      child:
+                          Transform.scale(
                         scale: 1.15,
+
                         child: SizedBox(
                           width: 56,
                           height: 56,
-                          child: Image.asset(
+
+                          child:
+                              Image.asset(
                             "assets/images/ui/back_screen.png",
                             fit: BoxFit.contain,
+
+                            errorBuilder: (
+                              context,
+                              error,
+                              stackTrace,
+                            ) {
+                              return const Icon(
+                                Icons.arrow_back,
+                                color:
+                                    Colors.white,
+                                size: 42,
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -547,27 +1078,67 @@ class _IslandScreenState extends State<IslandScreen>
                   ),
                 ),
 
-                // أيقونة المحفظة في أسفل يسار الشاشة مع الوهج المشع
+                // =================================================
+                // 👛 المحفظة
+                // =================================================
+
                 Positioned(
                   bottom: 20,
                   left: 20,
+
                   child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
+                    decoration:
+                        BoxDecoration(
+                      shape:
+                          BoxShape.circle,
+
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.amber.withOpacity(0.85),
+                          color: Colors.amber
+                              .withOpacity(
+                            0.85,
+                          ),
                           blurRadius: 16,
                           spreadRadius: 4,
                         ),
                       ],
                     ),
-                    child: Transform.scale(
+
+                    child:
+                        Transform.scale(
                       scale: 1.15,
-                      child: const WalletIconWidget(),
+
+                      child:
+                          const WalletIconWidget(),
                     ),
                   ),
                 ),
+
+                // =================================================
+                // 📺 مؤشر تحميل الإعلان
+                // =================================================
+
+                if (openingAd)
+                  Positioned.fill(
+                    child:
+                        IgnorePointer(
+                      child: Container(
+                        color: Colors.black
+                            .withOpacity(
+                          0.30,
+                        ),
+
+                        child:
+                            const Center(
+                          child:
+                              CircularProgressIndicator(
+                            color:
+                                Colors.amber,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             );
           },
