@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 
+import '../core/language/app_language_manager.dart';
 import '../managers/reward_manager.dart';
 import '../managers/puzzle_progress_manager.dart';
 import '../managers/ads_manager.dart';
@@ -28,7 +29,6 @@ class _WalletScreenState extends State<WalletScreen>
   bool isChestOpen = false;
   bool openingAd = false;
 
-  // لمنع الضغط المتكرر أثناء عملية الشراء
   bool buyingCoins = false;
   bool buyingStars = false;
   bool buyingGems = false;
@@ -49,9 +49,24 @@ class _WalletScreenState extends State<WalletScreen>
   late Animation<double> walletScaleAnimation;
 
   //==================================================
+  // 🌍 اللغة
+  //==================================================
+
+  AppLanguageManager get language =>
+      AppLanguageManager.instance;
+
+  String tr({
+    required String ar,
+    required String en,
+  }) {
+    return language.text(
+      ar: ar,
+      en: en,
+    );
+  }
+
+  //==================================================
   // 🛒 أسعار المتجر
-  //
-  // رصيد الإعلانات هو عملة الشراء.
   //==================================================
 
   static const int coinsAdsCost = 50;
@@ -138,8 +153,6 @@ class _WalletScreenState extends State<WalletScreen>
     if (!mounted) return;
 
     setState(() {
-      // نقرأ من PuzzleProgressManager باعتباره المصدر
-      // الرئيسي للأرصدة.
       coins = currentCoins;
       stars = currentStars;
       gems = currentGems;
@@ -147,7 +160,6 @@ class _WalletScreenState extends State<WalletScreen>
 
       // إبقاء reward مستخدماً حتى لا نغيّر
       // أي نظام مكافآت آخر موجود بالمشروع.
-      //
       // ignore: unnecessary_statements
       reward;
 
@@ -171,8 +183,6 @@ class _WalletScreenState extends State<WalletScreen>
 
   //==================================================
   // 🛒 شراء العملات
-  //
-  // 50 مشاهدة → 100 عملة
   //==================================================
 
   Future<void> buyCoins() async {
@@ -216,14 +226,15 @@ class _WalletScreenState extends State<WalletScreen>
     });
 
     showPurchaseMessage(
-      "🪙 تم شراء $coinsReward عملة",
+      tr(
+        ar: "🪙 تم شراء $coinsReward عملة",
+        en: "🪙 $coinsReward coins purchased",
+      ),
     );
   }
 
   //==================================================
   // 🛒 شراء النجوم
-  //
-  // 50 مشاهدة → 1 نجمة
   //==================================================
 
   Future<void> buyStars() async {
@@ -267,14 +278,15 @@ class _WalletScreenState extends State<WalletScreen>
     });
 
     showPurchaseMessage(
-      "⭐ تم شراء نجمة واحدة",
+      tr(
+        ar: "⭐ تم شراء نجمة واحدة",
+        en: "⭐ One star purchased",
+      ),
     );
   }
 
   //==================================================
   // 🛒 شراء الجواهر
-  //
-  // 100 مشاهدة → 1 جوهرة
   //==================================================
 
   Future<void> buyGems() async {
@@ -318,7 +330,10 @@ class _WalletScreenState extends State<WalletScreen>
     });
 
     showPurchaseMessage(
-      "💎 تم شراء جوهرة واحدة",
+      tr(
+        ar: "💎 تم شراء جوهرة واحدة",
+        en: "💎 One gem purchased",
+      ),
     );
   }
 
@@ -330,7 +345,10 @@ class _WalletScreenState extends State<WalletScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          "📺 تحتاج إلى $required مشاهدة إعلان",
+          tr(
+            ar: "📺 تحتاج إلى $required مشاهدة إعلان",
+            en: "📺 You need $required ad views",
+          ),
         ),
       ),
     );
@@ -416,9 +434,12 @@ class _WalletScreenState extends State<WalletScreen>
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              "الإعلان غير متوفر حالياً",
+              tr(
+                ar: "الإعلان غير متوفر حالياً",
+                en: "The ad is currently unavailable",
+              ),
             ),
           ),
         );
@@ -449,17 +470,27 @@ class _WalletScreenState extends State<WalletScreen>
         return AlertDialog(
           backgroundColor: const Color(0xff2A1B3D),
 
-          title: const Text(
-            "🎁 مكافأة الصندوق",
-            style: TextStyle(
+          title: Text(
+            tr(
+              ar: "🎁 مكافأة الصندوق",
+              en: "🎁 Chest Reward",
+            ),
+            style: const TextStyle(
               color: Colors.amber,
             ),
           ),
 
           content: Text(
-            "🪙 العملات: ${reward.coins}\n"
-            "⭐ النجوم: ${reward.stars}\n"
-            "💎 الجواهر: ${reward.gems}",
+            tr(
+              ar:
+                  "🪙 العملات: ${reward.coins}\n"
+                  "⭐ النجوم: ${reward.stars}\n"
+                  "💎 الجواهر: ${reward.gems}",
+              en:
+                  "🪙 Coins: ${reward.coins}\n"
+                  "⭐ Stars: ${reward.stars}\n"
+                  "💎 Gems: ${reward.gems}",
+            ),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
@@ -500,243 +531,275 @@ class _WalletScreenState extends State<WalletScreen>
       );
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF1A0B2E),
+    return Directionality(
+      textDirection: language.textDirection,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF1A0B2E),
 
-      //================================================
-      // APP BAR
-      //================================================
+        //================================================
+        // APP BAR
+        //================================================
 
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            GestureDetector(
-              onTap: triggerWalletOpeningAnimation,
+        appBar: AppBar(
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GestureDetector(
+                onTap: triggerWalletOpeningAnimation,
 
-              child: Image.asset(
-                isWalletOpeningAnim
-                    ? "assets/images/ui/open_wallet.png"
-                    : "assets/images/ui/close_wallet.png",
+                child: Image.asset(
+                  isWalletOpeningAnim
+                      ? "assets/images/ui/open_wallet.png"
+                      : "assets/images/ui/close_wallet.png",
 
-                width: 38,
-                height: 38,
+                  width: 38,
+                  height: 38,
 
-                fit: BoxFit.contain,
+                  fit: BoxFit.contain,
 
-                errorBuilder: (_, __, ___) {
-                  return const Icon(
-                    Icons.wallet,
-                    color: Colors.amber,
-                    size: 38,
-                  );
-                },
-              ),
-            ),
-
-            const SizedBox(width: 10),
-
-            const Text(
-              "المتجر والمحفظة",
-              style: TextStyle(
-                color: Colors.amber,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-          ],
-        ),
-
-        centerTitle: true,
-
-        backgroundColor:
-            const Color(0xFF2A1B3D),
-
-        elevation: 4,
-
-        iconTheme:
-            const IconThemeData(
-          color: Colors.amber,
-        ),
-      ),
-
-      //================================================
-      // BODY
-      //================================================
-
-      body: Stack(
-        children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight:
-                        constraints.maxHeight,
-                  ),
-
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-
-                    child: Column(
-                      children: [
-                        //================================
-                        // 📺 رصيد المشاهدات
-                        //================================
-
-                        adsBalanceCard(),
-
-                        const SizedBox(height: 14),
-
-                        //================================
-                        // 🛒 المتجر
-                        //================================
-
-                        const Text(
-                          "🛒 متجر المكافآت",
-                          style: TextStyle(
-                            color: Colors.amber,
-                            fontSize: 23,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-
-                        const SizedBox(height: 6),
-
-                        const Text(
-                          "استخدم رصيد المشاهدات لشراء العملات والنجوم والجواهر",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        //================================
-                        // 🪙 العملات
-                        //================================
-
-                        walletCard(
-                          title: "العملات",
-                          value: coins,
-                          assetPath:
-                              "assets/images/rewards/puzzle_coin.png",
-                          priceText:
-                              "50 مشاهدة",
-                          onBuy:
-                              buyingCoins
-                                  ? null
-                                  : buyCoins,
-                          loading:
-                              buyingCoins,
-                        ),
-
-                        const SizedBox(height: 10),
-
-                        //================================
-                        // ⭐ النجوم
-                        //================================
-
-                        walletCard(
-                          title: "النجوم",
-                          value: stars,
-                          assetPath:
-                              "assets/images/rewards/Star_gold.png",
-                          priceText:
-                              "50 مشاهدة",
-                          onBuy:
-                              buyingStars
-                                  ? null
-                                  : buyStars,
-                          loading:
-                              buyingStars,
-                        ),
-
-                        const SizedBox(height: 10),
-
-                        //================================
-                        // 💎 الجواهر
-                        //================================
-
-                        walletCard(
-                          title: "الجواهر",
-                          value: gems,
-                          assetPath:
-                              "assets/images/rewards/gem.png",
-                          priceText:
-                              "100 مشاهدة",
-                          onBuy:
-                              buyingGems
-                                  ? null
-                                  : buyGems,
-                          loading:
-                              buyingGems,
-                        ),
-
-                        const SizedBox(height: 18),
-
-                        //================================
-                        // 🎁 صندوق المكافأة
-                        //================================
-
-                        rewardChestCard(),
-
-                        const SizedBox(height: 14),
-
-                        //================================
-                        // 📢 الإعلان
-                        //================================
-
-                        AdsManager().banner(),
-
-                        const SizedBox(height: 20),
-                      ],
-                    ),
-                  ),
+                  errorBuilder: (_, __, ___) {
+                    return const Icon(
+                      Icons.wallet,
+                      color: Colors.amber,
+                      size: 38,
+                    );
+                  },
                 ),
-              );
-            },
+              ),
+
+              const SizedBox(width: 10),
+
+              Text(
+                tr(
+                  ar: "المتجر والمحفظة",
+                  en: "Store & Wallet",
+                ),
+                style: const TextStyle(
+                  color: Colors.amber,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+            ],
           ),
 
-          //==============================================
-          // 💼 حركة المحفظة
-          //==============================================
+          centerTitle: true,
 
-          if (isWalletOpeningAnim)
-            Positioned.fill(
-              child: Container(
-                color:
-                    Colors.black.withOpacity(0.6),
+          backgroundColor:
+              const Color(0xFF2A1B3D),
 
-                child: Center(
-                  child: SlideTransition(
-                    position:
-                        walletPositionAnimation,
+          elevation: 4,
 
-                    child: ScaleTransition(
-                      scale:
-                          walletScaleAnimation,
+          iconTheme:
+              const IconThemeData(
+            color: Colors.amber,
+          ),
+        ),
 
-                      child: Image.asset(
-                        "assets/images/ui/open_wallet.png",
+        //================================================
+        // BODY
+        //================================================
 
-                        width: 180,
-                        height: 180,
+        body: Stack(
+          children: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight:
+                          constraints.maxHeight,
+                    ),
 
-                        fit: BoxFit.contain,
+                    child: Padding(
+                      padding:
+                          const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+
+                      child: Column(
+                        children: [
+                          //================================
+                          // 📺 رصيد المشاهدات
+                          //================================
+
+                          adsBalanceCard(),
+
+                          const SizedBox(height: 14),
+
+                          //================================
+                          // 🛒 المتجر
+                          //================================
+
+                          Text(
+                            tr(
+                              ar: "🛒 متجر المكافآت",
+                              en: "🛒 Reward Store",
+                            ),
+                            style: const TextStyle(
+                              color: Colors.amber,
+                              fontSize: 23,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+
+                          const SizedBox(height: 6),
+
+                          Text(
+                            tr(
+                              ar:
+                                  "استخدم رصيد المشاهدات لشراء العملات والنجوم والجواهر",
+                              en:
+                                  "Use your ad-view balance to buy coins, stars, and gems",
+                            ),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          //================================
+                          // 🪙 العملات
+                          //================================
+
+                          walletCard(
+                            title: tr(
+                              ar: "العملات",
+                              en: "Coins",
+                            ),
+                            value: coins,
+                            assetPath:
+                                "assets/images/rewards/puzzle_coin.png",
+                            priceText:
+                                tr(
+                              ar: "50 مشاهدة",
+                              en: "50 views",
+                            ),
+                            onBuy:
+                                buyingCoins
+                                    ? null
+                                    : buyCoins,
+                            loading:
+                                buyingCoins,
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          //================================
+                          // ⭐ النجوم
+                          //================================
+
+                          walletCard(
+                            title: tr(
+                              ar: "النجوم",
+                              en: "Stars",
+                            ),
+                            value: stars,
+                            assetPath:
+                                "assets/images/rewards/Star_gold.png",
+                            priceText:
+                                tr(
+                              ar: "50 مشاهدة",
+                              en: "50 views",
+                            ),
+                            onBuy:
+                                buyingStars
+                                    ? null
+                                    : buyStars,
+                            loading:
+                                buyingStars,
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          //================================
+                          // 💎 الجواهر
+                          //================================
+
+                          walletCard(
+                            title: tr(
+                              ar: "الجواهر",
+                              en: "Gems",
+                            ),
+                            value: gems,
+                            assetPath:
+                                "assets/images/rewards/gem.png",
+                            priceText:
+                                tr(
+                              ar: "100 مشاهدة",
+                              en: "100 views",
+                            ),
+                            onBuy:
+                                buyingGems
+                                    ? null
+                                    : buyGems,
+                            loading:
+                                buyingGems,
+                          ),
+
+                          const SizedBox(height: 18),
+
+                          //================================
+                          // 🎁 صندوق المكافأة
+                          //================================
+
+                          rewardChestCard(),
+
+                          const SizedBox(height: 14),
+
+                          //================================
+                          // 📢 الإعلان
+                          //================================
+
+                          AdsManager().banner(),
+
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            //==============================================
+            // 💼 حركة المحفظة
+            //==============================================
+
+            if (isWalletOpeningAnim)
+              Positioned.fill(
+                child: Container(
+                  color:
+                      Colors.black.withOpacity(0.6),
+
+                  child: Center(
+                    child: SlideTransition(
+                      position:
+                          walletPositionAnimation,
+
+                      child: ScaleTransition(
+                        scale:
+                            walletScaleAnimation,
+
+                        child: Image.asset(
+                          "assets/images/ui/open_wallet.png",
+
+                          width: 180,
+                          height: 180,
+
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -818,9 +881,12 @@ class _WalletScreenState extends State<WalletScreen>
                   CrossAxisAlignment.start,
 
               children: [
-                const Text(
-                  "رصيد المشاهدات",
-                  style: TextStyle(
+                Text(
+                  tr(
+                    ar: "رصيد المشاهدات",
+                    en: "Ad Views Balance",
+                  ),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight:
@@ -830,9 +896,12 @@ class _WalletScreenState extends State<WalletScreen>
 
                 const SizedBox(height: 3),
 
-                const Text(
-                  "عملة المتجر",
-                  style: TextStyle(
+                Text(
+                  tr(
+                    ar: "عملة المتجر",
+                    en: "Store Currency",
+                  ),
+                  style: const TextStyle(
                     color: Colors.white60,
                     fontSize: 13,
                   ),
@@ -958,7 +1027,10 @@ class _WalletScreenState extends State<WalletScreen>
                 const SizedBox(height: 2),
 
                 Text(
-                  "الرصيد: $value",
+                  tr(
+                    ar: "الرصيد: $value",
+                    en: "Balance: $value",
+                  ),
 
                   style:
                       const TextStyle(
@@ -1013,10 +1085,13 @@ class _WalletScreenState extends State<WalletScreen>
                               Color(0xFF1A0B2E),
                         ),
                       )
-                    : const Text(
-                        "شراء",
+                    : Text(
+                        tr(
+                          ar: "شراء",
+                          en: "Buy",
+                        ),
                         style:
-                            TextStyle(
+                            const TextStyle(
                           fontWeight:
                               FontWeight.bold,
                         ),
@@ -1113,10 +1188,13 @@ class _WalletScreenState extends State<WalletScreen>
 
               const SizedBox(width: 8),
 
-              const Text(
-                "صندوق المكافأة الملكي",
+              Text(
+                tr(
+                  ar: "صندوق المكافأة الملكي",
+                  en: "Royal Reward Chest",
+                ),
 
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight:
                       FontWeight.bold,
@@ -1128,13 +1206,18 @@ class _WalletScreenState extends State<WalletScreen>
 
           const SizedBox(height: 4),
 
-          const Text(
-            "شاهد إعلاناً وافتح الصندوق للحصول على مكافأة عشوائية",
+          Text(
+            tr(
+              ar:
+                  "شاهد إعلاناً وافتح الصندوق للحصول على مكافأة عشوائية",
+              en:
+                  "Watch an ad and open the chest to receive a random reward",
+            ),
 
             textAlign:
                 TextAlign.center,
 
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               color: Colors.white70,
             ),
@@ -1233,10 +1316,21 @@ class _WalletScreenState extends State<WalletScreen>
 
               label: Text(
                 openingAd
-                    ? "جاري فتح الإعلان..."
+                    ? tr(
+                        ar: "جاري فتح الإعلان...",
+                        en: "Loading ad...",
+                      )
                     : isChestOpen
-                        ? "تم فتح الصندوق!"
-                        : "شاهد إعلان وافتح الصندوق",
+                        ? tr(
+                            ar: "تم فتح الصندوق!",
+                            en: "Chest opened!",
+                          )
+                        : tr(
+                            ar:
+                                "شاهد إعلان وافتح الصندوق",
+                            en:
+                                "Watch Ad & Open Chest",
+                          ),
 
                 style:
                     const TextStyle(
