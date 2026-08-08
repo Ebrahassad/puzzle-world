@@ -6,7 +6,7 @@ import 'package:flutter/scheduler.dart';
 
 import '../managers/ads_manager.dart';
 import '../managers/reward_manager.dart';
-import '../managers/app_language_manager.dart';
+import '../../../core/language/app_language_manager.dart';
 import '../widgets/game_toolbar.dart';
 import 'world_map_screen.dart';
 
