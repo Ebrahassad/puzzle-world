@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 
-import '../core/app_language_manager.dart';
+import '../../../core/language/app_language_manager.dart';
 
 import '../engine/puzzle_controller.dart';
 import '../engine/puzzle_painter.dart';
