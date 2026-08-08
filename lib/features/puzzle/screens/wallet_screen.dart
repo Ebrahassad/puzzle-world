@@ -111,7 +111,7 @@ class _WalletScreenState extends State<WalletScreen>
 
     chestController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 900),
     );
 
     chestScaleAnimation = Tween<double>(
@@ -566,33 +566,31 @@ class _WalletScreenState extends State<WalletScreen>
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              GestureDetector(
-                onTap: triggerWalletOpeningAnimation,
-                child: Image.asset(
-                  // المحفظة المفتوحة دائماً
-                  "assets/images/ui/open_wallet.png",
-                  width: 40,
-                  height: 40,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) {
-                    return const Icon(
-                      Icons.account_balance_wallet_rounded,
-                      color: Colors.amber,
-                      size: 38,
-                    );
-                  },
-                ),
+              // أيقونة المحفظة — صورة فقط بدون أي تفاعل
+              Image.asset(
+                "assets/images/ui/open_wallet.png",
+                width: 46,
+                height: 46,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) {
+                  return const Icon(
+                    Icons.account_balance_wallet_rounded,
+                    color: Color(0xFF5B2A86),
+                    size: 42,
+                  );
+                },
               ),
 
               const SizedBox(width: 9),
 
+              // العنوان — المحفظة أولاً ثم المتجر
               Text(
                 tr(
-                  ar: "المتجر والمحفظة",
-                  en: "Store & Wallet",
+                  ar: "المحفظة والمتجر",
+                  en: "Wallet & Store",
                 ),
                 style: const TextStyle(
-                  color: Colors.amber,
+                  color: Color(0xFF5B2A86),
                   fontWeight: FontWeight.bold,
                   fontSize: 19,
                 ),
@@ -1162,7 +1160,7 @@ class _WalletScreenState extends State<WalletScreen>
               scale: chestScaleAnimation,
               child: AnimatedSwitcher(
                 duration:
-                    const Duration(milliseconds: 300),
+                    const Duration(milliseconds: 800),
                 child: Image.asset(
                   isChestOpen
                       ? "assets/images/rewards/reward_chest_open.png"
@@ -1170,15 +1168,15 @@ class _WalletScreenState extends State<WalletScreen>
                   key: ValueKey<bool>(
                     isChestOpen,
                   ),
-                  height: 145,
-                  width: 145,
+                  height: 180,
+                  width: 180,
                   fit: BoxFit.contain,
                   errorBuilder: (_, __, ___) {
                     return Icon(
                       isChestOpen
                           ? Icons.lock_open
                           : Icons.lock,
-                      size: 100,
+                      size: 120,
                       color: Colors.amber,
                     );
                   },
