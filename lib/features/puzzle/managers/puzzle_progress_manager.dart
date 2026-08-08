@@ -562,43 +562,42 @@ class PuzzleProgressManager {
   //==================================================
 
   static int getLevelCoinCost(int level) {
-    if (level <= 1) {
-      return 0;
-    }
-
-    switch (level) {
-      case 2:
-        return 100;
-
-      case 3:
-        return 400;
-
-      case 4:
-        return 800;
-
-      case 5:
-        return 1600;
-
-      case 6:
-        return 3200;
-
-      case 7:
-        return 6400;
-
-      case 8:
-        return 12800;
-
-      case 9:
-        return 25600;
-
-      case 10:
-        return 51200;
-
-      default:
-        return 51200;
-    }
+  if (level <= 1) {
+    return 0;
   }
 
+  switch (level) {
+    case 2:
+      return 75;
+
+    case 3:
+      return 150;
+
+    case 4:
+      return 250;
+
+    case 5:
+      return 350;
+
+    case 6:
+      return 450;
+
+    case 7:
+      return 600;
+
+    case 8:
+      return 750;
+
+    case 9:
+      return 875;
+
+    case 10:
+      return 1000;
+
+    default:
+      return 1000;
+  }
+}
   //==================================================
   // ⭐ أسعار فتح المراحل بالنجوم
   //==================================================
