@@ -11,7 +11,8 @@ import '../managers/ads_manager.dart';
 import '../managers/reward_manager.dart';
 import '../models/puzzle_model.dart';
 import '../widgets/victory_puzzle_preview.dart';
-import '../managers/app_language_manager.dart';
+import '../../../core/language/app_language_manager.dart';
+
 import 'final_victory_screen.dart';
 
 /// ============================================================
