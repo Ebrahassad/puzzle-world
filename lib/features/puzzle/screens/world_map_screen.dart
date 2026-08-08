@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'private_island_screen.dart';
 import '../data/puzzle_data.dart';
@@ -58,6 +57,10 @@ class WorldMapScreen extends StatefulWidget {
 class _WorldMapScreenState
     extends State<WorldMapScreen>
     with TickerProviderStateMixin {
+  // ============================================================
+  // 🌍 الخريطة
+  // ============================================================
+
   static const String mapImage =
       "assets/images/world/world_map.jpg";
 
@@ -65,35 +68,64 @@ class _WorldMapScreenState
   static const double worldHeight = 1350;
 
   // ============================================================
-  // 💎 الجزيرة الخاصة
+  // 🏝️ الجزيرة الخاصة
   // ============================================================
 
   static const int privateIslandGemCost = 100;
 
-  static const String privateIslandKey =
-      "private_island_unlocked";
+  // ============================================================
+  // 🗺️ بيانات الجزر
+  // ============================================================
 
   late final List<PuzzleModel> islands;
+
+  // ============================================================
+  // 🎬 Animation
+  // ============================================================
 
   late final AnimationController worldController;
   late final Animation<double> worldScale;
   late final Animation<double> worldTranslateY;
 
   late final List<AnimationController> cloudControllers;
+
+  // ============================================================
+  // 🔊 الصوت
+  // ============================================================
+
   late final AudioPlayer audioPlayer;
 
-  bool spaceUnlocked = false;
+  // ============================================================
+  // 🔓 حالة الجزر
+  // ============================================================
+
+  final Map<String, bool> islandUnlocked = {
+    "animals": true,
+    "nature": false,
+    "cars": false,
+    "landmarks": false,
+    "space": false,
+  };
+
   bool privateIslandUnlocked = false;
 
+  // ============================================================
+  // 🔄 حالات التحميل
+  // ============================================================
+
+  bool loadingIslandState = true;
   bool unlockingIsland = false;
   bool unlockingPrivateIsland = false;
+
+  // الجزيرة التي يتم التعامل معها حالياً
+  String? processingIslandId;
 
   // ============================================================
   // 🗺️ مواقع الجزر
   // ============================================================
 
   static final List<_RelativeRect> _islandRects = [
-    // جزيرة الفضاء
+    // 🚀 جزيرة الفضاء
     _RelativeRect(
       id: "space",
       left: 210 / worldWidth,
@@ -102,7 +134,7 @@ class _WorldMapScreenState
       height: 540 / worldHeight,
     ),
 
-    // المعالم
+    // 🏛️ المعالم
     _RelativeRect(
       id: "landmarks",
       left: 100 / worldWidth,
@@ -111,7 +143,7 @@ class _WorldMapScreenState
       height: 365 / worldHeight,
     ),
 
-    // السيارات
+    // 🚗 السيارات
     _RelativeRect(
       id: "cars",
       left: 460 / worldWidth,
@@ -120,7 +152,7 @@ class _WorldMapScreenState
       height: 365 / worldHeight,
     ),
 
-    // الطبيعة
+    // 🌳 الطبيعة
     _RelativeRect(
       id: "nature",
       left: 268 / worldWidth,
@@ -129,7 +161,7 @@ class _WorldMapScreenState
       height: 380 / worldHeight,
     ),
 
-    // الحيوانات
+    // 🐯 الحيوانات
     _RelativeRect(
       id: "animals",
       left: 268 / worldWidth,
@@ -183,27 +215,52 @@ class _WorldMapScreenState
     super.initState();
 
     islands = PuzzleData.puzzles;
+
     audioPlayer = AudioPlayer();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await AdsManager().initAds();
-
-      final canClaim =
-          await RewardManager.canClaimDailyReward();
-
-      if (canClaim && mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => DailyRewardPopup(
-            onRewardClaimed: () {},
-          ),
-        );
-      }
-    });
+    // ------------------------------------------------------------
+    // تحميل حالة الجزر
+    // ------------------------------------------------------------
 
     loadIslandState();
+
+    // ------------------------------------------------------------
+    // تحميل الجزيرة الخاصة
+    // ------------------------------------------------------------
+
     loadPrivateIslandState();
+
+    // ------------------------------------------------------------
+    // 🎁 المكافأة اليومية
+    //
+    // لا نستدعي initAds هنا.
+    // AdsManager مسؤول عن تهيئة الإعلانات من مكانه المركزي.
+    // ------------------------------------------------------------
+
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) async {
+        final canClaim =
+            await RewardManager.canClaimDailyReward();
+
+        if (!mounted) return;
+
+        if (canClaim) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) {
+              return DailyRewardPopup(
+                onRewardClaimed: () {},
+              );
+            },
+          );
+        }
+      },
+    );
+
+    // ------------------------------------------------------------
+    // 🌍 Animation الخريطة
+    // ------------------------------------------------------------
 
     worldController = AnimationController(
       vsync: this,
@@ -230,6 +287,10 @@ class _WorldMapScreenState
       ),
     );
 
+    // ------------------------------------------------------------
+    // ☁️ Animation السحب
+    // ------------------------------------------------------------
+
     cloudControllers = _clouds
         .map(
           (cloud) => AnimationController(
@@ -245,15 +306,31 @@ class _WorldMapScreenState
   // ============================================================
 
   Future<void> loadIslandState() async {
-    final unlocked =
-        await PuzzleProgressManager.isIslandUnlocked(
-      "space",
-    );
+    try {
+      for (final islandId in [
+        "animals",
+        "nature",
+        "cars",
+        "landmarks",
+        "space",
+      ]) {
+        final unlocked =
+            await PuzzleProgressManager.isIslandUnlocked(
+          islandId,
+        );
+
+        islandUnlocked[islandId] =
+            unlocked || islandId == "animals";
+      }
+    } catch (_) {
+      // الحيوانات تبقى مفتوحة دائماً
+      islandUnlocked["animals"] = true;
+    }
 
     if (!mounted) return;
 
     setState(() {
-      spaceUnlocked = unlocked;
+      loadingIslandState = false;
     });
   }
 
@@ -262,59 +339,23 @@ class _WorldMapScreenState
   // ============================================================
 
   Future<void> loadPrivateIslandState() async {
-    final prefs =
-        await SharedPreferences.getInstance();
+    try {
+      final unlocked =
+          await PuzzleProgressManager
+              .isPrivateIslandUnlocked();
 
-    final unlocked =
-        prefs.getBool(privateIslandKey) ?? false;
+      if (!mounted) return;
 
-    if (!mounted) return;
+      setState(() {
+        privateIslandUnlocked = unlocked;
+      });
+    } catch (_) {
+      if (!mounted) return;
 
-    setState(() {
-      privateIslandUnlocked = unlocked;
-    });
-  }
-
-  // ============================================================
-  // 🔓 حفظ فتح الجزيرة الخاصة
-  // ============================================================
-
-  Future<void> unlockPrivateIsland() async {
-    final prefs =
-        await SharedPreferences.getInstance();
-
-    await prefs.setBool(
-      privateIslandKey,
-      true,
-    );
-
-    if (!mounted) return;
-
-    setState(() {
-      privateIslandUnlocked = true;
-      unlockingPrivateIsland = false;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          "🏝️ تم فتح جزيرتك الخاصة!",
-        ),
-      ),
-    );
-
-    await Future.delayed(
-      const Duration(milliseconds: 600),
-    );
-
-    if (!mounted) return;
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const PrivateIslandScreen(),
-      ),
-    );
+      setState(() {
+        privateIslandUnlocked = false;
+      });
+    }
   }
 
   // ============================================================
@@ -338,6 +379,7 @@ class _WorldMapScreenState
   @override
   void dispose() {
     worldController.dispose();
+
     audioPlayer.dispose();
 
     for (final controller in cloudControllers) {
@@ -371,9 +413,13 @@ class _WorldMapScreenState
         MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: const Color(0xff08182b),
+      backgroundColor:
+          const Color(0xff08182b),
       body: LayoutBuilder(
-        builder: (context, constraints) {
+        builder: (
+          context,
+          constraints,
+        ) {
           final double screenWidth =
               constraints.maxWidth;
 
@@ -384,6 +430,10 @@ class _WorldMapScreenState
               screenHeight <= 0) {
             return const SizedBox.shrink();
           }
+
+          // --------------------------------------------------------
+          // 📐 تكبير الخريطة لتغطية الشاشة
+          // --------------------------------------------------------
 
           final double scale = math.max(
             screenWidth / worldWidth,
@@ -430,8 +480,10 @@ class _WorldMapScreenState
                               worldTranslateY.value,
                             ),
                             child: Transform.scale(
-                              scale: worldScale.value,
-                              alignment: Alignment.center,
+                              scale:
+                                  worldScale.value,
+                              alignment:
+                                  Alignment.center,
                               child: child,
                             ),
                           );
@@ -443,7 +495,10 @@ class _WorldMapScreenState
                             clipBehavior:
                                 Clip.none,
                             children: [
-                              // الخريطة
+                              // ------------------------------------------------
+                              // 🗺️ صورة الخريطة
+                              // ------------------------------------------------
+
                               Positioned.fill(
                                 child: Image.asset(
                                   mapImage,
@@ -452,22 +507,32 @@ class _WorldMapScreenState
                                     context,
                                     error,
                                     stack,
-                                  ) =>
-                                      const SizedBox.shrink(),
+                                  ) {
+                                    return const SizedBox
+                                        .shrink();
+                                  },
                                 ),
                               ),
 
-                              // السحب
+                              // ------------------------------------------------
+                              // ☁️ السحب
+                              // ------------------------------------------------
+
                               for (int i = 0;
                                   i < _clouds.length;
                                   i++)
                                 cloudWidget(
-                                  cloud: _clouds[i],
+                                  cloud:
+                                      _clouds[i],
                                   controller:
-                                      cloudControllers[i],
+                                      cloudControllers[
+                                          i],
                                 ),
 
-                              // الجزر
+                              // ------------------------------------------------
+                              // 🏝️ الجزر
+                              // ------------------------------------------------
+
                               for (final rect
                                   in _islandRects)
                                 islandImage(
@@ -486,7 +551,8 @@ class _WorldMapScreenState
                 // ==================================================
 
                 Positioned(
-                  bottom: bottomPadding + 20,
+                  bottom:
+                      bottomPadding + 20,
                   left: 20,
                   child: GestureDetector(
                     onTap: () async {
@@ -496,17 +562,19 @@ class _WorldMapScreenState
                         return;
                       }
 
-                      // لا نغيّر وظيفة WalletIconWidget هنا.
-                      // الانتقال للمحفظة يتم من خلال الـ Widget نفسه
-                      // إذا كان مبرمجاً لذلك.
+                      // لا نغير وظيفة WalletIconWidget.
+                      // الـ Widget نفسه مسؤول عن الانتقال للمحفظة.
                     },
                     child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
+                      decoration:
+                          BoxDecoration(
+                        shape:
+                            BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color:
-                                Colors.amber.withOpacity(
+                            color: Colors
+                                .amber
+                                .withOpacity(
                               0.85,
                             ),
                             blurRadius: 16,
@@ -514,7 +582,8 @@ class _WorldMapScreenState
                           ),
                         ],
                       ),
-                      child: Transform.scale(
+                      child:
+                          Transform.scale(
                         scale: 1.15,
                         child:
                             const WalletIconWidget(),
@@ -528,7 +597,8 @@ class _WorldMapScreenState
                 // ==================================================
 
                 Positioned(
-                  bottom: bottomPadding + 20,
+                  bottom:
+                      bottomPadding + 20,
                   right: 20,
                   child: GestureDetector(
                     onTap:
@@ -536,12 +606,15 @@ class _WorldMapScreenState
                             ? null
                             : openPrivateIsland,
                     child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
+                      decoration:
+                          BoxDecoration(
+                        shape:
+                            BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color:
-                                Colors.amber.withOpacity(
+                            color: Colors
+                                .amber
+                                .withOpacity(
                               0.85,
                             ),
                             blurRadius: 16,
@@ -549,20 +622,25 @@ class _WorldMapScreenState
                           ),
                         ],
                       ),
-                      child: Transform.scale(
+                      child:
+                          Transform.scale(
                         scale: 1.15,
                         child: SizedBox(
                           width: 55,
                           height: 55,
-                          child: Image.asset(
+                          child:
+                              Image.asset(
                             "assets/images/ui/private_island.png",
-                            fit: BoxFit.contain,
+                            fit:
+                                BoxFit.contain,
                             errorBuilder: (
                               context,
                               error,
                               stack,
-                            ) =>
-                                const SizedBox.shrink(),
+                            ) {
+                              return const SizedBox
+                                  .shrink();
+                            },
                           ),
                         ),
                       ),
@@ -571,7 +649,31 @@ class _WorldMapScreenState
                 ),
 
                 // ==================================================
-                // 🔄 مؤشر فتح
+                // 🔄 التحميل
+                // ==================================================
+
+                if (loadingIslandState)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Container(
+                        color: Colors.black
+                            .withOpacity(
+                          0.12,
+                        ),
+                        child:
+                            const Center(
+                          child:
+                              CircularProgressIndicator(
+                            color:
+                                Colors.amber,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // ==================================================
+                // 🔄 فتح الجزيرة
                 // ==================================================
 
                 if (unlockingIsland ||
@@ -579,14 +681,16 @@ class _WorldMapScreenState
                   Positioned.fill(
                     child: IgnorePointer(
                       child: Container(
-                        color:
-                            Colors.black.withOpacity(
+                        color: Colors.black
+                            .withOpacity(
                           0.15,
                         ),
-                        child: const Center(
+                        child:
+                            const Center(
                           child:
                               CircularProgressIndicator(
-                            color: Colors.amber,
+                            color:
+                                Colors.amber,
                           ),
                         ),
                       ),
@@ -616,7 +720,10 @@ class _WorldMapScreenState
 
     return AnimatedBuilder(
       animation: controller,
-      builder: (context, child) {
+      builder: (
+        context,
+        child,
+      ) {
         return Positioned(
           left: (worldWidth + 100) -
               (controller.value *
@@ -625,7 +732,8 @@ class _WorldMapScreenState
           child: Opacity(
             opacity: cloud.opacity,
             child: Transform.rotate(
-              angle: controller.value * 0.15,
+              angle:
+                  controller.value * 0.15,
               child: child,
             ),
           ),
@@ -638,8 +746,9 @@ class _WorldMapScreenState
           context,
           error,
           stack,
-        ) =>
-            const SizedBox.shrink(),
+        ) {
+          return const SizedBox.shrink();
+        },
       ),
     );
   }
@@ -670,8 +779,9 @@ class _WorldMapScreenState
         rect.height * worldHeight;
 
     final bool locked =
-        rect.id != "animals" &&
-        !isIslandUnlockedLocal(rect.id);
+        !isIslandUnlockedLocal(
+      rect.id,
+    );
 
     return Positioned(
       left: left,
@@ -681,12 +791,21 @@ class _WorldMapScreenState
       child: GestureDetector(
         onTap: () async {
           await playClickSound();
-          await openIsland(island);
+
+          await openIsland(
+            island,
+          );
         },
-        behavior: HitTestBehavior.opaque,
+        behavior:
+            HitTestBehavior.opaque,
         child: Stack(
-          alignment: Alignment.center,
+          alignment:
+              Alignment.center,
           children: [
+            // ------------------------------------------------------
+            // 🏝️ صورة الجزيرة
+            // ------------------------------------------------------
+
             Image.asset(
               island.image,
               fit: BoxFit.contain,
@@ -694,11 +813,16 @@ class _WorldMapScreenState
                 context,
                 error,
                 stack,
-              ) =>
-                  const SizedBox.shrink(),
+              ) {
+                return const SizedBox
+                    .shrink();
+              },
             ),
 
+            // ------------------------------------------------------
             // 🔒 القفل
+            // ------------------------------------------------------
+
             if (locked)
               Positioned(
                 right: 20,
@@ -712,12 +836,14 @@ class _WorldMapScreenState
                     context,
                     error,
                     stack,
-                  ) =>
-                      const Icon(
-                    Icons.lock,
-                    color: Colors.amber,
-                    size: 55,
-                  ),
+                  ) {
+                    return const Icon(
+                      Icons.lock,
+                      color:
+                          Colors.amber,
+                      size: 55,
+                    );
+                  },
                 ),
               ),
           ],
@@ -737,20 +863,16 @@ class _WorldMapScreenState
       return true;
     }
 
-    if (islandId == "space") {
-      return spaceUnlocked;
-    }
-
-    // بالنسبة للجزر الأخرى، حالة الفتح الفعلية
-    // يتم التحقق منها عند الضغط.
-    return false;
+    return islandUnlocked[
+            islandId] ??
+        false;
   }
 
   // ============================================================
-  // 💰 سعر الجزيرة بالنجوم
+  // 📺 عدد الإعلانات المطلوبة
   // ============================================================
 
-  int getIslandStarCost(
+  int getIslandRequiredAds(
     String islandId,
   ) {
     switch (islandId) {
@@ -781,28 +903,10 @@ class _WorldMapScreenState
   Future<void> openIsland(
     PuzzleModel island,
   ) async {
-    final unlocked =
-        await PuzzleProgressManager
-            .isIslandUnlocked(
-      island.id,
-    );
-
-    if (unlocked) {
-      if (!mounted) return;
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => IslandScreen(
-            island: island,
-          ),
-        ),
-      );
-
-      return;
-    }
-
+    // ------------------------------------------------------------
     // الحيوانات مفتوحة دائماً
+    // ------------------------------------------------------------
+
     if (island.id == "animals") {
       await PuzzleProgressManager
           .unlockIsland(
@@ -814,7 +918,8 @@ class _WorldMapScreenState
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => IslandScreen(
+          builder: (_) =>
+              IslandScreen(
             island: island,
           ),
         ),
@@ -823,156 +928,315 @@ class _WorldMapScreenState
       return;
     }
 
-    await showIslandPurchaseDialog(
+    // ------------------------------------------------------------
+    // إذا كانت الجزيرة مفتوحة
+    // ------------------------------------------------------------
+
+    final unlocked =
+        await PuzzleProgressManager
+            .isIslandUnlocked(
+      island.id,
+    );
+
+    if (unlocked) {
+      if (!mounted) return;
+
+      setState(() {
+        islandUnlocked[island.id] =
+            true;
+      });
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              IslandScreen(
+            island: island,
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    // ------------------------------------------------------------
+    // الجزيرة مغلقة
+    // ------------------------------------------------------------
+
+    await showIslandAdsDialog(
       island,
     );
   }
 
   // ============================================================
-  // ⭐ نافذة شراء الجزيرة
+  // 📺 نافذة فتح الجزيرة بالإعلانات
   // ============================================================
 
-  Future<void> showIslandPurchaseDialog(
+  Future<void> showIslandAdsDialog(
     PuzzleModel island,
   ) async {
-    final cost =
-        getIslandStarCost(
+    final requiredAds =
+        PuzzleProgressManager
+            .getIslandRequiredAds(
       island.id,
     );
 
-    final currentStars =
+    final currentAds =
         await PuzzleProgressManager
-            .getStars();
+            .getAdsBalance();
 
     if (!mounted) return;
+
+    // ------------------------------------------------------------
+    // إذا وصل الرصيد للحد المطلوب بالفعل
+    // ------------------------------------------------------------
+
+    if (currentAds >= requiredAds) {
+      final unlocked =
+          await PuzzleProgressManager
+              .unlockIslandWithAds(
+        island.id,
+      );
+
+      if (unlocked) {
+        setState(() {
+          islandUnlocked[island.id] =
+              true;
+        });
+
+        await openUnlockedIsland(
+          island,
+        );
+
+        return;
+      }
+    }
+
+    // ------------------------------------------------------------
+    // Dialog
+    // ------------------------------------------------------------
 
     showDialog(
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor:
-              const Color(0xFF2A1B3D),
-          shape: RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(20),
-          ),
-          title: const Text(
-            "🔒 الجزيرة مغلقة",
-            style: TextStyle(
-              color: Colors.amber,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Column(
-            mainAxisSize:
-                MainAxisSize.min,
-            children: [
-              const Text(
-                "هذه الجزيرة تحتاج إلى نجوم لفتحها.",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
+        return StatefulBuilder(
+          builder: (
+            dialogContext,
+            setDialogState,
+          ) {
+            return AlertDialog(
+              backgroundColor:
+                  const Color(
+                0xFF2A1B3D,
+              ),
+              shape:
+                  RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(
+                  20,
                 ),
               ),
+              title: const Text(
+                "🔒 الجزيرة مغلقة",
+                textAlign:
+                    TextAlign.center,
+                style: TextStyle(
+                  color:
+                      Colors.amber,
+                  fontWeight:
+                      FontWeight.bold,
+                ),
+              ),
+              content: FutureBuilder<int>(
+                future:
+                    PuzzleProgressManager
+                        .getAdsBalance(),
+                builder: (
+                  context,
+                  snapshot,
+                ) {
+                  final balance =
+                      snapshot.data ??
+                          currentAds;
 
-              const SizedBox(height: 18),
+                  final remaining =
+                      math.max(
+                    0,
+                    requiredAds -
+                        balance,
+                  );
 
-              Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    "assets/images/rewards/Star_gold.png",
-                    width: 45,
-                    height: 45,
-                    fit: BoxFit.contain,
-                  ),
+                  return Column(
+                    mainAxisSize:
+                        MainAxisSize.min,
+                    children: [
+                      const Text(
+                        "شاهد إعلانات للحصول على رصيد فتح الجزر.",
+                        textAlign:
+                            TextAlign.center,
+                        style:
+                            TextStyle(
+                          color:
+                              Colors.white,
+                          fontSize: 16,
+                        ),
+                      ),
 
-                  const SizedBox(width: 8),
+                      const SizedBox(
+                        height: 20,
+                      ),
 
-                  Text(
-                    "$cost",
+                      // ------------------------------------------------
+                      // 📺 المطلوب
+                      // ------------------------------------------------
+
+                      Row(
+                        mainAxisAlignment:
+                            MainAxisAlignment
+                                .center,
+                        children: [
+                          const Icon(
+                            Icons
+                                .ondemand_video,
+                            color:
+                                Colors.amber,
+                            size: 38,
+                          ),
+
+                          const SizedBox(
+                            width: 10,
+                          ),
+
+                          Text(
+                            "$requiredAds",
+                            style:
+                                const TextStyle(
+                              color:
+                                  Colors.amber,
+                              fontSize:
+                                  28,
+                              fontWeight:
+                                  FontWeight
+                                      .bold,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(
+                        height: 10,
+                      ),
+
+                      Text(
+                        "رصيد الإعلانات: $balance 📺",
+                        style:
+                            const TextStyle(
+                          color:
+                              Colors.white70,
+                          fontSize:
+                              16,
+                        ),
+                      ),
+
+                      const SizedBox(
+                        height: 8,
+                      ),
+
+                      if (remaining > 0)
+                        Text(
+                          "متبقي $remaining مشاهدة",
+                          style:
+                              const TextStyle(
+                            color:
+                                Colors.white,
+                            fontSize:
+                                15,
+                          ),
+                        )
+                      else
+                        const Text(
+                          "يمكن فتح الجزيرة الآن 🎉",
+                          style:
+                              TextStyle(
+                            color:
+                                Colors.greenAccent,
+                            fontWeight:
+                                FontWeight.bold,
+                            fontSize:
+                                15,
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(
+                      dialogContext,
+                    );
+                  },
+                  child: const Text(
+                    "إلغاء",
                     style:
-                        const TextStyle(
-                      color: Colors.amber,
-                      fontSize: 26,
-                      fontWeight:
-                          FontWeight.bold,
+                        TextStyle(
+                      color:
+                          Colors.white70,
                     ),
                   ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              Text(
-                "رصيدك الحالي: $currentStars ⭐",
-                style:
-                    const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 16,
                 ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(
-                  dialogContext,
-                );
-              },
-              child: const Text(
-                "إلغاء",
-                style: TextStyle(
-                  color: Colors.white70,
-                ),
-              ),
-            ),
 
-            ElevatedButton.icon(
-              icon: const Icon(
-                Icons.star,
-              ),
-              label: const Text(
-                "شراء وفتح",
-              ),
-              style:
-                  ElevatedButton.styleFrom(
-                backgroundColor:
-                    Colors.amber,
-                foregroundColor:
-                    const Color(
-                  0xFF1A0B2E,
+                // --------------------------------------------------------
+                // 📺 مشاهدة إعلان
+                // --------------------------------------------------------
+
+                ElevatedButton.icon(
+                  icon: const Icon(
+                    Icons
+                        .ondemand_video,
+                  ),
+                  label: const Text(
+                    "شاهد إعلان",
+                  ),
+                  style:
+                      ElevatedButton
+                          .styleFrom(
+                    backgroundColor:
+                        Colors.amber,
+                    foregroundColor:
+                        const Color(
+                      0xFF1A0B2E,
+                    ),
+                  ),
+                  onPressed:
+                      unlockingIsland
+                          ? null
+                          : () async {
+                              await watchIslandAd(
+                                island,
+                                dialogContext,
+                                setDialogState,
+                              );
+                            },
                 ),
-              ),
-              onPressed:
-                  unlockingIsland
-                      ? null
-                      : () async {
-                          await buyIslandWithStars(
-                            island,
-                            cost,
-                            dialogContext,
-                          );
-                        },
-            ),
-          ],
+              ],
+            );
+          },
         );
       },
     );
   }
 
   // ============================================================
-  // ⭐ شراء الجزيرة بالنجوم
+  // 📺 مشاهدة إعلان للجزيرة
   // ============================================================
 
-  Future<void> buyIslandWithStars(
+  Future<void> watchIslandAd(
     PuzzleModel island,
-    int cost,
     BuildContext dialogContext,
+    StateSetter setDialogState,
   ) async {
     if (unlockingIsland) {
       return;
@@ -980,76 +1244,193 @@ class _WorldMapScreenState
 
     setState(() {
       unlockingIsland = true;
+      processingIslandId =
+          island.id;
     });
 
-    final paid =
-        await PuzzleProgressManager
-            .spendStars(
-      cost,
-    );
+    setDialogState(() {});
 
-    if (!paid) {
-      if (mounted) {
+    await AdsManager().showRewardedAd(
+      onRewardEarned: () async {
+        // ----------------------------------------------------------
+        // مهم:
+        //
+        // AdsManager الجديد يضيف +1 إلى adsBalance
+        // بعد نجاح الإعلان.
+        //
+        // لذلك لا نضيف الرصيد هنا مرة ثانية.
+        // ----------------------------------------------------------
+
+        final balance =
+            await PuzzleProgressManager
+                .getAdsBalance();
+
+        final required =
+            PuzzleProgressManager
+                .getIslandRequiredAds(
+          island.id,
+        );
+
+        // ----------------------------------------------------------
+        // هل أصبح الرصيد كافياً؟
+        // ----------------------------------------------------------
+
+        if (balance >= required) {
+          final unlocked =
+              await PuzzleProgressManager
+                  .unlockIslandWithAds(
+            island.id,
+          );
+
+          if (unlocked) {
+            islandUnlocked[
+                    island.id] =
+                true;
+
+            if (mounted) {
+              setState(() {
+                unlockingIsland =
+                    false;
+                processingIslandId =
+                    null;
+              });
+            }
+
+            if (dialogContext.mounted) {
+              Navigator.pop(
+                dialogContext,
+              );
+            }
+
+            if (!mounted) return;
+
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(
+              SnackBar(
+                content: Text(
+                  "🎉 تم فتح جزيرة ${getIslandName(island.id)}!",
+                ),
+              ),
+            );
+
+            await Future.delayed(
+              const Duration(
+                milliseconds: 500,
+              ),
+            );
+
+            if (!mounted) return;
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    IslandScreen(
+                  island: island,
+                ),
+              ),
+            );
+
+            return;
+          }
+        }
+
+        // ----------------------------------------------------------
+        // لم يصل للحد المطلوب بعد
+        // ----------------------------------------------------------
+
+        if (mounted) {
+          setState(() {
+            unlockingIsland =
+                false;
+            processingIslandId =
+                null;
+          });
+        }
+
+        if (dialogContext.mounted) {
+          setDialogState(() {});
+        }
+      },
+      onAdFailed: () {
+        if (!mounted) return;
+
         setState(() {
-          unlockingIsland = false;
+          unlockingIsland =
+              false;
+          processingIslandId =
+              null;
         });
+
+        if (dialogContext.mounted) {
+          setDialogState(() {});
+        }
 
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text(
-              "لا تملك $cost ⭐ لفتح هذه الجزيرة.",
+              "تعذر تشغيل الإعلان. حاول مرة أخرى.",
             ),
           ),
         );
-      }
-
-      return;
-    }
-
-    await PuzzleProgressManager
-        .unlockIsland(
-      island.id,
+      },
     );
+  }
 
+  // ============================================================
+  // 🏝️ فتح الجزيرة بعد نجاح الشراء
+  // ============================================================
+
+  Future<void> openUnlockedIsland(
+    PuzzleModel island,
+  ) async {
     if (!mounted) return;
-
-    Navigator.pop(
-      dialogContext,
-    );
 
     setState(() {
-      unlockingIsland = false;
-
-      if (island.id == "space") {
-        spaceUnlocked = true;
-      }
+      islandUnlocked[island.id] =
+          true;
     });
-
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-      const SnackBar(
-        content: Text(
-          "🎉 تم شراء الجزيرة وفتحها!",
-        ),
-      ),
-    );
-
-    await Future.delayed(
-      const Duration(milliseconds: 500),
-    );
-
-    if (!mounted) return;
 
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => IslandScreen(
+        builder: (_) =>
+            IslandScreen(
           island: island,
         ),
       ),
     );
+  }
+
+  // ============================================================
+  // 🏷️ اسم الجزيرة
+  // ============================================================
+
+  String getIslandName(
+    String islandId,
+  ) {
+    switch (islandId) {
+      case "animals":
+        return "الحيوانات";
+
+      case "nature":
+        return "الطبيعة";
+
+      case "cars":
+        return "السيارات";
+
+      case "landmarks":
+        return "المعالم";
+
+      case "space":
+        return "الفضاء";
+
+      default:
+        return "الجديدة";
+    }
   }
 
   // ============================================================
@@ -1061,7 +1442,20 @@ class _WorldMapScreenState
 
     if (!mounted) return;
 
-    if (privateIslandUnlocked) {
+    // ------------------------------------------------------------
+    // الجزيرة مفتوحة بالفعل
+    // ------------------------------------------------------------
+
+    final unlocked =
+        await PuzzleProgressManager
+            .isPrivateIslandUnlocked();
+
+    if (unlocked) {
+      setState(() {
+        privateIslandUnlocked =
+            true;
+      });
+
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -1073,11 +1467,19 @@ class _WorldMapScreenState
       return;
     }
 
+    // ------------------------------------------------------------
+    // قراءة رصيد الجواهر
+    // ------------------------------------------------------------
+
     final gems =
         await PuzzleProgressManager
             .getGems();
 
     if (!mounted) return;
+
+    // ------------------------------------------------------------
+    // نافذة الجزيرة الخاصة
+    // ------------------------------------------------------------
 
     showDialog(
       context: context,
@@ -1086,15 +1488,21 @@ class _WorldMapScreenState
         return AlertDialog(
           backgroundColor:
               const Color(0xFF2A1B3D),
-          shape: RoundedRectangleBorder(
+          shape:
+              RoundedRectangleBorder(
             borderRadius:
-                BorderRadius.circular(20),
+                BorderRadius.circular(
+              20,
+            ),
           ),
           title: const Text(
             "🏝️ الجزيرة الخاصة",
+            textAlign:
+                TextAlign.center,
             style: TextStyle(
               color: Colors.amber,
-              fontWeight: FontWeight.bold,
+              fontWeight:
+                  FontWeight.bold,
             ),
           ),
           content: Column(
@@ -1103,33 +1511,41 @@ class _WorldMapScreenState
             children: [
               const Text(
                 "افتح جزيرتك الخاصة وأنشئ ألغازك من صورك الخاصة.",
-                textAlign: TextAlign.center,
+                textAlign:
+                    TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(
+                height: 20,
+              ),
 
               Row(
                 mainAxisAlignment:
-                    MainAxisAlignment.center,
+                    MainAxisAlignment
+                        .center,
                 children: [
                   Image.asset(
                     "assets/images/rewards/gem.png",
                     width: 48,
                     height: 48,
-                    fit: BoxFit.contain,
+                    fit:
+                        BoxFit.contain,
                   ),
 
-                  const SizedBox(width: 8),
+                  const SizedBox(
+                    width: 8,
+                  ),
 
                   Text(
                     "$privateIslandGemCost",
                     style:
                         const TextStyle(
-                      color: Colors.amber,
+                      color:
+                          Colors.amber,
                       fontSize: 28,
                       fontWeight:
                           FontWeight.bold,
@@ -1138,13 +1554,16 @@ class _WorldMapScreenState
                 ],
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(
+                height: 12,
+              ),
 
               Text(
                 "رصيدك الحالي: $gems 💎",
                 style:
                     const TextStyle(
-                  color: Colors.white70,
+                  color:
+                      Colors.white70,
                   fontSize: 16,
                 ),
               ),
@@ -1159,8 +1578,10 @@ class _WorldMapScreenState
               },
               child: const Text(
                 "إلغاء",
-                style: TextStyle(
-                  color: Colors.white70,
+                style:
+                    TextStyle(
+                  color:
+                      Colors.white70,
                 ),
               ),
             ),
@@ -1173,7 +1594,8 @@ class _WorldMapScreenState
                 "شراء وفتح",
               ),
               style:
-                  ElevatedButton.styleFrom(
+                  ElevatedButton
+                      .styleFrom(
                 backgroundColor:
                     Colors.amber,
                 foregroundColor:
@@ -1208,49 +1630,68 @@ class _WorldMapScreenState
     }
 
     setState(() {
-      unlockingPrivateIsland = true;
+      unlockingPrivateIsland =
+          true;
     });
+
+    // ------------------------------------------------------------
+    // النظام المركزي هو المسؤول عن الخصم والفتح
+    // ------------------------------------------------------------
 
     final paid =
         await PuzzleProgressManager
-            .spendGems(
-      privateIslandGemCost,
-    );
+            .buyPrivateIslandWithGems();
 
     if (!paid) {
-      if (mounted) {
-        setState(() {
-          unlockingPrivateIsland = false;
-        });
+      if (!mounted) return;
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
-          SnackBar(
-            content: Text(
-              "لا تملك $privateIslandGemCost 💎 لفتح الجزيرة الخاصة.",
-            ),
+      setState(() {
+        unlockingPrivateIsland =
+            false;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        SnackBar(
+          content: Text(
+            "لا تملك $privateIslandGemCost 💎 لفتح الجزيرة الخاصة.",
           ),
-        );
-      }
+        ),
+      );
 
       return;
     }
 
-    await unlockPrivateIsland();
-
     if (!mounted) return;
 
-    Navigator.pop(
-      dialogContext,
-    );
-
     setState(() {
-      unlockingPrivateIsland = false;
+      privateIslandUnlocked =
+          true;
+      unlockingPrivateIsland =
+          false;
     });
 
+    if (dialogContext.mounted) {
+      Navigator.pop(
+        dialogContext,
+      );
+    }
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(
+      const SnackBar(
+        content: Text(
+          "🏝️ تم فتح جزيرتك الخاصة!",
+        ),
+      ),
+    );
+
     await Future.delayed(
-      const Duration(milliseconds: 300),
+      const Duration(
+        milliseconds: 500,
+      ),
     );
 
     if (!mounted) return;
