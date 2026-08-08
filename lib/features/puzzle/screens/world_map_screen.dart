@@ -1089,8 +1089,7 @@ class _WorldMapScreenState
     PuzzleModel island,
   ) async {
     final requiredAds =
-        PuzzleProgressManager
-            .getIslandRequiredAds(
+        getIslandRequiredAds(
       island.id,
     );
 
@@ -1101,13 +1100,20 @@ class _WorldMapScreenState
     if (!mounted) return;
 
     if (currentAds >= requiredAds) {
-      final unlocked =
+      final paid =
           await PuzzleProgressManager
-              .unlockIslandWithAds(
-        island.id,
+              .spendAdsBalance(
+        requiredAds,
       );
 
-      if (unlocked) {
+      if (paid) {
+        await PuzzleProgressManager
+            .unlockIsland(
+          island.id,
+        );
+
+        if (!mounted) return;
+
         setState(() {
           islandUnlocked[
               island.id] = true;
@@ -1389,7 +1395,7 @@ class _WorldMapScreenState
 
     setDialogState(() {});
 
-    await AdsManager()
+    AdsManager()
         .showRewardedAd(
       onRewardEarned: () async {
         final balance =
@@ -1397,19 +1403,23 @@ class _WorldMapScreenState
                 .getAdsBalance();
 
         final required =
-            PuzzleProgressManager
-                .getIslandRequiredAds(
+            getIslandRequiredAds(
           island.id,
         );
 
         if (balance >= required) {
-          final unlocked =
+          final paid =
               await PuzzleProgressManager
-                  .unlockIslandWithAds(
-            island.id,
+                  .spendAdsBalance(
+            required,
           );
 
-          if (unlocked) {
+          if (paid) {
+            await PuzzleProgressManager
+                .unlockIsland(
+              island.id,
+            );
+
             islandUnlocked[
                 island.id] = true;
 
