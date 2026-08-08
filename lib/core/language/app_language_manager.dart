@@ -1,13 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// ============================================================
+/// 🌐 App Language Manager
+///
+/// مسؤول عن لغة التطبيق بالكامل.
+/// اللغة يمكن تغييرها من WorldMapScreen فقط.
+/// عند تغييرها يتم تحديث التطبيق بالكامل.
+/// ============================================================
+
 class AppLanguageManager {
-  static const String _languageKey = 'app_language';
+  AppLanguageManager._internal();
 
   static final AppLanguageManager instance =
       AppLanguageManager._internal();
 
-  AppLanguageManager._internal();
+  // ============================================================
+  // 💾 مفتاح حفظ اللغة
+  // ============================================================
+
+  static const String _languageKey = 'app_language';
 
   // ============================================================
   // 🌐 اللغة الحالية
@@ -18,12 +30,17 @@ class AppLanguageManager {
     const Locale('ar'),
   );
 
+  Locale get locale => localeNotifier.value;
+
   // ============================================================
-  // 🇦🇪 هل اللغة عربية؟
+  // 🔤 اللغة
   // ============================================================
 
   bool get isArabic =>
-      localeNotifier.value.languageCode == 'ar';
+      locale.languageCode == 'ar';
+
+  bool get isEnglish =>
+      locale.languageCode == 'en';
 
   // ============================================================
   // 🧭 اتجاه التطبيق
@@ -35,7 +52,7 @@ class AppLanguageManager {
           : TextDirection.ltr;
 
   // ============================================================
-  // 📥 تحميل اللغة المحفوظة
+  // 🚀 تحميل اللغة المحفوظة
   // ============================================================
 
   Future<void> load() async {
@@ -49,9 +66,26 @@ class AppLanguageManager {
       localeNotifier.value =
           const Locale('en');
     } else {
+      // العربية هي اللغة الافتراضية
       localeNotifier.value =
           const Locale('ar');
     }
+  }
+
+  // ============================================================
+  // 🇸🇦 اختيار العربية
+  // ============================================================
+
+  Future<void> setArabic() async {
+    await setLanguage('ar');
+  }
+
+  // ============================================================
+  // 🇬🇧 اختيار الإنجليزية
+  // ============================================================
+
+  Future<void> setEnglish() async {
+    await setLanguage('en');
   }
 
   // ============================================================
@@ -61,16 +95,25 @@ class AppLanguageManager {
   Future<void> setLanguage(
     String languageCode,
   ) async {
-    final language =
+    final String language =
         languageCode == 'en'
             ? 'en'
             : 'ar';
 
-    final locale =
+    final Locale newLocale =
         Locale(language);
 
-    localeNotifier.value = locale;
+    // لا نعيد التحديث إذا كانت اللغة نفسها
+    if (localeNotifier.value.languageCode ==
+        language) {
+      return;
+    }
 
+    // تحديث التطبيق مباشرة
+    localeNotifier.value =
+        newLocale;
+
+    // حفظ اللغة
     final prefs =
         await SharedPreferences.getInstance();
 
@@ -86,9 +129,20 @@ class AppLanguageManager {
 
   Future<void> toggleLanguage() async {
     if (isArabic) {
-      await setLanguage('en');
+      await setEnglish();
     } else {
-      await setLanguage('ar');
+      await setArabic();
     }
+  }
+
+  // ============================================================
+  // 📝 ترجمة بسيطة داخل الشاشات
+  // ============================================================
+
+  String text({
+    required String ar,
+    required String en,
+  }) {
+    return isArabic ? ar : en;
   }
 }
