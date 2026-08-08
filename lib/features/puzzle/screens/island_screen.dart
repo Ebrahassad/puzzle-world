@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../core/app_language_manager.dart';
+
 import '../data/island_background_data.dart';
 import '../data/puzzle_level_data.dart';
 
@@ -28,6 +30,23 @@ class IslandScreen extends StatefulWidget {
 
 class _IslandScreenState extends State<IslandScreen>
     with TickerProviderStateMixin {
+  // ============================================================
+  // 🌐 نظام اللغة
+  // ============================================================
+
+  final AppLanguageManager languageManager =
+      AppLanguageManager.instance;
+
+  String _text({
+    required String ar,
+    required String en,
+  }) {
+    return languageManager.text(
+      ar: ar,
+      en: en,
+    );
+  }
+
   // ============================================================
   // 🌍 أبعاد العالم
   // ============================================================
@@ -84,10 +103,7 @@ class _IslandScreenState extends State<IslandScreen>
     Offset(0.33, 0.46), // 6
     Offset(0.60, 0.37), // 7
     Offset(0.35, 0.28), // 8
-
-    // المرحلة 9 تم تنزيلها قليلاً
     Offset(0.56, 0.22), // 9
-
     Offset(0.50, 0.10), // 10
   ];
 
@@ -98,6 +114,10 @@ class _IslandScreenState extends State<IslandScreen>
   @override
   void initState() {
     super.initState();
+
+    languageManager.localeNotifier.addListener(
+      _onLanguageChanged,
+    );
 
     levels = PuzzleLevelData.getLevels(
       widget.island.id,
@@ -134,8 +154,6 @@ class _IslandScreenState extends State<IslandScreen>
 
     // ------------------------------------------------------------
     // ✨ حركة الأيقونات
-    //
-    // نفس فكرة الحركة النابضة الخفيفة المستخدمة مع المحفظة.
     // ------------------------------------------------------------
 
     _uiGlowController = AnimationController(
@@ -145,11 +163,27 @@ class _IslandScreenState extends State<IslandScreen>
   }
 
   // ============================================================
+  // 🌐 عند تغيير اللغة
+  // ============================================================
+
+  void _onLanguageChanged() {
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {});
+  }
+
+  // ============================================================
   // 🧹 DISPOSE
   // ============================================================
 
   @override
   void dispose() {
+    languageManager.localeNotifier.removeListener(
+      _onLanguageChanged,
+    );
+
     worldController.dispose();
     _uiGlowController.dispose();
 
@@ -161,27 +195,22 @@ class _IslandScreenState extends State<IslandScreen>
   // ============================================================
 
   int getRequiredAds(int levelNumber) {
-    // المرحلة الأولى مفتوحة.
     if (levelNumber <= 1) {
       return 0;
     }
 
-    // 2 - 5
     if (levelNumber <= 5) {
       return adsForLevels2To5;
     }
 
-    // 6 - 10
     if (levelNumber <= 10) {
       return adsForLevels6To10;
     }
 
-    // 11 - 15
     if (levelNumber <= 15) {
       return adsForLevels11To15;
     }
 
-    // 16+
     return adsForAdvancedLevels;
   }
 
@@ -233,8 +262,6 @@ class _IslandScreenState extends State<IslandScreen>
         previousLevelKey,
       );
 
-      // إذا أنهى اللاعب المرحلة السابقة
-      // نفتح الحالية مباشرة.
       if (previousCompleted) {
         await PuzzleProgressManager.unlockLevel(
           levelKey,
@@ -312,8 +339,10 @@ class _IslandScreenState extends State<IslandScreen>
         return AlertDialog(
           backgroundColor:
               const Color(0xFF2A1B3D),
+
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius:
+                BorderRadius.circular(22),
           ),
 
           // =====================================================
@@ -342,12 +371,16 @@ class _IslandScreenState extends State<IslandScreen>
 
               const SizedBox(width: 10),
 
-              const Expanded(
+              Expanded(
                 child: Text(
-                  "المرحلة مغلقة",
-                  style: TextStyle(
+                  _text(
+                    ar: "المرحلة مغلقة",
+                    en: "Level Locked",
+                  ),
+                  style: const TextStyle(
                     color: Colors.amber,
-                    fontWeight: FontWeight.bold,
+                    fontWeight:
+                        FontWeight.bold,
                     fontSize: 20,
                   ),
                 ),
@@ -360,24 +393,34 @@ class _IslandScreenState extends State<IslandScreen>
           // =====================================================
 
           content: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize:
+                MainAxisSize.min,
             children: [
               Text(
-                "المرحلة ${level.levelNumber}",
-                textAlign: TextAlign.center,
+                _text(
+                  ar: "المرحلة ${level.levelNumber}",
+                  en: "Level ${level.levelNumber}",
+                ),
+                textAlign:
+                    TextAlign.center,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 19,
-                  fontWeight: FontWeight.bold,
+                  fontWeight:
+                      FontWeight.bold,
                 ),
               ),
 
               const SizedBox(height: 14),
 
-              const Text(
-                "شاهد إعلانات للحصول على رصيد مشاهدة وفتح هذه المرحلة.",
-                textAlign: TextAlign.center,
-                style: TextStyle(
+              Text(
+                _text(
+                  ar: "شاهد إعلانات للحصول على رصيد مشاهدة وفتح هذه المرحلة.",
+                  en: "Watch ads to earn viewing credits and unlock this level.",
+                ),
+                textAlign:
+                    TextAlign.center,
+                style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 15,
                 ),
@@ -403,21 +446,28 @@ class _IslandScreenState extends State<IslandScreen>
 
                   Text(
                     "$requiredAds",
-                    style: const TextStyle(
+                    style:
+                        const TextStyle(
                       color: Colors.amber,
                       fontSize: 30,
-                      fontWeight: FontWeight.bold,
+                      fontWeight:
+                          FontWeight.bold,
                     ),
                   ),
 
                   const SizedBox(width: 6),
 
-                  const Text(
-                    "مشاهدة",
-                    style: TextStyle(
+                  Text(
+                    _text(
+                      ar: "مشاهدة",
+                      en: "views",
+                    ),
+                    style:
+                        const TextStyle(
                       color: Colors.white,
                       fontSize: 17,
-                      fontWeight: FontWeight.bold,
+                      fontWeight:
+                          FontWeight.bold,
                     ),
                   ),
                 ],
@@ -430,17 +480,29 @@ class _IslandScreenState extends State<IslandScreen>
               // =================================================
 
               Container(
-                padding: const EdgeInsets.symmetric(
+                padding:
+                    const EdgeInsets.symmetric(
                   horizontal: 18,
                   vertical: 12,
                 ),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.20),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: Colors.amber.withOpacity(0.35),
+
+                decoration:
+                    BoxDecoration(
+                  color:
+                      Colors.black.withOpacity(
+                    0.20,
+                  ),
+                  borderRadius:
+                      BorderRadius.circular(
+                    14,
+                  ),
+                  border:
+                      Border.all(
+                    color: Colors.amber
+                        .withOpacity(0.35),
                   ),
                 ),
+
                 child: Row(
                   mainAxisAlignment:
                       MainAxisAlignment.center,
@@ -455,10 +517,12 @@ class _IslandScreenState extends State<IslandScreen>
 
                     Text(
                       "$balance / $requiredAds",
-                      style: const TextStyle(
+                      style:
+                          const TextStyle(
                         color: Colors.white,
                         fontSize: 19,
-                        fontWeight: FontWeight.bold,
+                        fontWeight:
+                            FontWeight.bold,
                       ),
                     ),
                   ],
@@ -469,15 +533,24 @@ class _IslandScreenState extends State<IslandScreen>
 
               Text(
                 balance >= requiredAds
-                    ? "يمكنك فتح المرحلة الآن."
-                    : "المتبقي: ${requiredAds - balance} مشاهدة",
-                textAlign: TextAlign.center,
+                    ? _text(
+                        ar: "يمكنك فتح المرحلة الآن.",
+                        en: "You can unlock this level now.",
+                      )
+                    : _text(
+                        ar: "المتبقي: ${requiredAds - balance} مشاهدة",
+                        en: "Remaining: ${requiredAds - balance} views",
+                      ),
+                textAlign:
+                    TextAlign.center,
                 style: TextStyle(
-                  color: balance >= requiredAds
-                      ? Colors.greenAccent
-                      : Colors.white70,
+                  color:
+                      balance >= requiredAds
+                          ? Colors.greenAccent
+                          : Colors.white70,
                   fontSize: 14,
-                  fontWeight: FontWeight.bold,
+                  fontWeight:
+                      FontWeight.bold,
                 ),
               ),
             ],
@@ -490,11 +563,17 @@ class _IslandScreenState extends State<IslandScreen>
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(dialogContext);
+                Navigator.pop(
+                  dialogContext,
+                );
               },
-              child: const Text(
-                "إلغاء",
-                style: TextStyle(
+              child: Text(
+                _text(
+                  ar: "إلغاء",
+                  en: "Cancel",
+                ),
+                style:
+                    const TextStyle(
                   color: Colors.white70,
                 ),
               ),
@@ -508,20 +587,38 @@ class _IslandScreenState extends State<IslandScreen>
               icon: const Icon(
                 Icons.ondemand_video,
               ),
+
               label: Text(
                 balance >= requiredAds
-                    ? "فتح المرحلة"
-                    : "مشاهدة إعلان",
+                    ? _text(
+                        ar: "فتح المرحلة",
+                        en: "Unlock Level",
+                      )
+                    : _text(
+                        ar: "مشاهدة إعلان",
+                        en: "Watch Ad",
+                      ),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber,
+
+              style:
+                  ElevatedButton.styleFrom(
+                backgroundColor:
+                    Colors.amber,
+
                 foregroundColor:
-                    const Color(0xFF1A0B2E),
-                shape: RoundedRectangleBorder(
+                    const Color(
+                  0xFF1A0B2E,
+                ),
+
+                shape:
+                    RoundedRectangleBorder(
                   borderRadius:
-                      BorderRadius.circular(12),
+                      BorderRadius.circular(
+                    12,
+                  ),
                 ),
               ),
+
               onPressed: openingAd
                   ? null
                   : () async {
@@ -555,35 +652,47 @@ class _IslandScreenState extends State<IslandScreen>
     );
 
     final currentBalance =
-        await PuzzleProgressManager.getAdsBalance();
+        await PuzzleProgressManager
+            .getAdsBalance();
 
     // ==========================================================
     // 🔓 إذا كان الرصيد كافياً
     // ==========================================================
 
     if (currentBalance >= requiredAds) {
-      await PuzzleProgressManager.unlockLevel(
-        getLevelKey(level.levelNumber),
+      await PuzzleProgressManager
+          .unlockLevel(
+        getLevelKey(
+          level.levelNumber,
+        ),
       );
 
       if (!mounted) {
         return;
       }
 
-      Navigator.pop(dialogContext);
+      Navigator.pop(
+        dialogContext,
+      );
 
       setState(() {});
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        SnackBar(
           content: Text(
-            "🎉 تم فتح المرحلة!",
+            _text(
+              ar: "🎉 تم فتح المرحلة!",
+              en: "🎉 Level unlocked!",
+            ),
           ),
         ),
       );
 
       await Future.delayed(
-        const Duration(milliseconds: 400),
+        const Duration(
+          milliseconds: 400,
+        ),
       );
 
       if (!mounted) {
@@ -591,6 +700,7 @@ class _IslandScreenState extends State<IslandScreen>
       }
 
       await openPuzzle(level);
+
       return;
     }
 
@@ -602,9 +712,10 @@ class _IslandScreenState extends State<IslandScreen>
       openingAd = true;
     });
 
-    // نغلق نافذة الشراء قبل عرض الإعلان.
     if (dialogContext.mounted) {
-      Navigator.pop(dialogContext);
+      Navigator.pop(
+        dialogContext,
+      );
     }
 
     AdsManager().showRewardedAd(
@@ -613,10 +724,12 @@ class _IslandScreenState extends State<IslandScreen>
         // ➕ إضافة مشاهدة واحدة إلى الرصيد
         // ======================================================
 
-        await PuzzleProgressManager.addAdsBalance(1);
+        await PuzzleProgressManager
+            .addAdsBalance(1);
 
         final balance =
-            await PuzzleProgressManager.getAdsBalance();
+            await PuzzleProgressManager
+                .getAdsBalance();
 
         final required =
             getRequiredAds(
@@ -628,8 +741,11 @@ class _IslandScreenState extends State<IslandScreen>
         // ======================================================
 
         if (balance >= required) {
-          await PuzzleProgressManager.unlockLevel(
-            getLevelKey(level.levelNumber),
+          await PuzzleProgressManager
+              .unlockLevel(
+            getLevelKey(
+              level.levelNumber,
+            ),
           );
 
           if (mounted) {
@@ -637,16 +753,22 @@ class _IslandScreenState extends State<IslandScreen>
               openingAd = false;
             });
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
+            ScaffoldMessenger.of(context)
+                .showSnackBar(
+              SnackBar(
                 content: Text(
-                  "🎉 تم فتح المرحلة!",
+                  _text(
+                    ar: "🎉 تم فتح المرحلة!",
+                    en: "🎉 Level unlocked!",
+                  ),
                 ),
               ),
             );
 
             await Future.delayed(
-              const Duration(milliseconds: 500),
+              const Duration(
+                milliseconds: 500,
+              ),
             );
 
             if (!mounted) {
@@ -671,12 +793,20 @@ class _IslandScreenState extends State<IslandScreen>
           final remaining =
               required - balance;
 
-          ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context)
+              .showSnackBar(
             SnackBar(
               content: Text(
-                "📺 تمت إضافة مشاهدة!\n"
-                "الرصيد: $balance / $required\n"
-                "المتبقي: $remaining مشاهدة",
+                _text(
+                  ar:
+                      "📺 تمت إضافة مشاهدة!\n"
+                      "الرصيد: $balance / $required\n"
+                      "المتبقي: $remaining مشاهدة",
+                  en:
+                      "📺 View added!\n"
+                      "Balance: $balance / $required\n"
+                      "Remaining: $remaining views",
+                ),
               ),
             ),
           );
@@ -692,10 +822,14 @@ class _IslandScreenState extends State<IslandScreen>
           openingAd = false;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
+          SnackBar(
             content: Text(
-              "⚠️ تعذر عرض الإعلان. حاول مرة أخرى.",
+              _text(
+                ar: "⚠️ تعذر عرض الإعلان. حاول مرة أخرى.",
+                en: "⚠️ Unable to show the ad. Please try again.",
+              ),
             ),
           ),
         );
@@ -717,7 +851,8 @@ class _IslandScreenState extends State<IslandScreen>
     );
 
     return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+      behavior:
+          HitTestBehavior.opaque,
 
       onTap: () async {
         await openLevel(level);
@@ -728,12 +863,21 @@ class _IslandScreenState extends State<IslandScreen>
         height: size,
 
         child: DecoratedBox(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
+          decoration:
+              BoxDecoration(
+            shape:
+                BoxShape.circle,
+
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.35),
-                blurRadius: size * 0.10,
+                color: Colors.black
+                    .withOpacity(
+                  0.35,
+                ),
+
+                blurRadius:
+                    size * 0.10,
+
                 offset: Offset(
                   0,
                   size * 0.05,
@@ -743,17 +887,12 @@ class _IslandScreenState extends State<IslandScreen>
           ),
 
           child: Stack(
-            alignment: Alignment.center,
+            alignment:
+                Alignment.center,
 
             children: [
               // =================================================
               // 🔒 قفل المرحلة
-              //
-              // مهم:
-              // قفل المراحل مختلف عن قفل الجزر.
-              //
-              // مغلقة  -> lock_close.png
-              // مفتوحة  -> lock_open.png
               // =================================================
 
               FutureBuilder<bool>(
@@ -768,14 +907,16 @@ class _IslandScreenState extends State<IslandScreen>
                   snapshot,
                 ) {
                   final unlocked =
-                      snapshot.data ?? false;
+                      snapshot.data ??
+                          false;
 
                   return Image.asset(
                     unlocked
                         ? "assets/images/ui/lock_open.png"
                         : "assets/images/ui/lock_close.png",
 
-                    fit: BoxFit.contain,
+                    fit:
+                        BoxFit.contain,
 
                     errorBuilder: (
                       context,
@@ -786,10 +927,14 @@ class _IslandScreenState extends State<IslandScreen>
                         unlocked
                             ? Icons.lock_open
                             : Icons.lock,
+
                         color: unlocked
-                            ? Colors.greenAccent
+                            ? Colors
+                                .greenAccent
                             : Colors.amber,
-                        size: size * 0.55,
+
+                        size:
+                            size * 0.55,
                       );
                     },
                   );
@@ -805,16 +950,29 @@ class _IslandScreenState extends State<IslandScreen>
                   child: Text(
                     "${level.levelNumber}",
 
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: size * 0.28,
-                      fontWeight: FontWeight.w900,
+                    style:
+                        TextStyle(
+                      color:
+                          Colors.white,
 
-                      shadows: const [
+                      fontSize:
+                          size * 0.28,
+
+                      fontWeight:
+                          FontWeight.w900,
+
+                      shadows:
+                          const [
                         Shadow(
-                          color: Colors.black,
-                          blurRadius: 5,
-                          offset: Offset(1, 2),
+                          color:
+                              Colors.black,
+                          blurRadius:
+                              5,
+                          offset:
+                              Offset(
+                            1,
+                            2,
+                          ),
                         ),
                       ],
                     ),
@@ -851,9 +1009,11 @@ class _IslandScreenState extends State<IslandScreen>
 
       boxShadow: [
         BoxShadow(
-          color: Colors.amber.withOpacity(
+          color: Colors.amber
+              .withOpacity(
             glowStrength,
           ),
+
           blurRadius: 16,
           spreadRadius: 4,
         ),
@@ -904,10 +1064,14 @@ class _IslandScreenState extends State<IslandScreen>
                 worldHeight * scale;
 
             final double dx =
-                (screenWidth - scaledWidth) / 2;
+                (screenWidth -
+                        scaledWidth) /
+                    2;
 
             final double dy =
-                (screenHeight - scaledHeight) / 2;
+                (screenHeight -
+                        scaledHeight) /
+                    2;
 
             final double levelButtonSize =
                 (80 / scale).clamp(
@@ -928,16 +1092,22 @@ class _IslandScreenState extends State<IslandScreen>
                         left: dx,
                         top: dy,
 
-                        child: Transform.scale(
+                        child:
+                            Transform.scale(
                           scale: scale,
+
                           alignment:
                               Alignment.topLeft,
 
                           child: SizedBox(
-                            width: worldWidth,
-                            height: worldHeight,
+                            width:
+                                worldWidth,
 
-                            child: AnimatedBuilder(
+                            height:
+                                worldHeight,
+
+                            child:
+                                AnimatedBuilder(
                               animation:
                                   worldController,
 
@@ -945,8 +1115,10 @@ class _IslandScreenState extends State<IslandScreen>
                                 context,
                                 child,
                               ) {
-                                return Transform.translate(
-                                  offset: Offset(
+                                return Transform
+                                    .translate(
+                                  offset:
+                                      Offset(
                                     0,
                                     worldTranslateY
                                         .value,
@@ -955,17 +1127,26 @@ class _IslandScreenState extends State<IslandScreen>
                                   child:
                                       Transform.scale(
                                     scale:
-                                        worldScale.value,
+                                        worldScale
+                                            .value,
+
                                     alignment:
-                                        Alignment.center,
-                                    child: child,
+                                        Alignment
+                                            .center,
+
+                                    child:
+                                        child,
                                   ),
                                 );
                               },
 
-                              child: SizedBox(
-                                width: worldWidth,
-                                height: worldHeight,
+                              child:
+                                  SizedBox(
+                                width:
+                                    worldWidth,
+
+                                height:
+                                    worldHeight,
 
                                 child: Stack(
                                   clipBehavior:
@@ -977,7 +1158,8 @@ class _IslandScreenState extends State<IslandScreen>
                                     // =================================
 
                                     Positioned.fill(
-                                      child: Opacity(
+                                      child:
+                                          Opacity(
                                         opacity:
                                             islandBackgroundOpacity,
 
@@ -989,7 +1171,10 @@ class _IslandScreenState extends State<IslandScreen>
                                                 .island
                                                 .id,
                                           ),
-                                          fit: BoxFit.cover,
+
+                                          fit:
+                                              BoxFit.cover,
+
                                           errorBuilder: (
                                             context,
                                             error,
@@ -1008,12 +1193,17 @@ class _IslandScreenState extends State<IslandScreen>
 
                                     Positioned(
                                       left: 0,
-                                      top: islandAreaTop,
-                                      width: worldWidth,
+                                      top:
+                                          islandAreaTop,
+
+                                      width:
+                                          worldWidth,
+
                                       height:
                                           islandAreaHeight,
 
-                                      child: Opacity(
+                                      child:
+                                          Opacity(
                                         opacity:
                                             islandImageOpacity,
 
@@ -1022,11 +1212,14 @@ class _IslandScreenState extends State<IslandScreen>
                                           widget
                                               .island
                                               .image,
-                                          fit: BoxFit
-                                              .contain,
+
+                                          fit:
+                                              BoxFit.contain,
+
                                           alignment:
                                               Alignment
                                                   .center,
+
                                           errorBuilder: (
                                             context,
                                             error,
@@ -1098,8 +1291,10 @@ class _IslandScreenState extends State<IslandScreen>
                   top: 20,
                   left: 20,
 
-                  child: AnimatedBuilder(
-                    animation: _uiGlowController,
+                  child:
+                      AnimatedBuilder(
+                    animation:
+                        _uiGlowController,
 
                     builder: (
                       context,
@@ -1111,25 +1306,32 @@ class _IslandScreenState extends State<IslandScreen>
 
                         child:
                             Transform.scale(
-                          scale: _uiPulseScale,
+                          scale:
+                              _uiPulseScale,
 
                           child: child,
                         ),
                       );
                     },
 
-                    child: GestureDetector(
+                    child:
+                        GestureDetector(
                       onTap: () {
-                        Navigator.pop(context);
+                        Navigator.pop(
+                          context,
+                        );
                       },
 
                       child: SizedBox(
                         width: 56,
                         height: 56,
 
-                        child: Image.asset(
+                        child:
+                            Image.asset(
                           "assets/images/ui/back_screen.png",
-                          fit: BoxFit.contain,
+
+                          fit:
+                              BoxFit.contain,
 
                           errorBuilder: (
                             context,
@@ -1138,7 +1340,8 @@ class _IslandScreenState extends State<IslandScreen>
                           ) {
                             return const Icon(
                               Icons.arrow_back,
-                              color: Colors.white,
+                              color:
+                                  Colors.white,
                               size: 42,
                             );
                           },
@@ -1156,8 +1359,10 @@ class _IslandScreenState extends State<IslandScreen>
                   bottom: 20,
                   left: 20,
 
-                  child: AnimatedBuilder(
-                    animation: _uiGlowController,
+                  child:
+                      AnimatedBuilder(
+                    animation:
+                        _uiGlowController,
 
                     builder: (
                       context,
@@ -1169,14 +1374,16 @@ class _IslandScreenState extends State<IslandScreen>
 
                         child:
                             Transform.scale(
-                          scale: _uiPulseScale,
+                          scale:
+                              _uiPulseScale,
 
                           child: child,
                         ),
                       );
                     },
 
-                    child: const WalletIconWidget(),
+                    child:
+                        const WalletIconWidget(),
                   ),
                 ),
 
@@ -1188,7 +1395,8 @@ class _IslandScreenState extends State<IslandScreen>
                   Positioned.fill(
                     child:
                         IgnorePointer(
-                      child: Container(
+                      child:
+                          Container(
                         color: Colors.black
                             .withOpacity(
                           0.30,
