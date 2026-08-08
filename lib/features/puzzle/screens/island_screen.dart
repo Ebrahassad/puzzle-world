@@ -12,7 +12,6 @@ import '../models/puzzle_level_model.dart';
 import '../widgets/wallet_icon_widget.dart';
 
 import '../managers/puzzle_progress_manager.dart';
-import '../managers/ads_manager.dart';
 
 import 'puzzle_game_screen.dart';
 
@@ -61,24 +60,19 @@ class _IslandScreenState extends State<IslandScreen>
   static const double islandImageOpacity = 0.65;
 
   // ============================================================
-  // 📺 نظام إعلانات فتح المراحل
+  // 🪙 صورة العملة
   // ============================================================
 
-  // المرحلة 1 مفتوحة تلقائياً.
-  //
-  // المراحل 2 - 5  = 5 إعلانات
-  // المراحل 6 - 10 = 10 إعلانات
-  // المراحل 11 - 15 = 15 إعلان
-  // المراحل 16 وما فوق = 20 إعلان
+  static const String coinAsset =
+      "assets/images/rewards/puzzle_coin.png";
 
-  static const int adsForLevels2To5 = 5;
-  static const int adsForLevels6To10 = 10;
-  static const int adsForLevels11To15 = 15;
-  static const int adsForAdvancedLevels = 20;
+  // ============================================================
+  // 📦 البيانات
+  // ============================================================
 
   late final List<PuzzleLevelModel> levels;
 
-  bool openingAd = false;
+  bool purchasingLevel = false;
 
   late final AnimationController worldController;
   late final Animation<double> worldScale;
@@ -123,10 +117,6 @@ class _IslandScreenState extends State<IslandScreen>
       widget.island.id,
     );
 
-    // ------------------------------------------------------------
-    // 🌍 حركة العالم
-    // ------------------------------------------------------------
-
     worldController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 12),
@@ -152,10 +142,6 @@ class _IslandScreenState extends State<IslandScreen>
       ),
     );
 
-    // ------------------------------------------------------------
-    // ✨ حركة الأيقونات
-    // ------------------------------------------------------------
-
     _uiGlowController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1800),
@@ -163,7 +149,7 @@ class _IslandScreenState extends State<IslandScreen>
   }
 
   // ============================================================
-  // 🌐 عند تغيير اللغة
+  // 🌐 تغيير اللغة
   // ============================================================
 
   void _onLanguageChanged() {
@@ -191,27 +177,28 @@ class _IslandScreenState extends State<IslandScreen>
   }
 
   // ============================================================
-  // 📺 عدد الإعلانات المطلوبة لفتح المرحلة
+  // 🪙 سعر المرحلة
+  // ============================================================
+  //
+  // الأسعار مصدرها PuzzleProgressManager
+  // حتى لا يكون لدينا نظامان مختلفان للأسعار.
+  //
+  // 1  = مجاني
+  // 2  = 75
+  // 3  = 150
+  // 4  = 250
+  // 5  = 350
+  // 6  = 450
+  // 7  = 600
+  // 8  = 750
+  // 9  = 875
+  // 10 = 1000
   // ============================================================
 
-  int getRequiredAds(int levelNumber) {
-    if (levelNumber <= 1) {
-      return 0;
-    }
-
-    if (levelNumber <= 5) {
-      return adsForLevels2To5;
-    }
-
-    if (levelNumber <= 10) {
-      return adsForLevels6To10;
-    }
-
-    if (levelNumber <= 15) {
-      return adsForLevels11To15;
-    }
-
-    return adsForAdvancedLevels;
+  int getLevelCoinCost(int levelNumber) {
+    return PuzzleProgressManager.getLevelCoinCost(
+      levelNumber,
+    );
   }
 
   // ============================================================
@@ -225,16 +212,33 @@ class _IslandScreenState extends State<IslandScreen>
   // ============================================================
   // 🎮 فتح المرحلة
   // ============================================================
+  //
+  // النظام:
+  //
+  // 1️⃣ إذا كانت المرحلة مفتوحة بالفعل → دخول مباشر.
+  //
+  // 2️⃣ إذا لم تكن مفتوحة:
+  //    نتحقق هل المرحلة السابقة مكتملة.
+  //
+  //    نعم → فتح مجاني + دخول.
+  //
+  //    لا → عرض نافذة الشراء.
+  //
+  // 🪙 الشراء لا يعتمد على ترتيب المراحل.
+  // يستطيع اللاعب شراء المرحلة 10 مثلاً مباشرة.
+  // ============================================================
 
   Future<void> openLevel(
     PuzzleLevelModel level,
   ) async {
+    final levelNumber = level.levelNumber;
+
     final levelKey = getLevelKey(
-      level.levelNumber,
+      levelNumber,
     );
 
     // ==========================================================
-    // 🔓 فحص الفتح
+    // 🔓 مفتوحة بالفعل
     // ==========================================================
 
     final unlocked =
@@ -248,13 +252,12 @@ class _IslandScreenState extends State<IslandScreen>
     }
 
     // ==========================================================
-    // 🏆 فحص المرحلة السابقة
+    // 🆓 محاولة الفتح المجاني بإكمال المرحلة السابقة
     // ==========================================================
 
-    if (level.levelNumber > 1) {
-      final previousLevelKey =
-          getLevelKey(
-        level.levelNumber - 1,
+    if (levelNumber > 1) {
+      final previousLevelKey = getLevelKey(
+        levelNumber - 1,
       );
 
       final previousCompleted =
@@ -279,10 +282,10 @@ class _IslandScreenState extends State<IslandScreen>
     }
 
     // ==========================================================
-    // 📺 المرحلة لا تزال مغلقة
+    // 🪙 المرحلة مغلقة ويمكن شراؤها مباشرة
     // ==========================================================
 
-    await showUnlockDialog(level);
+    await showPurchaseDialog(level);
   }
 
   // ============================================================
@@ -314,39 +317,38 @@ class _IslandScreenState extends State<IslandScreen>
   }
 
   // ============================================================
-  // 🔒 نافذة فتح المرحلة
+  // 🪙 نافذة شراء المرحلة
   // ============================================================
 
-  Future<void> showUnlockDialog(
+  Future<void> showPurchaseDialog(
     PuzzleLevelModel level,
   ) async {
-    final requiredAds =
-        getRequiredAds(
-      level.levelNumber,
+    final levelNumber = level.levelNumber;
+
+    final cost = getLevelCoinCost(
+      levelNumber,
     );
 
     final balance =
-        await PuzzleProgressManager.getAdsBalance();
+        await PuzzleProgressManager.getCoins();
 
     if (!mounted) {
       return;
     }
 
-    showDialog(
+    await showDialog(
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor:
-              const Color(0xFF2A1B3D),
+          backgroundColor: const Color(0xFF2A1B3D),
 
           shape: RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(22),
           ),
 
           // =====================================================
-          // العنوان
+          // 🔒 العنوان
           // =====================================================
 
           title: Row(
@@ -379,8 +381,7 @@ class _IslandScreenState extends State<IslandScreen>
                   ),
                   style: const TextStyle(
                     color: Colors.amber,
-                    fontWeight:
-                        FontWeight.bold,
+                    fontWeight: FontWeight.bold,
                     fontSize: 20,
                   ),
                 ),
@@ -389,244 +390,250 @@ class _IslandScreenState extends State<IslandScreen>
           ),
 
           // =====================================================
-          // المحتوى
+          // 📋 المحتوى
           // =====================================================
 
           content: Column(
-            mainAxisSize:
-                MainAxisSize.min,
+            mainAxisSize: MainAxisSize.min,
             children: [
+              // -------------------------------------------------
+              // رقم المرحلة
+              // -------------------------------------------------
+
               Text(
                 _text(
-                  ar: "المرحلة ${level.levelNumber}",
-                  en: "Level ${level.levelNumber}",
+                  ar: "المرحلة $levelNumber",
+                  en: "Level $levelNumber",
                 ),
-                textAlign:
-                    TextAlign.center,
+                textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 19,
-                  fontWeight:
-                      FontWeight.bold,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
 
               const SizedBox(height: 14),
 
+              // -------------------------------------------------
+              // رسالة الشراء
+              // -------------------------------------------------
+
               Text(
                 _text(
-                  ar: "شاهد إعلانات للحصول على رصيد مشاهدة وفتح هذه المرحلة.",
-                  en: "Watch ads to earn viewing credits and unlock this level.",
+                  ar:
+                      "يمكنك فتح هذه المرحلة مجاناً عند إكمال المرحلة السابقة، أو شراؤها الآن بالعملات.",
+                  en:
+                      "You can unlock this level for free by completing the previous level, or purchase it now with coins.",
                 ),
-                textAlign:
-                    TextAlign.center,
+                textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 15,
+                  height: 1.45,
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 22),
 
               // =================================================
-              // 📺 المطلوب
-              // =================================================
-
-              Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.ondemand_video,
-                    color: Colors.amber,
-                    size: 34,
-                  ),
-
-                  const SizedBox(width: 8),
-
-                  Text(
-                    "$requiredAds",
-                    style:
-                        const TextStyle(
-                      color: Colors.amber,
-                      fontSize: 30,
-                      fontWeight:
-                          FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(width: 6),
-
-                  Text(
-                    _text(
-                      ar: "مشاهدة",
-                      en: "views",
-                    ),
-                    style:
-                        const TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight:
-                          FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 15),
-
-              // =================================================
-              // 📊 الرصيد
+              // 🪙 سعر المرحلة
               // =================================================
 
               Container(
-                padding:
-                    const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 12,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 14,
                 ),
-
-                decoration:
-                    BoxDecoration(
-                  color:
-                      Colors.black.withOpacity(
-                    0.20,
-                  ),
-                  borderRadius:
-                      BorderRadius.circular(
-                    14,
-                  ),
-                  border:
-                      Border.all(
-                    color: Colors.amber
-                        .withOpacity(0.35),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.20),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.amber.withOpacity(0.40),
                   ),
                 ),
-
                 child: Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
-                      Icons.video_library,
-                      color: Colors.amber,
-                      size: 25,
+                    Image.asset(
+                      coinAsset,
+                      width: 42,
+                      height: 42,
+                      fit: BoxFit.contain,
+                      errorBuilder: (
+                        context,
+                        error,
+                        stackTrace,
+                      ) {
+                        return const Icon(
+                          Icons.monetization_on,
+                          color: Colors.amber,
+                          size: 42,
+                        );
+                      },
                     ),
 
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
 
                     Text(
-                      "$balance / $requiredAds",
-                      style:
-                          const TextStyle(
-                        color: Colors.white,
-                        fontSize: 19,
-                        fontWeight:
-                            FontWeight.bold,
+                      "$cost",
+                      style: const TextStyle(
+                        color: Colors.amber,
+                        fontSize: 31,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ],
                 ),
               ),
 
+              const SizedBox(height: 17),
+
+              // =================================================
+              // 💰 رصيد اللاعب
+              // =================================================
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    coinAsset,
+                    width: 27,
+                    height: 27,
+                    fit: BoxFit.contain,
+                    errorBuilder: (
+                      context,
+                      error,
+                      stackTrace,
+                    ) {
+                      return const Icon(
+                        Icons.monetization_on,
+                        color: Colors.amber,
+                        size: 27,
+                      );
+                    },
+                  ),
+
+                  const SizedBox(width: 7),
+
+                  Text(
+                    _text(
+                      ar: "رصيدك: $balance",
+                      en: "Your balance: $balance",
+                    ),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+
               const SizedBox(height: 10),
 
+              // =================================================
+              // ⚠️ حالة الرصيد
+              // =================================================
+
               Text(
-                balance >= requiredAds
+                balance >= cost
                     ? _text(
-                        ar: "يمكنك فتح المرحلة الآن.",
-                        en: "You can unlock this level now.",
+                        ar: "لديك عملات كافية للشراء.",
+                        en:
+                            "You have enough coins to purchase this level.",
                       )
                     : _text(
-                        ar: "المتبقي: ${requiredAds - balance} مشاهدة",
-                        en: "Remaining: ${requiredAds - balance} views",
+                        ar:
+                            "تحتاج إلى ${cost - balance} عملة إضافية.",
+                        en:
+                            "You need ${cost - balance} more coins.",
                       ),
-                textAlign:
-                    TextAlign.center,
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  color:
-                      balance >= requiredAds
-                          ? Colors.greenAccent
-                          : Colors.white70,
+                  color: balance >= cost
+                      ? Colors.greenAccent
+                      : Colors.redAccent,
                   fontSize: 14,
-                  fontWeight:
-                      FontWeight.bold,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
 
           // =====================================================
-          // الأزرار
+          // 🔘 الأزرار
           // =====================================================
 
           actions: [
+            // ---------------------------------------------------
+            // إلغاء
+            // ---------------------------------------------------
+
             TextButton(
               onPressed: () {
-                Navigator.pop(
-                  dialogContext,
-                );
+                Navigator.pop(dialogContext);
               },
               child: Text(
                 _text(
                   ar: "إلغاء",
                   en: "Cancel",
                 ),
-                style:
-                    const TextStyle(
+                style: const TextStyle(
                   color: Colors.white70,
                 ),
               ),
             ),
 
-            // ===================================================
-            // 📺 مشاهدة إعلان
-            // ===================================================
+            // ---------------------------------------------------
+            // 🪙 شراء
+            // ---------------------------------------------------
 
             ElevatedButton.icon(
-              icon: const Icon(
-                Icons.ondemand_video,
+              icon: Image.asset(
+                coinAsset,
+                width: 25,
+                height: 25,
+                fit: BoxFit.contain,
+                errorBuilder: (
+                  context,
+                  error,
+                  stackTrace,
+                ) {
+                  return const Icon(
+                    Icons.monetization_on,
+                  );
+                },
               ),
 
               label: Text(
-                balance >= requiredAds
-                    ? _text(
-                        ar: "فتح المرحلة",
-                        en: "Unlock Level",
-                      )
-                    : _text(
-                        ar: "مشاهدة إعلان",
-                        en: "Watch Ad",
-                      ),
-              ),
-
-              style:
-                  ElevatedButton.styleFrom(
-                backgroundColor:
-                    Colors.amber,
-
-                foregroundColor:
-                    const Color(
-                  0xFF1A0B2E,
-                ),
-
-                shape:
-                    RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(
-                    12,
-                  ),
+                _text(
+                  ar: "شراء $cost",
+                  en: "Buy $cost",
                 ),
               ),
 
-              onPressed: openingAd
-                  ? null
-                  : () async {
-                      await handleUnlockAd(
-                        level,
-                        dialogContext,
-                      );
-                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                foregroundColor: const Color(0xFF1A0B2E),
+                disabledBackgroundColor:
+                    Colors.grey.shade700,
+                disabledForegroundColor:
+                    Colors.white54,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+
+              onPressed:
+                  purchasingLevel || balance < cost
+                      ? null
+                      : () async {
+                          await handlePurchaseLevel(
+                            level,
+                            dialogContext,
+                          );
+                        },
             ),
           ],
         );
@@ -635,206 +642,257 @@ class _IslandScreenState extends State<IslandScreen>
   }
 
   // ============================================================
-  // 📺 مشاهدة الإعلان / فتح المرحلة
+  // 🪙 تنفيذ شراء المرحلة
   // ============================================================
 
-  Future<void> handleUnlockAd(
+  Future<void> handlePurchaseLevel(
     PuzzleLevelModel level,
     BuildContext dialogContext,
   ) async {
-    if (openingAd) {
+    if (purchasingLevel) {
       return;
     }
 
-    final requiredAds =
-        getRequiredAds(
-      level.levelNumber,
+    final levelNumber = level.levelNumber;
+
+    final levelKey = getLevelKey(
+      levelNumber,
     );
 
-    final currentBalance =
-        await PuzzleProgressManager
-            .getAdsBalance();
-
     // ==========================================================
-    // 🔓 إذا كان الرصيد كافياً
+    // 🔓 المرحلة الأولى مجانية
     // ==========================================================
 
-    if (currentBalance >= requiredAds) {
-      await PuzzleProgressManager
-          .unlockLevel(
-        getLevelKey(
-          level.levelNumber,
-        ),
+    if (levelNumber <= 1) {
+      await PuzzleProgressManager.unlockLevel(
+        levelKey,
       );
 
-      if (!mounted) {
-        return;
-      }
-
-      Navigator.pop(
-        dialogContext,
-      );
-
-      setState(() {});
-
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        SnackBar(
-          content: Text(
-            _text(
-              ar: "🎉 تم فتح المرحلة!",
-              en: "🎉 Level unlocked!",
-            ),
-          ),
-        ),
-      );
-
-      await Future.delayed(
-        const Duration(
-          milliseconds: 400,
-        ),
-      );
-
-      if (!mounted) {
-        return;
+      if (dialogContext.mounted) {
+        Navigator.pop(dialogContext);
       }
 
       await openPuzzle(level);
+      return;
+    }
+
+    final cost = getLevelCoinCost(
+      levelNumber,
+    );
+
+    final balance =
+        await PuzzleProgressManager.getCoins();
+
+    // ==========================================================
+    // 💰 التحقق من الرصيد
+    // ==========================================================
+
+    if (balance < cost) {
+      if (dialogContext.mounted) {
+        Navigator.pop(dialogContext);
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF3A183F),
+          duration: const Duration(seconds: 2),
+          content: Row(
+            children: [
+              Image.asset(
+                coinAsset,
+                width: 30,
+                height: 30,
+                fit: BoxFit.contain,
+                errorBuilder: (
+                  context,
+                  error,
+                  stackTrace,
+                ) {
+                  return const Icon(
+                    Icons.monetization_on,
+                    color: Colors.amber,
+                  );
+                },
+              ),
+
+              const SizedBox(width: 10),
+
+              Expanded(
+                child: Text(
+                  _text(
+                    ar:
+                        "لا تملك عملات كافية.\n"
+                        "السعر: $cost | رصيدك: $balance",
+                    en:
+                        "Not enough coins.\n"
+                        "Price: $cost | Balance: $balance",
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
 
       return;
     }
 
     // ==========================================================
-    // 📺 بدء الإعلان
+    // 🔄 بدء الشراء
     // ==========================================================
 
     setState(() {
-      openingAd = true;
+      purchasingLevel = true;
     });
 
-    if (dialogContext.mounted) {
-      Navigator.pop(
-        dialogContext,
-      );
-    }
+    // ==========================================================
+    // 🪙 الشراء من خلال مدير التقدم
+    // ==========================================================
+    //
+    // هذه الدالة تقوم بـ:
+    //
+    // 1. التحقق من المرحلة.
+    // 2. خصم العملات.
+    // 3. فتح المرحلة.
+    // 4. حفظ المرحلة ضمن purchasedLevelsKey.
+    //
+    // لذلك لا نستدعي savePurchasedLevel().
+    // ==========================================================
 
-    AdsManager().showRewardedAd(
-      onRewardEarned: () async {
-        // ======================================================
-        // ➕ إضافة مشاهدة واحدة إلى الرصيد
-        // ======================================================
+    final purchased =
+        await PuzzleProgressManager.buyLevelWithCoins(
+      levelKey,
+      levelNumber,
+    );
 
-        await PuzzleProgressManager
-            .addAdsBalance(1);
-
-        final balance =
-            await PuzzleProgressManager
-                .getAdsBalance();
-
-        final required =
-            getRequiredAds(
-          level.levelNumber,
-        );
-
-        // ======================================================
-        // 🔓 تحقق من فتح المرحلة
-        // ======================================================
-
-        if (balance >= required) {
-          await PuzzleProgressManager
-              .unlockLevel(
-            getLevelKey(
-              level.levelNumber,
-            ),
-          );
-
-          if (mounted) {
-            setState(() {
-              openingAd = false;
-            });
-
-            ScaffoldMessenger.of(context)
-                .showSnackBar(
-              SnackBar(
-                content: Text(
-                  _text(
-                    ar: "🎉 تم فتح المرحلة!",
-                    en: "🎉 Level unlocked!",
-                  ),
-                ),
-              ),
-            );
-
-            await Future.delayed(
-              const Duration(
-                milliseconds: 500,
-              ),
-            );
-
-            if (!mounted) {
-              return;
-            }
-
-            await openPuzzle(level);
-          }
-
-          return;
-        }
-
-        // ======================================================
-        // 📊 لم يكتمل العدد بعد
-        // ======================================================
-
-        if (mounted) {
-          setState(() {
-            openingAd = false;
-          });
-
-          final remaining =
-              required - balance;
-
-          ScaffoldMessenger.of(context)
-              .showSnackBar(
-            SnackBar(
-              content: Text(
-                _text(
-                  ar:
-                      "📺 تمت إضافة مشاهدة!\n"
-                      "الرصيد: $balance / $required\n"
-                      "المتبقي: $remaining مشاهدة",
-                  en:
-                      "📺 View added!\n"
-                      "Balance: $balance / $required\n"
-                      "Remaining: $remaining views",
-                ),
-              ),
-            ),
-          );
-        }
-      },
-
-      onAdFailed: () {
-        if (!mounted) {
-          return;
-        }
-
+    if (!purchased) {
+      if (mounted) {
         setState(() {
-          openingAd = false;
+          purchasingLevel = false;
         });
+      }
 
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
-          SnackBar(
-            content: Text(
-              _text(
-                ar: "⚠️ تعذر عرض الإعلان. حاول مرة أخرى.",
-                en: "⚠️ Unable to show the ad. Please try again.",
-              ),
+      if (dialogContext.mounted) {
+        Navigator.pop(dialogContext);
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF3A183F),
+          content: Text(
+            _text(
+              ar: "تعذر شراء المرحلة. تأكد من رصيدك وحاول مرة أخرى.",
+              en:
+                  "Unable to purchase the level. Check your balance and try again.",
             ),
           ),
-        );
-      },
+        ),
+      );
+
+      return;
+    }
+
+    // ==========================================================
+    // 🔄 تحديث الحالة
+    // ==========================================================
+
+    if (mounted) {
+      setState(() {
+        purchasingLevel = false;
+      });
+    }
+
+    // ==========================================================
+    // إغلاق النافذة
+    // ==========================================================
+
+    if (dialogContext.mounted) {
+      Navigator.pop(dialogContext);
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    // ==========================================================
+    // 🎉 رسالة نجاح الشراء
+    // ==========================================================
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: const Color(0xFF21452A),
+        duration: const Duration(seconds: 2),
+
+        content: Row(
+          children: [
+            Image.asset(
+              coinAsset,
+              width: 32,
+              height: 32,
+              fit: BoxFit.contain,
+              errorBuilder: (
+                context,
+                error,
+                stackTrace,
+              ) {
+                return const Icon(
+                  Icons.check_circle,
+                  color: Colors.greenAccent,
+                  size: 30,
+                );
+              },
+            ),
+
+            const SizedBox(width: 10),
+
+            Expanded(
+              child: Text(
+                _text(
+                  ar:
+                      "تم شراء المرحلة $levelNumber بنجاح!\n"
+                      "تم خصم $cost عملة.",
+                  en:
+                      "Level $levelNumber purchased successfully!\n"
+                      "$cost coins deducted.",
+                ),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
+
+    // ==========================================================
+    // 🔄 إعادة بناء الخريطة لتغيير القفل
+    // ==========================================================
+
+    setState(() {});
+
+    // ==========================================================
+    // 🎮 الدخول إلى المرحلة مباشرة
+    // ==========================================================
+
+    await Future.delayed(
+      const Duration(milliseconds: 500),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await openPuzzle(level);
   }
 
   // ============================================================
@@ -845,14 +903,12 @@ class _IslandScreenState extends State<IslandScreen>
     PuzzleLevelModel level, {
     required double size,
   }) {
-    final levelKey =
-        getLevelKey(
+    final levelKey = getLevelKey(
       level.levelNumber,
     );
 
     return GestureDetector(
-      behavior:
-          HitTestBehavior.opaque,
+      behavior: HitTestBehavior.opaque,
 
       onTap: () async {
         await openLevel(level);
@@ -863,21 +919,12 @@ class _IslandScreenState extends State<IslandScreen>
         height: size,
 
         child: DecoratedBox(
-          decoration:
-              BoxDecoration(
-            shape:
-                BoxShape.circle,
-
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.black
-                    .withOpacity(
-                  0.35,
-                ),
-
-                blurRadius:
-                    size * 0.10,
-
+                color: Colors.black.withOpacity(0.35),
+                blurRadius: size * 0.10,
                 offset: Offset(
                   0,
                   size * 0.05,
@@ -887,18 +934,16 @@ class _IslandScreenState extends State<IslandScreen>
           ),
 
           child: Stack(
-            alignment:
-                Alignment.center,
+            alignment: Alignment.center,
 
             children: [
               // =================================================
-              // 🔒 قفل المرحلة
+              // 🔒 / 🔓 القفل
               // =================================================
 
               FutureBuilder<bool>(
                 future:
-                    PuzzleProgressManager
-                        .isLevelUnlocked(
+                    PuzzleProgressManager.isLevelUnlocked(
                   levelKey,
                 ),
 
@@ -907,16 +952,14 @@ class _IslandScreenState extends State<IslandScreen>
                   snapshot,
                 ) {
                   final unlocked =
-                      snapshot.data ??
-                          false;
+                      snapshot.data ?? false;
 
                   return Image.asset(
                     unlocked
                         ? "assets/images/ui/lock_open.png"
                         : "assets/images/ui/lock_close.png",
 
-                    fit:
-                        BoxFit.contain,
+                    fit: BoxFit.contain,
 
                     errorBuilder: (
                       context,
@@ -929,12 +972,10 @@ class _IslandScreenState extends State<IslandScreen>
                             : Icons.lock,
 
                         color: unlocked
-                            ? Colors
-                                .greenAccent
+                            ? Colors.greenAccent
                             : Colors.amber,
 
-                        size:
-                            size * 0.55,
+                        size: size * 0.55,
                       );
                     },
                   );
@@ -950,26 +991,15 @@ class _IslandScreenState extends State<IslandScreen>
                   child: Text(
                     "${level.levelNumber}",
 
-                    style:
-                        TextStyle(
-                      color:
-                          Colors.white,
-
-                      fontSize:
-                          size * 0.28,
-
-                      fontWeight:
-                          FontWeight.w900,
-
-                      shadows:
-                          const [
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: size * 0.28,
+                      fontWeight: FontWeight.w900,
+                      shadows: const [
                         Shadow(
-                          color:
-                              Colors.black,
-                          blurRadius:
-                              5,
-                          offset:
-                              Offset(
+                          color: Colors.black,
+                          blurRadius: 5,
+                          offset: Offset(
                             1,
                             2,
                           ),
@@ -1009,11 +1039,9 @@ class _IslandScreenState extends State<IslandScreen>
 
       boxShadow: [
         BoxShadow(
-          color: Colors.amber
-              .withOpacity(
+          color: Colors.amber.withOpacity(
             glowStrength,
           ),
-
           blurRadius: 16,
           spreadRadius: 4,
         ),
@@ -1028,8 +1056,7 @@ class _IslandScreenState extends State<IslandScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          const Color(0xff020b24),
+      backgroundColor: const Color(0xff020b24),
 
       body: SafeArea(
         child: LayoutBuilder(
@@ -1049,7 +1076,7 @@ class _IslandScreenState extends State<IslandScreen>
             }
 
             // ==================================================
-            // 📐 حساب مقياس الخريطة
+            // 📐 مقياس الخريطة
             // ==================================================
 
             final double scale = math.max(
@@ -1064,14 +1091,10 @@ class _IslandScreenState extends State<IslandScreen>
                 worldHeight * scale;
 
             final double dx =
-                (screenWidth -
-                        scaledWidth) /
-                    2;
+                (screenWidth - scaledWidth) / 2;
 
             final double dy =
-                (screenHeight -
-                        scaledHeight) /
-                    2;
+                (screenHeight - scaledHeight) / 2;
 
             final double levelButtonSize =
                 (80 / scale).clamp(
@@ -1092,65 +1115,41 @@ class _IslandScreenState extends State<IslandScreen>
                         left: dx,
                         top: dy,
 
-                        child:
-                            Transform.scale(
+                        child: Transform.scale(
                           scale: scale,
-
-                          alignment:
-                              Alignment.topLeft,
+                          alignment: Alignment.topLeft,
 
                           child: SizedBox(
-                            width:
-                                worldWidth,
+                            width: worldWidth,
+                            height: worldHeight,
 
-                            height:
-                                worldHeight,
-
-                            child:
-                                AnimatedBuilder(
-                              animation:
-                                  worldController,
+                            child: AnimatedBuilder(
+                              animation: worldController,
 
                               builder: (
                                 context,
                                 child,
                               ) {
-                                return Transform
-                                    .translate(
-                                  offset:
-                                      Offset(
+                                return Transform.translate(
+                                  offset: Offset(
                                     0,
-                                    worldTranslateY
-                                        .value,
+                                    worldTranslateY.value,
                                   ),
 
-                                  child:
-                                      Transform.scale(
-                                    scale:
-                                        worldScale
-                                            .value,
-
-                                    alignment:
-                                        Alignment
-                                            .center,
-
-                                    child:
-                                        child,
+                                  child: Transform.scale(
+                                    scale: worldScale.value,
+                                    alignment: Alignment.center,
+                                    child: child,
                                   ),
                                 );
                               },
 
-                              child:
-                                  SizedBox(
-                                width:
-                                    worldWidth,
-
-                                height:
-                                    worldHeight,
+                              child: SizedBox(
+                                width: worldWidth,
+                                height: worldHeight,
 
                                 child: Stack(
-                                  clipBehavior:
-                                      Clip.none,
+                                  clipBehavior: Clip.none,
 
                                   children: [
                                     // =================================
@@ -1158,22 +1157,17 @@ class _IslandScreenState extends State<IslandScreen>
                                     // =================================
 
                                     Positioned.fill(
-                                      child:
-                                          Opacity(
+                                      child: Opacity(
                                         opacity:
                                             islandBackgroundOpacity,
 
-                                        child:
-                                            Image.asset(
+                                        child: Image.asset(
                                           IslandBackgroundData
                                               .getBackground(
-                                            widget
-                                                .island
-                                                .id,
+                                            widget.island.id,
                                           ),
 
-                                          fit:
-                                              BoxFit.cover,
+                                          fit: BoxFit.cover,
 
                                           errorBuilder: (
                                             context,
@@ -1193,32 +1187,21 @@ class _IslandScreenState extends State<IslandScreen>
 
                                     Positioned(
                                       left: 0,
-                                      top:
-                                          islandAreaTop,
+                                      top: islandAreaTop,
+                                      width: worldWidth,
+                                      height: islandAreaHeight,
 
-                                      width:
-                                          worldWidth,
-
-                                      height:
-                                          islandAreaHeight,
-
-                                      child:
-                                          Opacity(
+                                      child: Opacity(
                                         opacity:
                                             islandImageOpacity,
 
-                                        child:
-                                            Image.asset(
-                                          widget
-                                              .island
-                                              .image,
+                                        child: Image.asset(
+                                          widget.island.image,
 
-                                          fit:
-                                              BoxFit.contain,
+                                          fit: BoxFit.contain,
 
                                           alignment:
-                                              Alignment
-                                                  .center,
+                                              Alignment.center,
 
                                           errorBuilder: (
                                             context,
@@ -1240,31 +1223,26 @@ class _IslandScreenState extends State<IslandScreen>
                                       levels.length,
                                       (index) {
                                         if (index >=
-                                            levelPositions
-                                                .length) {
+                                            levelPositions.length) {
                                           return const SizedBox
                                               .shrink();
                                         }
 
                                         final pos =
-                                            levelPositions[
-                                                index];
+                                            levelPositions[index];
 
                                         return Positioned(
                                           left:
-                                              (worldWidth *
-                                                      pos.dx) -
+                                              (worldWidth * pos.dx) -
                                                   (levelButtonSize /
                                                       2),
 
                                           top:
-                                              (worldHeight *
-                                                      pos.dy) -
+                                              (worldHeight * pos.dy) -
                                                   (levelButtonSize /
                                                       2),
 
-                                          child:
-                                              levelButton(
+                                          child: levelButton(
                                             levels[index],
                                             size:
                                                 levelButtonSize,
@@ -1291,10 +1269,8 @@ class _IslandScreenState extends State<IslandScreen>
                   top: 20,
                   left: 20,
 
-                  child:
-                      AnimatedBuilder(
-                    animation:
-                        _uiGlowController,
+                  child: AnimatedBuilder(
+                    animation: _uiGlowController,
 
                     builder: (
                       context,
@@ -1304,34 +1280,26 @@ class _IslandScreenState extends State<IslandScreen>
                         decoration:
                             _uiGlowDecoration(),
 
-                        child:
-                            Transform.scale(
-                          scale:
-                              _uiPulseScale,
-
+                        child: Transform.scale(
+                          scale: _uiPulseScale,
                           child: child,
                         ),
                       );
                     },
 
-                    child:
-                        GestureDetector(
+                    child: GestureDetector(
                       onTap: () {
-                        Navigator.pop(
-                          context,
-                        );
+                        Navigator.pop(context);
                       },
 
                       child: SizedBox(
                         width: 56,
                         height: 56,
 
-                        child:
-                            Image.asset(
+                        child: Image.asset(
                           "assets/images/ui/back_screen.png",
 
-                          fit:
-                              BoxFit.contain,
+                          fit: BoxFit.contain,
 
                           errorBuilder: (
                             context,
@@ -1340,8 +1308,7 @@ class _IslandScreenState extends State<IslandScreen>
                           ) {
                             return const Icon(
                               Icons.arrow_back,
-                              color:
-                                  Colors.white,
+                              color: Colors.white,
                               size: 42,
                             );
                           },
@@ -1359,10 +1326,8 @@ class _IslandScreenState extends State<IslandScreen>
                   bottom: 20,
                   left: 20,
 
-                  child:
-                      AnimatedBuilder(
-                    animation:
-                        _uiGlowController,
+                  child: AnimatedBuilder(
+                    animation: _uiGlowController,
 
                     builder: (
                       context,
@@ -1372,11 +1337,8 @@ class _IslandScreenState extends State<IslandScreen>
                         decoration:
                             _uiGlowDecoration(),
 
-                        child:
-                            Transform.scale(
-                          scale:
-                              _uiPulseScale,
-
+                        child: Transform.scale(
+                          scale: _uiPulseScale,
                           child: child,
                         ),
                       );
@@ -1388,26 +1350,21 @@ class _IslandScreenState extends State<IslandScreen>
                 ),
 
                 // =================================================
-                // 📺 مؤشر تحميل الإعلان
+                // ⏳ مؤشر الشراء
                 // =================================================
 
-                if (openingAd)
+                if (purchasingLevel)
                   Positioned.fill(
-                    child:
-                        IgnorePointer(
-                      child:
-                          Container(
-                        color: Colors.black
-                            .withOpacity(
+                    child: IgnorePointer(
+                      child: Container(
+                        color: Colors.black.withOpacity(
                           0.30,
                         ),
 
-                        child:
-                            const Center(
+                        child: const Center(
                           child:
                               CircularProgressIndicator(
-                            color:
-                                Colors.amber,
+                            color: Colors.amber,
                           ),
                         ),
                       ),
