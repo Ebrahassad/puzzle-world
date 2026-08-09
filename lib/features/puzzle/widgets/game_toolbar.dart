@@ -481,7 +481,7 @@ class _GameToolbarState extends State<GameToolbar>
                   ),
 
                   const SizedBox(
-                    width: 5,
+                    width: 12,
                   ),
 
                   // ------------------------------------------------
