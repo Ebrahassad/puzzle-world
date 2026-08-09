@@ -1,19 +1,12 @@
 import 'package:flutter/material.dart';
 
 import 'core/theme/app_theme.dart';
-import 'core/language/app_language_manager.dart';
 
 import 'features/puzzle/managers/ads_manager.dart';
 import 'features/puzzle/screens/world_map_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // ============================================================
-  // 🌐 تحميل اللغة المحفوظة
-  // ============================================================
-
-  await AppLanguageManager.instance.load();
 
   // ============================================================
   // 🚀 تشغيل التطبيق مباشرة
@@ -37,93 +30,40 @@ class PuzzleWorldApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<Locale>(
-      valueListenable:
-          AppLanguageManager.instance.localeNotifier,
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
 
-      builder: (
-        context,
-        locale,
-        child,
-      ) {
-        final bool isArabic =
-            locale.languageCode == 'ar';
+      title: 'Puzzle World',
 
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
+      // ==========================================================
+      // 🎨 الثيم
+      // ==========================================================
 
-          title: 'Puzzle World',
+      theme: AppTheme.lightTheme.copyWith(
+        snackBarTheme: SnackBarThemeData(
+          backgroundColor: const Color(0xFF4A247A),
 
-          // ======================================================
-          // 🌐 اللغة الحالية
-          // ======================================================
-
-          locale: locale,
-
-          supportedLocales: const [
-            Locale('ar'),
-            Locale('en'),
-          ],
-
-          // ======================================================
-          // 🧭 اتجاه التطبيق بالكامل
-          // ======================================================
-
-          builder: (
-            context,
-            child,
-          ) {
-            return Directionality(
-              textDirection: isArabic
-                  ? TextDirection.rtl
-                  : TextDirection.ltr,
-
-              child:
-                  child ??
-                  const SizedBox.shrink(),
-            );
-          },
-
-          // ======================================================
-          // 🎨 الثيم
-          // ======================================================
-
-          theme:
-              AppTheme.lightTheme.copyWith(
-            snackBarTheme:
-                SnackBarThemeData(
-              backgroundColor:
-                  const Color(0xFF4A247A),
-
-              contentTextStyle:
-                  const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight:
-                    FontWeight.w600,
-              ),
-
-              behavior:
-                  SnackBarBehavior.floating,
-
-              shape:
-                  RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(16),
-              ),
-
-              elevation: 8,
-            ),
+          contentTextStyle: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
           ),
 
-          // ======================================================
-          // 🌍 الشاشة الأولى
-          // ======================================================
+          behavior: SnackBarBehavior.floating,
 
-          home:
-              const _StartupScreen(),
-        );
-      },
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+
+          elevation: 8,
+        ),
+      ),
+
+      // ==========================================================
+      // 🌍 الشاشة الأولى
+      // ==========================================================
+
+      home: const _StartupScreen(),
     );
   }
 }
@@ -145,9 +85,7 @@ class _StartupScreen extends StatefulWidget {
       _StartupScreenState();
 }
 
-class _StartupScreenState
-    extends State<_StartupScreen> {
-
+class _StartupScreenState extends State<_StartupScreen> {
   bool _adsStarted = false;
 
   @override
