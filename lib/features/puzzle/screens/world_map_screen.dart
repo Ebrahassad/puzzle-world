@@ -117,6 +117,12 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   bool unlockingPrivateIsland = false;
 
   // ============================================================
+  // 📢 رسالة فوق جميع طبقات الخريطة والجزر
+  // ============================================================
+  String? _worldMessage;
+  Timer? _worldMessageTimer;
+
+  // ============================================================
   // 🎁 المكافأة اليومية
   // ============================================================
   bool showingDailyReward = false; // الصندوق يبقى ظاهرًا دائمًا
@@ -372,51 +378,27 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   }
 
   // ============================================================
-  // 📢 رسالة موحدة
+  // 📢 رسالة فوق جميع طبقات الخريطة والجزر
   // ============================================================
   void showMessage(String message) {
     if (!mounted) return;
-    final messenger = _scaffoldMessengerKey.currentState;
-    if (messenger == null) return;
-    messenger
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          duration: const Duration(seconds: 3),
-          backgroundColor: const Color(0xFF4A247A),
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.fromLTRB(
-            16,
-            0,
-            16,
-            100,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          content: Row(
-            children: [
-              const Icon(
-                Icons.info_outline_rounded,
-                color: Colors.amber,
-                size: 22,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  message,
-                  textAlign: language.isArabic ? TextAlign.right : TextAlign.left,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+
+    _worldMessageTimer?.cancel();
+
+    setState(() {
+      _worldMessage = message;
+    });
+
+    _worldMessageTimer = Timer(
+      const Duration(seconds: 3),
+      () {
+        if (!mounted) return;
+
+        setState(() {
+          _worldMessage = null;
+        });
+      },
+    );
   }
 
   // ============================================================
@@ -439,12 +421,16 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   @override
   void dispose() {
     dailyRewardTimer?.cancel();
+    _worldMessageTimer?.cancel();
+
     worldController.dispose();
     iconGlowController.dispose();
     audioPlayer.dispose();
+
     for (final controller in cloudControllers) {
       controller.dispose();
     }
+
     super.dispose();
   }
 
@@ -574,29 +560,29 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                 Positioned(
                   top: topPadding + 16,
                   left: 16,
-                  child: _DailyRewardMiniWidget(
-                    available: dailyRewardAvailable,
-                    remaining: dailyRewardRemaining,
-                    timeText: formatDailyRewardTime(
-                      dailyRewardRemaining,
-                    ),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onTap: dailyRewardAvailable
                         ? () async {
                             await playClickSound();
+
                             if (!mounted) return;
+
                             final canClaim =
                                 await RewardManager.canClaimDailyReward();
+
                             if (!mounted) return;
+
                             if (!canClaim) {
                               await _checkDailyReward();
                               return;
                             }
+
                             setState(() {
                               showingDailyReward = true;
-                              // مهم:
-                              // لا نخفي الصندوق.
                               dailyRewardMiniVisible = true;
                             });
+
                             await showDialog(
                               context: context,
                               barrierDismissible: false,
@@ -604,26 +590,34 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                                 return DailyRewardPopup(
                                   onRewardClaimed: () {
                                     if (!mounted) return;
+
                                     setState(() {
                                       showingDailyReward = false;
-                                      // الصندوق يبقى ظاهرًا
                                       dailyRewardMiniVisible = true;
-                                      // تبدأ فترة الانتظار
                                       dailyRewardAvailable = false;
                                     });
                                   },
                                 );
                               },
                             );
+
                             if (!mounted) return;
+
                             setState(() {
                               showingDailyReward = false;
                               dailyRewardMiniVisible = true;
                             });
-                            // إعادة حساب الوقت فورًا
+
                             await _checkDailyReward();
                           }
                         : null,
+                    child: _DailyRewardMiniWidget(
+                      available: dailyRewardAvailable,
+                      remaining: dailyRewardRemaining,
+                      timeText: formatDailyRewardTime(
+                        dailyRewardRemaining,
+                      ),
+                    ),
                   ),
                 ),
 
@@ -633,14 +627,19 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                 Positioned(
                   top: topPadding + 16,
                   right: 18,
-                  child: _AnimatedRoyalImageIcon(
-                    controller: iconGlowController,
-                    image: "assets/images/ui/seting_icon.png",
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onTap: () async {
                       await playClickSound();
+
                       if (!mounted) return;
+
                       await showSettingsDialog();
                     },
+                    child: _AnimatedRoyalImageIcon(
+                      controller: iconGlowController,
+                      image: "assets/images/ui/seting_icon.png",
+                    ),
                   ),
                 ),
 
@@ -737,6 +736,100 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                         child: const Center(
                           child: CircularProgressIndicator(
                             color: Colors.amber,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // ==================================================
+                // 📢 رسالة الشراء / الفتح
+                // 🔝 أعلى طبقة فوق الخريطة والجزر والأزرار
+                // ==================================================
+                if (_worldMessage != null)
+                  Positioned(
+                    top: topPadding + 95,
+                    left: 20,
+                    right: 20,
+                    child: IgnorePointer(
+                      child: Center(
+                        child: Material(
+                          color: Colors.transparent,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 250),
+                            transitionBuilder: (child, animation) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: ScaleTransition(
+                                  scale: Tween<double>(
+                                    begin: 0.92,
+                                    end: 1.0,
+                                  ).animate(
+                                    CurvedAnimation(
+                                      parent: animation,
+                                      curve: Curves.easeOutBack,
+                                    ),
+                                  ),
+                                  child: child,
+                                ),
+                              );
+                            },
+                            child: Container(
+                              key: ValueKey(_worldMessage),
+                              constraints: const BoxConstraints(
+                                maxWidth: 380,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 13,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF2A1B3D).withOpacity(0.97),
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(
+                                  color: Colors.amber.withOpacity(0.85),
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.45),
+                                    blurRadius: 16,
+                                    spreadRadius: 2,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                  BoxShadow(
+                                    color: Colors.amber.withOpacity(0.15),
+                                    blurRadius: 20,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.info_outline_rounded,
+                                    color: Colors.amber,
+                                    size: 23,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Flexible(
+                                    child: Text(
+                                      _worldMessage!,
+                                      textAlign: language.isArabic
+                                          ? TextAlign.right
+                                          : TextAlign.left,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        height: 1.35,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -1801,12 +1894,11 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 // 🎁 صندوق المكافأة اليومية + العد التنازلي
 // ================================================================
 class _DailyRewardMiniWidget extends StatelessWidget {
-  final VoidCallback? onTap;
   final bool available;
   final Duration remaining;
   final String timeText;
+
   const _DailyRewardMiniWidget({
-    required this.onTap,
     required this.available,
     required this.remaining,
     required this.timeText,
@@ -1816,97 +1908,100 @@ class _DailyRewardMiniWidget extends StatelessWidget {
   Widget build(
     BuildContext context,
   ) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: SizedBox(
-        width: 72,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ==============================================
-            // 🎁 الصندوق
-            // ==============================================
-            SizedBox(
-              width: 64,
-              height: 64,
-              child: Image.asset(
-                "assets/images/rewards/daly_box_close.png",
-                width: 58,
-                height: 58,
-                fit: BoxFit.contain,
-                errorBuilder: (
-                  context,
-                  error,
-                  stack,
-                ) {
-                  return Icon(
-                    Icons.card_giftcard_rounded,
-                    color: available ? Colors.amber : Colors.white38,
-                    size: 38,
-                  );
-                },
-              ),
-            ),
-            const SizedBox(
-              height: 4,
-            ),
-            // ==============================================
-            // ⏱️ العد التنازلي
-            // ==============================================
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 6,
-                vertical: 3,
-              ),
-              decoration: BoxDecoration(
-                color: const Color(
-                  0xFF1A0E2A,
-                ).withOpacity(
-                  0.92,
-                ),
-                borderRadius: BorderRadius.circular(
-                  8,
-                ),
-                border: Border.all(
+    return SizedBox(
+      width: 72,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ==============================================
+          // 🎁 الصندوق
+          // ==============================================
+          SizedBox(
+            width: 64,
+            height: 64,
+            child: Image.asset(
+              "assets/images/rewards/daly_box_close.png",
+              width: 58,
+              height: 58,
+              fit: BoxFit.contain,
+              errorBuilder: (
+                context,
+                error,
+                stack,
+              ) {
+                return Icon(
+                  Icons.card_giftcard_rounded,
                   color: available
-                      ? Colors.amber.withOpacity(
-                          0.80,
-                        )
-                      : Colors.white24,
-                  width: 1,
-                ),
+                      ? Colors.amber
+                      : Colors.white38,
+                  size: 38,
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(
+            height: 4,
+          ),
+
+          // ==============================================
+          // ⏱️ العد التنازلي
+          // ==============================================
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 6,
+              vertical: 3,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(
+                0xFF1A0E2A,
+              ).withOpacity(
+                0.92,
+              ),
+              borderRadius: BorderRadius.circular(
+                8,
+              ),
+              border: Border.all(
+                color: available
+                    ? Colors.amber.withOpacity(
+                        0.80,
+                      )
+                    : Colors.white24,
+                width: 1,
+              ),
+            ),
+            child: Text(
+              available ? "00:00:00" : timeText,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: available
+                    ? Colors.amber
+                    : Colors.white70,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ),
+
+          // ==============================================
+          // 🎁 حالة الصندوق
+          // ==============================================
+          if (available)
+            Padding(
+              padding: const EdgeInsets.only(
+                top: 2,
               ),
               child: Text(
-                available ? "00:00:00" : timeText,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: available ? Colors.amber : Colors.white70,
-                  fontSize: 10,
+                "جاهز",
+                style: const TextStyle(
+                  color: Colors.amber,
+                  fontSize: 9,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 0.3,
                 ),
               ),
             ),
-            // ==============================================
-            // 🎁 حالة الصندوق
-            // ==============================================
-            if (available)
-              Padding(
-                padding: const EdgeInsets.only(
-                  top: 2,
-                ),
-                child: Text(
-                  "جاهز",
-                  style: const TextStyle(
-                    color: Colors.amber,
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -1963,11 +2058,10 @@ class _AnimatedRoyalWallet extends StatelessWidget {
 class _AnimatedRoyalImageIcon extends StatelessWidget {
   final Animation<double> controller;
   final String image;
-  final VoidCallback onTap;
+
   const _AnimatedRoyalImageIcon({
     required this.controller,
     required this.image,
-    required this.onTap,
   });
 
   @override
@@ -1981,32 +2075,30 @@ class _AnimatedRoyalImageIcon extends StatelessWidget {
         child,
       ) {
         final pulse = controller.value;
-        return GestureDetector(
-          onTap: onTap,
-          child: SizedBox(
-            width: 56,
-            height: 56,
-            child: Transform.scale(
-              scale: 1.0 + pulse * 0.035,
-              child: Image.asset(
-                image,
-                width: 34,
-                height: 34,
-                fit: BoxFit.contain,
-                errorBuilder: (
-                  context,
-                  error,
-                  stack,
-                ) {
-                  return const Icon(
-                    Icons.settings_rounded,
-                    color: Color(
-                      0xFFD6B8FF,
-                    ),
-                    size: 29,
-                  );
-                },
-              ),
+
+        return SizedBox(
+          width: 56,
+          height: 56,
+          child: Transform.scale(
+            scale: 1.0 + pulse * 0.035,
+            child: Image.asset(
+              image,
+              width: 34,
+              height: 34,
+              fit: BoxFit.contain,
+              errorBuilder: (
+                context,
+                error,
+                stack,
+              ) {
+                return const Icon(
+                  Icons.settings_rounded,
+                  color: Color(
+                    0xFFD6B8FF,
+                  ),
+                  size: 29,
+                );
+              },
             ),
           ),
         );
