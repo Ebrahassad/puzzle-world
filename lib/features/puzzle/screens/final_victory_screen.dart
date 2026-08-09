@@ -6,7 +6,7 @@ import 'package:flutter/scheduler.dart';
 
 import '../managers/ads_manager.dart';
 import '../managers/reward_manager.dart';
-import '../../../core/language/app_language_manager.dart';
+
 import '../widgets/game_toolbar.dart';
 import 'world_map_screen.dart';
 
@@ -39,7 +39,7 @@ class _FlightParticle {
 }
 
 /// ============================================================
-/// 🎉 جسيمات القصاصات الورقية (Confetti)
+/// 🎉 جسيمات القصاصات الورقية
 /// ============================================================
 
 class _ConfettiParticle {
@@ -71,7 +71,7 @@ class _ConfettiParticle {
 ///
 /// هذه الشاشة مخصصة للمرحلة العاشرة فقط.
 ///
-/// المكافآت هنا:
+/// المكافآت:
 /// ⭐ نجمة
 /// 🪙 100 عملة
 /// 💎 جوهرة
@@ -94,13 +94,6 @@ class FinalVictoryScreen extends StatefulWidget {
 
 class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     with TickerProviderStateMixin {
-  // ==========================================================
-  // 🌐 اللغة
-  // ==========================================================
-
-  AppLanguageManager get _language =>
-      AppLanguageManager.instance;
-
   // ==========================================================
   // 🎯 أهداف شريط الأدوات
   // ==========================================================
@@ -185,7 +178,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   ];
 
   // ==========================================================
-  // 🚀 البداية (INIT)
+  // 🚀 البداية
   // ==========================================================
 
   @override
@@ -775,7 +768,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // 🎉 القصاصات الورقية (Confetti)
+  // 🎉 القصاصات الورقية
   // ==========================================================
 
   void _spawnConfetti() {
@@ -898,154 +891,9 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return Directionality(
-          textDirection:
-              _language.textDirection,
-          child: AlertDialog(
-            backgroundColor:
-                const Color(
-              0xff1D1730,
-            ),
-            shape:
-                RoundedRectangleBorder(
-              borderRadius:
-                  BorderRadius.circular(
-                22,
-              ),
-            ),
-            title: Text(
-              _language.text(
-                ar: 'مضاعفة المكافأة',
-                en: 'Double Reward',
-              ),
-              style:
-                  const TextStyle(
-                color: Colors.amber,
-                fontWeight:
-                    FontWeight.bold,
-              ),
-            ),
-            content: Column(
-              mainAxisSize:
-                  MainAxisSize.min,
-              children: [
-                Text(
-                  _language.text(
-                    ar: 'شاهد إعلاناً للحصول على مكافأة إضافية.',
-                    en: 'Watch an ad to receive an additional reward.',
-                  ),
-                  textAlign:
-                      TextAlign.center,
-                  style:
-                      const TextStyle(
-                    color:
-                        Colors.white70,
-                    fontSize: 15,
-                  ),
-                ),
-
-                const SizedBox(
-                  height: 20,
-                ),
-
-                // ----------------------------------------------
-                // معاينة صور المكافآت
-                // ----------------------------------------------
-
-                Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment
-                          .center,
-                  children: [
-                    _RewardPreviewImage(
-                      asset:
-                          'assets/images/rewards/Star_gold.png',
-                      size: 48,
-                    ),
-
-                    const SizedBox(
-                      width: 14,
-                    ),
-
-                    _RewardPreviewImage(
-                      asset:
-                          'assets/images/rewards/puzzle_coin.png',
-                      size: 48,
-                    ),
-
-                    const SizedBox(
-                      width: 14,
-                    ),
-
-                    _RewardPreviewImage(
-                      asset:
-                          'assets/images/rewards/gem.png',
-                      size: 46,
-                    ),
-                  ],
-                ),
-
-                const SizedBox(
-                  height: 12,
-                ),
-
-                Text(
-                  _language.text(
-                    ar: 'نجمة + 100 عملة + جوهرة',
-                    en: 'Star + 100 Coins + Gem',
-                  ),
-                  textAlign:
-                      TextAlign.center,
-                  style:
-                      const TextStyle(
-                    color:
-                        Colors.white,
-                    fontWeight:
-                        FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            actionsAlignment:
-                MainAxisAlignment
-                    .center,
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(
-                    context,
-                    false,
-                  );
-                },
-                child: Text(
-                  _language.text(
-                    ar: 'لاحقاً',
-                    en: 'Later',
-                  ),
-                  style:
-                      const TextStyle(
-                    color:
-                        Colors.white70,
-                  ),
-                ),
-              ),
-
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(
-                    context,
-                    true,
-                  );
-                },
-                child: Text(
-                  _language.text(
-                    ar: 'شاهد الإعلان',
-                    en: 'Watch Ad',
-                  ),
-                ),
-              ),
-            ],
-          ),
+        return const Directionality(
+          textDirection: TextDirection.rtl,
+          child: _DoubleRewardDialogContent(),
         );
       },
     );
@@ -1098,12 +946,9 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text(
-              _language.text(
-                ar: 'تمت مضاعفة المكافأة!',
-                en: 'Reward doubled!',
-              ),
+              'تمت مضاعفة المكافأة!',
             ),
           ),
         );
@@ -1136,12 +981,9 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text(
-              _language.text(
-                ar: 'الإعلان غير متوفر حالياً',
-                en: 'The ad is currently unavailable.',
-              ),
+              'الإعلان غير متوفر حالياً',
             ),
           ),
         );
@@ -1174,7 +1016,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // 🧱 البناء (BUILD)
+  // 🧱 البناء
   // ==========================================================
 
   @override
@@ -1184,411 +1026,9 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     final size =
         MediaQuery.of(context).size;
 
-    return Directionality(
-      textDirection:
-          _language.textDirection,
-      child: Scaffold(
-        backgroundColor:
-            Colors.transparent,
-        body: Stack(
-          children: [
-            // ==================================================
-            // 🌌 الخلفية
-            // ==================================================
-
-            Positioned.fill(
-              child: Container(
-                decoration:
-                    const BoxDecoration(
-                  gradient:
-                      LinearGradient(
-                    begin:
-                        Alignment.topCenter,
-                    end:
-                        Alignment.bottomCenter,
-                    colors: [
-                      Color(
-                        0xff06101E,
-                      ),
-                      Color(
-                        0xff020509,
-                      ),
-                    ],
-                  ),
-                ),
-                child:
-                    AnimatedBuilder(
-                  animation:
-                      _bgController,
-                  builder:
-                      (context, child) {
-                    return Transform
-                        .translate(
-                      offset: Offset(
-                        0,
-                        _bgShift.value,
-                      ),
-                      child:
-                          Transform.scale(
-                        scale:
-                            _bgScale.value,
-                        child:
-                            child,
-                      ),
-                    );
-                  },
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        left: -60,
-                        top: 70,
-                        child:
-                            _softGlow(
-                          180,
-                          Colors
-                              .blueAccent
-                              .withOpacity(
-                            0.10,
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        right: -40,
-                        top: 160,
-                        child:
-                            _softGlow(
-                          220,
-                          Colors.amber
-                              .withOpacity(
-                            0.10,
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        left: 30,
-                        bottom: 140,
-                        child:
-                            _softGlow(
-                          260,
-                          Colors
-                              .purpleAccent
-                              .withOpacity(
-                            0.08,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // ==================================================
-            // 🧭 شريط الأدوات
-            // ==================================================
-
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: GameToolbar(
-                starKey:
-                    _starKey,
-                gemKey:
-                    _gemKey,
-                coinKey:
-                    _coinKey,
-                onExit:
-                    _goHome,
-                soundEnabled:
-                    true,
-              ),
-            ),
-
-            // ==================================================
-            // 🎁 الصندوق
-            // ==================================================
-
-            if (_showChest)
-              Center(
-                child:
-                    AnimatedBuilder(
-                  animation:
-                      _chestController,
-                  builder:
-                      (context, child) {
-                    return Transform
-                        .translate(
-                      offset: Offset(
-                        0,
-                        _chestDrop.value,
-                      ),
-                      child:
-                          Transform.scale(
-                        scale:
-                            _chestScale.value,
-                        child:
-                            Transform.rotate(
-                          angle: _opened
-                              ? 0
-                              : _chestShake
-                                  .value,
-                          child:
-                              Container(
-                            key:
-                                _chestKey,
-                            width: 240,
-                            height: 240,
-                            alignment:
-                                Alignment
-                                    .center,
-                            child:
-                                Image.asset(
-                              _opened
-                                  ? 'assets/images/rewards/reward_chest_open.png'
-                                  : 'assets/images/rewards/reward_chest_closed.png',
-                              fit: BoxFit
-                                  .contain,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-            // ==================================================
-            // ✨ التوهج
-            // ==================================================
-
-            if (_opened)
-              IgnorePointer(
-                child: Center(
-                  child:
-                      AnimatedBuilder(
-                    animation:
-                        _glowController,
-                    builder:
-                        (context, child) {
-                      final glow =
-                          0.18 +
-                          (_glowController
-                                  .value *
-                              0.26);
-
-                      return Container(
-                        width: 460,
-                        height: 460,
-                        decoration:
-                            BoxDecoration(
-                          shape:
-                              BoxShape
-                                  .circle,
-                          gradient:
-                              RadialGradient(
-                            colors: [
-                              Colors
-                                  .amber
-                                  .withOpacity(
-                                glow,
-                              ),
-                              Colors
-                                  .transparent,
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-
-            // ==================================================
-            // 🎉 القصاصات الورقية
-            // ==================================================
-
-            if (_confettiActive ||
-                _confetti.isNotEmpty)
-              Positioned.fill(
-                child:
-                    IgnorePointer(
-                  child:
-                      CustomPaint(
-                    painter:
-                        _ConfettiPainter(
-                      List.of(
-                        _confetti,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-            // ==================================================
-            // 🏆 العنوان
-            // ==================================================
-
-            if (_showTitle)
-              Positioned(
-                left: 24,
-                right: 24,
-                top:
-                    size.height *
-                        0.18,
-                child:
-                    FadeTransition(
-                  opacity:
-                      _titleController,
-                  child:
-                      SlideTransition(
-                    position:
-                        Tween<Offset>(
-                      begin:
-                          const Offset(
-                        0,
-                        0.2,
-                      ),
-                      end:
-                          Offset.zero,
-                    ).animate(
-                      CurvedAnimation(
-                        parent:
-                            _titleController,
-                        curve:
-                            Curves
-                                .easeOutCubic,
-                      ),
-                    ),
-                    child:
-                        Column(
-                      mainAxisSize:
-                          MainAxisSize
-                              .min,
-                      children: [
-                        Text(
-                          _language.text(
-                            ar: 'لقد أكملت المرحلة العاشرة',
-                            en: 'You completed Level 10',
-                          ),
-                          textAlign:
-                              TextAlign
-                                  .center,
-                          style:
-                              const TextStyle(
-                            color:
-                                Colors.white,
-                            fontSize: 28,
-                            fontWeight:
-                                FontWeight
-                                    .bold,
-                            shadows: [
-                              Shadow(
-                                color:
-                                    Colors
-                                        .amber,
-                                blurRadius:
-                                    16,
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(
-                          height: 8,
-                        ),
-
-                        Text(
-                          _language.text(
-                            ar: 'تم فتح عالمك بالكامل',
-                            en: 'Your world is now fully unlocked',
-                          ),
-                          textAlign:
-                              TextAlign
-                                  .center,
-                          style:
-                              const TextStyle(
-                            color:
-                                Colors.white70,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-            // ==================================================
-            // ✈️ طبقة طفو المكافآت
-            // ==================================================
-
-            if (_showRewardFlights)
-              Positioned.fill(
-                child:
-                    IgnorePointer(
-                  child:
-                      AnimatedBuilder(
-                    animation:
-                        _floatController,
-                    builder:
-                        (context, child) {
-                      final bob =
-                          math.sin(
-                                _floatController
-                                    .value *
-                                    2 *
-                                    math.pi,
-                              ) *
-                              4;
-
-                      return Transform
-                          .translate(
-                        offset:
-                            Offset(
-                          0,
-                          bob,
-                        ),
-                        child:
-                            child,
-                      );
-                    },
-                    child:
-                        const SizedBox
-                            .shrink(),
-                  ),
-                ),
-              ),
-
-            // ==================================================
-            // ⚡ الوميض
-            // ==================================================
-
-            Positioned.fill(
-              child:
-                  IgnorePointer(
-                child:
-                    AnimatedBuilder(
-                  animation:
-                      _flashController,
-                  builder:
-                      (context, child) {
-                    return Container(
-                      color: Colors
-                          .white
-                          .withOpacity(
-                        _flashController
-                                .value *
-                            0.9,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return const Directionality(
+      textDirection: TextDirection.rtl,
+      child: _FinalVictoryContent(),
     );
   }
 
@@ -1637,7 +1077,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // 🧹 التخلص من الموارد (Dispose)
+  // 🧹 التخلص من الموارد
   // ==========================================================
 
   @override
@@ -1667,7 +1107,174 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 }
 
 // ============================================================
-// 🎉 رسم القصاصات الورقية (Confetti painter)
+// 🎁 محتوى نافذة مضاعفة المكافأة
+// ============================================================
+
+class _DoubleRewardDialogContent
+    extends StatelessWidget {
+  const _DoubleRewardDialogContent();
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor:
+          const Color(0xff1D1730),
+      shape:
+          RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.circular(
+          22,
+        ),
+      ),
+      title: const Text(
+        'مضاعفة المكافأة',
+        style:
+            TextStyle(
+          color: Colors.amber,
+          fontWeight:
+              FontWeight.bold,
+        ),
+      ),
+      content: Column(
+        mainAxisSize:
+            MainAxisSize.min,
+        children: [
+          const Text(
+            'شاهد إعلاناً للحصول على مكافأة إضافية.',
+            textAlign:
+                TextAlign.center,
+            style:
+                TextStyle(
+              color:
+                  Colors.white70,
+              fontSize: 15,
+            ),
+          ),
+
+          const SizedBox(
+            height: 20,
+          ),
+
+          // ----------------------------------------------------
+          // معاينة صور المكافآت
+          // ----------------------------------------------------
+
+          Row(
+            mainAxisAlignment:
+                MainAxisAlignment
+                    .center,
+            children: [
+              const _RewardPreviewImageStatic(
+                asset:
+                    'assets/images/rewards/Star_gold.png',
+                size: 48,
+              ),
+
+              const SizedBox(
+                width: 14,
+              ),
+
+              const _RewardPreviewImageStatic(
+                asset:
+                    'assets/images/rewards/puzzle_coin.png',
+                size: 48,
+              ),
+
+              const SizedBox(
+                width: 14,
+              ),
+
+              const _RewardPreviewImageStatic(
+                asset:
+                    'assets/images/rewards/gem.png',
+                size: 46,
+              ),
+            ],
+          ),
+
+          const SizedBox(
+            height: 12,
+          ),
+
+          const Text(
+            'نجمة + 100 عملة + جوهرة',
+            textAlign:
+                TextAlign.center,
+            style:
+                TextStyle(
+              color:
+                  Colors.white,
+              fontWeight:
+                  FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+      actionsAlignment:
+          MainAxisAlignment.center,
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(
+              context,
+              false,
+            );
+          },
+          child: const Text(
+            'لاحقاً',
+            style:
+                TextStyle(
+              color:
+                  Colors.white70,
+            ),
+          ),
+        ),
+
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pop(
+              context,
+              true,
+            );
+          },
+          child: const Text(
+            'شاهد الإعلان',
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ============================================================
+// 🖼️ صورة معاينة المكافأة داخل النافذة
+// ============================================================
+
+class _RewardPreviewImageStatic
+    extends StatelessWidget {
+  final String asset;
+  final double size;
+
+  const _RewardPreviewImageStatic({
+    required this.asset,
+    required this.size,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Image.asset(
+        asset,
+        fit: BoxFit.contain,
+      ),
+    );
+  }
+}
+
+// ============================================================
+// 🎉 رسم القصاصات الورقية
 // ============================================================
 
 class _ConfettiPainter
