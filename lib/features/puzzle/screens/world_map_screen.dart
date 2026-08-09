@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
-import '../../../core/language/app_language_manager.dart';
 import 'private_island_screen.dart';
 import '../data/puzzle_data.dart';
 import '../models/puzzle_model.dart';
@@ -364,20 +363,6 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   }
 
   // ============================================================
-  // 🌐 اللغة
-  // ============================================================
-  AppLanguageManager get language => AppLanguageManager.instance;
-  String t({
-    required String ar,
-    required String en,
-  }) {
-    return language.text(
-      ar: ar,
-      en: en,
-    );
-  }
-
-  // ============================================================
   // 📢 رسالة فوق جميع طبقات الخريطة والجزر
   // ============================================================
   void showMessage(String message) {
@@ -554,12 +539,33 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                 ),
 
                 // ==================================================
-                // 🎁 صندوق المكافأة اليومية
-                // 📍 ثابت دائمًا يسار الشاشة
+                // ⚙️ الإعدادات (بدل الصندوق - أعلى يسار الشاشة)
                 // ==================================================
                 Positioned(
                   top: topPadding + 16,
-                  left: 16,
+                  left: 18,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () async {
+                      await playClickSound();
+
+                      if (!mounted) return;
+
+                      await showSettingsDialog();
+                    },
+                    child: _AnimatedRoyalImageIcon(
+                      controller: iconGlowController,
+                      image: "assets/images/ui/seting_icon.png",
+                    ),
+                  ),
+                ),
+
+                // ==================================================
+                // 🎁 صندوق المكافأة اليومية (بدل الجزيرة - أسفل يمين الشاشة)
+                // ==================================================
+                Positioned(
+                  bottom: bottomPadding + 20,
+                  right: 18,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: dailyRewardAvailable
@@ -622,52 +628,11 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                 ),
 
                 // ==================================================
-                // ⚙️ الإعدادات
-                // ==================================================
-                Positioned(
-                  top: topPadding + 16,
-                  right: 18,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () async {
-                      await playClickSound();
-
-                      if (!mounted) return;
-
-                      await showSettingsDialog();
-                    },
-                    child: _AnimatedRoyalImageIcon(
-                      controller: iconGlowController,
-                      image: "assets/images/ui/seting_icon.png",
-                    ),
-                  ),
-                ),
-
-                // ==================================================
-                // 👛 المحفظة
+                // 🏝️ الجزيرة الخاصة (بدل المحفظة - أسفل يسار الشاشة)
                 // ==================================================
                 Positioned(
                   bottom: bottomPadding + 20,
                   left: 20,
-                  child: GestureDetector(
-                    onTap: () async {
-                      await playClickSound();
-                      if (!context.mounted) {
-                        return;
-                      }
-                    },
-                    child: _AnimatedRoyalWallet(
-                      controller: iconGlowController,
-                    ),
-                  ),
-                ),
-
-                // ==================================================
-                // 🏝️ الجزيرة الخاصة
-                // ==================================================
-                Positioned(
-                  bottom: bottomPadding + 20,
-                  right: 18,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () async {
@@ -703,6 +668,25 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                           return const SizedBox.shrink();
                         },
                       ),
+                    ),
+                  ),
+                ),
+
+                // ==================================================
+                // 👛 المحفظة (بدل الإعدادات - أعلى يمين الشاشة)
+                // ==================================================
+                Positioned(
+                  top: topPadding + 16,
+                  right: 18,
+                  child: GestureDetector(
+                    onTap: () async {
+                      await playClickSound();
+                      if (!context.mounted) {
+                        return;
+                      }
+                    },
+                    child: _AnimatedRoyalWallet(
+                      controller: iconGlowController,
                     ),
                   ),
                 ),
@@ -816,9 +800,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                                   Flexible(
                                     child: Text(
                                       _worldMessage!,
-                                      textAlign: language.isArabic
-                                          ? TextAlign.right
-                                          : TextAlign.left,
+                                      textAlign: TextAlign.right,
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 14,
@@ -1032,12 +1014,9 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                           const SizedBox(
                             width: 6,
                           ),
-                          Text(
-                            t(
-                              ar: "فتح",
-                              en: "Unlock",
-                            ),
-                            style: const TextStyle(
+                          const Text(
+                            "فتح",
+                            style: TextStyle(
                               color: Colors.white,
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -1173,10 +1152,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                   ),
                   Flexible(
                     child: Text(
-                      t(
-                        ar: "${getIslandName(island.id)} مغلقة",
-                        en: "${getIslandName(island.id)} is locked",
-                      ),
+                      "${getIslandName(island.id)} مغلقة",
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: Colors.amber,
@@ -1200,13 +1176,10 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                   return Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        t(
-                          ar: "يمكنك شراء هذه الجزيرة باستخدام النجوم.",
-                          en: "You can unlock this island using stars.",
-                        ),
+                      const Text(
+                        "يمكنك شراء هذه الجزيرة باستخدام النجوم.",
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
                         ),
@@ -1240,10 +1213,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                         height: 12,
                       ),
                       Text(
-                        t(
-                          ar: "نجومك الحالية: $stars ⭐",
-                          en: "Your current stars: $stars ⭐",
-                        ),
+                        "نجومك الحالية: $stars ⭐",
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white,
@@ -1255,10 +1225,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                       ),
                       if (remaining > 0)
                         Text(
-                          t(
-                            ar: "تحتاج إلى $remaining ⭐ إضافية.",
-                            en: "You need $remaining more ⭐.",
-                          ),
+                          "تحتاج إلى $remaining ⭐ إضافية.",
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Colors.white,
@@ -1266,13 +1233,10 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                           ),
                         )
                       else
-                        Text(
-                          t(
-                            ar: "يمكنك شراء الجزيرة الآن.",
-                            en: "You can unlock the island now.",
-                          ),
+                        const Text(
+                          "يمكنك شراء الجزيرة الآن.",
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.greenAccent,
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
@@ -1289,12 +1253,9 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                       dialogContext,
                     );
                   },
-                  child: Text(
-                    t(
-                      ar: "إلغاء",
-                      en: "Cancel",
-                    ),
-                    style: const TextStyle(
+                  child: const Text(
+                    "إلغاء",
+                    style: TextStyle(
                       color: Colors.white70,
                     ),
                   ),
@@ -1306,11 +1267,8 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                     height: 22,
                     fit: BoxFit.contain,
                   ),
-                  label: Text(
-                    t(
-                      ar: "شراء وفتح",
-                      en: "Buy & Unlock",
-                    ),
+                  label: const Text(
+                    "شراء وفتح",
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.amber,
@@ -1378,10 +1336,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
         );
         if (!mounted) return;
         showMessage(
-          t(
-            ar: "لا تملك نجومًا كافية. تحتاج $requiredStars ⭐ لفتح جزيرة ${getIslandName(island.id)}.",
-            en: "You don't have enough stars. You need $requiredStars ⭐ to unlock ${getIslandName(island.id)}.",
-          ),
+          "لا تملك نجومًا كافية. تحتاج $requiredStars ⭐ لفتح جزيرة ${getIslandName(island.id)}.",
         );
         return;
       }
@@ -1414,10 +1369,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
         );
         if (!mounted) return;
         showMessage(
-          t(
-            ar: "تعذر شراء الجزيرة. تأكد من رصيد النجوم.",
-            en: "The island could not be purchased. Please check your star balance.",
-          ),
+          "تعذر شراء الجزيرة. تأكد من رصيد النجوم.",
         );
         return;
       }
@@ -1443,10 +1395,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
       );
       if (!mounted) return;
       showMessage(
-        t(
-          ar: "تم شراء وفتح جزيرة ${getIslandName(island.id)} بنجاح! ⭐",
-          en: "${getIslandName(island.id)} island has been purchased and unlocked! ⭐",
-        ),
+        "تم شراء وفتح جزيرة ${getIslandName(island.id)} بنجاح! ⭐",
       );
     } catch (_) {
       if (mounted) {
@@ -1466,10 +1415,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
       );
       if (!mounted) return;
       showMessage(
-        t(
-          ar: "حدث خطأ أثناء فتح الجزيرة.",
-          en: "An error occurred while unlocking the island.",
-        ),
+        "حدث خطأ أثناء فتح الجزيرة.",
       );
     }
   }
@@ -1482,35 +1428,17 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   ) {
     switch (islandId) {
       case "animals":
-        return t(
-          ar: "الحيوانات",
-          en: "Animals",
-        );
+        return "الحيوانات";
       case "nature":
-        return t(
-          ar: "الطبيعة",
-          en: "Nature",
-        );
+        return "الطبيعة";
       case "cars":
-        return t(
-          ar: "السيارات",
-          en: "Cars",
-        );
+        return "السيارات";
       case "landmarks":
-        return t(
-          ar: "المعالم",
-          en: "Landmarks",
-        );
+        return "المعالم";
       case "space":
-        return t(
-          ar: "الفضاء",
-          en: "Space",
-        );
+        return "الفضاء";
       default:
-        return t(
-          ar: "الجديدة",
-          en: "New",
-        );
+        return "الجديدة";
     }
   }
 
@@ -1571,12 +1499,9 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                   const SizedBox(
                     width: 10,
                   ),
-                  Text(
-                    t(
-                      ar: "الإعدادات",
-                      en: "Settings",
-                    ),
-                    style: const TextStyle(
+                  const Text(
+                    "الإعدادات",
+                    style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
@@ -1594,10 +1519,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                       icon: soundEnabled
                           ? Icons.volume_up_rounded
                           : Icons.volume_off_rounded,
-                      title: t(
-                        ar: "الصوت",
-                        en: "Sound",
-                      ),
+                      title: "الصوت",
                       trailing: Switch(
                         value: soundEnabled,
                         activeColor: const Color(
@@ -1616,35 +1538,12 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                       ),
                     ),
                     // ==========================================
-                    // 🌐 اللغة
-                    // ==========================================
-                    _SettingsTile(
-                      icon: Icons.language_rounded,
-                      title: t(
-                        ar: "اللغة",
-                        en: "Language",
-                      ),
-                      subtitle: language.isArabic ? "العربية" : "English",
-                      onTap: () {
-                        Navigator.pop(
-                          dialogContext,
-                        );
-                        showLanguageDialog();
-                      },
-                    ),
-                    // ==========================================
                     // ℹ️ حول
                     // ==========================================
                     _SettingsTile(
                       icon: Icons.info_outline_rounded,
-                      title: t(
-                        ar: "حول",
-                        en: "About",
-                      ),
-                      subtitle: t(
-                        ar: "معلومات Puzzle World",
-                        en: "Puzzle World information",
-                      ),
+                      title: "حول",
+                      subtitle: "معلومات Puzzle World",
                       onTap: () {
                         Navigator.pop(
                           dialogContext,
@@ -1660,14 +1559,8 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                     // ==========================================
                     _SettingsTile(
                       icon: Icons.exit_to_app_rounded,
-                      title: t(
-                        ar: "إغلاق التطبيق",
-                        en: "Exit App",
-                      ),
-                      subtitle: t(
-                        ar: "إغلاق Puzzle World",
-                        en: "Close Puzzle World",
-                      ),
+                      title: "إغلاق التطبيق",
+                      subtitle: "إغلاق Puzzle World",
                       iconColor: const Color(
                         0xFFFF8A9B,
                       ),
@@ -1688,12 +1581,9 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                     const SizedBox(
                       height: 8,
                     ),
-                    Text(
-                      t(
-                        ar: "الإصدار $appVersion",
-                        en: "Version $appVersion",
-                      ),
-                      style: const TextStyle(
+                    const Text(
+                      "الإصدار 1.0.0",
+                      style: TextStyle(
                         color: Colors.white38,
                         fontSize: 12,
                       ),
@@ -1703,66 +1593,6 @@ class _WorldMapScreenState extends State<WorldMapScreen>
               ),
             );
           },
-        );
-      },
-    );
-  }
-
-  // ============================================================
-  // 🌐 اختيار اللغة
-  // ============================================================
-  Future<void> showLanguageDialog() async {
-    await showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF241337),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              20,
-            ),
-          ),
-          title: Text(
-            t(
-              ar: "اللغة",
-              en: "Language",
-            ),
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _LanguageOption(
-                title: "العربية",
-                selected: language.isArabic,
-                onTap: () async {
-                  await language.setArabic();
-                  if (!mounted) return;
-                  Navigator.pop(
-                    dialogContext,
-                  );
-                  setState(() {});
-                },
-              ),
-              _LanguageOption(
-                title: "English",
-                selected: language.isEnglish,
-                onTap: () async {
-                  await language.setEnglish();
-                  if (!mounted) return;
-                  Navigator.pop(
-                    dialogContext,
-                  );
-                  setState(() {});
-                },
-              ),
-            ],
-          ),
         );
       },
     );
@@ -1782,13 +1612,10 @@ class _WorldMapScreenState extends State<WorldMapScreen>
               22,
             ),
           ),
-          title: Text(
-            t(
-              ar: "حول Puzzle World",
-              en: "About Puzzle World",
-            ),
+          title: const Text(
+            "حول Puzzle World",
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
             ),
@@ -1810,56 +1637,35 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                 const SizedBox(
                   height: 10,
                 ),
-                Text(
-                  t(
-                    ar: "الإصدار $appVersion",
-                    en: "Version $appVersion",
-                  ),
-                  style: const TextStyle(
+                const Text(
+                  "الإصدار 1.0.0",
+                  style: TextStyle(
                     color: Colors.white54,
                   ),
                 ),
                 const SizedBox(
                   height: 22,
                 ),
-                _AboutSection(
-                  title: t(
-                    ar: "نظام فتح الجزر",
-                    en: "Island Unlock System",
-                  ),
+                const _AboutSection(
+                  title: "نظام فتح الجزر",
                   icon: Icons.public_rounded,
-                  text: t(
-                    ar: "تبدأ جزيرة الحيوانات مفتوحة. أما باقي الجزر فتُفتح باستخدام النجوم.",
-                    en: "The Animals Island starts unlocked. Other islands are unlocked using stars.",
-                  ),
+                  text: "تبدأ جزيرة الحيوانات مفتوحة. أما باقي الجزر فتُفتح باستخدام النجوم.",
                 ),
                 const SizedBox(
                   height: 14,
                 ),
-                _AboutSection(
-                  title: t(
-                    ar: "نظام الجزيرة الخاصة",
-                    en: "Private Island System",
-                  ),
+                const _AboutSection(
+                  title: "نظام الجزيرة الخاصة",
                   icon: Icons.photo_library_rounded,
-                  text: t(
-                    ar: "يمكنك فتح الجزيرة الخاصة باستخدام 100 جوهرة، ثم إنشاء ألغاز من صورك الخاصة.",
-                    en: "You can unlock the Private Island with 100 gems and create puzzles from your own photos.",
-                  ),
+                  text: "يمكنك فتح الجزيرة الخاصة باستخدام 100 جوهرة، ثم إنشاء ألغاز من صورك الخاصة.",
                 ),
                 const SizedBox(
                   height: 14,
                 ),
-                _AboutSection(
-                  title: t(
-                    ar: "نظام الشراء والمكافآت",
-                    en: "Rewards System",
-                  ),
+                const _AboutSection(
+                  title: "نظام الشراء والمكافآت",
                   icon: Icons.shopping_bag_rounded,
-                  text: t(
-                    ar: "تستخدم اللعبة العملات والنجوم والجواهر لإدارة المكافآت وفتح الميزات المختلفة.",
-                    en: "The game uses coins, stars, and gems to manage rewards and unlock different features.",
-                  ),
+                  text: "تستخدم اللعبة العملات والنجوم والجواهر لإدارة المكافآت وفتح الميزات المختلفة.",
                 ),
               ],
             ),
@@ -1871,12 +1677,9 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                   dialogContext,
                 );
               },
-              child: Text(
-                t(
-                  ar: "إغلاق",
-                  en: "Close",
-                ),
-                style: const TextStyle(
+              child: const Text(
+                "إغلاق",
+                style: TextStyle(
                   color: Color(
                     0xFFD6B8FF,
                   ),
@@ -1988,13 +1791,13 @@ class _DailyRewardMiniWidget extends StatelessWidget {
           // 🎁 حالة الصندوق
           // ==============================================
           if (available)
-            Padding(
-              padding: const EdgeInsets.only(
+            const Padding(
+              padding: EdgeInsets.only(
                 top: 2,
               ),
               child: Text(
                 "جاهز",
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.amber,
                   fontSize: 9,
                   fontWeight: FontWeight.bold,
@@ -2132,7 +1935,6 @@ class _SettingsTile extends StatelessWidget {
   Widget build(
     BuildContext context,
   ) {
-    final bool isArabic = AppLanguageManager.instance.isArabic;
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(
         horizontal: 4,
@@ -2156,7 +1958,7 @@ class _SettingsTile extends StatelessWidget {
       ),
       title: Text(
         title,
-        textAlign: isArabic ? TextAlign.right : TextAlign.left,
+        textAlign: TextAlign.right,
         style: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.w600,
@@ -2166,57 +1968,19 @@ class _SettingsTile extends StatelessWidget {
           ? null
           : Text(
               subtitle!,
-              textAlign: isArabic ? TextAlign.right : TextAlign.left,
+              textAlign: TextAlign.right,
               style: const TextStyle(
                 color: Colors.white54,
                 fontSize: 12,
               ),
             ),
-      trailing: trailing ??
-          Icon(
-            isArabic ? Icons.chevron_left_rounded : Icons.chevron_right_rounded,
+      trailing:
+          trailing ??
+          const Icon(
+            Icons.chevron_left_rounded,
             color: Colors.white38,
           ),
       onTap: onTap,
-    );
-  }
-}
-
-// ================================================================
-// 🌐 اختيار اللغة
-// ================================================================
-class _LanguageOption extends StatelessWidget {
-  final String title;
-  final bool selected;
-  final VoidCallback onTap;
-  const _LanguageOption({
-    required this.title,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(
-    BuildContext context,
-  ) {
-    return ListTile(
-      onTap: onTap,
-      title: Text(
-        title,
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-        ),
-      ),
-      trailing: Icon(
-        selected ? Icons.radio_button_checked : Icons.radio_button_off,
-        color: selected
-            ? const Color(
-                0xFFD6B8FF,
-              )
-            : Colors.white38,
-      ),
     );
   }
 }
@@ -2238,7 +2002,6 @@ class _AboutSection extends StatelessWidget {
   Widget build(
     BuildContext context,
   ) {
-    final bool isArabic = AppLanguageManager.instance.isArabic;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(
@@ -2274,7 +2037,7 @@ class _AboutSection extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  textAlign: isArabic ? TextAlign.right : TextAlign.left,
+                  textAlign: TextAlign.right,
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -2288,7 +2051,7 @@ class _AboutSection extends StatelessWidget {
           ),
           Text(
             text,
-            textAlign: isArabic ? TextAlign.right : TextAlign.left,
+            textAlign: TextAlign.right,
             style: const TextStyle(
               color: Colors.white70,
               fontSize: 14,
