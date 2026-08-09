@@ -209,7 +209,7 @@ levelNumber,
 // ============================================================
 
 String getLevelKey(int levelNumber) {
-return "${widget.island.id}level$levelNumber";
+  return "${widget.island.id}_level_$levelNumber";
 }
 
 // ============================================================
