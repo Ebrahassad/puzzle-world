@@ -10,7 +10,6 @@ import '../engine/puzzle_piece.dart';
 import '../managers/ads_manager.dart';
 import '../managers/reward_manager.dart';
 import '../models/puzzle_model.dart';
-import '../widgets/victory_puzzle_preview.dart';
 import '../../../core/language/app_language_manager.dart';
 
 import 'final_victory_screen.dart';
@@ -45,41 +44,7 @@ class _ConfettiSpark {
 }
 
 /// ============================================================
-/// 🧩 Puzzle explosion data
-/// ============================================================
-
-class _PieceExplosionData {
-  final PuzzlePiece piece;
-
-  Offset position;
-
-  double vx = 0;
-  double vy = 0;
-  double gravity = 0.3;
-
-  double rotation = 0;
-  double rotationSpeed = 0;
-
-  double opacity = 1;
-  double scale = 1;
-
-  _PieceExplosionData(this.piece)
-      : position = piece.correctPosition;
-}
-
-/// ============================================================
 /// 🏆 VictoryScreen
-///
-/// Levels 1 - 9:
-///   ⭐ 1 Star
-///   🪙 100 Coins
-///
-/// Optional rewarded ad:
-///   ⭐ +1 Star
-///   🪙 +100 Coins
-///
-/// Level 10:
-///   FinalVictoryScreen handles all final rewards.
 /// ============================================================
 
 class VictoryScreen extends StatefulWidget {
@@ -134,39 +99,6 @@ class _VictoryScreenState extends State<VictoryScreen>
       AppLanguageManager.instance;
 
   // ============================================================
-  // ⏱ Master timing
-  // ============================================================
-
-  static const int kImagePhaseMs = 2000;
-  static const int kExplosionPhaseMs = 3000;
-  static const int kChestPhaseMs = 5000;
-
-  // ============================================================
-  // 🧩 Puzzle pieces
-  // ============================================================
-
-  List<PuzzlePiece> _pieces = [];
-
-  List<_PieceExplosionData> _explosionPieces = [];
-
-  bool _introVisible = false;
-  bool _showPieces = true;
-
-  // ============================================================
-  // 🎯 Centering
-  // ============================================================
-
-  Offset _puzzleCenterOffset = Offset.zero;
-
-  // ============================================================
-  // 💥 Explosion
-  // ============================================================
-
-  late Ticker _physicsTicker;
-
-  double _lastElapsedMs = 0;
-
-  // ============================================================
   // 🎁 Chest
   // ============================================================
 
@@ -195,14 +127,6 @@ class _VictoryScreenState extends State<VictoryScreen>
   final List<_ConfettiSpark> _sparkles = [];
 
   bool _sparklesActive = false;
-
-  // ============================================================
-  // ⭐ Star preview
-  // ============================================================
-
-  late AnimationController _starPreviewController;
-
-  bool _showStarPreview = false;
 
   // ============================================================
   // ⭐ Reward flight
@@ -255,7 +179,6 @@ class _VictoryScreenState extends State<VictoryScreen>
   void initState() {
     super.initState();
 
-    _physicsTicker = createTicker(_updateExplosion);
     _sparkleTicker = createTicker(_updateSparkles);
 
     _setupChestAnimation();
@@ -265,14 +188,9 @@ class _VictoryScreenState extends State<VictoryScreen>
       duration: const Duration(milliseconds: 1500),
     );
 
-    _starPreviewController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
-
     _rewardController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1300),
+      duration: const Duration(milliseconds: 750),
     );
 
     _buttonsFloatController = AnimationController(
@@ -282,8 +200,6 @@ class _VictoryScreenState extends State<VictoryScreen>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-
-      _preparePieces();
 
       _runSequence();
 
@@ -298,196 +214,6 @@ class _VictoryScreenState extends State<VictoryScreen>
   }
 
   // ============================================================
-  // 🧩 Prepare puzzle pieces
-  //
-  // مهم:
-  // يتم حساب مركز اللغز أولاً ثم تطبيق التوسيط مباشرة
-  // على جميع القطع.
-  //
-  // بهذا تكون الصورة كاملة ومرتبة ومتمركزة منذ أول ظهور
-  // وقبل بداية الانفجار.
-  // ============================================================
-
-  void _preparePieces() {
-    _pieces = widget.pieces.toList();
-
-    // ----------------------------------------------------------
-    // حساب الإزاحة أولاً
-    // ----------------------------------------------------------
-
-    _calculatePuzzleCenter();
-
-    // ----------------------------------------------------------
-    // إنشاء بيانات القطع مع تطبيق التوسيط مباشرة
-    // ----------------------------------------------------------
-
-    _explosionPieces = _pieces.map((piece) {
-      final data = _PieceExplosionData(piece);
-
-      data.position = _centeredPosition(
-        piece.correctPosition,
-      );
-
-      return data;
-    }).toList();
-
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
-  // ============================================================
-  // 🎯 Calculate puzzle center
-  //
-  // نعتمد فقط على boardRect كمصدر موثوق لمركز البازل.
-  //
-  // لا نستخدم:
-  // physicalSize
-  // devicePixelRatio
-  // minX / maxX / minY / maxY
-  // أو متوسط أكثر من نظام إحداثيات.
-  // ============================================================
-
-  void _calculatePuzzleCenter() {
-    if (!mounted) {
-      _puzzleCenterOffset = Offset.zero;
-      return;
-    }
-
-    final screenSize = MediaQuery.of(context).size;
-
-    final screenCenter = Offset(
-      screenSize.width / 2,
-      screenSize.height / 2,
-    );
-
-    final boardCenter = widget.boardRect.center;
-
-    // ----------------------------------------------------------
-    // إزاحة واحدة فقط:
-    //
-    // مركز الشاشة - مركز البورد
-    // ----------------------------------------------------------
-
-    _puzzleCenterOffset =
-        screenCenter - boardCenter;
-  }
-
-  // ============================================================
-  // 🎯 Get centered piece position
-  // ============================================================
-
-  Offset _centeredPosition(
-    Offset original,
-  ) {
-    return original + _puzzleCenterOffset;
-  }
-
-  // ============================================================
-  // 💥 Start explosion
-  // ============================================================
-
-  void _startExplosion() {
-    final random = Random();
-
-    for (final data in _explosionPieces) {
-      data.position = _centeredPosition(
-        data.piece.correctPosition,
-      );
-
-      data.vx =
-          (random.nextDouble() - 0.5) * 10;
-
-      data.vy =
-          -4.0 - random.nextDouble() * 8.0;
-
-      data.gravity =
-          0.18 + random.nextDouble() * 0.25;
-
-      data.rotationSpeed =
-          (random.nextDouble() - 0.5) * 0.04;
-
-      data.rotation = 0;
-      data.opacity = 1;
-      data.scale = 1;
-    }
-
-    _lastElapsedMs = 0;
-
-    _physicsTicker.start();
-  }
-
-  // ============================================================
-  // 💥 Explosion physics
-  // ============================================================
-
-  void _updateExplosion(Duration elapsed) {
-    final elapsedMs =
-        elapsed.inMilliseconds.toDouble();
-
-    final dt = (
-      (elapsedMs - _lastElapsedMs) /
-      (1000 / 60)
-    ).clamp(0.2, 3.0);
-
-    _lastElapsedMs = elapsedMs;
-
-    final fadeT =
-        (elapsedMs / kExplosionPhaseMs)
-            .clamp(0.0, 1.0);
-
-    final targetOpacity =
-        1.0 - Curves.easeOut.transform(fadeT);
-
-    final floorY =
-        MediaQuery.of(context).size.height +
-        250;
-
-    for (final data in _explosionPieces) {
-      data.position += Offset(
-        data.vx * dt,
-        data.vy * dt,
-      );
-
-      data.vy += data.gravity * dt;
-
-      if (data.position.dy > floorY) {
-        data.position = Offset(
-          data.position.dx,
-          floorY,
-        );
-
-        data.vy *= -0.45;
-        data.vx *= 0.8;
-      }
-
-      final damping =
-          pow(0.985, dt).toDouble();
-
-      data.vx *= damping;
-      data.vy *= damping;
-
-      data.rotation +=
-          data.rotationSpeed * dt;
-
-      data.opacity = targetOpacity;
-
-      data.scale = max(
-        0.82,
-        data.scale - 0.0006 * dt,
-      );
-    }
-
-    if (mounted) {
-      setState(() {});
-    }
-
-    if (elapsedMs >= kExplosionPhaseMs) {
-      _physicsTicker.stop();
-    }
-  }
-
-  // ============================================================
   // 🎁 Chest animation
   // ============================================================
 
@@ -495,14 +221,14 @@ class _VictoryScreenState extends State<VictoryScreen>
     _chestController = AnimationController(
       vsync: this,
       duration: const Duration(
-        milliseconds: 3200,
+        milliseconds: 1800,
       ),
     );
 
     _chestFall = TweenSequence<double>([
       TweenSequenceItem(
         tween: Tween(
-          begin: -650.0,
+          begin: -500.0,
           end: 0.0,
         ).chain(
           CurveTween(
@@ -514,7 +240,7 @@ class _VictoryScreenState extends State<VictoryScreen>
       TweenSequenceItem(
         tween: Tween(
           begin: 0.0,
-          end: -70.0,
+          end: -45.0,
         ).chain(
           CurveTween(
             curve: Curves.easeOut,
@@ -524,7 +250,7 @@ class _VictoryScreenState extends State<VictoryScreen>
       ),
       TweenSequenceItem(
         tween: Tween(
-          begin: -70.0,
+          begin: -45.0,
           end: 0.0,
         ).chain(
           CurveTween(
@@ -580,18 +306,6 @@ class _VictoryScreenState extends State<VictoryScreen>
 
         setState(() {
           _chestOpened = true;
-
-          if (!widget.isFinalLevel) {
-            _showStarPreview = true;
-
-            _starPreviewController.repeat(
-              reverse: true,
-            );
-          } else {
-            _showStarPreview = false;
-
-            _starPreviewController.stop();
-          }
         });
 
         _glowController.repeat(
@@ -747,55 +461,19 @@ class _VictoryScreenState extends State<VictoryScreen>
         MediaQuery.of(context).size;
 
     // ----------------------------------------------------------
-    // نقطة بداية النجمة
+    // ⭐ نقطة خروج النجمة من أعلى الصندوق
     // ----------------------------------------------------------
 
-    try {
-      if (_chestKey.currentContext != null) {
-        final renderObject =
-            _chestKey.currentContext!
-                .findRenderObject();
-
-        if (renderObject is RenderBox &&
-            renderObject.hasSize) {
-          _rewardStart =
-              renderObject.localToGlobal(
-            renderObject.size.center(
-              Offset.zero,
-            ),
-          );
-        } else {
-          _rewardStart = Offset(
-            size.width / 2,
-            size.height / 2,
-          );
-        }
-      } else {
-        _rewardStart = Offset(
-          size.width / 2,
-          size.height / 2,
-        );
-      }
-    } catch (_) {
-      _rewardStart = Offset(
-        size.width / 2,
-        size.height / 2,
-      );
-    }
+    _rewardStart = Offset(
+      size.width / 2,
+      size.height / 2 - 125,
+    );
 
     _rewardEnd = _getRewardTarget();
 
     setState(() {
-      _showStarPreview = false;
-
-      _starPreviewController.stop();
-
       _showReward = true;
     });
-
-    // ----------------------------------------------------------
-    // ⭐ حركة النجمة
-    // ----------------------------------------------------------
 
     try {
       _rewardController.reset();
@@ -804,10 +482,6 @@ class _VictoryScreenState extends State<VictoryScreen>
     } catch (_) {}
 
     if (!mounted) return;
-
-    // ----------------------------------------------------------
-    // ⭐ المكافأة الأساسية
-    // ----------------------------------------------------------
 
     await _grantBaseReward();
 
@@ -997,10 +671,6 @@ class _VictoryScreenState extends State<VictoryScreen>
       _rewardAdFinished = true;
     }
 
-    // ----------------------------------------------------------
-    // ⏳ Timeout protection
-    // ----------------------------------------------------------
-
     const maxWait =
         Duration(seconds: 15);
 
@@ -1057,92 +727,57 @@ class _VictoryScreenState extends State<VictoryScreen>
   Future<void> _runSequence() async {
     if (!mounted) return;
 
-    setState(() {
-      _introVisible = true;
-    });
-
     // ----------------------------------------------------------
-    // 🧩 صورة البازل كاملة
+    // 🎁 إظهار الصندوق مباشرة
     // ----------------------------------------------------------
 
     await Future.delayed(
-      const Duration(
-        milliseconds: kImagePhaseMs,
-      ),
+      const Duration(milliseconds: 250),
     );
 
     if (!mounted) return;
-
-    // ----------------------------------------------------------
-    // 💥 الانفجار
-    // ----------------------------------------------------------
-
-    _startExplosion();
-
-    await Future.delayed(
-      const Duration(
-        milliseconds: kExplosionPhaseMs,
-      ),
-    );
-
-    if (!mounted) return;
-
-    if (_physicsTicker.isActive) {
-      _physicsTicker.stop();
-    }
-
-    // ----------------------------------------------------------
-    // 🎁 الصندوق
-    // ----------------------------------------------------------
 
     setState(() {
       _showChest = true;
     });
 
-    await Future.delayed(
-      const Duration(milliseconds: 120),
-    );
-
-    if (!mounted) return;
-
-    setState(() {
-      _showPieces = false;
-    });
+    // ----------------------------------------------------------
+    // 🎁 حركة الصندوق
+    // ----------------------------------------------------------
 
     try {
       await _chestController.forward();
     } catch (_) {}
 
+    if (!mounted) return;
+
     // ----------------------------------------------------------
-    // ⏳ وقت عرض الصندوق المفتوح
+    // ⏳ عرض الصندوق المفتوح قليلاً
     // ----------------------------------------------------------
 
     await Future.delayed(
-      const Duration(
-        milliseconds: kChestPhaseMs,
-      ),
+      const Duration(milliseconds: 700),
     );
 
     if (!mounted) return;
 
     // ----------------------------------------------------------
-    // 💎 المرحلة النهائية
+    // 💎 المستوى النهائي
     // ----------------------------------------------------------
 
     if (widget.isFinalLevel) {
       await Future.delayed(
-        const Duration(seconds: 5),
+        const Duration(milliseconds: 1200),
       );
 
       if (!mounted) return;
 
       _goToFinalVictory();
-
       return;
     }
 
     // ----------------------------------------------------------
-    // ⭐ تسليم النجمة إلى Toolbar
+    // ⭐ إخراج النجمة من أعلى الصندوق
     // ----------------------------------------------------------
 
     await _startRewardFlight();
@@ -1208,70 +843,6 @@ class _VictoryScreenState extends State<VictoryScreen>
 
       child: Stack(
         children: [
-          // ======================================================
-          // 🧩 Puzzle
-          // ======================================================
-
-          if (_showPieces &&
-              _explosionPieces.isNotEmpty)
-            Positioned.fill(
-              child: IgnorePointer(
-                child: AnimatedOpacity(
-                  duration:
-                      const Duration(milliseconds: 500),
-
-                  opacity:
-                      _introVisible ? 1 : 0,
-
-                  child: AnimatedScale(
-                    duration:
-                        const Duration(milliseconds: 500),
-
-                    curve:
-                        Curves.easeOutBack,
-
-                    scale:
-                        _introVisible ? 1 : 0.9,
-
-                    child:
-                        VictoryPuzzlePreview(
-                      image:
-                          widget.puzzleImage,
-
-                      rows:
-                          widget.rows,
-
-                      cols:
-                          widget.cols,
-
-                      pieces:
-                          _explosionPieces
-                              .map(
-                        (e) {
-                          return VictoryPieceRenderData(
-                            piece:
-                                e.piece,
-
-                            position:
-                                e.position,
-
-                            rotation:
-                                e.rotation,
-
-                            opacity:
-                                e.opacity,
-
-                            scale:
-                                e.scale,
-                          );
-                        },
-                      ).toList(),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
           // ======================================================
           // ✨ Chest glow
           // ======================================================
@@ -1400,57 +971,6 @@ class _VictoryScreenState extends State<VictoryScreen>
                     ),
                   );
                 },
-              ),
-            ),
-
-          // ======================================================
-          // ⭐ Star preview
-          // ======================================================
-
-          if (_showStarPreview &&
-              !widget.isFinalLevel)
-            IgnorePointer(
-              child: Center(
-                child: AnimatedBuilder(
-                  animation:
-                      _starPreviewController,
-
-                  builder:
-                      (context, child) {
-                    final t =
-                        _starPreviewController
-                            .value;
-
-                    final scale =
-                        0.9 + (t * 0.2);
-
-                    return Transform.translate(
-                      offset:
-                          const Offset(
-                        0,
-                        -110,
-                      ),
-
-                      child: Opacity(
-                        opacity:
-                            0.85 +
-                            (t * 0.15),
-
-                        child:
-                            Transform.scale(
-                          scale: scale,
-
-                          child:
-                              Image.asset(
-                            'assets/images/rewards/Star_gold.png',
-
-                            width: 60,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
               ),
             ),
 
@@ -1591,7 +1111,6 @@ class _VictoryScreenState extends State<VictoryScreen>
                           MainAxisSize.min,
 
                       children: [
-                        // المستوى التالي
                         _VictoryImageActionButton(
                           imagePath:
                               'assets/images/ui/next_play.png',
@@ -1607,10 +1126,9 @@ class _VictoryScreenState extends State<VictoryScreen>
                         ),
 
                         const SizedBox(
-                          height: 20,
+                          height: 14,
                         ),
 
-                        // إعادة اللعب
                         _VictoryImageActionButton(
                           imagePath:
                               'assets/images/ui/again_play.png',
@@ -1621,10 +1139,9 @@ class _VictoryScreenState extends State<VictoryScreen>
                         ),
 
                         const SizedBox(
-                          height: 20,
+                          height: 14,
                         ),
 
-                        // الخريطة
                         _VictoryImageActionButton(
                           imagePath:
                               'assets/images/ui/home_map.png',
@@ -1650,20 +1167,14 @@ class _VictoryScreenState extends State<VictoryScreen>
 
   @override
   void dispose() {
-    if (_physicsTicker.isActive) {
-      _physicsTicker.stop();
-    }
-
     if (_sparkleTicker.isActive) {
       _sparkleTicker.stop();
     }
 
-    _physicsTicker.dispose();
     _sparkleTicker.dispose();
 
     _chestController.dispose();
     _glowController.dispose();
-    _starPreviewController.dispose();
     _rewardController.dispose();
     _buttonsFloatController.dispose();
 
@@ -1696,10 +1207,10 @@ class _VictoryImageActionButton
         (MediaQuery.of(context)
                     .size
                     .width *
-                0.25)
+                0.30)
             .clamp(
-              90.0,
-              130.0,
+              105.0,
+              150.0,
             );
 
     return GestureDetector(
