@@ -1,4 +1,4 @@
-Import 'dart:math' as math;
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -16,15 +16,15 @@ import '../managers/puzzle_progress_manager.dart';
 import 'puzzle_game_screen.dart';
 
 class IslandScreen extends StatefulWidget {
-final PuzzleModel island;
+  final PuzzleModel island;
 
-const IslandScreen({
-super.key,
-required this.island,
-});
+  const IslandScreen({
+    super.key,
+    required this.island,
+  });
 
-@override
-State<IslandScreen> createState() => _IslandScreenState();
+  @override
+  State<IslandScreen> createState() => _IslandScreenState();
 }
 
 class _IslandScreenState extends State<IslandScreen>
