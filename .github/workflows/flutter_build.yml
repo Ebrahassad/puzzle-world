@@ -22,7 +22,7 @@ jobs:
 
 
       # ============================================================
-      # 🐦 Flutter
+      # 🐦 Setup Flutter
       # ============================================================
 
       - name: Setup Flutter
@@ -30,6 +30,17 @@ jobs:
         with:
           flutter-version: '3.44.8'
           channel: stable
+
+
+      # ============================================================
+      # ☕ Setup Java 17
+      # ============================================================
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
 
       # ============================================================
@@ -46,7 +57,7 @@ jobs:
 
 
       # ============================================================
-      # 📚 Flutter dependencies
+      # 📚 Dependencies
       # ============================================================
 
       - name: Flutter pub get
@@ -54,22 +65,7 @@ jobs:
 
 
       # ============================================================
-      # 📺 Unity Ads
-      #
-      # مهم:
-      # لا نحذف هذه الخطوة.
-      # يتم تحديث Unity Ads إلى النسخة المتوافقة المطلوبة.
-      # ============================================================
-
-      - name: Update Unity Ads plugin
-        run: |
-          flutter pub remove unity_ads_plugin
-          flutter pub add unity_ads_plugin:^0.4.0
-          flutter pub get
-
-
-      # ============================================================
-      # 🔎 Check Unity Ads version
+      # 📺 Check Unity Ads
       # ============================================================
 
       - name: Check Unity Ads version
@@ -78,38 +74,19 @@ jobs:
 
 
       # ============================================================
-      # 🔧 Fix Unity Ads JVM / Kotlin compatibility
-      #
-      # هذه الخطوة مهمة لأن Unity Ads قد يسبب مشكلة
-      # JVM target مع إصدار Kotlin/Gradle في المشروع.
+      # 🧹 Clean
       # ============================================================
 
-      - name: Fix Unity Ads JVM target
-        shell: bash
-        run: |
-          set -e
+      - name: Flutter clean
+        run: flutter clean
 
-          UNITY_PLUGIN_PATH=$(find "$HOME/.pub-cache" \
-            -type d \
-            -path "*/hosted/pub.dev/unity_ads_plugin-0.4.0" \
-            | head -n 1)
 
-          if [ -z "$UNITY_PLUGIN_PATH" ]; then
-            echo "Unity Ads plugin path not found."
-            exit 1
-          fi
+      # ============================================================
+      # 📚 Get dependencies after clean
+      # ============================================================
 
-          echo "Unity Ads plugin:"
-          echo "$UNITY_PLUGIN_PATH"
-
-          echo "=============================="
-          echo "Searching Gradle files..."
-          echo "=============================="
-
-          find "$UNITY_PLUGIN_PATH/android" \
-            -type f \
-            \( -name "*.gradle" -o -name "*.gradle.kts" \) \
-            -print
+      - name: Flutter pub get after clean
+        run: flutter pub get
 
 
       # ============================================================
@@ -118,22 +95,6 @@ jobs:
 
       - name: Generate App Icon
         run: dart run flutter_launcher_icons
-
-
-      # ============================================================
-      # 🧹 Flutter clean
-      # ============================================================
-
-      - name: Flutter clean
-        run: flutter clean
-
-
-      # ============================================================
-      # 📚 Get dependencies again
-      # ============================================================
-
-      - name: Flutter pub get after clean
-        run: flutter pub get
 
 
       # ============================================================
