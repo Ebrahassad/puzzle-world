@@ -18,24 +18,12 @@ Future<void> main() async {
   // ============================================================
   // 🚀 تشغيل التطبيق مباشرة
   //
-  // لا ننتظر تهيئة Unity Ads هنا حتى لا تتأخر شاشة Flutter.
+  // لا ننتظر Unity Ads هنا.
   // ============================================================
 
   runApp(
     const PuzzleWorldApp(),
   );
-
-  // ============================================================
-  // 📺 تهيئة الإعلانات في الخلفية بعد تشغيل التطبيق
-  // ============================================================
-
-  Future.microtask(() async {
-    try {
-      await AdsManager().initAds();
-    } catch (_) {
-      // فشل الإعلانات لا يمنع تشغيل اللعبة.
-    }
-  });
 }
 
 // ================================================================
@@ -52,6 +40,7 @@ class PuzzleWorldApp extends StatelessWidget {
     return ValueListenableBuilder<Locale>(
       valueListenable:
           AppLanguageManager.instance.localeNotifier,
+
       builder: (
         context,
         locale,
@@ -88,6 +77,7 @@ class PuzzleWorldApp extends StatelessWidget {
               textDirection: isArabic
                   ? TextDirection.rtl
                   : TextDirection.ltr,
+
               child:
                   child ??
                   const SizedBox.shrink(),
@@ -131,9 +121,65 @@ class PuzzleWorldApp extends StatelessWidget {
           // ======================================================
 
           home:
-              const WorldMapScreen(),
+              const _StartupScreen(),
         );
       },
     );
+  }
+}
+
+// ================================================================
+// 🚀 شاشة البداية
+//
+// تعرض WorldMapScreen مباشرة.
+// وبعد أول إطار يتم تشغيل Unity Ads في الخلفية.
+//
+// هذا يمنع الإعلانات من تأخير ظهور التطبيق.
+// ================================================================
+
+class _StartupScreen extends StatefulWidget {
+  const _StartupScreen();
+
+  @override
+  State<_StartupScreen> createState() =>
+      _StartupScreenState();
+}
+
+class _StartupScreenState
+    extends State<_StartupScreen> {
+
+  bool _adsStarted = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) {
+        _initializeAds();
+      },
+    );
+  }
+
+  Future<void> _initializeAds() async {
+    if (_adsStarted) {
+      return;
+    }
+
+    _adsStarted = true;
+
+    try {
+      await AdsManager().initAds();
+    } catch (_) {
+      // ========================================================
+      // الإعلانات ليست شرطًا لتشغيل اللعبة.
+      // إذا فشلت التهيئة، تستمر اللعبة بشكل طبيعي.
+      // ========================================================
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const WorldMapScreen();
   }
 }
