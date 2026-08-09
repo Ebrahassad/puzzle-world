@@ -7,17 +7,13 @@ on:
 
   workflow_dispatch:
 
-
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
-
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -25,37 +21,41 @@ jobs:
           flutter-version: '3.44.8'
           channel: stable
 
+      - name: Check Flutter
+        run: |
+          flutter --version
+          dart --version
 
       - name: Check pubspec.yaml
         run: |
           pwd
           ls -la
           echo "===================="
-          sed -n '1,120p' pubspec.yaml
+          sed -n '1,160p' pubspec.yaml
           echo "===================="
-
 
       - name: Flutter pub get
         run: flutter pub get
 
-
-      - name: Update Unity Ads plugin
-        run: |
-          flutter pub remove unity_ads_plugin
-          flutter pub add unity_ads_plugin:^0.4.0
-
-
       - name: Check Unity Ads version
-        run: flutter pub deps | grep unity_ads_plugin
-
+        run: flutter pub deps | grep unity_ads_plugin || true
 
       - name: Generate App Icon
         run: dart run flutter_launcher_icons
 
+      - name: Clean Flutter
+        run: flutter clean
+
+      - name: Flutter pub get after clean
+        run: flutter pub get
 
       - name: Build APK
         run: flutter build apk --release
 
+      - name: Show APK information
+        run: |
+          ls -lh build/app/outputs/flutter-apk/
+          echo "APK generated successfully."
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
