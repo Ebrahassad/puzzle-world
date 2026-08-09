@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 
-import '../../../core/language/app_language_manager.dart';
 import '../managers/reward_manager.dart';
 import '../managers/puzzle_progress_manager.dart';
 import '../managers/ads_manager.dart';
@@ -47,23 +46,6 @@ class _WalletScreenState extends State<WalletScreen>
   late AnimationController walletAnimController;
   late Animation<Offset> walletPositionAnimation;
   late Animation<double> walletScaleAnimation;
-
-  //==================================================
-  // 🌍 اللغة
-  //==================================================
-
-  AppLanguageManager get language =>
-      AppLanguageManager.instance;
-
-  String tr({
-    required String ar,
-    required String en,
-  }) {
-    return language.text(
-      ar: ar,
-      en: en,
-    );
-  }
 
   //==================================================
   // 🎨 ألوان الشاشة
@@ -245,10 +227,7 @@ class _WalletScreenState extends State<WalletScreen>
     });
 
     showPurchaseMessage(
-      tr(
-        ar: "🪙 تم شراء $coinsReward عملة",
-        en: "🪙 $coinsReward coins purchased",
-      ),
+      "🪙 تم شراء $coinsReward عملة",
     );
   }
 
@@ -297,10 +276,7 @@ class _WalletScreenState extends State<WalletScreen>
     });
 
     showPurchaseMessage(
-      tr(
-        ar: "⭐ تم شراء نجمة واحدة",
-        en: "⭐ One star purchased",
-      ),
+      "⭐ تم شراء نجمة واحدة",
     );
   }
 
@@ -349,10 +325,7 @@ class _WalletScreenState extends State<WalletScreen>
     });
 
     showPurchaseMessage(
-      tr(
-        ar: "💎 تم شراء جوهرة واحدة",
-        en: "💎 One gem purchased",
-      ),
+      "💎 تم شراء جوهرة واحدة",
     );
   }
 
@@ -365,10 +338,7 @@ class _WalletScreenState extends State<WalletScreen>
       SnackBar(
         backgroundColor: purpleDark,
         content: Text(
-          tr(
-            ar: "📺 تحتاج إلى $required مشاهدة إعلان",
-            en: "📺 You need $required ad views",
-          ),
+          "📺 تحتاج إلى $required مشاهدة إعلان",
         ),
       ),
     );
@@ -456,15 +426,12 @@ class _WalletScreenState extends State<WalletScreen>
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(
-            SnackBar(
+            const SnackBar(
               backgroundColor: purpleDark,
               content: Text(
-                tr(
-                  ar: "الإعلان غير متوفر حالياً",
-                  en: "The ad is currently unavailable",
-                ),
+                "الإعلان غير متوفر حالياً",
               ),
-              duration: const Duration(seconds: 2),
+              duration: Duration(seconds: 2),
             ),
           );
       },
@@ -493,26 +460,16 @@ class _WalletScreenState extends State<WalletScreen>
 
         return AlertDialog(
           backgroundColor: purpleDark,
-          title: Text(
-            tr(
-              ar: "🎁 مكافأة الصندوق",
-              en: "🎁 Chest Reward",
-            ),
-            style: const TextStyle(
+          title: const Text(
+            "🎁 مكافأة الصندوق",
+            style: TextStyle(
               color: Colors.amber,
             ),
           ),
           content: Text(
-            tr(
-              ar:
-                  "🪙 العملات: ${reward.coins}\n"
-                  "⭐ النجوم: ${reward.stars}\n"
-                  "💎 الجواهر: ${reward.gems}",
-              en:
-                  "🪙 Coins: ${reward.coins}\n"
-                  "⭐ Stars: ${reward.stars}\n"
-                  "💎 Gems: ${reward.gems}",
-            ),
+            "🪙 العملات: ${reward.coins}\n"
+            "⭐ النجوم: ${reward.stars}\n"
+            "💎 الجواهر: ${reward.gems}",
             style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
@@ -554,7 +511,7 @@ class _WalletScreenState extends State<WalletScreen>
     }
 
     return Directionality(
-      textDirection: language.textDirection,
+      textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: backgroundColor,
 
@@ -564,72 +521,66 @@ class _WalletScreenState extends State<WalletScreen>
 
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(kToolbarHeight),
-          child: Directionality(
-            textDirection: TextDirection.ltr,
-            child: AppBar(
-              automaticallyImplyLeading: false,
+          child: AppBar(
+            automaticallyImplyLeading: false,
 
-              //================================================
-              // زر الرجوع — ثابت دائماً في اليسار
-              //================================================
-              leading: Padding(
-                padding: const EdgeInsets.all(9),
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  child: Image.asset(
-                    "assets/images/ui/back_screen.png",
-                    width: 30,
-                    height: 30,
-                    fit: BoxFit.contain,
-                  ),
+            //================================================
+            // زر الرجوع — ثابت دائماً في اليسار
+            //================================================
+            leading: Padding(
+              padding: const EdgeInsets.all(9),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                },
+                child: Image.asset(
+                  "assets/images/ui/back_screen.png",
+                  width: 30,
+                  height: 30,
+                  fit: BoxFit.contain,
                 ),
               ),
+            ),
 
-              //================================================
-              // العنوان — في المنتصف
-              //================================================
-              title: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    "assets/images/ui/open_wallet.png",
-                    width: 46,
-                    height: 46,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) {
-                      return const Icon(
-                        Icons.account_balance_wallet_rounded,
-                        color: Color(0xFF5B2A86),
-                        size: 42,
-                      );
-                    },
-                  ),
-
-                  const SizedBox(width: 9),
-
-                  Text(
-                    tr(
-                      ar: "المحفظة والمتجر",
-                      en: "Wallet & Store",
-                    ),
-                    style: const TextStyle(
+            //================================================
+            // العنوان — في المنتصف
+            //================================================
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  "assets/images/ui/open_wallet.png",
+                  width: 46,
+                  height: 46,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) {
+                    return const Icon(
+                      Icons.account_balance_wallet_rounded,
                       color: Color(0xFF5B2A86),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 19,
-                    ),
+                      size: 42,
+                    );
+                  },
+                ),
+
+                const SizedBox(width: 9),
+
+                const Text(
+                  "المحفظة والمتجر",
+                  style: TextStyle(
+                    color: Color(0xFF5B2A86),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 19,
                   ),
-                ],
-              ),
+                ),
+              ],
+            ),
 
-              centerTitle: true,
-              backgroundColor: cardDarkColor,
-              elevation: 3,
+            centerTitle: true,
+            backgroundColor: cardDarkColor,
+            elevation: 3,
 
-              iconTheme: const IconThemeData(
-                color: purpleDark,
-              ),
+            iconTheme: const IconThemeData(
+              color: purpleDark,
             ),
           ),
         ),
@@ -666,12 +617,9 @@ class _WalletScreenState extends State<WalletScreen>
                       // 🛒 عنوان المتجر
                       //================================
 
-                      Text(
-                        tr(
-                          ar: "🛒 متجر المكافآت",
-                          en: "🛒 Reward Store",
-                        ),
-                        style: const TextStyle(
+                      const Text(
+                        "🛒 متجر المكافآت",
+                        style: TextStyle(
                           color: purpleText,
                           fontSize: 21,
                           fontWeight: FontWeight.bold,
@@ -680,15 +628,10 @@ class _WalletScreenState extends State<WalletScreen>
 
                       const SizedBox(height: 2),
 
-                      Text(
-                        tr(
-                          ar:
-                              "استخدم رصيد المشاهدات لشراء المكافآت",
-                          en:
-                              "Use your ad-view balance to buy rewards",
-                        ),
+                      const Text(
+                        "استخدم رصيد المشاهدات لشراء المكافآت",
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: purpleText,
                           fontSize: 12,
                         ),
@@ -703,17 +646,11 @@ class _WalletScreenState extends State<WalletScreen>
                       SizedBox(
                         height: 66,
                         child: walletCard(
-                          title: tr(
-                            ar: "العملات",
-                            en: "Coins",
-                          ),
+                          title: "العملات",
                           value: coins,
                           assetPath:
                               "assets/images/rewards/puzzle_coin.png",
-                          priceText: tr(
-                            ar: "50 مشاهدة",
-                            en: "50 views",
-                          ),
+                          priceText: "50 مشاهدة",
                           onBuy: buyingCoins
                               ? null
                               : buyCoins,
@@ -730,17 +667,11 @@ class _WalletScreenState extends State<WalletScreen>
                       SizedBox(
                         height: 66,
                         child: walletCard(
-                          title: tr(
-                            ar: "النجوم",
-                            en: "Stars",
-                          ),
+                          title: "النجوم",
                           value: stars,
                           assetPath:
                               "assets/images/rewards/Star_gold.png",
-                          priceText: tr(
-                            ar: "50 مشاهدة",
-                            en: "50 views",
-                          ),
+                          priceText: "50 مشاهدة",
                           onBuy: buyingStars
                               ? null
                               : buyStars,
@@ -757,17 +688,11 @@ class _WalletScreenState extends State<WalletScreen>
                       SizedBox(
                         height: 66,
                         child: walletCard(
-                          title: tr(
-                            ar: "الجواهر",
-                            en: "Gems",
-                          ),
+                          title: "الجواهر",
                           value: gems,
                           assetPath:
                               "assets/images/rewards/gem.png",
-                          priceText: tr(
-                            ar: "100 مشاهدة",
-                            en: "100 views",
-                          ),
+                          priceText: "100 مشاهدة",
                           onBuy: buyingGems
                               ? null
                               : buyGems,
@@ -891,23 +816,17 @@ class _WalletScreenState extends State<WalletScreen>
               crossAxisAlignment:
                   CrossAxisAlignment.start,
               children: [
-                Text(
-                  tr(
-                    ar: "رصيد المشاهدات",
-                    en: "Ad Views Balance",
-                  ),
-                  style: const TextStyle(
+                const Text(
+                  "رصيد المشاهدات",
+                  style: TextStyle(
                     color: purpleDark,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  tr(
-                    ar: "عملة المتجر",
-                    en: "Store Currency",
-                  ),
-                  style: const TextStyle(
+                const Text(
+                  "عملة المتجر",
+                  style: TextStyle(
                     color: purpleText,
                     fontSize: 11,
                   ),
@@ -1003,10 +922,7 @@ class _WalletScreenState extends State<WalletScreen>
                   ),
                 ),
                 Text(
-                  tr(
-                    ar: "الرصيد: $value",
-                    en: "Balance: $value",
-                  ),
+                  "الرصيد: $value",
                   style: const TextStyle(
                     color: Color(0xFF80632A),
                     fontSize: 13,
@@ -1051,13 +967,9 @@ class _WalletScreenState extends State<WalletScreen>
                             color: purpleDark,
                           ),
                         )
-                      : Text(
-                          tr(
-                            ar: "شراء",
-                            en: "Buy",
-                          ),
-                          style:
-                              const TextStyle(
+                      : const Text(
+                          "شراء",
+                          style: TextStyle(
                             fontWeight:
                                 FontWeight.bold,
                             fontSize: 13,
@@ -1143,12 +1055,9 @@ class _WalletScreenState extends State<WalletScreen>
 
               const SizedBox(width: 6),
 
-              Text(
-                tr(
-                  ar: "صندوق المكافأة الملكي",
-                  en: "Royal Reward Chest",
-                ),
-                style: const TextStyle(
+              const Text(
+                "صندوق المكافأة الملكي",
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: purpleDark,
@@ -1163,15 +1072,10 @@ class _WalletScreenState extends State<WalletScreen>
           // 📝 الوصف
           //==========================================
 
-          Text(
-            tr(
-              ar:
-                  "شاهد إعلاناً وافتح الصندوق للحصول على مكافأة عشوائية",
-              en:
-                  "Watch an ad and open the chest to receive a random reward",
-            ),
+          const Text(
+            "شاهد إعلاناً وافتح الصندوق للحصول على مكافأة عشوائية",
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               color: purpleText,
             ),
@@ -1246,21 +1150,10 @@ class _WalletScreenState extends State<WalletScreen>
               ),
               label: Text(
                 openingAd
-                    ? tr(
-                        ar: "جاري فتح الإعلان...",
-                        en: "Loading ad...",
-                      )
+                    ? "جاري فتح الإعلان..."
                     : isChestOpen
-                        ? tr(
-                            ar: "تم فتح الصندوق!",
-                            en: "Chest opened!",
-                          )
-                        : tr(
-                            ar:
-                                "شاهد إعلان وافتح الصندوق",
-                            en:
-                                "Watch Ad & Open Chest",
-                          ),
+                        ? "تم فتح الصندوق!"
+                        : "شاهد إعلان وافتح الصندوق",
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
