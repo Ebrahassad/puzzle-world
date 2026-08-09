@@ -78,38 +78,69 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
     });
 
     try {
-      final XFile? picked = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 90,
-      );
+      // ============================================================
+      // 📺 محاولة تشغيل إعلان مكافأة
+      //
+      // إذا كان الإعلان جاهزًا:
+      //     → يظهر الإعلان
+      //     → بعد اكتماله يفتح الاستوديو
+      //
+      // إذا لم يكن جاهزًا أو حدث خطأ:
+      //     → يفتح الاستوديو مباشرة
+      //
+      // الإعلان لا يمنع المستخدم من دخول الاستوديو بأي حال.
+      // ============================================================
 
-      if (!mounted) return;
+      bool studioOpened = false;
 
-      if (picked == null) {
+      Future<void> openStudio() async {
+        if (studioOpened || !mounted) return;
+
+        studioOpened = true;
+
         setState(() {
           _isPicking = false;
         });
-        return;
+
+        final XFile? picked = await _imagePicker.pickImage(
+          source: ImageSource.gallery,
+          imageQuality: 90,
+        );
+
+        if (!mounted) return;
+
+        if (picked == null) {
+          return;
+        }
+
+        final int? gridSize = await _showDifficultyDialog();
+
+        if (!mounted || gridSize == null) {
+          return;
+        }
+
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => PuzzleGameScreen(
+              customImagePath: picked.path,
+              isCustomImage: true,
+              customGridSize: gridSize,
+            ),
+          ),
+        );
       }
 
-      final int? gridSize = await _showDifficultyDialog();
+      AdsManager().showRewardedAd(
+        // الإعلان اكتمل بنجاح
+        onRewardEarned: () {
+          openStudio();
+        },
 
-      if (!mounted) return;
-
-      setState(() {
-        _isPicking = false;
-      });
-
-      if (gridSize == null) return;
-
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => PuzzleGameScreen(
-            customImagePath: picked.path,
-            isCustomImage: true,
-            customGridSize: gridSize,
-          ),
-        ),
+        // الإعلان غير جاهز أو فشل
+        // لا ننتظر الإعلان، ندخل الاستوديو مباشرة
+        onAdFailed: () {
+          openStudio();
+        },
       );
     } catch (_) {
       if (!mounted) return;
@@ -121,9 +152,9 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-            'تعذر اختيار الصورة. حاول مرة أخرى.',
+            'تعذر فتح الاستوديو. حاول مرة أخرى.',
           ),
-          backgroundColor: Colors.red.shade700,
+          backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -586,7 +617,7 @@ class _DifficultyOption extends StatelessWidget {
 
 // ============================================================================
 // 🔒 فتح مستوى الجزيرة
-// ============================================================
+// ============================================================================
 
 class _LevelSlot extends StatelessWidget {
   final int index;
