@@ -1,12 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+
 import '../managers/reward_manager.dart';
 import '../managers/ads_manager.dart';
 
 class DailyRewardPopup extends StatefulWidget {
   final VoidCallback onRewardClaimed;
 
-  const DailyRewardPopup({super.key, required this.onRewardClaimed});
+  const DailyRewardPopup({
+    super.key,
+    required this.onRewardClaimed,
+  });
 
   @override
   State<DailyRewardPopup> createState() => _DailyRewardPopupState();
@@ -14,295 +18,834 @@ class DailyRewardPopup extends StatefulWidget {
 
 class _DailyRewardPopupState extends State<DailyRewardPopup>
     with TickerProviderStateMixin {
-  late AnimationController _mainController;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _rotationAnimation;
-  late Animation<Offset> _positionAnimation;
+  // ============================================================
+  // 🎬 Controllers
+  // ============================================================
+
+  late AnimationController _boxController;
+  late AnimationController _rewardController;
+  late AnimationController _returnController;
+
+  late Animation<Offset> _boxPosition;
+  late Animation<double> _boxScale;
+  late Animation<double> _boxRotation;
+
+  // ============================================================
+  // 📦 الحالة
+  // ============================================================
 
   bool _isOpen = false;
   bool _isClaimed = false;
   bool _showRewardUI = false;
+  bool _isWatchingAd = false;
+
+  // ============================================================
+  // 🎁 القيم المعروضة
+  // ============================================================
 
   int _displayCoins = 0;
   int _displayStars = 0;
   int _displayGems = 0;
 
-  final int _targetCoins = 100;
-  final int _targetStars = 1;
-  final int _targetGems = 1;
+  static const int _targetCoins = 100;
+  static const int _targetStars = 1;
+  static const int _targetGems = 1;
+
+  // ============================================================
+  // ⏱️ Timer العد
+  // ============================================================
+
+  Timer? _rewardTimer;
+
+  // ============================================================
+  // 🚀 INIT
+  // ============================================================
 
   @override
   void initState() {
     super.initState();
 
-    _mainController = AnimationController(
+    // ----------------------------------------------------------
+    // حركة الصندوق من أعلى اليسار إلى المنتصف
+    // ----------------------------------------------------------
+
+    _boxController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-
-    _scaleAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-          tween: Tween<double>(begin: 0.0, end: 1.15)
-              .chain(CurveTween(curve: Curves.easeOut)),
-          weight: 60),
-      TweenSequenceItem(
-          tween: Tween<double>(begin: 1.15, end: 1.0)
-              .chain(CurveTween(curve: Curves.easeInOut)),
-          weight: 40),
-    ]).animate(_mainController);
-
-    _rotationAnimation = Tween<double>(begin: -0.05, end: 0.05).animate(
-      CurvedAnimation(
-        parent: _mainController,
-        curve: Curves.easeInOutSine,
+      duration: const Duration(
+        milliseconds: 900,
       ),
     );
 
-    // حركة تبدأ من أسفل اليسار (مكان المحفظة أو الصندوق) إلى منتصف الشاشة
-    _positionAnimation = Tween<Offset>(
-      begin: const Offset(-2.0, 2.0),
+    _boxPosition = Tween<Offset>(
+      begin: const Offset(
+        -1.15,
+        -3.0,
+      ),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _mainController,
-      curve: const Interval(0.0, 1.0, curve: Curves.easeInOutCubic),
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _boxController,
+        curve: Curves.easeOutBack,
+      ),
+    );
 
-    _mainController.forward();
+    _boxScale = Tween<double>(
+      begin: 0.55,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _boxController,
+        curve: Curves.easeOutBack,
+      ),
+    );
+
+    _boxRotation = Tween<double>(
+      begin: -0.08,
+      end: 0.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _boxController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+
+    // ----------------------------------------------------------
+    // حركة المكافآت نحو المحفظة
+    // ----------------------------------------------------------
+
+    _rewardController = AnimationController(
+      vsync: this,
+      duration: const Duration(
+        milliseconds: 1100,
+      ),
+    );
+
+    // ----------------------------------------------------------
+    // رجوع الصندوق إلى أعلى اليسار
+    // ----------------------------------------------------------
+
+    _returnController = AnimationController(
+      vsync: this,
+      duration: const Duration(
+        milliseconds: 750,
+      ),
+    );
+
+    _boxController.forward();
   }
+
+  // ============================================================
+  // 🧹 DISPOSE
+  // ============================================================
 
   @override
   void dispose() {
-    _mainController.dispose();
+    _rewardTimer?.cancel();
+
+    _boxController.dispose();
+    _rewardController.dispose();
+    _returnController.dispose();
+
     super.dispose();
   }
 
-  void _onBoxTap() async {
-    if (_isOpen || _isClaimed) return;
+  // ============================================================
+  // 📦 الضغط على الصندوق
+  // ============================================================
 
-    // استدعاء دالة المطالبة بالمكافأة اليومية من مدير المكافآت الموجود لديك
-    final reward = await RewardManager.claimDailyReward();
-    if (reward == null) return;
+  Future<void> _onBoxTap() async {
+    if (_isOpen || _isClaimed || _isWatchingAd) {
+      return;
+    }
 
-    setState(() {
-      _isOpen = true;
-    });
+    try {
+      final reward = await RewardManager.claimDailyReward();
 
-    _startCountingReward();
-  }
+      if (reward == null) {
+        return;
+      }
 
-  void _startCountingReward() {
-    const duration = Duration(milliseconds: 50);
-    int step = 0;
-    Timer.periodic(duration, (timer) {
-      step++;
+      if (!mounted) {
+        return;
+      }
+
       setState(() {
-        _displayCoins = (_targetCoins * (step / 20)).clamp(0, _targetCoins).toInt();
-        _displayStars = (_targetStars * (step / 20)).clamp(0, _targetStars).toInt();
-        _displayGems = (_targetGems * (step / 20)).clamp(0, _targetGems).toInt();
+        _isOpen = true;
       });
 
-      if (step >= 20) {
-        timer.cancel();
-        setState(() {
-          _showRewardUI = true;
-        });
+      // --------------------------------------------------------
+      // فتح الصندوق
+      // --------------------------------------------------------
+
+      await Future.delayed(
+        const Duration(
+          milliseconds: 250,
+        ),
+      );
+
+      if (!mounted) {
+        return;
       }
-    });
+
+      _startCountingReward();
+    } catch (_) {}
   }
 
-  void _claimReward() {
+  // ============================================================
+  // 🔢 عد المكافأة
+  // ============================================================
+
+  void _startCountingReward() {
+    _rewardTimer?.cancel();
+
+    int step = 0;
+
+    _rewardTimer = Timer.periodic(
+      const Duration(
+        milliseconds: 45,
+      ),
+      (timer) {
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
+
+        step++;
+
+        final progress = (step / 25).clamp(
+          0.0,
+          1.0,
+        );
+
+        setState(() {
+          _displayCoins =
+              (_targetCoins * progress).round();
+
+          _displayStars =
+              (_targetStars * progress).round();
+
+          _displayGems =
+              (_targetGems * progress).round();
+        });
+
+        if (step >= 25) {
+          timer.cancel();
+
+          setState(() {
+            _displayCoins = _targetCoins;
+            _displayStars = _targetStars;
+            _displayGems = _targetGems;
+            _showRewardUI = true;
+          });
+        }
+      },
+    );
+  }
+
+  // ============================================================
+  // 🎁 استلام المكافأة
+  // ============================================================
+
+  Future<void> _claimReward() async {
+    if (_isClaimed || _isWatchingAd) {
+      return;
+    }
+
+    _rewardTimer?.cancel();
+
+    if (!mounted) {
+      return;
+    }
+
     setState(() {
       _isClaimed = true;
     });
 
-    _mainController.reverse().then((_) {
-      widget.onRewardClaimed();
+    // ----------------------------------------------------------
+    // تشغيل حركة المكافآت نحو المحفظة
+    // ----------------------------------------------------------
+
+    await _rewardController.forward();
+
+    if (!mounted) {
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // رجوع الصندوق إلى مكانه أعلى الشاشة
+    // ----------------------------------------------------------
+
+    await _returnController.forward();
+
+    if (!mounted) {
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // إغلاق النافذة وإظهار الصندوق المصغر في WorldMapScreen
+    // ----------------------------------------------------------
+
+    widget.onRewardClaimed();
+
+    if (mounted) {
       Navigator.of(context).pop();
-    });
+    }
   }
 
+  // ============================================================
+  // 📺 مضاعفة المكافأة
+  // ============================================================
+
   void _watchAdToDouble() {
+    if (_isWatchingAd || _isClaimed) {
+      return;
+    }
+
+    setState(() {
+      _isWatchingAd = true;
+    });
+
     AdsManager().showRewardedAd(
       onRewardEarned: () async {
-        // مضاعفة المكافأة عبر RewardManager
-        final currentReward = await RewardManager.getReward();
-        // أو مضاعفة القيم المعروضة مباشرة وإضافتها
-        setState(() {
-          _displayCoins *= 2;
-          _displayStars *= 2;
-          _displayGems *= 2;
-        });
-        
-        await RewardManager.addCoins(_targetCoins);
-        await RewardManager.addGems(_targetGems);
-        await RewardManager.addStars(_targetStars);
+        // ------------------------------------------------------
+        // لا نستدعي claimDailyReward مرة أخرى.
+        //
+        // المكافأة الأساسية تم استلامها بالفعل عند فتح الصندوق.
+        // هنا نضيف فقط المكافأة الإضافية.
+        // ------------------------------------------------------
 
-        _claimReward();
+        await RewardManager.addCoins(
+          _targetCoins,
+        );
+
+        await RewardManager.addStars(
+          _targetStars,
+        );
+
+        await RewardManager.addGems(
+          _targetGems,
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          _displayCoins = _targetCoins * 2;
+          _displayStars = _targetStars * 2;
+          _displayGems = _targetGems * 2;
+          _isWatchingAd = false;
+          _showRewardUI = false;
+        });
+
+        await Future.delayed(
+          const Duration(
+            milliseconds: 350,
+          ),
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          _showRewardUI = true;
+        });
       },
       onAdFailed: () {
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          _isWatchingAd = false;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("الإعلان غير متوفر حالياً")),
+          const SnackBar(
+            content: Text(
+              "الإعلان غير متوفر حالياً",
+            ),
+          ),
         );
       },
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: EdgeInsets.zero,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            color: Colors.black.withOpacity(0.7),
-          ),
-          SlideTransition(
-            position: _positionAnimation,
-            child: ScaleTransition(
-              scale: _scaleAnimation,
-              child: RotationTransition(
-                turns: _rotationAnimation,
-                child: GestureDetector(
-                  onTap: _onBoxTap,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: 200,
-                        height: 200,
-                        child: Image.asset(
-                          _isOpen
-                              ? 'assets/images/ui/open_wallet.png'
-                              : 'assets/images/ui/close_wallet.png',
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => Icon(
-                            _isOpen ? Icons.lock_open : Icons.lock,
-                            size: 100,
-                            color: Colors.amber,
-                          ),
-                        ),
-                      ),
-                      if (!_isOpen)
-                        const Padding(
-                          padding: EdgeInsets.only(top: 16),
-                          child: Text(
-                            'انقر لفتح المحفظة والمكافأة!',
-                            style: TextStyle(
-                              color: Colors.amber,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
+  // ============================================================
+  // 📦 مكان الصندوق
+  // ============================================================
+
+  Widget _buildBox() {
+    return AnimatedBuilder(
+      animation: Listenable.merge([
+        _boxController,
+        _returnController,
+      ]),
+      builder: (
+        context,
+        child,
+      ) {
+        final double returnValue =
+            _returnController.value;
+
+        final Offset startPosition =
+            _boxPosition.value;
+
+        final Offset currentPosition = Offset.lerp(
+              startPosition,
+              const Offset(
+                -1.15,
+                -3.0,
               ),
+              returnValue,
+            ) ??
+            startPosition;
+
+        final double scale = Tween<double>(
+          begin: _boxScale.value,
+          end: 0.55,
+        ).transform(returnValue);
+
+        return FractionalTranslation(
+          translation: currentPosition,
+          child: Transform.scale(
+            scale: scale,
+            child: Transform.rotate(
+              angle: _boxRotation.value,
+              child: child,
             ),
           ),
-          if (_isOpen)
-            Positioned(
-              bottom: 100,
-              child: TweenAnimationBuilder<double>(
-                tween: Tween<double>(begin: 0.0, end: 1.0),
-                duration: const Duration(milliseconds: 400),
-                builder: (context, value, child) {
-                  return Transform.scale(
-                    scale: value,
-                    child: Opacity(
-                      opacity: value,
+        );
+      },
+      child: GestureDetector(
+        onTap: _onBoxTap,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ----------------------------------------------------
+            // 📦 الصندوق
+            // ----------------------------------------------------
+
+            SizedBox(
+              width: 190,
+              height: 190,
+              child: AnimatedSwitcher(
+                duration: const Duration(
+                  milliseconds: 350,
+                ),
+                transitionBuilder: (
+                  child,
+                  animation,
+                ) {
+                  return ScaleTransition(
+                    scale: animation,
+                    child: FadeTransition(
+                      opacity: animation,
                       child: child,
                     ),
                   );
                 },
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2A1B3D),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.amber, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.5),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
+                child: Image.asset(
+                  _isOpen
+                      ? "assets/images/rewards/daly_box_open.png"
+                      : "assets/images/rewards/daly_box_close.png",
+                  key: ValueKey<bool>(
+                    _isOpen,
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'مبروك! حصلت على مكافأتك',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildRewardItem('🪙', '$_displayCoins'),
-                          _buildRewardItem('⭐', '$_displayStars'),
-                          _buildRewardItem('💎', '$_displayGems'),
-                        ],
-                      ),
-                      if (_showRewardUI) ...[
-                        const SizedBox(height: 20),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.amber,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: _claimReward,
-                          child: const Text(
-                            'استلام المكافأة',
-                            style: TextStyle(
-                                color: Colors.black, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextButton(
-                          onPressed: _watchAdToDouble,
-                          child: const Text(
-                            'مضاعفة المكافأة عبر الفيديو 🎥',
-                            style: TextStyle(color: Colors.amberAccent),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                  fit: BoxFit.contain,
+                  errorBuilder: (
+                    context,
+                    error,
+                    stack,
+                  ) {
+                    return Icon(
+                      _isOpen
+                          ? Icons.card_giftcard_rounded
+                          : Icons.inventory_2_rounded,
+                      color: Colors.amber,
+                      size: 110,
+                    );
+                  },
                 ),
               ),
             ),
-        ],
+
+            // ----------------------------------------------------
+            // النص قبل الفتح
+            // ----------------------------------------------------
+
+            if (!_isOpen)
+              const Padding(
+                padding: EdgeInsets.only(
+                  top: 14,
+                ),
+                child: Text(
+                  "انقر لفتح المكافأة اليومية",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.amber,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildRewardItem(String emoji, String value) {
+  // ============================================================
+  // 🎁 لوحة المكافأة
+  // ============================================================
+
+  Widget _buildRewardPanel() {
+    if (!_isOpen) {
+      return const SizedBox.shrink();
+    }
+
+    return Positioned(
+      left: 20,
+      right: 20,
+      bottom: 80,
+      child: AnimatedOpacity(
+        opacity: _isOpen ? 1.0 : 0.0,
+        duration: const Duration(
+          milliseconds: 350,
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(
+            18,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(
+              0xFF2A1B3D,
+            ),
+            borderRadius: BorderRadius.circular(
+              22,
+            ),
+            border: Border.all(
+              color: Colors.amber,
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(
+                  0.45,
+                ),
+                blurRadius: 18,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "مبروك! حصلت على مكافأتك",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(
+                height: 18,
+              ),
+
+              Row(
+                mainAxisAlignment:
+                    MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildRewardItem(
+                    "🪙",
+                    _displayCoins,
+                  ),
+                  _buildRewardItem(
+                    "⭐",
+                    _displayStars,
+                  ),
+                  _buildRewardItem(
+                    "💎",
+                    _displayGems,
+                  ),
+                ],
+              ),
+
+              if (_showRewardUI) ...[
+                const SizedBox(
+                  height: 20,
+                ),
+
+                // ------------------------------------------------
+                // استلام
+                // ------------------------------------------------
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed:
+                        _isWatchingAd ? null : _claimReward,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      foregroundColor:
+                          const Color(
+                        0xFF1A0B2E,
+                      ),
+                      padding:
+                          const EdgeInsets.symmetric(
+                        vertical: 13,
+                      ),
+                      shape:
+                          RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(
+                          14,
+                        ),
+                      ),
+                    ),
+                    child: const Text(
+                      "استلام المكافأة",
+                      style: TextStyle(
+                        fontWeight:
+                            FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(
+                  height: 8,
+                ),
+
+                // ------------------------------------------------
+                // مضاعفة
+                // ------------------------------------------------
+
+                TextButton(
+                  onPressed:
+                      _isWatchingAd
+                          ? null
+                          : _watchAdToDouble,
+                  child: Text(
+                    _isWatchingAd
+                        ? "جاري تحميل الإعلان..."
+                        : "مضاعفة المكافأة عبر الفيديو 🎥",
+                    style: const TextStyle(
+                      color: Colors.amberAccent,
+                      fontWeight:
+                          FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // 🪙 ⭐ 💎 عنصر المكافأة
+  // ============================================================
+
+  Widget _buildRewardItem(
+    String icon,
+    int value,
+  ) {
     return Column(
       children: [
-        Text(emoji, style: const TextStyle(fontSize: 28)),
-        const SizedBox(height: 5),
         Text(
-          value,
+          icon,
+          style: const TextStyle(
+            fontSize: 30,
+          ),
+        ),
+        const SizedBox(
+          height: 5,
+        ),
+        Text(
+          "$value",
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 16,
+            fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
         ),
       ],
+    );
+  }
+
+  // ============================================================
+  // 🚀 حركة المكافآت إلى المحفظة
+  // ============================================================
+
+  Widget _buildFlyingRewards() {
+    if (!_isClaimed) {
+      return const SizedBox.shrink();
+    }
+
+    return AnimatedBuilder(
+      animation: _rewardController,
+      builder: (
+        context,
+        child,
+      ) {
+        final double value =
+            Curves.easeInCubic.transform(
+          _rewardController.value,
+        );
+
+        return Stack(
+          children: [
+            _flyingReward(
+              icon: "🪙",
+              begin: const Offset(
+                0,
+                0,
+              ),
+              end: const Offset(
+                -0.85,
+                1.9,
+              ),
+              value: value,
+              delay: 0.0,
+            ),
+            _flyingReward(
+              icon: "⭐",
+              begin: const Offset(
+                0,
+                0,
+              ),
+              end: const Offset(
+                -0.20,
+                1.9,
+              ),
+              value: value,
+              delay: 0.08,
+            ),
+            _flyingReward(
+              icon: "💎",
+              begin: const Offset(
+                0,
+                0,
+              ),
+              end: const Offset(
+                0.45,
+                1.9,
+              ),
+              value: value,
+              delay: 0.16,
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _flyingReward({
+    required String icon,
+    required Offset begin,
+    required Offset end,
+    required double value,
+    required double delay,
+  }) {
+    final double progress =
+        ((value - delay) / (1 - delay))
+            .clamp(0.0, 1.0);
+
+    final curved =
+        Curves.easeInOut.transform(
+      progress,
+    );
+
+    final Offset position = Offset.lerp(
+          begin,
+          end,
+          curved,
+        ) ??
+        begin;
+
+    final double scale =
+        1.0 - (curved * 0.45);
+
+    final double opacity =
+        progress < 0.8
+            ? 1.0
+            : 1.0 -
+                ((progress - 0.8) / 0.2);
+
+    return Align(
+      alignment: Alignment.center,
+      child: FractionalTranslation(
+        translation: position,
+        child: Opacity(
+          opacity: opacity,
+          child: Transform.scale(
+            scale: scale,
+            child: Text(
+              icon,
+              style: const TextStyle(
+                fontSize: 32,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // 🖥️ BUILD
+  // ============================================================
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: EdgeInsets.zero,
+      child: SizedBox.expand(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // ----------------------------------------------------
+            // خلفية
+            // ----------------------------------------------------
+
+            Container(
+              color: Colors.black.withOpacity(
+                0.72,
+              ),
+            ),
+
+            // ----------------------------------------------------
+            // الصندوق
+            // ----------------------------------------------------
+
+            _buildBox(),
+
+            // ----------------------------------------------------
+            // لوحة المكافأة
+            // ----------------------------------------------------
+
+            _buildRewardPanel(),
+
+            // ----------------------------------------------------
+            // المكافآت الطائرة
+            // ----------------------------------------------------
+
+            if (_isClaimed)
+              _buildFlyingRewards(),
+          ],
+        ),
+      ),
     );
   }
 }
