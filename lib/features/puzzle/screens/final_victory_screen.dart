@@ -17,7 +17,7 @@ enum _RewardType {
 }
 
 /// ============================================================
-/// ✈️ Reward flight particle
+/// ✈️ جسيمات حركة المكافأة
 /// ============================================================
 
 class _FlightParticle {
@@ -39,7 +39,7 @@ class _FlightParticle {
 }
 
 /// ============================================================
-/// 🎉 Confetti particle
+/// 🎉 جسيمات القصاصات الورقية (Confetti)
 /// ============================================================
 
 class _ConfettiParticle {
@@ -67,7 +67,7 @@ class _ConfettiParticle {
 }
 
 /// ============================================================
-/// 🏆 FINAL VICTORY SCREEN
+/// 🏆 شاشة الفوز النهائية
 ///
 /// هذه الشاشة مخصصة للمرحلة العاشرة فقط.
 ///
@@ -95,14 +95,14 @@ class FinalVictoryScreen extends StatefulWidget {
 class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     with TickerProviderStateMixin {
   // ==========================================================
-  // 🌐 Language
+  // 🌐 اللغة
   // ==========================================================
 
   AppLanguageManager get _language =>
       AppLanguageManager.instance;
 
   // ==========================================================
-  // 🎯 Toolbar targets
+  // 🎯 أهداف شريط الأدوات
   // ==========================================================
 
   final GlobalKey _starKey = GlobalKey();
@@ -112,13 +112,13 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   final GlobalKey _chestKey = GlobalKey();
 
   // ==========================================================
-  // 🔊 Audio
+  // 🔊 الصوت
   // ==========================================================
 
   late final AudioPlayer _audioPlayer;
 
   // ==========================================================
-  // 🌌 Background
+  // 🌌 الخلفية
   // ==========================================================
 
   late final AnimationController _bgController;
@@ -126,7 +126,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   late final Animation<double> _bgShift;
 
   // ==========================================================
-  // 🎁 Chest
+  // 🎁 الصندوق
   // ==========================================================
 
   late final AnimationController _chestController;
@@ -135,7 +135,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   late final Animation<double> _chestShake;
 
   // ==========================================================
-  // ✨ Effects
+  // ✨ المؤثرات
   // ==========================================================
 
   late final AnimationController _flashController;
@@ -143,7 +143,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   late final AnimationController _titleController;
 
   // ==========================================================
-  // ✈️ Reward flight
+  // ✈️ حركة المكافآت
   // ==========================================================
 
   late final AnimationController _flightController;
@@ -151,7 +151,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   late final AnimationController _badgePunchController;
 
   // ==========================================================
-  // 🎉 Confetti
+  // 🎉 القصاصات الورقية
   // ==========================================================
 
   late Ticker _confettiTicker;
@@ -161,7 +161,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   bool _confettiActive = false;
 
   // ==========================================================
-  // 🎬 State
+  // 🎬 الحالة
   // ==========================================================
 
   bool _opened = false;
@@ -175,7 +175,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   bool _adInProgress = false;
 
   // ==========================================================
-  // 🎁 Reward order
+  // 🎁 ترتيب المكافآت
   // ==========================================================
 
   final List<_RewardType> _rewardOrder = const [
@@ -185,7 +185,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   ];
 
   // ==========================================================
-  // 🚀 INIT
+  // 🚀 البداية (INIT)
   // ==========================================================
 
   @override
@@ -195,7 +195,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     _audioPlayer = AudioPlayer();
 
     // ----------------------------------------------------------
-    // Background animation
+    // حركة الخلفية
     // ----------------------------------------------------------
 
     _bgController = AnimationController(
@@ -224,7 +224,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     );
 
     // ----------------------------------------------------------
-    // Chest animation
+    // حركة الصندوق
     // ----------------------------------------------------------
 
     _chestController = AnimationController(
@@ -304,7 +304,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     );
 
     // ----------------------------------------------------------
-    // Other controllers
+    // وحدات التحكم الأخرى
     // ----------------------------------------------------------
 
     _flashController = AnimationController(
@@ -350,7 +350,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     );
 
     // ----------------------------------------------------------
-    // Confetti ticker
+    // مؤشر القصاصات الورقية
     // ----------------------------------------------------------
 
     _confettiTicker = createTicker(
@@ -358,7 +358,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     );
 
     // ----------------------------------------------------------
-    // Start cinematic
+    // بدء التسلسل السينمائي
     // ----------------------------------------------------------
 
     WidgetsBinding.instance.addPostFrameCallback(
@@ -371,7 +371,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // 🎬 Main sequence
+  // 🎬 التسلسل الرئيسي
   // ==========================================================
 
   Future<void> _runSequence() async {
@@ -388,7 +388,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     });
 
     // ----------------------------------------------------------
-    // Victory sound
+    // صوت الفوز
     // ----------------------------------------------------------
 
     try {
@@ -400,7 +400,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     } catch (_) {}
 
     // ----------------------------------------------------------
-    // Chest falls
+    // سقوط الصندوق
     // ----------------------------------------------------------
 
     await _chestController.forward();
@@ -408,7 +408,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     if (!mounted) return;
 
     // ----------------------------------------------------------
-    // Open chest
+    // فتح الصندوق
     // ----------------------------------------------------------
 
     setState(() {
@@ -426,7 +426,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     );
 
     // ----------------------------------------------------------
-    // Title
+    // العنوان
     // ----------------------------------------------------------
 
     await Future.delayed(
@@ -446,7 +446,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     );
 
     // ----------------------------------------------------------
-    // Rewards
+    // المكافآت
     // ----------------------------------------------------------
 
     await Future.delayed(
@@ -465,7 +465,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     if (!mounted) return;
 
     // ----------------------------------------------------------
-    // Double reward
+    // مضاعفة المكافأة
     // ----------------------------------------------------------
 
     await Future.delayed(
@@ -486,7 +486,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // ✈️ Play reward flights
+  // ✈️ تشغيل حركات انتقال المكافآت
   // ==========================================================
 
   Future<void> _playRewardFlights({
@@ -544,7 +544,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // ✈️ Fly one reward
+  // ✈️ تحليق مكافأة واحدة
   // ==========================================================
 
   Future<void> _flyOneReward(
@@ -638,7 +638,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // 🎯 Reward target
+  // 🎯 هدف المكافأة
   // ==========================================================
 
   Offset? _rewardTarget(
@@ -670,7 +670,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // 🖼️ Reward assets
+  // 🖼️ أصول المكافآت
   // ==========================================================
 
   String _rewardAsset(
@@ -689,7 +689,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // 📏 Reward sizes
+  // 📏 أحجام المكافآت
   // ==========================================================
 
   double _rewardSize(
@@ -703,7 +703,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // 🌈 Reward arcs
+  // 🌈 أقواس مسار المكافأة
   // ==========================================================
 
   double _rewardArc(
@@ -717,7 +717,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // 🎁 Chest center
+  // 🎁 مركز الصندوق
   // ==========================================================
 
   Offset _getChestCenter() {
@@ -753,7 +753,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // ⏳ Wait toolbar
+  // ⏳ انتظار أهداف شريط الأدوات
   // ==========================================================
 
   Future<void> _waitForToolbarTargets() async {
@@ -775,7 +775,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // 🎉 Confetti
+  // 🎉 القصاصات الورقية (Confetti)
   // ==========================================================
 
   void _spawnConfetti() {
@@ -846,7 +846,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // 🎉 Update confetti
+  // 🎉 تحديث القصاصات الورقية
   // ==========================================================
 
   void _updateConfetti() {
@@ -882,7 +882,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // 🎁 Double reward dialog
+  // 🎁 نافذة مضاعفة المكافأة
   // ==========================================================
 
   Future<void> _showDoubleRewardDialog() async {
@@ -949,7 +949,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
                 ),
 
                 // ----------------------------------------------
-                // Reward images instead of emojis
+                // معاينة صور المكافآت
                 // ----------------------------------------------
 
                 Row(
@@ -1051,7 +1051,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     );
 
     // ----------------------------------------------------------
-    // User declined
+    // رفض المستخدم
     // ----------------------------------------------------------
 
     if (wantDouble != true) {
@@ -1060,7 +1060,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     }
 
     // ----------------------------------------------------------
-    // Initialize Ads
+    // تهيئة الإعلانات
     // ----------------------------------------------------------
 
     if (!AdsManager()
@@ -1076,13 +1076,13 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     });
 
     // ----------------------------------------------------------
-    // Rewarded Ad
+    // إعلان المكافأة
     // ----------------------------------------------------------
 
     AdsManager().showRewardedAd(
       onRewardEarned: () async {
         // ======================================================
-        // Double the FINAL rewards:
+        // مضاعفة المكافآت النهائية:
         //
         // ⭐ +1
         // 🪙 +100
@@ -1109,7 +1109,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
         );
 
         // ------------------------------------------------------
-        // Replay reward flight
+        // إعادة عرض حركة المكافآت
         // ------------------------------------------------------
 
         await _playRewardFlights(
@@ -1152,7 +1152,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // 🏠 Go home
+  // 🏠 العودة للخريطة
   // ==========================================================
 
   void _goHome() {
@@ -1174,7 +1174,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // 🧱 BUILD
+  // 🧱 البناء (BUILD)
   // ==========================================================
 
   @override
@@ -1193,7 +1193,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
         body: Stack(
           children: [
             // ==================================================
-            // 🌌 Background
+            // 🌌 الخلفية
             // ==================================================
 
             Positioned.fill(
@@ -1284,7 +1284,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
             ),
 
             // ==================================================
-            // 🧭 Toolbar
+            // 🧭 شريط الأدوات
             // ==================================================
 
             Positioned(
@@ -1306,7 +1306,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
             ),
 
             // ==================================================
-            // 🎁 Chest
+            // 🎁 الصندوق
             // ==================================================
 
             if (_showChest)
@@ -1359,7 +1359,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
               ),
 
             // ==================================================
-            // ✨ Glow
+            // ✨ التوهج
             // ==================================================
 
             if (_opened)
@@ -1405,7 +1405,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
               ),
 
             // ==================================================
-            // 🎉 Confetti
+            // 🎉 القصاصات الورقية
             // ==================================================
 
             if (_confettiActive ||
@@ -1426,7 +1426,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
               ),
 
             // ==================================================
-            // 🏆 Title
+            // 🏆 العنوان
             // ==================================================
 
             if (_showTitle)
@@ -1520,7 +1520,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
               ),
 
             // ==================================================
-            // ✈️ Reward floating layer
+            // ✈️ طبقة طفو المكافآت
             // ==================================================
 
             if (_showRewardFlights)
@@ -1561,7 +1561,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
               ),
 
             // ==================================================
-            // ⚡ Flash
+            // ⚡ الوميض
             // ==================================================
 
             Positioned.fill(
@@ -1593,7 +1593,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // 🌟 Soft glow
+  // 🌟 توهج ناعم
   // ==========================================================
 
   Widget _softGlow(
@@ -1619,7 +1619,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // 🖼️ Reward preview image
+  // 🖼️ صورة معاينة المكافأة
   // ==========================================================
 
   Widget _RewardPreviewImage({
@@ -1637,7 +1637,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // 🧹 Dispose
+  // 🧹 التخلص من الموارد (Dispose)
   // ==========================================================
 
   @override
@@ -1667,7 +1667,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 }
 
 // ============================================================
-// 🎉 Confetti painter
+// 🎉 رسم القصاصات الورقية (Confetti painter)
 // ============================================================
 
 class _ConfettiPainter
