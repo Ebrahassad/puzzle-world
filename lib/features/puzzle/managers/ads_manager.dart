@@ -43,7 +43,56 @@ class AdsManager {
 
   bool _rewardedReady = false;
 
+  bool get isRewardedReady => _rewardedReady;
+
   bool _interstitialReady = false;
+
+  bool get isInterstitialReady => _interstitialReady;
+
+  //==================================================
+  // 🔄 إعادة تحميل الإعلانات
+  //==================================================
+
+  Timer? _rewardedRetryTimer;
+
+  Timer? _interstitialRetryTimer;
+
+  bool _rewardedLoading = false;
+
+  bool _interstitialLoading = false;
+
+  int _rewardedRetryCount = 0;
+
+  int _interstitialRetryCount = 0;
+
+  //==================================================
+  // ⏱️ أوقات إعادة المحاولة
+  //
+  // المحاولة الأولى بعد 3 ثوانٍ
+  // ثم 5
+  // ثم 10
+  // ثم 20
+  // ثم 30 كحد أقصى
+  //==================================================
+
+  Duration _retryDelay(int retryCount) {
+    switch (retryCount) {
+      case 0:
+        return const Duration(seconds: 3);
+
+      case 1:
+        return const Duration(seconds: 5);
+
+      case 2:
+        return const Duration(seconds: 10);
+
+      case 3:
+        return const Duration(seconds: 20);
+
+      default:
+        return const Duration(seconds: 30);
+    }
+  }
 
   //==================================================
   // 🚀 تهيئة الإعلانات
@@ -67,6 +116,7 @@ class AdsManager {
           '✅ Unity Ads initialized',
         );
 
+        // بدء تحميل الإعلانات في الخلفية
         loadAds();
 
         if (!completer.isCompleted) {
@@ -90,15 +140,55 @@ class AdsManager {
 
   //==================================================
   // 📦 تحميل الإعلانات
+  //
+  // يتم تشغيله مرة واحدة ثم يتولى النظام
+  // إعادة المحاولة تلقائيًا عند الفشل.
   //==================================================
 
   void loadAds() {
-    // Rewarded
+    if (!_initialized) {
+      return;
+    }
+
+    _loadRewardedAd();
+    _loadInterstitialAd();
+  }
+
+  //==================================================
+  // 📺 تحميل Rewarded
+  //==================================================
+
+  void _loadRewardedAd() {
+    if (!_initialized) {
+      return;
+    }
+
+    if (_rewardedReady) {
+      return;
+    }
+
+    if (_rewardedLoading) {
+      return;
+    }
+
+    _rewardedLoading = true;
+
+    debugPrint(
+      '📥 Loading Rewarded ad...',
+    );
+
     UnityAds.load(
       placementId: rewardedPlacementId,
 
       onComplete: (placementId) {
+        _rewardedLoading = false;
+
         _rewardedReady = true;
+
+        _rewardedRetryCount = 0;
+
+        _rewardedRetryTimer?.cancel();
+        _rewardedRetryTimer = null;
 
         debugPrint(
           '✅ Rewarded ad ready',
@@ -110,20 +200,94 @@ class AdsManager {
         error,
         message,
       ) {
+        _rewardedLoading = false;
+
         _rewardedReady = false;
 
         debugPrint(
           '❌ Rewarded ad failed: $message',
         );
+
+        _scheduleRewardedRetry();
       },
     );
+  }
 
-    // Interstitial
+  //==================================================
+  // 🔄 إعادة محاولة Rewarded
+  //==================================================
+
+  void _scheduleRewardedRetry() {
+    if (!_initialized) {
+      return;
+    }
+
+    if (_rewardedReady) {
+      return;
+    }
+
+    if (_rewardedLoading) {
+      return;
+    }
+
+    if (_rewardedRetryTimer != null) {
+      return;
+    }
+
+    final Duration delay =
+        _retryDelay(_rewardedRetryCount);
+
+    debugPrint(
+      '🔄 Rewarded retry in ${delay.inSeconds}s',
+    );
+
+    _rewardedRetryTimer = Timer(
+      delay,
+      () {
+        _rewardedRetryTimer = null;
+
+        _rewardedRetryCount++;
+
+        _loadRewardedAd();
+      },
+    );
+  }
+
+  //==================================================
+  // 📺 تحميل Interstitial
+  //==================================================
+
+  void _loadInterstitialAd() {
+    if (!_initialized) {
+      return;
+    }
+
+    if (_interstitialReady) {
+      return;
+    }
+
+    if (_interstitialLoading) {
+      return;
+    }
+
+    _interstitialLoading = true;
+
+    debugPrint(
+      '📥 Loading Interstitial ad...',
+    );
+
     UnityAds.load(
       placementId: interstitialPlacementId,
 
       onComplete: (placementId) {
+        _interstitialLoading = false;
+
         _interstitialReady = true;
+
+        _interstitialRetryCount = 0;
+
+        _interstitialRetryTimer?.cancel();
+        _interstitialRetryTimer = null;
 
         debugPrint(
           '✅ Interstitial ad ready',
@@ -135,11 +299,55 @@ class AdsManager {
         error,
         message,
       ) {
+        _interstitialLoading = false;
+
         _interstitialReady = false;
 
         debugPrint(
           '❌ Interstitial ad failed: $message',
         );
+
+        _scheduleInterstitialRetry();
+      },
+    );
+  }
+
+  //==================================================
+  // 🔄 إعادة محاولة Interstitial
+  //==================================================
+
+  void _scheduleInterstitialRetry() {
+    if (!_initialized) {
+      return;
+    }
+
+    if (_interstitialReady) {
+      return;
+    }
+
+    if (_interstitialLoading) {
+      return;
+    }
+
+    if (_interstitialRetryTimer != null) {
+      return;
+    }
+
+    final Duration delay =
+        _retryDelay(_interstitialRetryCount);
+
+    debugPrint(
+      '🔄 Interstitial retry in ${delay.inSeconds}s',
+    );
+
+    _interstitialRetryTimer = Timer(
+      delay,
+      () {
+        _interstitialRetryTimer = null;
+
+        _interstitialRetryCount++;
+
+        _loadInterstitialAd();
       },
     );
   }
@@ -147,16 +355,13 @@ class AdsManager {
   //==================================================
   // 📺 الإعلان المكافئ
   //
-  // كل إعلان مكتمل = مشاهدة واحدة فقط
-  // لا يفتح مرحلة أو جزيرة مباشرة.
+  // إذا كان جاهزًا:
+  //     يظهر الإعلان.
   //
-  // المشاهدة تذهب إلى:
-  // PuzzleProgressManager.adsBalance
+  // إذا لم يكن جاهزًا:
+  //     onAdFailed يعمل مباشرة.
   //
-  // ثم يستخدمها المتجر لشراء:
-  // 🪙 العملات
-  // ⭐ النجوم
-  // 💎 الجواهر
+  // لا يتم انتظار الإعلان.
   //==================================================
 
   void showRewardedAd({
@@ -165,11 +370,19 @@ class AdsManager {
   }) {
     if (!_initialized) {
       onAdFailed?.call();
+
+      // نحاول تحميله في الخلفية
+      _loadRewardedAd();
+
       return;
     }
 
     if (!_rewardedReady) {
       onAdFailed?.call();
+
+      // يبدأ التحميل في الخلفية إذا لم يكن هناك تحميل حالي
+      _loadRewardedAd();
+
       return;
     }
 
@@ -180,37 +393,41 @@ class AdsManager {
 
     _isShowing = true;
 
+    _rewardedReady = false;
+
     UnityAds.showVideoAd(
       placementId: rewardedPlacementId,
 
       onComplete: (_) async {
-        // منع تكرار المكافأة
         _isShowing = false;
-        _rewardedReady = false;
 
-        // إعادة تحميل إعلان جديد
-        loadAds();
+        debugPrint(
+          '✅ Rewarded ad completed',
+        );
 
-        // مشاهدة واحدة فقط
+        // تسجيل المشاهدة
         await PuzzleProgressManager.addAdsBalance(1);
 
         debugPrint(
           '📺 +1 ad balance',
         );
 
-        // إبلاغ الشاشة أن المكافأة وصلت
+        // إبلاغ الشاشة بالمكافأة
         onRewardEarned();
+
+        // تحميل إعلان جديد في الخلفية
+        _loadRewardedAd();
       },
 
       onFailed: (_, __, ___) {
         _isShowing = false;
-        _rewardedReady = false;
-
-        loadAds();
 
         debugPrint(
-          '❌ Rewarded ad failed',
+          '❌ Rewarded ad failed while showing',
         );
+
+        // تحميل إعلان جديد في الخلفية
+        _loadRewardedAd();
 
         onAdFailed?.call();
       },
@@ -219,8 +436,6 @@ class AdsManager {
 
   //==================================================
   // 📺 إعلان Interstitial
-  //
-  // لا يمنح أي عملة أو مشاهدة.
   //==================================================
 
   void showInterstitialAd({
@@ -228,11 +443,17 @@ class AdsManager {
   }) {
     if (!_initialized) {
       onAdClosed();
+
+      _loadInterstitialAd();
+
       return;
     }
 
     if (!_interstitialReady) {
       onAdClosed();
+
+      _loadInterstitialAd();
+
       return;
     }
 
@@ -243,23 +464,33 @@ class AdsManager {
 
     _isShowing = true;
 
+    _interstitialReady = false;
+
     UnityAds.showVideoAd(
       placementId: interstitialPlacementId,
 
       onComplete: (_) {
         _isShowing = false;
-        _interstitialReady = false;
 
-        loadAds();
+        debugPrint(
+          '✅ Interstitial completed',
+        );
+
+        // تحميل إعلان جديد في الخلفية
+        _loadInterstitialAd();
 
         onAdClosed();
       },
 
       onFailed: (_, __, ___) {
         _isShowing = false;
-        _interstitialReady = false;
 
-        loadAds();
+        debugPrint(
+          '❌ Interstitial failed',
+        );
+
+        // إعادة التحميل في الخلفية
+        _loadInterstitialAd();
 
         onAdClosed();
       },
