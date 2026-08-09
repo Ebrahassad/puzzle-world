@@ -137,7 +137,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     _mainController.forward();
 
     //==================================================
-    // ⏱️ تشغيل العداد
+    // ⏱️ تهيئة العداد
     //==================================================
 
     _initializeCountdown();
@@ -151,7 +151,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   void dispose() {
     _countdownTimer?.cancel();
     _rewardTimer?.cancel();
-
     _mainController.dispose();
 
     super.dispose();
@@ -173,13 +172,13 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     _countdownTimer = Timer.periodic(
       const Duration(seconds: 1),
       (_) {
-        _updateDailyRewardStatus();
+        _tickCountdown();
       },
     );
   }
 
   //==================================================
-  // ⏱️ تحديث حالة المكافأة
+  // ⏱️ تحديث حالة المكافأة من التخزين
   //==================================================
 
   Future<void> _updateDailyRewardStatus() async {
@@ -191,29 +190,94 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
         return;
       }
 
-      final now = DateTime.now();
+      if (available) {
+        setState(() {
+          _dailyRewardAvailable = true;
+          _remainingTime = Duration.zero;
 
-      // بداية اليوم التالي
-      final tomorrow = DateTime(
-        now.year,
-        now.month,
-        now.day + 1,
-      );
+          // إعادة الصندوق إلى الحالة الأصلية
+          _isOpen = false;
+          _isClaimed = false;
+          _showRewardUI = false;
 
-      final remaining = tomorrow.difference(now);
+          _displayCoins = 0;
+          _displayStars = 0;
+          _displayGems = 0;
+        });
+
+        return;
+      }
+
+      final remaining = _getTimeUntilTomorrow();
 
       setState(() {
-        _dailyRewardAvailable = available;
-
-        if (available) {
-          _remainingTime = Duration.zero;
-        } else {
-          _remainingTime = remaining;
-        }
+        _dailyRewardAvailable = false;
+        _remainingTime = remaining;
       });
     } catch (_) {
-      // لا نوقف الواجهة في حالة حدوث خطأ.
+      // لا نوقف الواجهة عند حدوث خطأ.
     }
+  }
+
+  //==================================================
+  // ⏱️ نبضة العداد كل ثانية
+  //==================================================
+
+  void _tickCountdown() {
+    if (!mounted) {
+      return;
+    }
+
+    // إذا كانت المكافأة متاحة بالفعل
+    if (_dailyRewardAvailable) {
+      return;
+    }
+
+    final newRemaining = _getTimeUntilTomorrow();
+
+    //==================================================
+    // 🕛 انتهى اليوم
+    //==================================================
+
+    if (newRemaining <= Duration.zero) {
+      setState(() {
+        _remainingTime = Duration.zero;
+
+        _dailyRewardAvailable = true;
+
+        // إعادة الصندوق إلى الحالة المغلقة
+        _isOpen = false;
+        _isClaimed = false;
+        _showRewardUI = false;
+        _isDoubling = false;
+
+        _displayCoins = 0;
+        _displayStars = 0;
+        _displayGems = 0;
+      });
+
+      return;
+    }
+
+    setState(() {
+      _remainingTime = newRemaining;
+    });
+  }
+
+  //==================================================
+  // ⏰ حساب الوقت حتى بداية اليوم التالي
+  //==================================================
+
+  Duration _getTimeUntilTomorrow() {
+    final now = DateTime.now();
+
+    final tomorrow = DateTime(
+      now.year,
+      now.month,
+      now.day + 1,
+    );
+
+    return tomorrow.difference(now);
   }
 
   //==================================================
@@ -405,27 +469,21 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
 
     setState(() {
       _isOpen = true;
+
       _dailyRewardAvailable = false;
-      _remainingTime = _getTimeUntilTomorrow();
+
+      _remainingTime =
+          _getTimeUntilTomorrow();
+
+      _displayCoins = 0;
+      _displayStars = 0;
+      _displayGems = 0;
+
+      _showRewardUI = false;
+      _isClaimed = false;
     });
 
     _startCountingReward();
-  }
-
-  //==================================================
-  // ⏰ حساب الوقت حتى اليوم التالي
-  //==================================================
-
-  Duration _getTimeUntilTomorrow() {
-    final now = DateTime.now();
-
-    final tomorrow = DateTime(
-      now.year,
-      now.month,
-      now.day + 1,
-    );
-
-    return tomorrow.difference(now);
   }
 
   //==================================================
@@ -498,19 +556,19 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
 
     setState(() {
       _isClaimed = true;
+
+      // إخفاء لوحة المكافأة فقط
+      // وليس الصندوق.
+      _showRewardUI = false;
     });
 
-    _mainController.reverse().then(
-      (_) {
-        if (!mounted) {
-          return;
-        }
+    //==================================================
+    // 📦 الصندوق يبقى ظاهراً
+    // ⏱️ العداد يبقى تحته
+    // ❌ لا Navigator.pop()
+    //==================================================
 
-        widget.onRewardClaimed();
-
-        Navigator.of(context).pop();
-      },
-    );
+    widget.onRewardClaimed();
   }
 
   //==================================================
@@ -531,7 +589,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
         //==================================================
         // المكافأة الأصلية تمت إضافتها عند فتح الصندوق.
         //
-        // نضيف هنا فقط النسخة الإضافية.
+        // نضيف فقط النسخة الإضافية.
         //==================================================
 
         await RewardManager.addCoins(
@@ -562,10 +620,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
 
           _isDoubling = false;
         });
-
-        //==================================================
-        // عرض المكافأة المضاعفة قليلاً
-        //==================================================
 
         await Future.delayed(
           const Duration(
@@ -702,7 +756,8 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
               // 👆 رسالة فتح الصندوق
               //==================================================
 
-              if (!_isOpen)
+              if (!_isOpen &&
+                  _dailyRewardAvailable)
                 const Padding(
                   padding: EdgeInsets.only(
                     top: 16,
@@ -735,7 +790,8 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   //==================================================
 
   Widget _buildRewardPanel() {
-    if (!_isOpen) {
+    if (!_isOpen ||
+        _isClaimed) {
       return const SizedBox.shrink();
     }
 
