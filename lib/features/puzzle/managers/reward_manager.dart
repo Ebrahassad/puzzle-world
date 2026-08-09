@@ -534,6 +534,55 @@ static Future<bool> spendStars(
 
 
 
+//==================================================
+// ⏱️ الوقت المتبقي للمكافأة اليومية
+//==================================================
+
+static Future<Duration> getDailyRewardRemaining() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+
+    final saved = prefs.getString(dailyRewardKey);
+
+    // لم يستلم المكافأة من قبل
+    if (saved == null) {
+      return Duration.zero;
+    }
+
+    final last = DateTime.tryParse(saved);
+
+    if (last == null) {
+      return Duration.zero;
+    }
+
+    final now = DateTime.now();
+
+    // إذا أصبحت المكافأة متاحة
+    final nextReward = DateTime(
+      now.year,
+      now.month,
+      now.day + 1,
+    );
+
+    final remaining = nextReward.difference(now);
+
+    if (remaining.isNegative) {
+      return Duration.zero;
+    }
+
+    return remaining;
+  } catch (_) {
+    return Duration.zero;
+  }
+}
+
+
+
+
+
+
+
+
   static Future<RewardResultModel?>
 
   claimDailyReward() async {
