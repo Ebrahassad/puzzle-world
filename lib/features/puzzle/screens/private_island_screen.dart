@@ -1,44 +1,46 @@
+import 'dart:async';
+import 'dart:io';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'puzzle_game_screen.dart';
 import '../managers/ads_manager.dart';
 
-/// ============================================================
-/// 🏝️ Private Island Screen
+/// ===============================================================
+/// 🏝️ الجزيرة الغامضة
 ///
-/// الجزيرة الغامضة.
+/// هذه الشاشة مستقلة عن مستويات البازل العادية.
 ///
-/// الوظيفة الوحيدة للشاشة:
-///
-/// 1. فتح معرض الصور.
-/// 2. اختيار صورة من الجهاز.
-/// 3. اختيار درجة صعوبة اللغز.
+/// الوظيفة:
+/// 1. اختيار صورة من الجهاز.
+/// 2. تجهيز الصورة لتكون مربعة بدون قص محتواها.
+/// 3. اختيار مستوى:
+///      4 × 4
+///      6 × 6
+///      8 × 8
 /// 4. الانتقال مباشرة إلى PuzzleGameScreen.
 ///
-/// جميع درجات الصعوبة متاحة مباشرة.
-/// لا توجد مستويات مقفلة أو مربعات مستويات.
-/// ============================================================
-
+/// ملاحظة:
+/// لا يتم تعديل PuzzleGenerator أو PuzzleController أو
+/// مستويات اللعبة الأساسية.
+/// ===============================================================
 class PrivateIslandScreen extends StatefulWidget {
-  const PrivateIslandScreen({
-    super.key,
-  });
+  const PrivateIslandScreen({super.key});
 
   @override
   State<PrivateIslandScreen> createState() =>
       _PrivateIslandScreenState();
 }
 
-class _PrivateIslandScreenState
-    extends State<PrivateIslandScreen>
+class _PrivateIslandScreenState extends State<PrivateIslandScreen>
     with TickerProviderStateMixin {
   // ============================================================
   // 🎞️ Animation
   // ============================================================
 
   late final AnimationController _floatingController;
-
   late final Animation<double> _floatingAnimation;
 
   // ============================================================
@@ -59,16 +61,12 @@ class _PrivateIslandScreenState
 
     _floatingController = AnimationController(
       vsync: this,
-      duration: const Duration(
-        seconds: 3,
-      ),
-    )..repeat(
-        reverse: true,
-      );
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
 
     _floatingAnimation = Tween<double>(
-      begin: -8.0,
-      end: 8.0,
+      begin: -8,
+      end: 8,
     ).animate(
       CurvedAnimation(
         parent: _floatingController,
@@ -84,24 +82,11 @@ class _PrivateIslandScreenState
   @override
   void dispose() {
     _floatingController.dispose();
-
     super.dispose();
   }
 
   // ============================================================
-  // 🖼️ فتح استوديو الصور
-  // ============================================================
-  //
-  // الإعلان اختياري:
-  //
-  // إذا كان Rewarded جاهزًا:
-  //     → يظهر الإعلان
-  //     → بعد انتهاء الإعلان يفتح الاستوديو.
-  //
-  // إذا لم يكن جاهزًا:
-  //     → يفتح الاستوديو مباشرة.
-  //
-  // الإعلان لا يمنع دخول المستخدم للاستوديو.
+  // 🖼️ فتح الاستوديو
   // ============================================================
 
   Future<void> _openImageStudio() async {
@@ -122,10 +107,6 @@ class _PrivateIslandScreenState
 
       studioOpened = true;
 
-      setState(() {
-        _isPicking = false;
-      });
-
       try {
         // ======================================================
         // 🖼️ اختيار الصورة
@@ -134,15 +115,45 @@ class _PrivateIslandScreenState
         final XFile? picked =
             await _imagePicker.pickImage(
           source: ImageSource.gallery,
-          imageQuality: 90,
+          imageQuality: 100,
         );
 
         if (!mounted) {
           return;
         }
 
-        // المستخدم ألغى اختيار الصورة
         if (picked == null) {
+          setState(() {
+            _isPicking = false;
+          });
+
+          return;
+        }
+
+        // ======================================================
+        // 🟪 تجهيز الصورة لتكون مربعة
+        //
+        // مهم:
+        // لا نقص الصورة.
+        //
+        // إذا كانت:
+        // 1920 × 1080
+        //
+        // تصبح:
+        // 1920 × 1920
+        //
+        // مع وضع الصورة في المنتصف وخلفية مناسبة.
+        //
+        // بهذا PuzzleGameScreen الذي يستخدم BoxFit.cover
+        // لن يقص أجزاء من صورة المستخدم.
+        // ======================================================
+
+        final String preparedPath =
+            await _prepareSquareImage(
+          picked.path,
+        );
+
+        if (!mounted) {
           return;
         }
 
@@ -158,66 +169,292 @@ class _PrivateIslandScreenState
         }
 
         if (gridSize == null) {
+          setState(() {
+            _isPicking = false;
+          });
+
           return;
         }
 
         // ======================================================
-        // 🧩 الانتقال مباشرة إلى لعبة البازل
+        // 🎮 الانتقال إلى لعبة البازل
         // ======================================================
+
+        setState(() {
+          _isPicking = false;
+        });
 
         await Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => PuzzleGameScreen(
-              customImagePath: picked.path,
+              customImagePath: preparedPath,
+
+              // هذه هي النقطة التي تجعل اللعبة
+              // تستخدم نظام الجزيرة الغامضة.
               isCustomImage: true,
+
+              // 4 أو 6 أو 8
+              //
+              // عند 8:
+              // rows = 8
+              // cols = 8
+              // 8 × 8 = 64 قطعة.
               customGridSize: gridSize,
             ),
           ),
         );
-      } catch (_) {
+      } catch (error, stackTrace) {
+        debugPrint(
+          '❌ Private Island image error: $error',
+        );
+
+        debugPrint(
+          '$stackTrace',
+        );
+
         if (!mounted) {
           return;
         }
 
+        setState(() {
+          _isPicking = false;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-              'تعذر اختيار الصورة. حاول مرة أخرى.',
+          const SnackBar(
+            content: Text(
+              'تعذر فتح الصورة. حاول مرة أخرى.',
             ),
-            backgroundColor: Colors.red.shade700,
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
     }
 
-    try {
-      // ========================================================
-      // 📺 محاولة تشغيل إعلان مكافأة
-      //
-      // الإعلان اختياري بالكامل.
-      // ========================================================
+    // ============================================================
+    // 📺 الإعلان المكافئ
+    //
+    // الإعلان اختياري:
+    // - إذا نجح → نفتح الاستوديو.
+    // - إذا فشل أو غير جاهز → نفتح الاستوديو مباشرة.
+    //
+    // لا نمنع المستخدم من استخدام الجزيرة الغامضة.
+    // ============================================================
 
-      AdsManager().showRewardedAd(
-        onRewardEarned: () {
-          openStudio();
-        },
-        onAdFailed: () {
-          openStudio();
-        },
-      );
-    } catch (_) {
-      // ========================================================
-      // إذا حدث أي خطأ في الإعلانات:
-      // نفتح الاستوديو مباشرة.
-      // ========================================================
-
-      await openStudio();
-    }
+    AdsManager().showRewardedAd(
+      onRewardEarned: () {
+        openStudio();
+      },
+      onAdFailed: () {
+        openStudio();
+      },
+    );
   }
 
   // ============================================================
-  // 🎯 نافذة اختيار الصعوبة
+  // 🟪 تجهيز الصورة المربعة
+  // ============================================================
+  //
+  // الهدف:
+  //
+  // صورة المستخدم:
+  //
+  //   ┌───────────────────────┐
+  //   │       الصورة          │
+  //   └───────────────────────┘
+  //
+  // تصبح داخل Canvas مربع:
+  //
+  //   ┌───────────────────────┐
+  //   │       مساحة           │
+  //   │   ┌───────────────┐   │
+  //   │   │    الصورة     │   │
+  //   │   └───────────────┘   │
+  //   │       مساحة           │
+  //   └───────────────────────┘
+  //
+  // بدون فقدان أي جزء من الصورة.
+  //
+  // ============================================================
+
+  Future<String> _prepareSquareImage(
+    String sourcePath,
+  ) async {
+    final File sourceFile = File(sourcePath);
+
+    if (!await sourceFile.exists()) {
+      throw Exception(
+        'Source image does not exist.',
+      );
+    }
+
+    final Uint8List bytes =
+        await sourceFile.readAsBytes();
+
+    final ui.Codec codec =
+        await ui.instantiateImageCodec(bytes);
+
+    final ui.FrameInfo frame =
+        await codec.getNextFrame();
+
+    final ui.Image sourceImage =
+        frame.image;
+
+    final int sourceWidth =
+        sourceImage.width;
+
+    final int sourceHeight =
+        sourceImage.height;
+
+    // ------------------------------------------------------------
+    // إذا كانت الصورة مربعة أصلًا:
+    // لا نحتاج إلى إعادة تصنيعها.
+    // ------------------------------------------------------------
+
+    if (sourceWidth == sourceHeight) {
+      sourceImage.dispose();
+      codec.dispose();
+
+      return sourcePath;
+    }
+
+    // ------------------------------------------------------------
+    // أكبر ضلع يصبح حجم الصورة الجديدة.
+    // ------------------------------------------------------------
+
+    final int squareSize =
+        sourceWidth > sourceHeight
+            ? sourceWidth
+            : sourceHeight;
+
+    final ui.PictureRecorder recorder =
+        ui.PictureRecorder();
+
+    final Canvas canvas =
+        Canvas(recorder);
+
+    final Rect outputRect =
+        Rect.fromLTWH(
+      0,
+      0,
+      squareSize.toDouble(),
+      squareSize.toDouble(),
+    );
+
+    // ------------------------------------------------------------
+    // خلفية بسيطة.
+    //
+    // يمكن تغييرها لاحقًا إذا أردت تصميمًا معينًا.
+    // ------------------------------------------------------------
+
+    final Paint backgroundPaint =
+        Paint()
+          ..color = const Color(0xFF101827);
+
+    canvas.drawRect(
+      outputRect,
+      backgroundPaint,
+    );
+
+    // ------------------------------------------------------------
+    // حساب مكان الصورة في منتصف المربع.
+    // ------------------------------------------------------------
+
+    final double dx =
+        (squareSize - sourceWidth) / 2;
+
+    final double dy =
+        (squareSize - sourceHeight) / 2;
+
+    final Rect sourceRect =
+        Rect.fromLTWH(
+      0,
+      0,
+      sourceWidth.toDouble(),
+      sourceHeight.toDouble(),
+    );
+
+    final Rect destinationRect =
+        Rect.fromLTWH(
+      dx,
+      dy,
+      sourceWidth.toDouble(),
+      sourceHeight.toDouble(),
+    );
+
+    final Paint imagePaint =
+        Paint()
+          ..filterQuality = FilterQuality.high;
+
+    canvas.drawImageRect(
+      sourceImage,
+      sourceRect,
+      destinationRect,
+      imagePaint,
+    );
+
+    // ------------------------------------------------------------
+    // إنشاء الصورة النهائية.
+    // ------------------------------------------------------------
+
+    final ui.Picture picture =
+        recorder.endRecording();
+
+    final ui.Image squareImage =
+        await picture.toImage(
+      squareSize,
+      squareSize,
+    );
+
+    final ByteData? byteData =
+        await squareImage.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
+
+    if (byteData == null) {
+      sourceImage.dispose();
+      squareImage.dispose();
+      codec.dispose();
+
+      throw Exception(
+        'Could not encode image.',
+      );
+    }
+
+    final Uint8List pngBytes =
+        byteData.buffer.asUint8List();
+
+    // ------------------------------------------------------------
+    // حفظ نسخة مؤقتة.
+    //
+    // سيتم استخدامها فقط في جلسة الجزيرة الغامضة.
+    // ------------------------------------------------------------
+
+    final Directory tempDirectory =
+        Directory.systemTemp;
+
+    final String fileName =
+        'private_island_${DateTime.now().microsecondsSinceEpoch}.png';
+
+    final File outputFile =
+        File(
+      '${tempDirectory.path}/$fileName',
+    );
+
+    await outputFile.writeAsBytes(
+      pngBytes,
+      flush: true,
+    );
+
+    sourceImage.dispose();
+    squareImage.dispose();
+    codec.dispose();
+
+    return outputFile.path;
+  }
+
+  // ============================================================
+  // 🎯 اختيار مستوى البازل
   // ============================================================
 
   Future<int?> _showDifficultyDialog() {
@@ -229,112 +466,117 @@ class _PrivateIslandScreenState
           backgroundColor:
               const Color(0xFF1B2A3A),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius:
+                BorderRadius.circular(20),
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(
+            padding:
+                const EdgeInsets.symmetric(
               horizontal: 24,
               vertical: 28,
             ),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize:
+                  MainAxisSize.min,
               children: [
-                // ==================================================
-                // العنوان
-                // ==================================================
-
                 const Text(
                   'اختر مستوى الصعوبة',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    fontWeight:
+                        FontWeight.bold,
                   ),
                 ),
 
-                const SizedBox(
-                  height: 8,
-                ),
+                const SizedBox(height: 8),
 
                 Text(
                   'اختر عدد قطع البازل',
-                  textAlign: TextAlign.center,
+                  textAlign:
+                      TextAlign.center,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
+                    color: Colors.white
+                        .withOpacity(0.6),
                     fontSize: 13,
                   ),
                 ),
 
-                const SizedBox(
-                  height: 24,
-                ),
+                const SizedBox(height: 24),
 
                 // ==================================================
-                // 🟢 سهل
+                // 4 × 4
                 // ==================================================
 
                 _DifficultyOption(
                   label: 'سهل',
-                  subtitle: '4×4 • 16 قطعة',
-                  icon: Icons.sentiment_satisfied_alt,
-                  color: const Color(0xFF4CAF7D),
+                  subtitle:
+                      '4×4 • 16 قطعة',
+                  icon:
+                      Icons.sentiment_satisfied_alt,
+                  color:
+                      const Color(0xFF4CAF7D),
                   onTap: () {
-                    Navigator.of(dialogContext).pop(4);
+                    Navigator.of(
+                      dialogContext,
+                    ).pop(4);
                   },
                 ),
 
-                const SizedBox(
-                  height: 12,
-                ),
+                const SizedBox(height: 12),
 
                 // ==================================================
-                // 🟡 متوسط
+                // 6 × 6
                 // ==================================================
 
                 _DifficultyOption(
                   label: 'متوسط',
-                  subtitle: '6×6 • 36 قطعة',
+                  subtitle:
+                      '6×6 • 36 قطعة',
                   icon: Icons.extension,
-                  color: const Color(0xFFE0A63A),
+                  color:
+                      const Color(0xFFE0A63A),
                   onTap: () {
-                    Navigator.of(dialogContext).pop(6);
+                    Navigator.of(
+                      dialogContext,
+                    ).pop(6);
                   },
                 ),
 
-                const SizedBox(
-                  height: 12,
-                ),
+                const SizedBox(height: 12),
 
                 // ==================================================
-                // 🔴 خبير
+                // 8 × 8
                 // ==================================================
 
                 _DifficultyOption(
                   label: 'خبير',
-                  subtitle: '8×8 • 64 قطعة',
-                  icon: Icons.local_fire_department,
-                  color: const Color(0xFFD9534F),
+                  subtitle:
+                      '8×8 • 64 قطعة',
+                  icon:
+                      Icons.local_fire_department,
+                  color:
+                      const Color(0xFFD9534F),
                   onTap: () {
-                    Navigator.of(dialogContext).pop(8);
+                    Navigator.of(
+                      dialogContext,
+                    ).pop(8);
                   },
                 ),
 
-                const SizedBox(
-                  height: 16,
-                ),
-
-                // ==================================================
-                // إلغاء
-                // ==================================================
+                const SizedBox(height: 16),
 
                 TextButton(
                   onPressed: () {
-                    Navigator.of(dialogContext).pop();
+                    Navigator.of(
+                      dialogContext,
+                    ).pop();
                   },
                   child: Text(
                     'إلغاء',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white
+                          .withOpacity(0.5),
                     ),
                   ),
                 ),
@@ -347,13 +589,16 @@ class _PrivateIslandScreenState
   }
 
   // ============================================================
-  // 🏗️ BUILD
+  // 🎨 BUILD
   // ============================================================
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection:
+          TextDirection.rtl,
       child: Scaffold(
         body: Stack(
           children: [
@@ -363,28 +608,27 @@ class _PrivateIslandScreenState
 
             Positioned.fill(
               child: Image.asset(
-                'assets/images/background/'
-                'private_bacgraund.png',
+                'assets/images/background/private_bacgraund.png',
                 fit: BoxFit.cover,
-                errorBuilder: (
+                errorBuilder:
+                    (
                   context,
                   error,
                   stackTrace,
                 ) {
                   return Container(
-                    color: const Color(0xFF0D1B2A),
+                    color:
+                        const Color(0xFF0D1B2A),
                   );
                 },
               ),
             ),
 
-            // ======================================================
-            // 🌑 طبقة تعتيم
-            // ======================================================
-
             Positioned.fill(
               child: Container(
-                color: Colors.black.withOpacity(0.35),
+                color:
+                    Colors.black
+                        .withOpacity(0.35),
               ),
             ),
 
@@ -393,40 +637,48 @@ class _PrivateIslandScreenState
             // ======================================================
 
             Align(
-              alignment: Alignment.topCenter,
+              alignment:
+                  Alignment.topCenter,
               child: Padding(
-                padding: const EdgeInsets.only(
+                padding:
+                    const EdgeInsets.only(
                   top: 90,
                 ),
-                child: AnimatedBuilder(
-                  animation: _floatingAnimation,
-                  builder: (
+                child:
+                    AnimatedBuilder(
+                  animation:
+                      _floatingAnimation,
+                  builder:
+                      (
                     context,
                     child,
                   ) {
                     return Transform.translate(
                       offset: Offset(
                         0,
-                        _floatingAnimation.value,
+                        _floatingAnimation
+                            .value,
                       ),
                       child: child,
                     );
                   },
-                  child: SizedBox(
+                  child:
+                      SizedBox(
                     width: 180,
                     height: 180,
                     child: Image.asset(
-                      'assets/images/islands/'
-                      'private_island.png',
+                      'assets/images/islands/private_island.png',
                       fit: BoxFit.contain,
-                      errorBuilder: (
+                      errorBuilder:
+                          (
                         context,
                         error,
                         stackTrace,
                       ) {
                         return const Icon(
                           Icons.landscape,
-                          color: Colors.white70,
+                          color:
+                              Colors.white70,
                           size: 80,
                         );
                       },
@@ -443,28 +695,25 @@ class _PrivateIslandScreenState
             SafeArea(
               child: Column(
                 crossAxisAlignment:
-                    CrossAxisAlignment.stretch,
+                    CrossAxisAlignment
+                        .stretch,
                 children: [
-                  // ==================================================
-                  // 🏷️ الشريط العلوي
-                  // ==================================================
-
-                  _buildHeaderBar(context),
+                  _buildHeaderBar(
+                    context,
+                  ),
 
                   const Spacer(
                     flex: 1,
                   ),
 
-                  // ==================================================
-                  // 🖼️ بطاقة الاستوديو
-                  // ==================================================
-
                   Padding(
                     padding:
-                        const EdgeInsets.symmetric(
+                        const EdgeInsets
+                            .symmetric(
                       horizontal: 20,
                     ),
-                    child: _buildStudioCard(),
+                    child:
+                        _buildStudioCard(),
                   ),
 
                   const Spacer(
@@ -487,52 +736,58 @@ class _PrivateIslandScreenState
     BuildContext context,
   ) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(
+      margin:
+          const EdgeInsets.fromLTRB(
         16,
         12,
         16,
         0,
       ),
-      padding: const EdgeInsets.symmetric(
+      padding:
+          const EdgeInsets.symmetric(
         horizontal: 16,
         vertical: 10,
       ),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2E1A47),
+      decoration:
+          BoxDecoration(
+        color:
+            const Color(0xFF2E1A47),
         borderRadius:
             BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFB8860B),
+          color:
+              const Color(0xFFB8860B),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
             color:
-                Colors.black.withOpacity(0.4),
+                Colors.black.withOpacity(
+              0.4,
+            ),
             blurRadius: 8,
-            offset: const Offset(0, 4),
+            offset:
+                const Offset(0, 4),
           ),
         ],
       ),
       child: Row(
         children: [
-          // ======================================================
-          // 📷 أيقونة الصورة
-          // ======================================================
-
           SizedBox(
             width: 32,
             height: 32,
             child: Image.asset(
               'assets/images/ui/add_pic.png',
               fit: BoxFit.contain,
-              errorBuilder: (
+              errorBuilder:
+                  (
                 context,
                 error,
                 stackTrace,
               ) {
                 return const Icon(
-                  Icons.add_photo_alternate,
+                  Icons
+                      .add_photo_alternate,
                   color: Colors.white,
                   size: 28,
                 );
@@ -540,42 +795,34 @@ class _PrivateIslandScreenState
             ),
           ),
 
-          const SizedBox(
-            width: 12,
-          ),
-
-          // ======================================================
-          // 🏝️ العنوان
-          // ======================================================
+          const SizedBox(width: 12),
 
           const Expanded(
             child: Text(
               'الجزيرة الغامضة',
-              textAlign: TextAlign.center,
+              textAlign:
+                  TextAlign.center,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
-                fontWeight: FontWeight.bold,
+                fontWeight:
+                    FontWeight.bold,
                 letterSpacing: 0.5,
               ),
             ),
           ),
 
-          const SizedBox(
-            width: 12,
-          ),
-
-          // ======================================================
-          // ↩️ الرجوع
-          // ======================================================
+          const SizedBox(width: 12),
 
           IconButton(
-            onPressed: () {
-              Navigator.of(context).maybePop();
-            },
+            onPressed: () =>
+                Navigator.of(
+                  context,
+                ).maybePop(),
             icon: const Icon(
               Icons.arrow_forward_ios,
-              color: Colors.white70,
+              color:
+                  Colors.white70,
               size: 20,
             ),
             constraints:
@@ -588,19 +835,23 @@ class _PrivateIslandScreenState
   }
 
   // ============================================================
-  // 🖼️ بطاقة استوديو الصور
+  // 🖼️ بطاقة الاستوديو
   // ============================================================
 
   Widget _buildStudioCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+      padding:
+          const EdgeInsets.all(20),
+      decoration:
+          BoxDecoration(
         borderRadius:
             BorderRadius.circular(24),
         gradient:
             const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin:
+              Alignment.topLeft,
+          end:
+              Alignment.bottomRight,
           colors: [
             Color(0xFF1B3A57),
             Color(0xFF12293F),
@@ -608,76 +859,73 @@ class _PrivateIslandScreenState
         ),
         border: Border.all(
           color:
-              Colors.white.withOpacity(0.12),
+              Colors.white
+                  .withOpacity(0.12),
         ),
         boxShadow: [
           BoxShadow(
             color:
-                Colors.black.withOpacity(0.45),
+                Colors.black.withOpacity(
+              0.45,
+            ),
             blurRadius: 20,
-            offset: const Offset(0, 10),
+            offset:
+                const Offset(0, 10),
           ),
         ],
       ),
       child: Column(
         children: [
-          // ======================================================
-          // 📷 العنوان
-          // ======================================================
-
           const Text(
             'استوديو الصور',
             style: TextStyle(
               color: Colors.white,
               fontSize: 18,
-              fontWeight: FontWeight.w700,
+              fontWeight:
+                  FontWeight.w700,
             ),
           ),
 
-          const SizedBox(
-            height: 6,
-          ),
-
-          // ======================================================
-          // الوصف
-          // ======================================================
+          const SizedBox(height: 6),
 
           Text(
             'اختر صورة من جهازك وحوّلها إلى لغز تفاعلي',
-            textAlign: TextAlign.center,
+            textAlign:
+                TextAlign.center,
             style: TextStyle(
-              color:
-                  Colors.white.withOpacity(0.7),
+              color: Colors.white
+                  .withOpacity(0.7),
               fontSize: 13,
             ),
           ),
 
-          const SizedBox(
-            height: 18,
-          ),
-
-          // ======================================================
-          // 🚀 زر فتح الاستوديو
-          // ======================================================
+          const SizedBox(height: 18),
 
           SizedBox(
             width: double.infinity,
             height: 48,
-            child: ElevatedButton(
-              onPressed: _isPicking
-                  ? null
-                  : _openImageStudio,
+            child:
+                ElevatedButton(
+              onPressed:
+                  _isPicking
+                      ? null
+                      : _openImageStudio,
               style:
                   ElevatedButton.styleFrom(
                 backgroundColor:
-                    const Color(0xFFE0A63A),
+                    const Color(
+                  0xFFE0A63A,
+                ),
                 disabledBackgroundColor:
-                    const Color(0xFFE0A63A)
-                        .withOpacity(0.5),
+                    const Color(
+                  0xFFE0A63A,
+                ).withOpacity(0.5),
                 shape:
                     RoundedRectangleBorder(
                   borderRadius:
-                      BorderRadius.circular(14),
+                      BorderRadius.circular(
+                    14,
+                  ),
                 ),
                 elevation: 0,
               ),
@@ -688,13 +936,15 @@ class _PrivateIslandScreenState
                       child:
                           CircularProgressIndicator(
                         strokeWidth: 2.4,
-                        color: Colors.white,
+                        color:
+                            Colors.white,
                       ),
                     )
                   : const Text(
                       'افتح الاستوديو',
                       style: TextStyle(
-                        color: Colors.white,
+                        color:
+                            Colors.white,
                         fontSize: 16,
                         fontWeight:
                             FontWeight.w700,
@@ -709,7 +959,7 @@ class _PrivateIslandScreenState
 }
 
 // ============================================================================
-// 🎯 خيار الصعوبة
+// 🎯 خيار مستوى الصعوبة
 // ============================================================================
 
 class _DifficultyOption
@@ -742,29 +992,28 @@ class _DifficultyOption
           horizontal: 16,
           vertical: 12,
         ),
-        decoration: BoxDecoration(
-          color:
-              Colors.white.withOpacity(0.04),
+        decoration:
+            BoxDecoration(
+          color: Colors.white
+              .withOpacity(0.04),
           borderRadius:
               BorderRadius.circular(14),
           border: Border.all(
-            color:
-                Colors.white.withOpacity(0.08),
+            color: Colors.white
+                .withOpacity(0.08),
           ),
         ),
         child: Row(
           children: [
-            // ====================================================
-            // 🎯 الأيقونة
-            // ====================================================
-
             Container(
               width: 36,
               height: 36,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color:
-                    color.withOpacity(0.18),
+              decoration:
+                  BoxDecoration(
+                shape:
+                    BoxShape.circle,
+                color: color
+                    .withOpacity(0.18),
               ),
               child: Icon(
                 icon,
@@ -773,19 +1022,15 @@ class _DifficultyOption
               ),
             ),
 
-            const SizedBox(
-              width: 12,
-            ),
-
-            // ====================================================
-            // 🏷️ اسم الصعوبة
-            // ====================================================
+            const SizedBox(width: 12),
 
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(
-                  color: Colors.white,
+                style:
+                    const TextStyle(
+                  color:
+                      Colors.white,
                   fontSize: 15,
                   fontWeight:
                       FontWeight.w600,
@@ -793,28 +1038,23 @@ class _DifficultyOption
               ),
             ),
 
-            // ====================================================
-            // 🔢 عدد القطع
-            // ====================================================
-
             Text(
               subtitle,
               style: TextStyle(
-                color:
-                    Colors.white.withOpacity(0.5),
+                color: Colors.white
+                    .withOpacity(0.5),
                 fontSize: 13,
                 fontWeight:
                     FontWeight.w500,
               ),
             ),
 
-            const SizedBox(
-              width: 6,
-            ),
+            const SizedBox(width: 6),
 
-            const Icon(
+            Icon(
               Icons.arrow_back_ios,
-              color: Colors.white30,
+              color: Colors.white
+                  .withOpacity(0.3),
               size: 12,
             ),
           ],
