@@ -4,7 +4,6 @@
 
     <application
         android:label="puzzle world"
-        android:name="android.app.Application"
         android:icon="@mipmap/ic_launcher">
 
         <activity
