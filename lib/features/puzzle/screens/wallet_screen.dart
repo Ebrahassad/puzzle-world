@@ -562,62 +562,75 @@ class _WalletScreenState extends State<WalletScreen>
         // APP BAR
         //================================================
 
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // أيقونة المحفظة — صورة فقط بدون تفاعل
-              Image.asset(
-                "assets/images/ui/open_wallet.png",
-                width: 46,
-                height: 46,
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) {
-                  return const Icon(
-                    Icons.account_balance_wallet_rounded,
-                    color: Color(0xFF5B2A86),
-                    size: 42,
-                  );
-                },
-              ),
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(kToolbarHeight),
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: AppBar(
+              automaticallyImplyLeading: false,
 
-              const SizedBox(width: 9),
-
-              // العنوان
-              Text(
-                tr(
-                  ar: "المحفظة والمتجر",
-                  en: "Wallet & Store",
-                ),
-                style: const TextStyle(
-                  color: Color(0xFF5B2A86),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 19,
+              //================================================
+              // زر الرجوع — ثابت دائماً في اليسار
+              //================================================
+              leading: Padding(
+                padding: const EdgeInsets.all(9),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: Image.asset(
+                    "assets/images/ui/back_screen.png",
+                    width: 30,
+                    height: 30,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
-            ],
-          ),
-          centerTitle: true,
-          backgroundColor: cardDarkColor,
-          elevation: 3,
-          // زر الرجوع في طرف الشريط
-          leading: Padding(
-            padding: const EdgeInsets.all(9),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.pop(context);
-              },
-              child: Image.asset(
-                "assets/images/ui/back_screen.png",
-                width: 30,
-                height: 30,
-                fit: BoxFit.contain,
+
+              //================================================
+              // العنوان — في المنتصف
+              //================================================
+              title: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    "assets/images/ui/open_wallet.png",
+                    width: 46,
+                    height: 46,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) {
+                      return const Icon(
+                        Icons.account_balance_wallet_rounded,
+                        color: Color(0xFF5B2A86),
+                        size: 42,
+                      );
+                    },
+                  ),
+
+                  const SizedBox(width: 9),
+
+                  Text(
+                    tr(
+                      ar: "المحفظة والمتجر",
+                      en: "Wallet & Store",
+                    ),
+                    style: const TextStyle(
+                      color: Color(0xFF5B2A86),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 19,
+                    ),
+                  ),
+                ],
+              ),
+
+              centerTitle: true,
+              backgroundColor: cardDarkColor,
+              elevation: 3,
+
+              iconTheme: const IconThemeData(
+                color: purpleDark,
               ),
             ),
-          ),
-          iconTheme: const IconThemeData(
-            color: purpleDark,
           ),
         ),
 
@@ -1107,7 +1120,7 @@ class _WalletScreenState extends State<WalletScreen>
             MainAxisAlignment.center,
         children: [
           //==========================================
-          // عنوان الصندوق
+          // 🎁 عنوان الصندوق
           //==========================================
 
           Row(
@@ -1146,6 +1159,10 @@ class _WalletScreenState extends State<WalletScreen>
 
           const SizedBox(height: 2),
 
+          //==========================================
+          // 📝 الوصف
+          //==========================================
+
           Text(
             tr(
               ar:
@@ -1160,10 +1177,10 @@ class _WalletScreenState extends State<WalletScreen>
             ),
           ),
 
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
 
           //==========================================
-          // 🎁 الصندوق — تم تكبيره
+          // 🎁 الصندوق
           //==========================================
 
           GestureDetector(
@@ -1180,15 +1197,15 @@ class _WalletScreenState extends State<WalletScreen>
                   key: ValueKey<bool>(
                     isChestOpen,
                   ),
-                  height: 180,
-                  width: 180,
+                  height: 145,
+                  width: 145,
                   fit: BoxFit.contain,
                   errorBuilder: (_, __, ___) {
                     return Icon(
                       isChestOpen
                           ? Icons.lock_open
                           : Icons.lock,
-                      size: 120,
+                      size: 100,
                       color: Colors.amber,
                     );
                   },
@@ -1197,10 +1214,11 @@ class _WalletScreenState extends State<WalletScreen>
             ),
           ),
 
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
 
           //==========================================
-          // زر فتح الصندوق
+          // 📺 زر مشاهدة الإعلان وفتح الصندوق
+          // يبقى داخل مربع الصندوق وتحت الصندوق مباشرة
           //==========================================
 
           SizedBox(
@@ -1250,6 +1268,8 @@ class _WalletScreenState extends State<WalletScreen>
               ),
             ),
           ),
+
+          const SizedBox(height: 2),
         ],
       ),
     );
