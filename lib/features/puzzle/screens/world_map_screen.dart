@@ -755,57 +755,75 @@ return Scaffold(
             // 🏝️ الجزيرة الخاصة  
             // ==================================================  
 
-            Positioned(  
-              bottom: bottomPadding + 20,  
-              right: 20,  
-              child: GestureDetector(  
-                onTap: unlockingPrivateIsland ? null : openPrivateIsland,  
-                child: AnimatedBuilder(  
-                  animation: iconGlowController,  
-                  builder: (  
-                    context,  
-                    child,  
-                  ) {  
-                    final pulse = iconGlowController.value;  
+            Positioned(
+              bottom: bottomPadding + 20,
+              right: 18,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: unlockingPrivateIsland
+                      ? null
+                      : () async {
+                          await openPrivateIsland();
+                        },
+                  borderRadius: BorderRadius.circular(40),
+                  child: AnimatedBuilder(
+                    animation: iconGlowController,
+                    builder: (
+                      context,
+                      child,
+                    ) {
+                      final pulse = iconGlowController.value;
 
-                    return Container(  
-                      decoration: BoxDecoration(  
-                        shape: BoxShape.circle,  
-                        boxShadow: [  
-                          BoxShadow(  
-                            color: const Color(  
-                              0xFF6A35C9,  
-                            ).withOpacity(  
-                              0.20 + pulse * 0.10,  
-                            ),  
-                            blurRadius: 16 + pulse * 5,  
-                            spreadRadius: 2 + pulse * 2,  
-                          ),  
-                        ],  
-                      ),  
-                      child: Transform.scale(  
-                        scale: 1.10 + pulse * 0.025,  
-                        child: SizedBox(  
-                          width: 55,  
-                          height: 55,  
-                          child: Image.asset(  
-                            "assets/images/ui/private_island.png",  
-                            fit: BoxFit.contain,  
-                            errorBuilder: (  
-                              context,  
-                              error,  
-                              stack,  
-                            ) {  
-                              return const SizedBox.shrink();  
-                            },  
-                          ),  
-                        ),  
-                      ),  
-                    );  
-                  },  
-                ),  
-              ),  
-            ),  
+                      return Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: const Color(0xFF241337).withOpacity(0.90),
+                          border: Border.all(
+                            color: const Color(0xFFD6B8FF).withOpacity(
+                              0.75 + pulse * 0.20,
+                            ),
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF6A35C9).withOpacity(
+                                0.35 + pulse * 0.15,
+                              ),
+                              blurRadius: 18 + pulse * 7,
+                              spreadRadius: 2 + pulse * 2,
+                            ),
+                          ],
+                        ),
+                        child: Transform.scale(
+                          scale: 1.0 + pulse * 0.04,
+                          child: Padding(
+                            padding: const EdgeInsets.all(6),
+                            child: Image.asset(
+                              "assets/images/ui/private_island.png",
+                              fit: BoxFit.contain,
+                              errorBuilder: (
+                                context,
+                                error,
+                                stack,
+                              ) {
+                                return const Icon(
+                                  Icons.photo_library_rounded,
+                                  color: Color(0xFFD6B8FF),
+                                  size: 40,
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
 
             // ==================================================  
             // 🔄 تحميل  
