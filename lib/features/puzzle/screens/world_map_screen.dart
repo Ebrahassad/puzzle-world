@@ -264,59 +264,29 @@ _checkDailyReward();
 }
 
 // ============================================================
-// 🎁 المكافأة اليومية
+// 🎁 التحقق من المكافأة اليومية
 // ============================================================
 
 Future<void> _checkDailyReward() async {
-try {
-final canClaim = await RewardManager.canClaimDailyReward();
+  try {
+    final canClaim = await RewardManager.canClaimDailyReward();
 
-if (!mounted) return;  
+    if (!mounted) return;
 
-  if (canClaim) {  
-    setState(() {  
-      showingDailyReward = true;  
-    });  
+    setState(() {
+      // الصندوق يظهر دائماً في مكانه أعلى الشاشة
+      // إذا كانت المكافأة جاهزة.
+      dailyRewardMiniVisible = canClaim;
+      showingDailyReward = false;
+    });
+  } catch (_) {
+    if (!mounted) return;
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {  
-      if (!mounted) return;  
-
-      showDialog(  
-        context: context,  
-        barrierDismissible: false,  
-        builder: (dialogContext) {  
-          return DailyRewardPopup(  
-            onRewardClaimed: () {  
-              if (!mounted) return;  
-
-              setState(() {  
-                showingDailyReward = false;  
-                dailyRewardMiniVisible = true;  
-              });  
-            },  
-          );  
-        },  
-      ).then((_) {  
-        if (!mounted) return;  
-
-        setState(() {  
-          showingDailyReward = false;  
-        });  
-      });  
-    });  
-  } else {  
-    setState(() {  
-      dailyRewardMiniVisible = false;  
-    });  
-  }  
-} catch (_) {  
-  if (!mounted) return;  
-
-  setState(() {  
-    showingDailyReward = false;  
-  });  
-}
-
+    setState(() {
+      dailyRewardMiniVisible = false;
+      showingDailyReward = false;
+    });
+  }
 }
 
 // ============================================================
@@ -589,12 +559,13 @@ return Scaffold(
 
             // ==================================================  
             // 🎁 صندوق المكافأة اليومية  
+            // 📍 أعلى الشاشة - نفس جهة المحفظة  
             // ==================================================  
 
             if (dailyRewardMiniVisible)  
               Positioned(  
                 top: topPadding + 16,  
-                left: 18,  
+                left: 20,  
                 child: _DailyRewardMiniWidget(  
                   onTap: () async {  
                     await playClickSound();  
@@ -606,32 +577,49 @@ return Scaffold(
 
                     if (!mounted) return;  
 
-                    if (canClaim) {  
-                      showDialog(  
-                        context: context,  
-                        barrierDismissible: false,  
-                        builder: (dialogContext) {  
-                          return DailyRewardPopup(  
-                            onRewardClaimed: () {  
-                              if (!mounted) {  
-                                return;  
-                              }  
+                    if (!canClaim) {  
+                      setState(() {  
+                        dailyRewardMiniVisible = false;  
+                      });  
 
-                              setState(() {  
-                                dailyRewardMiniVisible = true;  
-                              });  
-                            },  
-                          );  
-                        },  
-                      );  
-                    } else {  
                       showMessage(  
                         t(  
                           ar: "لقد استلمت مكافأتك اليومية بالفعل.",  
                           en: "You have already claimed today's reward.",  
                         ),  
                       );  
+
+                      return;  
                     }  
+
+                    setState(() {  
+                      showingDailyReward = true;  
+                      dailyRewardMiniVisible = false;  
+                    });  
+
+                    await showDialog(  
+                      context: context,  
+                      barrierDismissible: false,  
+                      builder: (dialogContext) {  
+                        return DailyRewardPopup(  
+                          onRewardClaimed: () {  
+                            if (!mounted) return;  
+
+                            setState(() {  
+                              showingDailyReward = false;  
+                              dailyRewardMiniVisible = false;  
+                            });  
+                          },  
+                        );  
+                      },  
+                    );  
+
+                    if (!mounted) return;  
+
+                    // بعد انتهاء المكافأة سيتم لاحقاً وضع العد التنازلي هنا.  
+                    setState(() {  
+                      showingDailyReward = false;  
+                    });  
                   },  
                 ),  
               ),  
