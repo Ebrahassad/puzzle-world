@@ -429,6 +429,188 @@ class _IslandScreenState extends State<IslandScreen>
   }
 
   // ============================================================
+  // 💾 فحص وجود لعبة محفوظة لهذه المرحلة
+  // ============================================================
+
+  Future<bool> _checkSavedGame(
+    PuzzleLevelModel level,
+  ) async {
+    try {
+      final saved =
+          await PuzzleProgressManager.loadProgress();
+
+      if (saved == null) {
+        return false;
+      }
+
+      // ----------------------------------------------------------
+      // 🔐 الحفظ يجب أن يخص نفس الجزيرة ونفس المرحلة
+      // ----------------------------------------------------------
+
+      final String savedPuzzleId =
+          saved["puzzleId"]?.toString() ?? "";
+
+      final String savedLevelId =
+          saved["levelId"]?.toString() ?? "";
+
+      final String currentPuzzleId =
+          widget.island.id.toString();
+
+      final String currentLevelId =
+          level.id.toString();
+
+      return savedPuzzleId == currentPuzzleId &&
+          savedLevelId == currentLevelId;
+    } catch (e) {
+      debugPrint(
+        "❌ Error checking saved game: $e",
+      );
+
+      return false;
+    }
+  }
+
+  // ============================================================
+  // 💾 نافذة اللعبة المحفوظة
+  // ============================================================
+
+  Future<bool> _showContinueSavedGameDialog() async {
+    if (!mounted) {
+      return false;
+    }
+
+    final bool? result =
+        await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor:
+              const Color(0xFF2A1B3D),
+
+          shape:
+              RoundedRectangleBorder(
+            borderRadius:
+                BorderRadius.circular(24),
+          ),
+
+          title: const Row(
+            children: [
+              Icon(
+                Icons.save_rounded,
+                color: Colors.amber,
+                size: 32,
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  "لعبة محفوظة",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          content: const Text(
+            "توجد لعبة محفوظة لهذه المرحلة.\nهل تريد الاستمرار من حيث توقفت؟",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 16,
+              height: 1.5,
+            ),
+          ),
+
+          actionsPadding:
+              const EdgeInsets.fromLTRB(
+            16,
+            4,
+            16,
+            16,
+          ),
+
+          actions: [
+            // ----------------------------------------------------
+            // 🔄 ابدأ من جديد
+            // ----------------------------------------------------
+
+            TextButton(
+              onPressed: () async {
+                // مسح الحفظ لهذه اللعبة.
+                await PuzzleProgressManager
+                    .clearProgress();
+
+                if (!dialogContext.mounted) {
+                  return;
+                }
+
+                Navigator.pop(
+                  dialogContext,
+                  false,
+                );
+              },
+
+              child: const Text(
+                "ابدأ من جديد",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
+            // ----------------------------------------------------
+            // ▶️ متابعة
+            // ----------------------------------------------------
+
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                  true,
+                );
+              },
+
+              icon: const Icon(
+                Icons.play_arrow_rounded,
+              ),
+
+              label: const Text(
+                "متابعة",
+              ),
+
+              style:
+                  ElevatedButton.styleFrom(
+                backgroundColor:
+                    Colors.amber,
+                foregroundColor:
+                    const Color(0xFF1A0B2E),
+
+                padding:
+                    const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 11,
+                ),
+
+                shape:
+                    RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
+  }
+
+  // ============================================================
   // 🎮 فتح شاشة البازل
   // ============================================================
 
@@ -438,6 +620,37 @@ class _IslandScreenState extends State<IslandScreen>
     if (!mounted) {
       return;
     }
+
+    // ==========================================================
+    // 💾 فحص الحفظ قبل فتح PuzzleGameScreen
+    //
+    // مهم جدًا:
+    // لا نغير أي شيء داخل منطق البازل.
+    // فقط نقرر هل نعرض نافذة الحفظ أم لا.
+    // ==========================================================
+
+    final bool hasSavedGame =
+        await _checkSavedGame(level);
+
+    if (!mounted) {
+      return;
+    }
+
+    // ==========================================================
+    // 💾 توجد لعبة محفوظة
+    // ==========================================================
+
+    if (hasSavedGame) {
+      await _showContinueSavedGameDialog();
+
+      if (!mounted) {
+        return;
+      }
+    }
+
+    // ==========================================================
+    // 🎮 فتح شاشة البازل
+    // ==========================================================
 
     await Navigator.push(
       context,
@@ -455,7 +668,10 @@ class _IslandScreenState extends State<IslandScreen>
       return;
     }
 
-    // تحديث الأقفال بعد الرجوع من اللعبة.
+    // ==========================================================
+    // 🔄 تحديث الأقفال بعد الرجوع
+    // ==========================================================
+
     await _refreshLevels();
   }
 
