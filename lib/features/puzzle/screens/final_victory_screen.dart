@@ -6,8 +6,6 @@ import 'package:flutter/scheduler.dart';
 
 import '../managers/ads_manager.dart';
 import '../managers/reward_manager.dart';
-
-import '../widgets/game_toolbar.dart';
 import 'world_map_screen.dart';
 
 enum _RewardType {
@@ -17,7 +15,7 @@ enum _RewardType {
 }
 
 /// ============================================================
-/// ✈️ جسيمات حركة المكافأة
+/// ✈️ جسيم حركة المكافأة
 /// ============================================================
 
 class _FlightParticle {
@@ -69,14 +67,14 @@ class _ConfettiParticle {
 /// ============================================================
 /// 🏆 شاشة الفوز النهائية
 ///
-/// هذه الشاشة مخصصة للمرحلة العاشرة فقط.
+/// المرحلة العاشرة فقط.
 ///
 /// المكافآت:
 /// ⭐ نجمة
 /// 🪙 100 عملة
 /// 💎 جوهرة
 ///
-/// أما المراحل 1 - 9 فتتم مكافأتها من VictoryScreen.
+/// لا يوجد أي نظام لغة خارجي هنا.
 /// ============================================================
 
 class FinalVictoryScreen extends StatefulWidget {
@@ -95,12 +93,16 @@ class FinalVictoryScreen extends StatefulWidget {
 class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     with TickerProviderStateMixin {
   // ==========================================================
-  // 🎯 أهداف شريط الأدوات
+  // 🎯 أهداف المكافآت في الشريط العلوي
   // ==========================================================
 
   final GlobalKey _starKey = GlobalKey();
   final GlobalKey _coinKey = GlobalKey();
   final GlobalKey _gemKey = GlobalKey();
+
+  // ==========================================================
+  // 🎁 الصندوق
+  // ==========================================================
 
   final GlobalKey _chestKey = GlobalKey();
 
@@ -119,7 +121,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   late final Animation<double> _bgShift;
 
   // ==========================================================
-  // 🎁 الصندوق
+  // 🎁 حركة الصندوق
   // ==========================================================
 
   late final AnimationController _chestController;
@@ -144,14 +146,12 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   late final AnimationController _badgePunchController;
 
   // ==========================================================
-  // 🎉 القصاصات الورقية
+  // 🎉 القصاصات
   // ==========================================================
 
   late Ticker _confettiTicker;
 
   final List<_ConfettiParticle> _confetti = [];
-
-  bool _confettiActive = false;
 
   // ==========================================================
   // 🎬 الحالة
@@ -227,9 +227,9 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
     _chestDrop = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween(
-          begin: -700.0,
-          end: 0.0,
+        tween: Tween<double>(
+          begin: -700,
+          end: 0,
         ).chain(
           CurveTween(
             curve: Curves.easeInCubic,
@@ -238,9 +238,9 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
         weight: 55,
       ),
       TweenSequenceItem(
-        tween: Tween(
-          begin: 0.0,
-          end: -75.0,
+        tween: Tween<double>(
+          begin: 0,
+          end: -75,
         ).chain(
           CurveTween(
             curve: Curves.easeOut,
@@ -249,9 +249,9 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
         weight: 15,
       ),
       TweenSequenceItem(
-        tween: Tween(
-          begin: -75.0,
-          end: 0.0,
+        tween: Tween<double>(
+          begin: -75,
+          end: 0,
         ).chain(
           CurveTween(
             curve: Curves.bounceOut,
@@ -263,7 +263,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
     _chestScale = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween(
+        tween: Tween<double>(
           begin: 0.72,
           end: 1.22,
         ).chain(
@@ -274,7 +274,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
         weight: 55,
       ),
       TweenSequenceItem(
-        tween: Tween(
+        tween: Tween<double>(
           begin: 1.22,
           end: 1.0,
         ),
@@ -297,53 +297,41 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     );
 
     // ----------------------------------------------------------
-    // وحدات التحكم الأخرى
+    // المؤثرات
     // ----------------------------------------------------------
 
     _flashController = AnimationController(
       vsync: this,
-      duration: const Duration(
-        milliseconds: 650,
-      ),
+      duration: const Duration(milliseconds: 650),
     );
 
     _glowController = AnimationController(
       vsync: this,
-      duration: const Duration(
-        milliseconds: 1400,
-      ),
+      duration: const Duration(milliseconds: 1400),
     );
 
     _titleController = AnimationController(
       vsync: this,
-      duration: const Duration(
-        milliseconds: 900,
-      ),
+      duration: const Duration(milliseconds: 900),
     );
 
     _flightController = AnimationController(
       vsync: this,
-      duration: const Duration(
-        milliseconds: 950,
-      ),
+      duration: const Duration(milliseconds: 950),
     );
 
     _floatController = AnimationController(
       vsync: this,
-      duration: const Duration(
-        milliseconds: 1800,
-      ),
+      duration: const Duration(milliseconds: 1800),
     )..repeat();
 
     _badgePunchController = AnimationController(
       vsync: this,
-      duration: const Duration(
-        milliseconds: 420,
-      ),
+      duration: const Duration(milliseconds: 420),
     );
 
     // ----------------------------------------------------------
-    // مؤشر القصاصات الورقية
+    // القصاصات
     // ----------------------------------------------------------
 
     _confettiTicker = createTicker(
@@ -351,13 +339,12 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     );
 
     // ----------------------------------------------------------
-    // بدء التسلسل السينمائي
+    // تشغيل المشهد
     // ----------------------------------------------------------
 
     WidgetsBinding.instance.addPostFrameCallback(
       (_) async {
         if (!mounted) return;
-
         await _runSequence();
       },
     );
@@ -369,9 +356,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
   Future<void> _runSequence() async {
     await Future.delayed(
-      const Duration(
-        milliseconds: 500,
-      ),
+      const Duration(milliseconds: 500),
     );
 
     if (!mounted) return;
@@ -380,29 +365,15 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
       _showChest = true;
     });
 
-    // ----------------------------------------------------------
-    // صوت الفوز
-    // ----------------------------------------------------------
-
     try {
       await _audioPlayer.play(
-        AssetSource(
-          'audio/puzzle_win.mp3',
-        ),
+        AssetSource('audio/puzzle_win.mp3'),
       );
     } catch (_) {}
-
-    // ----------------------------------------------------------
-    // سقوط الصندوق
-    // ----------------------------------------------------------
 
     await _chestController.forward();
 
     if (!mounted) return;
-
-    // ----------------------------------------------------------
-    // فتح الصندوق
-    // ----------------------------------------------------------
 
     setState(() {
       _opened = true;
@@ -418,14 +389,8 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
       from: 0,
     );
 
-    // ----------------------------------------------------------
-    // العنوان
-    // ----------------------------------------------------------
-
     await Future.delayed(
-      const Duration(
-        milliseconds: 250,
-      ),
+      const Duration(milliseconds: 250),
     );
 
     if (!mounted) return;
@@ -438,14 +403,8 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
       from: 0,
     );
 
-    // ----------------------------------------------------------
-    // المكافآت
-    // ----------------------------------------------------------
-
     await Future.delayed(
-      const Duration(
-        milliseconds: 450,
-      ),
+      const Duration(milliseconds: 450),
     );
 
     if (!mounted) return;
@@ -457,14 +416,8 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
     if (!mounted) return;
 
-    // ----------------------------------------------------------
-    // مضاعفة المكافأة
-    // ----------------------------------------------------------
-
     await Future.delayed(
-      const Duration(
-        milliseconds: 250,
-      ),
+      const Duration(milliseconds: 250),
     );
 
     if (!mounted) return;
@@ -479,7 +432,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // ✈️ تشغيل حركات انتقال المكافآت
+  // ✈️ تشغيل حركات المكافآت
   // ==========================================================
 
   Future<void> _playRewardFlights({
@@ -502,16 +455,9 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
       if (!mounted) return;
 
       await Future.delayed(
-        const Duration(
-          milliseconds: 120,
-        ),
+        const Duration(milliseconds: 120),
       );
     }
-
-    // ========================================================
-    // المرحلة العاشرة:
-    // النجمة + العملات + الجوهرة
-    // ========================================================
 
     if (grantRewards && !replayOnly) {
       await RewardManager.addStars(1);
@@ -524,9 +470,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     );
 
     await Future.delayed(
-      const Duration(
-        milliseconds: 120,
-      ),
+      const Duration(milliseconds: 120),
     );
 
     if (mounted) {
@@ -547,21 +491,13 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
     if (target == null) return;
 
-    final start = _getChestCenter();
-
-    final asset = _rewardAsset(type);
-
-    final size = _rewardSize(type);
-
-    final arc = _rewardArc(type);
-
     final particle = _FlightParticle(
       key: GlobalKey(),
-      asset: asset,
-      size: size,
-      start: start,
+      asset: _rewardAsset(type),
+      size: _rewardSize(type),
+      start: _getChestCenter(),
       end: target,
-      arcHeight: arc,
+      arcHeight: _rewardArc(type),
     );
 
     final overlayEntry = OverlayEntry(
@@ -583,23 +519,23 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
                 particle.start.dy +
                 (particle.end.dy -
                         particle.start.dy) *
-                    t +
-                (-particle.arcHeight *
-                    math.sin(math.pi * t));
+                    t -
+                particle.arcHeight *
+                    math.sin(math.pi * t);
 
             final scale =
-                1.0 - (t * 0.4);
+                (1.0 - (t * 0.4)).clamp(
+              0.55,
+              1.0,
+            );
 
             return Positioned(
-              left: x -
-                  particle.size / 2,
-              top: y -
-                  particle.size / 2,
+              left:
+                  x - particle.size / 2,
+              top:
+                  y - particle.size / 2,
               child: Transform.scale(
-                scale: scale.clamp(
-                  0.55,
-                  1.0,
-                ),
+                scale: scale,
                 child: child,
               ),
             );
@@ -617,9 +553,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
     final overlay = Overlay.of(context);
 
-    overlay.insert(
-      overlayEntry,
-    );
+    overlay.insert(overlayEntry);
 
     _flightController.reset();
 
@@ -643,22 +577,19 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
       _RewardType.gem => _gemKey,
     };
 
-    final context = key.currentContext;
+    final targetContext = key.currentContext;
 
-    if (context == null) return null;
+    if (targetContext == null) return null;
 
     final box =
-        context.findRenderObject()
-            as RenderBox?;
+        targetContext.findRenderObject() as RenderBox?;
 
     if (box == null || !box.hasSize) {
       return null;
     }
 
     return box.localToGlobal(
-      box.size.center(
-        Offset.zero,
-      ),
+      box.size.center(Offset.zero),
     );
   }
 
@@ -672,10 +603,8 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     return switch (type) {
       _RewardType.star =>
         'assets/images/rewards/Star_gold.png',
-
       _RewardType.coin =>
         'assets/images/rewards/puzzle_coin.png',
-
       _RewardType.gem =>
         'assets/images/rewards/gem.png',
     };
@@ -696,7 +625,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // 🌈 أقواس مسار المكافأة
+  // 🌈 أقواس الحركة
   // ==========================================================
 
   double _rewardArc(
@@ -714,13 +643,13 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   // ==========================================================
 
   Offset _getChestCenter() {
-    final ctx =
+    final targetContext =
         _chestKey.currentContext;
 
     final screen =
         MediaQuery.of(context).size;
 
-    if (ctx == null) {
+    if (targetContext == null) {
       return Offset(
         screen.width / 2,
         screen.height / 2,
@@ -728,7 +657,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     }
 
     final box =
-        ctx.findRenderObject()
+        targetContext.findRenderObject()
             as RenderBox?;
 
     if (box == null || !box.hasSize) {
@@ -739,14 +668,12 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     }
 
     return box.localToGlobal(
-      box.size.center(
-        Offset.zero,
-      ),
+      box.size.center(Offset.zero),
     );
   }
 
   // ==========================================================
-  // ⏳ انتظار أهداف شريط الأدوات
+  // ⏳ انتظار أهداف المكافآت
   // ==========================================================
 
   Future<void> _waitForToolbarTargets() async {
@@ -760,15 +687,13 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
       }
 
       await Future.delayed(
-        const Duration(
-          milliseconds: 50,
-        ),
+        const Duration(milliseconds: 50),
       );
     }
   }
 
   // ==========================================================
-  // 🎉 القصاصات الورقية
+  // 🎉 إنشاء القصاصات
   // ==========================================================
 
   void _spawnConfetti() {
@@ -808,11 +733,11 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
         _ConfettiParticle(
           x: origin.dx,
           y: origin.dy,
-          vx: math.cos(angle) *
-              speed,
-          vy: math.sin(angle) *
-                  speed -
-              4,
+          vx:
+              math.cos(angle) * speed,
+          vy:
+              math.sin(angle) * speed -
+                  4,
           rotation:
               random.nextDouble() *
                   math.pi,
@@ -833,13 +758,11 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
       );
     }
 
-    _confettiActive = true;
-
     _confettiTicker.start();
   }
 
   // ==========================================================
-  // 🎉 تحديث القصاصات الورقية
+  // 🎉 تحديث القصاصات
   // ==========================================================
 
   void _updateConfetti() {
@@ -854,7 +777,6 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
       p.y += p.vy;
 
       p.vy += 0.17;
-
       p.vx *= 0.985;
 
       p.rotation +=
@@ -869,8 +791,6 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
     if (!active) {
       _confettiTicker.stop();
-
-      _confettiActive = false;
     }
   }
 
@@ -893,28 +813,19 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
       builder: (context) {
         return const Directionality(
           textDirection: TextDirection.rtl,
-          child: _DoubleRewardDialogContent(),
+          child:
+              _DoubleRewardDialogContent(),
         );
       },
     );
-
-    // ----------------------------------------------------------
-    // رفض المستخدم
-    // ----------------------------------------------------------
 
     if (wantDouble != true) {
       _goHome();
       return;
     }
 
-    // ----------------------------------------------------------
-    // تهيئة الإعلانات
-    // ----------------------------------------------------------
-
-    if (!AdsManager()
-        .isInitialized) {
-      await AdsManager()
-          .initAds();
+    if (!AdsManager().isInitialized) {
+      await AdsManager().initAds();
     }
 
     if (!mounted) return;
@@ -923,39 +834,22 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
       _adInProgress = true;
     });
 
-    // ----------------------------------------------------------
-    // إعلان المكافأة
-    // ----------------------------------------------------------
-
     AdsManager().showRewardedAd(
       onRewardEarned: () async {
-        // ======================================================
-        // مضاعفة المكافآت النهائية:
-        //
-        // ⭐ +1
-        // 🪙 +100
-        // 💎 +1
-        // ======================================================
-
         await RewardManager.addStars(1);
         await RewardManager.addCoins(100);
         await RewardManager.addGems(1);
 
         if (!mounted) return;
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
           const SnackBar(
             content: Text(
               'تمت مضاعفة المكافأة!',
             ),
           ),
         );
-
-        // ------------------------------------------------------
-        // إعادة عرض حركة المكافآت
-        // ------------------------------------------------------
 
         await _playRewardFlights(
           grantRewards: false,
@@ -970,7 +864,6 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 
         _goHome();
       },
-
       onAdFailed: () {
         if (!mounted) return;
 
@@ -978,9 +871,8 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
           _adInProgress = false;
         });
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
           const SnackBar(
             content: Text(
               'الإعلان غير متوفر حالياً',
@@ -998,8 +890,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   // ==========================================================
 
   void _goHome() {
-    if (!_running ||
-        !mounted) {
+    if (!_running || !mounted) {
       return;
     }
 
@@ -1016,24 +907,532 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
   }
 
   // ==========================================================
-  // 🧱 البناء
+  // 🧱 بناء الشاشة
+  //
+  // تم وضع المحتوى هنا مباشرة بدلاً من _FinalVictoryContent
+  // الذي كان مفقوداً ويسبب خطأ البناء.
   // ==========================================================
 
   @override
   Widget build(
     BuildContext context,
   ) {
-    final size =
-        MediaQuery.of(context).size;
-
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: _FinalVictoryContent(),
+      child: _buildFinalVictoryContent(),
     );
   }
 
   // ==========================================================
-  // 🌟 توهج ناعم
+  // 🏆 محتوى شاشة الفوز
+  // ==========================================================
+
+  Widget _buildFinalVictoryContent() {
+    return Scaffold(
+      backgroundColor:
+          const Color(0xff100B1C),
+      body: AnimatedBuilder(
+        animation: Listenable.merge([
+          _bgController,
+          _glowController,
+          _titleController,
+          _badgePunchController,
+        ]),
+        builder: (context, child) {
+          final glow =
+              0.35 +
+              (_glowController.value *
+                  0.25);
+
+          final titleValue =
+              Curves.easeOutBack.transform(
+            _titleController.value,
+          );
+
+          final badgeScale =
+              1.0 +
+              (_badgePunchController.value >
+                      0.5
+                  ? (1 -
+                          _badgePunchController
+                              .value) *
+                      0.15
+                  : _badgePunchController
+                          .value *
+                      0.15);
+
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              // ------------------------------------------------
+              // الخلفية
+              // ------------------------------------------------
+
+              Transform.translate(
+                offset: Offset(
+                  _bgShift.value,
+                  0,
+                ),
+                child: Transform.scale(
+                  scale: _bgScale.value,
+                  child: Container(
+                    decoration:
+                        const BoxDecoration(
+                      gradient:
+                          LinearGradient(
+                        begin:
+                            Alignment.topCenter,
+                        end:
+                            Alignment.bottomCenter,
+                        colors: [
+                          Color(
+                              0xff17102A),
+                          Color(
+                              0xff24153C),
+                          Color(
+                              0xff0F0A19),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // ------------------------------------------------
+              // توهج مركزي
+              // ------------------------------------------------
+
+              Center(
+                child: _softGlow(
+                  430,
+                  Colors.amber.withOpacity(
+                    glow,
+                  ),
+                ),
+              ),
+
+              // ------------------------------------------------
+              // شريط المكافآت العلوي
+              // ------------------------------------------------
+
+              SafeArea(
+                child: Align(
+                  alignment:
+                      Alignment.topCenter,
+                  child:
+                      _buildRewardToolbar(),
+                ),
+              ),
+
+              // ------------------------------------------------
+              // عنوان الفوز
+              // ------------------------------------------------
+
+              if (_showTitle)
+                Positioned(
+                  top: 145,
+                  left: 0,
+                  right: 0,
+                  child: Opacity(
+                    opacity:
+                        _titleController
+                            .value
+                            .clamp(0, 1),
+                    child: Transform.scale(
+                      scale:
+                          0.7 +
+                          titleValue *
+                              0.3,
+                      child:
+                          Column(
+                        children: const [
+                          Text(
+                            'مبروك!',
+                            textAlign:
+                                TextAlign.center,
+                            style:
+                                TextStyle(
+                              color:
+                                  Colors.amber,
+                              fontSize:
+                                  42,
+                              fontWeight:
+                                  FontWeight.w900,
+                              shadows: [
+                                Shadow(
+                                  blurRadius:
+                                      20,
+                                  color:
+                                      Colors.black54,
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            height: 8,
+                          ),
+                          Text(
+                            'لقد أكملت الجزيرة',
+                            textAlign:
+                                TextAlign.center,
+                            style:
+                                TextStyle(
+                              color:
+                                  Colors.white,
+                              fontSize:
+                                  20,
+                              fontWeight:
+                                  FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+              // ------------------------------------------------
+              // الصندوق
+              // ------------------------------------------------
+
+              if (_showChest)
+                Center(
+                  child: Transform.translate(
+                    offset: Offset(
+                      0,
+                      _chestDrop.value,
+                    ),
+                    child: Transform.rotate(
+                      angle:
+                          _chestShake.value,
+                      child: Transform.scale(
+                        scale:
+                            _chestScale.value,
+                        child: Container(
+                          key:
+                              _chestKey,
+                          width: 190,
+                          height: 190,
+                          decoration:
+                              BoxDecoration(
+                            shape:
+                                BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors
+                                    .amber
+                                    .withOpacity(
+                                  0.30 +
+                                      _glowController
+                                          .value *
+                                      0.20,
+                                ),
+                                blurRadius:
+                                    45,
+                                spreadRadius:
+                                    8,
+                              ),
+                            ],
+                          ),
+                          child:
+                              Image.asset(
+                            _opened
+                                ? 'assets/images/rewards/reward_chest_open.png'
+                                : 'assets/images/rewards/reward_chest_closed.png',
+                            fit:
+                                BoxFit.contain,
+                            errorBuilder:
+                                (
+                              context,
+                              error,
+                              stackTrace,
+                            ) {
+                              return Icon(
+                                _opened
+                                    ? Icons
+                                        .card_giftcard
+                                    : Icons
+                                        .inventory_2,
+                                size: 130,
+                                color:
+                                    Colors.amber,
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+              // ------------------------------------------------
+              // نص المكافآت
+              // ------------------------------------------------
+
+              if (_showTitle)
+                Positioned(
+                  left: 20,
+                  right: 20,
+                  bottom: 115,
+                  child: Transform.scale(
+                    scale:
+                        badgeScale,
+                    child:
+                        _buildRewardSummary(),
+                  ),
+                ),
+
+              // ------------------------------------------------
+              // القصاصات
+              // ------------------------------------------------
+
+              IgnorePointer(
+                child: CustomPaint(
+                  painter:
+                      _ConfettiPainter(
+                    _confetti,
+                  ),
+                ),
+              ),
+
+              // ------------------------------------------------
+              // وميض فتح الصندوق
+              // ------------------------------------------------
+
+              IgnorePointer(
+                child: AnimatedBuilder(
+                  animation:
+                      _flashController,
+                  builder:
+                      (
+                    context,
+                    child,
+                  ) {
+                    final opacity =
+                        (1 -
+                                _flashController
+                                    .value) *
+                            0.35;
+
+                    return Container(
+                      color: Colors.white
+                          .withOpacity(
+                        opacity,
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // ------------------------------------------------
+              // مؤشر حركة المكافآت
+              // ------------------------------------------------
+
+              if (_showRewardFlights)
+                const Positioned(
+                  bottom: 55,
+                  left: 0,
+                  right: 0,
+                  child: Text(
+                    '✨',
+                    textAlign:
+                        TextAlign.center,
+                    style:
+                        TextStyle(
+                      fontSize: 28,
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  // ==========================================================
+  // 🪙 شريط المكافآت
+  // ==========================================================
+
+  Widget _buildRewardToolbar() {
+    return Container(
+      margin:
+          const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: 10,
+      ),
+      padding:
+          const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: 9,
+      ),
+      decoration:
+          BoxDecoration(
+        color: const Color(
+          0xff1D1730,
+        ).withOpacity(0.94),
+        borderRadius:
+            BorderRadius.circular(22),
+        border: Border.all(
+          color:
+              Colors.amber.withOpacity(
+            0.28,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color:
+                Colors.black.withOpacity(
+              0.30,
+            ),
+            blurRadius: 18,
+            offset:
+                const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize:
+            MainAxisSize.min,
+        children: [
+          _buildRewardBadge(
+            key: _gemKey,
+            asset:
+                'assets/images/rewards/gem.png',
+            value: '💎',
+          ),
+          const SizedBox(width: 14),
+          _buildRewardBadge(
+            key: _coinKey,
+            asset:
+                'assets/images/rewards/puzzle_coin.png',
+            value: '🪙',
+          ),
+          const SizedBox(width: 14),
+          _buildRewardBadge(
+            key: _starKey,
+            asset:
+                'assets/images/rewards/Star_gold.png',
+            value: '⭐',
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================================
+  // 🏅 عنصر المكافأة
+  // ==========================================================
+
+  Widget _buildRewardBadge({
+    required GlobalKey key,
+    required String asset,
+    required String value,
+  }) {
+    return Container(
+      key: key,
+      padding:
+          const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 5,
+      ),
+      decoration:
+          BoxDecoration(
+        color: Colors.black
+            .withOpacity(0.20),
+        borderRadius:
+            BorderRadius.circular(14),
+      ),
+      child: Row(
+        mainAxisSize:
+            MainAxisSize.min,
+        children: [
+          Image.asset(
+            asset,
+            width: 30,
+            height: 30,
+            fit: BoxFit.contain,
+            errorBuilder:
+                (
+              context,
+              error,
+              stackTrace,
+            ) {
+              return Text(
+                value,
+                style:
+                    const TextStyle(
+                  fontSize: 25,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================================
+  // 🎁 ملخص المكافآت
+  // ==========================================================
+
+  Widget _buildRewardSummary() {
+    return Container(
+      padding:
+          const EdgeInsets.symmetric(
+        horizontal: 22,
+        vertical: 13,
+      ),
+      decoration:
+          BoxDecoration(
+        color:
+            const Color(0xff1D1730)
+                .withOpacity(0.92),
+        borderRadius:
+            BorderRadius.circular(20),
+        border: Border.all(
+          color:
+              Colors.amber.withOpacity(
+            0.35,
+          ),
+        ),
+      ),
+      child: const Column(
+        mainAxisSize:
+            MainAxisSize.min,
+        children: [
+          Text(
+            'المكافأة النهائية',
+            style:
+                TextStyle(
+              color:
+                  Colors.amber,
+              fontSize: 18,
+              fontWeight:
+                  FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            '⭐ نجمة   •   🪙 100 عملة   •   💎 جوهرة',
+            textAlign:
+                TextAlign.center,
+            style:
+                TextStyle(
+              color:
+                  Colors.white,
+              fontSize: 15,
+              fontWeight:
+                  FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================================
+  // 🌟 توهج
   // ==========================================================
 
   Widget _softGlow(
@@ -1054,24 +1453,6 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
             Colors.transparent,
           ],
         ),
-      ),
-    );
-  }
-
-  // ==========================================================
-  // 🖼️ صورة معاينة المكافأة
-  // ==========================================================
-
-  Widget _RewardPreviewImage({
-    required String asset,
-    required double size,
-  }) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Image.asset(
-        asset,
-        fit: BoxFit.contain,
       ),
     );
   }
@@ -1107,7 +1488,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
 }
 
 // ============================================================
-// 🎁 محتوى نافذة مضاعفة المكافأة
+// 🎁 نافذة مضاعفة المكافأة
 // ============================================================
 
 class _DoubleRewardDialogContent
@@ -1122,12 +1503,12 @@ class _DoubleRewardDialogContent
       shape:
           RoundedRectangleBorder(
         borderRadius:
-            BorderRadius.circular(
-          22,
-        ),
+            BorderRadius.circular(22),
       ),
       title: const Text(
         'مضاعفة المكافأة',
+        textAlign:
+            TextAlign.center,
         style:
             TextStyle(
           color: Colors.amber,
@@ -1150,52 +1531,31 @@ class _DoubleRewardDialogContent
               fontSize: 15,
             ),
           ),
-
-          const SizedBox(
-            height: 20,
-          ),
-
-          // ----------------------------------------------------
-          // معاينة صور المكافآت
-          // ----------------------------------------------------
-
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment:
-                MainAxisAlignment
-                    .center,
-            children: [
-              const _RewardPreviewImageStatic(
+                MainAxisAlignment.center,
+            children: const [
+              _RewardPreviewImageStatic(
                 asset:
                     'assets/images/rewards/Star_gold.png',
                 size: 48,
               ),
-
-              const SizedBox(
-                width: 14,
-              ),
-
-              const _RewardPreviewImageStatic(
+              SizedBox(width: 14),
+              _RewardPreviewImageStatic(
                 asset:
                     'assets/images/rewards/puzzle_coin.png',
                 size: 48,
               ),
-
-              const SizedBox(
-                width: 14,
-              ),
-
-              const _RewardPreviewImageStatic(
+              SizedBox(width: 14),
+              _RewardPreviewImageStatic(
                 asset:
                     'assets/images/rewards/gem.png',
                 size: 46,
               ),
             ],
           ),
-
-          const SizedBox(
-            height: 12,
-          ),
-
+          const SizedBox(height: 12),
           const Text(
             'نجمة + 100 عملة + جوهرة',
             textAlign:
@@ -1229,7 +1589,6 @@ class _DoubleRewardDialogContent
             ),
           ),
         ),
-
         ElevatedButton(
           onPressed: () {
             Navigator.pop(
@@ -1247,7 +1606,7 @@ class _DoubleRewardDialogContent
 }
 
 // ============================================================
-// 🖼️ صورة معاينة المكافأة داخل النافذة
+// 🖼️ صورة المكافأة
 // ============================================================
 
 class _RewardPreviewImageStatic
@@ -1261,20 +1620,34 @@ class _RewardPreviewImageStatic
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return SizedBox(
       width: size,
       height: size,
       child: Image.asset(
         asset,
         fit: BoxFit.contain,
+        errorBuilder:
+            (
+          context,
+          error,
+          stackTrace,
+        ) {
+          return const Icon(
+            Icons.card_giftcard,
+            color: Colors.amber,
+            size: 40,
+          );
+        },
       ),
     );
   }
 }
 
 // ============================================================
-// 🎉 رسم القصاصات الورقية
+// 🎉 رسم القصاصات
 // ============================================================
 
 class _ConfettiPainter
@@ -1282,9 +1655,7 @@ class _ConfettiPainter
   final List<_ConfettiParticle>
       particles;
 
-  _ConfettiPainter(
-    this.particles,
-  );
+  _ConfettiPainter(this.particles);
 
   @override
   void paint(
@@ -1300,10 +1671,7 @@ class _ConfettiPainter
 
       paint.color =
           p.color.withOpacity(
-        p.opacity.clamp(
-          0,
-          1,
-        ),
+        p.opacity.clamp(0, 1),
       );
 
       canvas.save();
@@ -1319,10 +1687,8 @@ class _ConfettiPainter
 
       canvas.drawRect(
         Rect.fromCenter(
-          center:
-              Offset.zero,
-          width:
-              p.size,
+          center: Offset.zero,
+          width: p.size,
           height:
               p.size * 0.5,
         ),
