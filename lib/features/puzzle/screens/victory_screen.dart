@@ -10,7 +10,6 @@ import '../engine/puzzle_piece.dart';
 import '../managers/ads_manager.dart';
 import '../managers/reward_manager.dart';
 import '../models/puzzle_model.dart';
-import '../../../core/language/app_language_manager.dart';
 
 import 'final_victory_screen.dart';
 
@@ -91,13 +90,6 @@ class VictoryScreen extends StatefulWidget {
 
 class _VictoryScreenState extends State<VictoryScreen>
     with TickerProviderStateMixin {
-  // ============================================================
-  // 🌐 Language
-  // ============================================================
-
-  AppLanguageManager get language =>
-      AppLanguageManager.instance;
-
   // ============================================================
   // 🎁 Chest
   // ============================================================
@@ -528,9 +520,6 @@ class _VictoryScreenState extends State<VictoryScreen>
         context: context,
         barrierDismissible: false,
         builder: (dialogContext) {
-          final lang =
-              AppLanguageManager.instance;
-
           return AlertDialog(
             backgroundColor:
                 const Color(0xff1D1730),
@@ -541,27 +530,18 @@ class _VictoryScreenState extends State<VictoryScreen>
                   BorderRadius.circular(22),
             ),
 
-            title: Text(
-              lang.text(
-                ar: 'مكافأة إضافية',
-                en: 'Extra Reward',
-              ),
-              style: const TextStyle(
+            title: const Text(
+              'مكافأة إضافية',
+              style: TextStyle(
                 color: Colors.amber,
                 fontWeight: FontWeight.bold,
               ),
             ),
 
-            content: Text(
-              lang.text(
-                ar:
-                    'هل تريد مضاعفة مكافأتك؟\n\n'
-                    'شاهد إعلاناً واحصل على مكافأة إضافية.',
-                en:
-                    'Do you want to double your reward?\n\n'
-                    'Watch an ad to receive an extra reward.',
-              ),
-              style: const TextStyle(
+            content: const Text(
+              'هل تريد مضاعفة مكافأتك؟\n\n'
+              'شاهد إعلاناً واحصل على مكافأة إضافية.',
+              style: TextStyle(
                 color: Colors.white70,
                 height: 1.5,
               ),
@@ -575,12 +555,7 @@ class _VictoryScreenState extends State<VictoryScreen>
                     false,
                   );
                 },
-                child: Text(
-                  lang.text(
-                    ar: 'لاحقاً',
-                    en: 'Later',
-                  ),
-                ),
+                child: const Text('لاحقاً'),
               ),
 
               ElevatedButton(
@@ -590,12 +565,7 @@ class _VictoryScreenState extends State<VictoryScreen>
                     true,
                   );
                 },
-                child: Text(
-                  lang.text(
-                    ar: 'مضاعفة',
-                    en: 'Double',
-                  ),
-                ),
+                child: const Text('مضاعفة'),
               ),
             ],
           );
@@ -650,18 +620,11 @@ class _VictoryScreenState extends State<VictoryScreen>
 
           if (!mounted) return;
 
-          final lang =
-              AppLanguageManager.instance;
-
           ScaffoldMessenger.of(context)
               .showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text(
-                lang.text(
-                  ar: 'الإعلان غير متوفر حالياً',
-                  en:
-                      'The ad is not available right now',
-                ),
+                'الإعلان غير متوفر حالياً',
               ),
             ),
           );
@@ -838,325 +801,328 @@ class _VictoryScreenState extends State<VictoryScreen>
   Widget build(
     BuildContext context,
   ) {
-    return Material(
-      type: MaterialType.transparency,
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Material(
+        type: MaterialType.transparency,
 
-      child: Stack(
-        children: [
-          // ======================================================
-          // ✨ Chest glow
-          // ======================================================
+        child: Stack(
+          children: [
+            // ======================================================
+            // ✨ Chest glow
+            // ======================================================
 
-          if (_showChest &&
-              _chestOpened &&
-              !_hideChestAfterReward)
-            IgnorePointer(
-              child: Center(
+            if (_showChest &&
+                _chestOpened &&
+                !_hideChestAfterReward)
+              IgnorePointer(
+                child: Center(
+                  child: AnimatedBuilder(
+                    animation:
+                        _glowController,
+
+                    builder:
+                        (context, child) {
+                      final glow =
+                          0.18 +
+                          (_glowController
+                                  .value *
+                              0.22);
+
+                      return Container(
+                        width: 460,
+                        height: 460,
+
+                        decoration:
+                            BoxDecoration(
+                          shape:
+                              BoxShape.circle,
+
+                          gradient:
+                              RadialGradient(
+                            colors: [
+                              Colors.amber
+                                  .withOpacity(
+                                glow,
+                              ),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+
+            // ======================================================
+            // ✨ Sparkles
+            // ======================================================
+
+            if (_sparklesActive ||
+                _sparkles.isNotEmpty)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter:
+                        _ConfettiSparkPainter(
+                      List.of(_sparkles),
+                    ),
+                  ),
+                ),
+              ),
+
+            // ======================================================
+            // 🎁 Chest
+            // ======================================================
+
+            if (_showChest &&
+                !_hideChestAfterReward)
+              Center(
                 child: AnimatedBuilder(
                   animation:
-                      _glowController,
+                      _chestController,
 
                   builder:
                       (context, child) {
-                    final glow =
-                        0.18 +
-                        (_glowController
-                                .value *
-                            0.22);
+                    return Transform.translate(
+                      offset: Offset(
+                        0,
+                        _chestFall.value,
+                      ),
 
-                    return Container(
-                      width: 460,
-                      height: 460,
+                      child:
+                          AnimatedOpacity(
+                        duration:
+                            const Duration(
+                          milliseconds: 500,
+                        ),
 
-                      decoration:
-                          BoxDecoration(
-                        shape:
-                            BoxShape.circle,
+                        opacity:
+                            _chestDisappearing
+                                ? 0
+                                : 1,
 
-                        gradient:
-                            RadialGradient(
-                          colors: [
-                            Colors.amber
-                                .withOpacity(
-                              glow,
+                        child:
+                            Transform.scale(
+                          scale:
+                              _chestScale.value,
+
+                          child:
+                              Transform.rotate(
+                            angle:
+                                _chestShake.value,
+
+                            child:
+                                SizedBox(
+                              key:
+                                  _chestKey,
+
+                              width: 250,
+                              height: 250,
+
+                              child:
+                                  Image.asset(
+                                _chestOpened
+                                    ? 'assets/images/rewards/reward_chest_open.png'
+                                    : 'assets/images/rewards/reward_chest_closed.png',
+
+                                fit:
+                                    BoxFit.contain,
+                              ),
                             ),
-                            Colors.transparent,
-                          ],
+                          ),
                         ),
                       ),
                     );
                   },
                 ),
               ),
-            ),
 
-          // ======================================================
-          // ✨ Sparkles
-          // ======================================================
+            // ======================================================
+            // ⭐ Star flight
+            // ======================================================
 
-          if (_sparklesActive ||
-              _sparkles.isNotEmpty)
-            Positioned.fill(
-              child: IgnorePointer(
-                child: CustomPaint(
-                  painter:
-                      _ConfettiSparkPainter(
-                    List.of(_sparkles),
-                  ),
-                ),
-              ),
-            ),
-
-          // ======================================================
-          // 🎁 Chest
-          // ======================================================
-
-          if (_showChest &&
-              !_hideChestAfterReward)
-            Center(
-              child: AnimatedBuilder(
+            if (_showReward &&
+                !widget.isFinalLevel)
+              AnimatedBuilder(
                 animation:
-                    _chestController,
+                    _rewardController,
 
                 builder:
                     (context, child) {
-                  return Transform.translate(
-                    offset: Offset(
-                      0,
-                      _chestFall.value,
-                    ),
+                  final t =
+                      Curves.easeInOutCubic
+                          .transform(
+                    _rewardController
+                        .value,
+                  );
+
+                  final x =
+                      _rewardStart.dx +
+                      (_rewardEnd.dx -
+                              _rewardStart.dx) *
+                          t;
+
+                  final y =
+                      _rewardStart.dy +
+                      (_rewardEnd.dy -
+                              _rewardStart.dy) *
+                          t;
+
+                  final currentScale =
+                      1.0 -
+                      Curves.easeIn
+                              .transform(
+                            _rewardController
+                                .value,
+                          ) *
+                          0.45;
+
+                  return Positioned(
+                    left: x - 35,
+                    top: y - 35,
 
                     child:
-                        AnimatedOpacity(
-                      duration:
-                          const Duration(
-                        milliseconds: 500,
+                        Transform.scale(
+                      scale:
+                          currentScale.clamp(
+                        0.55,
+                        1.0,
                       ),
 
-                      opacity:
-                          _chestDisappearing
-                              ? 0
-                              : 1,
-
                       child:
-                          Transform.scale(
-                        scale:
-                            _chestScale.value,
+                          Image.asset(
+                        'assets/images/rewards/Star_gold.png',
 
-                        child:
-                            Transform.rotate(
-                          angle:
-                              _chestShake.value,
-
-                          child:
-                              SizedBox(
-                            key:
-                                _chestKey,
-
-                            width: 250,
-                            height: 250,
-
-                            child:
-                                Image.asset(
-                              _chestOpened
-                                  ? 'assets/images/rewards/reward_chest_open.png'
-                                  : 'assets/images/rewards/reward_chest_closed.png',
-
-                              fit:
-                                  BoxFit.contain,
-                            ),
-                          ),
-                        ),
+                        width: 70,
                       ),
                     ),
                   );
                 },
               ),
-            ),
 
-          // ======================================================
-          // ⭐ Star flight
-          // ======================================================
+            // ======================================================
+            // 🎮 Navigation buttons
+            // ======================================================
 
-          if (_showReward &&
-              !widget.isFinalLevel)
-            AnimatedBuilder(
-              animation:
-                  _rewardController,
-
-              builder:
-                  (context, child) {
-                final t =
-                    Curves.easeInOutCubic
-                        .transform(
-                  _rewardController
-                      .value,
-                );
-
-                final x =
-                    _rewardStart.dx +
-                    (_rewardEnd.dx -
-                            _rewardStart.dx) *
-                        t;
-
-                final y =
-                    _rewardStart.dy +
-                    (_rewardEnd.dy -
-                            _rewardStart.dy) *
-                        t;
-
-                final currentScale =
-                    1.0 -
-                    Curves.easeIn
-                            .transform(
-                          _rewardController
-                              .value,
-                        ) *
-                        0.45;
-
-                return Positioned(
-                  left: x - 35,
-                  top: y - 35,
-
+            if (_showButtons)
+              Positioned.fill(
+                child: Center(
                   child:
-                      Transform.scale(
-                    scale:
-                        currentScale.clamp(
-                      0.55,
-                      1.0,
+                      TweenAnimationBuilder<
+                          double>(
+                    tween: Tween(
+                      begin: 0,
+                      end: 1,
                     ),
 
-                    child:
-                        Image.asset(
-                      'assets/images/rewards/Star_gold.png',
-
-                      width: 70,
+                    duration:
+                        const Duration(
+                      milliseconds: 600,
                     ),
-                  ),
-                );
-              },
-            ),
 
-          // ======================================================
-          // 🎮 Navigation buttons
-          // ======================================================
+                    curve:
+                        Curves.easeOutBack,
 
-          if (_showButtons)
-            Positioned.fill(
-              child: Center(
-                child:
-                    TweenAnimationBuilder<
-                        double>(
-                  tween: Tween(
-                    begin: 0,
-                    end: 1,
-                  ),
+                    builder: (
+                      context,
+                      fadeT,
+                      child,
+                    ) {
+                      return Opacity(
+                        opacity: fadeT,
 
-                  duration:
-                      const Duration(
-                    milliseconds: 600,
-                  ),
+                        child:
+                            Transform.translate(
+                          offset: Offset(
+                            0,
+                            (1 - fadeT) * 50,
+                          ),
 
-                  curve:
-                      Curves.easeOutBack,
-
-                  builder: (
-                    context,
-                    fadeT,
-                    child,
-                  ) {
-                    return Opacity(
-                      opacity: fadeT,
-
-                      child:
-                          Transform.translate(
-                        offset: Offset(
-                          0,
-                          (1 - fadeT) * 50,
+                          child: child,
                         ),
-
-                        child: child,
-                      ),
-                    );
-                  },
-
-                  child:
-                      AnimatedBuilder(
-                    animation:
-                        _buttonsFloatController,
-
-                    builder:
-                        (context, child) {
-                      final bob =
-                          sin(
-                            _buttonsFloatController
-                                    .value *
-                                2 *
-                                pi,
-                          ) *
-                          4;
-
-                      return Transform.translate(
-                        offset: Offset(
-                          0,
-                          bob,
-                        ),
-
-                        child: child,
                       );
                     },
 
-                    child: Column(
-                      mainAxisSize:
-                          MainAxisSize.min,
+                    child:
+                        AnimatedBuilder(
+                      animation:
+                          _buttonsFloatController,
 
-                      children: [
-                        _VictoryImageActionButton(
-                          imagePath:
-                              'assets/images/ui/next_play.png',
+                      builder:
+                          (context, child) {
+                        final bob =
+                            sin(
+                              _buttonsFloatController
+                                      .value *
+                                  2 *
+                                  pi,
+                            ) *
+                            4;
 
-                          onTap: () {
-                            if (widget.onNext !=
-                                null) {
-                              widget.onNext!();
-                            } else {
-                              widget.onFinished();
-                            }
-                          },
-                        ),
+                        return Transform.translate(
+                          offset: Offset(
+                            0,
+                            bob,
+                          ),
 
-                        const SizedBox(
-                          height: 14,
-                        ),
+                          child: child,
+                        );
+                      },
 
-                        _VictoryImageActionButton(
-                          imagePath:
-                              'assets/images/ui/again_play.png',
+                      child: Column(
+                        mainAxisSize:
+                            MainAxisSize.min,
 
-                          onTap:
-                              widget.onReplay ??
-                                  widget.onFinished,
-                        ),
+                        children: [
+                          _VictoryImageActionButton(
+                            imagePath:
+                                'assets/images/ui/next_play.png',
 
-                        const SizedBox(
-                          height: 14,
-                        ),
+                            onTap: () {
+                              if (widget.onNext !=
+                                  null) {
+                                widget.onNext!();
+                              } else {
+                                widget.onFinished();
+                              }
+                            },
+                          ),
 
-                        _VictoryImageActionButton(
-                          imagePath:
-                              'assets/images/ui/home_map.png',
+                          const SizedBox(
+                            height: 14,
+                          ),
 
-                          onTap:
-                              widget.onMap ??
-                                  widget.onFinished,
-                        ),
-                      ],
+                          _VictoryImageActionButton(
+                            imagePath:
+                                'assets/images/ui/again_play.png',
+
+                            onTap:
+                                widget.onReplay ??
+                                    widget.onFinished,
+                          ),
+
+                          const SizedBox(
+                            height: 14,
+                          ),
+
+                          _VictoryImageActionButton(
+                            imagePath:
+                                'assets/images/ui/home_map.png',
+
+                            onTap:
+                                widget.onMap ??
+                                    widget.onFinished,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
