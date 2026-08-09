@@ -5,8 +5,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 
-import '../../../core/language/app_language_manager.dart';
-
 import '../engine/puzzle_controller.dart';
 import '../engine/puzzle_painter.dart';
 import '../models/puzzle_level_model.dart';
@@ -47,13 +45,6 @@ class PuzzleGameScreen extends StatefulWidget {
 
 class _PuzzleGameScreenState
     extends State<PuzzleGameScreen> {
-  //==================================================
-  // 🌐 نظام اللغة
-  //==================================================
-
-  AppLanguageManager get language =>
-      AppLanguageManager.instance;
-
   //==================================================
   // 🖼️ الصورة
   //==================================================
@@ -244,19 +235,11 @@ class _PuzzleGameScreenState
         barrierDismissible: false,
         builder: (context) {
           return AlertDialog(
-            title: Text(
-              language.text(
-                ar: "توجد لعبة محفوظة",
-                en: "Saved Game Found",
-              ),
+            title: const Text(
+              "توجد لعبة محفوظة",
             ),
-            content: Text(
-              language.text(
-                ar:
-                    "هل تريد الاستمرار في اللعبة السابقة؟",
-                en:
-                    "Do you want to continue the previous game?",
-              ),
+            content: const Text(
+              "هل تريد الاستمرار في اللعبة السابقة؟",
             ),
             actions: [
               TextButton(
@@ -266,11 +249,8 @@ class _PuzzleGameScreenState
                     false,
                   );
                 },
-                child: Text(
-                  language.text(
-                    ar: "لعبة جديدة",
-                    en: "New Game",
-                  ),
+                child: const Text(
+                  "لعبة جديدة",
                 ),
               ),
               TextButton(
@@ -299,11 +279,8 @@ class _PuzzleGameScreenState
                     },
                   );
                 },
-                child: Text(
-                  language.text(
-                    ar: "استمرار",
-                    en: "Continue",
-                  ),
+                child: const Text(
+                  "استمرار",
                 ),
               ),
             ],
@@ -583,19 +560,11 @@ class _PuzzleGameScreenState
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(
-            language.text(
-              ar: "إعادة اللعبة",
-              en: "Restart Game",
-            ),
+          title: const Text(
+            "إعادة اللعبة",
           ),
-          content: Text(
-            language.text(
-              ar:
-                  "هل تريد إعادة اللعبة من البداية؟",
-              en:
-                  "Do you want to restart the game from the beginning?",
-            ),
+          content: const Text(
+            "هل تريد إعادة اللعبة من البداية؟",
           ),
           actions: [
             TextButton(
@@ -604,11 +573,8 @@ class _PuzzleGameScreenState
                 context,
                 false,
               ),
-              child: Text(
-                language.text(
-                  ar: "لا",
-                  en: "No",
-                ),
+              child: const Text(
+                "لا",
               ),
             ),
             ElevatedButton(
@@ -617,11 +583,8 @@ class _PuzzleGameScreenState
                 context,
                 true,
               ),
-              child: Text(
-                language.text(
-                  ar: "نعم",
-                  en: "Yes",
-                ),
+              child: const Text(
+                "نعم",
               ),
             ),
           ],
@@ -898,410 +861,437 @@ class _PuzzleGameScreenState
   Widget build(
     BuildContext context,
   ) {
-    return ValueListenableBuilder<Locale>(
-      valueListenable:
-          language.localeNotifier,
-      builder: (
-        context,
-        locale,
-        child,
-      ) {
-        if (checkingSavedGame ||
-            image == null ||
-            loading) {
-          return Directionality(
-            textDirection:
-                language.textDirection,
-            child: Scaffold(
-              body: Center(
-                child:
-                    CircularProgressIndicator(),
-              ),
+    if (checkingSavedGame ||
+        image == null ||
+        loading) {
+      return const Directionality(
+        textDirection: TextDirection.rtl,
+        child: Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      );
+    }
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        body: Container(
+          decoration: const BoxDecoration(
+            color: Color(
+              0xFFE8E1F3,
             ),
-          );
-        }
+          ),
+          child: SafeArea(
+            child: Stack(
+              key: overlayKey,
+              children: [
+                //==================================================
+                // BOARD + TRAY
+                //==================================================
 
-        return Directionality(
-          textDirection:
-              language.textDirection,
-          child: Scaffold(
-            body: Container(
-              decoration:
-                  const BoxDecoration(
-                color: Color(
-                  0xFFE8E1F3,
-                ),
-              ),
-              child: SafeArea(
-                child: Stack(
-                  key: overlayKey,
+                Column(
                   children: [
-                    //==================================================
-                    // BOARD + TRAY
-                    //==================================================
-
-                    Column(
-                      children: [
-                        const SizedBox(
-                          height: 70,
-                        ),
-
-                        Expanded(
-                          child: Padding(
-                            padding:
-                                const EdgeInsets
-                                    .symmetric(
-                              horizontal: 8,
-                            ),
-                            child: Center(
-                              child:
-                                  Container(
-                                key: boardKey,
-                                width:
-                                    boardSize,
-                                height:
-                                    boardSize,
-                                decoration:
-                                    BoxDecoration(
-                                  color:
-                                      const Color(
-                                    0xFFDCCFEA,
-                                  ),
-                                  borderRadius:
-                                      BorderRadius
-                                          .circular(
-                                    24,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors
-                                          .black
-                                          .withOpacity(
-                                        0.35,
-                                      ),
-                                      blurRadius:
-                                          25,
-                                      spreadRadius:
-                                          2,
-                                    ),
-                                  ],
-                                  border:
-                                      Border.all(
-                                    color:
-                                        const Color(
-                                      0xFFF7F2FD,
-                                    ),
-                                    width: 2,
-                                  ),
-                                ),
-                                child:
-                                    showBoardImage
-                                        ? ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(
-                                              18,
-                                            ),
-                                            child:
-                                                Opacity(
-                                              opacity:
-                                                  0.18,
-                                              child: widget.isCustomImage &&
-                                                      widget.customImagePath !=
-                                                          null
-                                                  ? Image.file(
-                                                      File(
-                                                        widget.customImagePath!,
-                                                      ),
-                                                      width:
-                                                          boardSize,
-                                                      height:
-                                                          boardSize,
-                                                      fit:
-                                                          BoxFit.cover,
-                                                    )
-                                                  : Image.asset(
-                                                      widget.level!.image,
-                                                      width:
-                                                          boardSize,
-                                                      height:
-                                                          boardSize,
-                                                      fit:
-                                                          BoxFit.cover,
-                                                    ),
-                                            ),
-                                          )
-                                        : const SizedBox
-                                            .shrink(),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(
-                          height: 15,
-                        ),
-
-                        Container(
-                          key: trayKey,
-                          height: trayHeight,
-                          margin:
-                              const EdgeInsets
-                                  .symmetric(
-                            horizontal: 12,
-                          ),
-                          decoration:
-                              BoxDecoration(
-                            color:
-                                const Color(
-                              0xFFDCCFEA,
-                            ),
-                            borderRadius:
-                                BorderRadius
-                                    .circular(
-                              22,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors
-                                    .black
-                                    .withOpacity(
-                                  0.25,
-                                ),
-                                blurRadius:
-                                    20,
-                                offset:
-                                    const Offset(
-                                  0,
-                                  8,
-                                ),
-                              ),
-                            ],
-                            border:
-                                Border.all(
-                              color:
-                                  const Color(
-                                0xFFF7F2FD,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(
-                          height: 15,
-                        ),
-                      ],
+                    const SizedBox(
+                      height: 70,
                     ),
 
-                    //==================================================
-                    // 🪙 حركة العملة
-                    //==================================================
-
-                    if (showCoinAnimation &&
-                        coinAnimationStart !=
-                            null)
-                      Builder(
-                        builder:
-                            (context) {
-                          final target =
-                              getCoinTargetPosition();
-
-                          if (target ==
-                              null) {
-                            return const SizedBox
-                                .shrink();
-                          }
-
-                          return FlyingCoin(
-                            start:
-                                coinAnimationStart!,
-                            end: target,
-                            onFinished:
-                                () async {
-                              await RewardManager
-                                  .addCoins(
-                                1,
-                              );
-
-                              if (!mounted) {
-                                return;
-                              }
-
-                              setState(() {
-                                showCoinAnimation =
-                                    false;
-                              });
-                            },
-                          );
-                        },
-                      ),
-
-                    //==================================================
-                    // 🧩 البازل
-                    //==================================================
-
-                    if (puzzleCreated)
-                      Positioned.fill(
-                        child:
-                            GestureDetector(
-                          behavior:
-                              HitTestBehavior
-                                  .translucent,
-
-                          onPanStart:
-                              (details) {
-                            controller
-                                .onPanStart(
-                              details
-                                  .localPosition,
-                            );
-                          },
-
-                          onPanUpdate:
-                              (details) {
-                            controller
-                                .onPanUpdate(
-                              details
-                                  .localPosition,
-                            );
-                          },
-
-                          onPanEnd:
-                              (_) async {
-                            controller
-                                .onPanEnd();
-
-                            moves++;
-
-                            await Future.delayed(
-                              const Duration(
-                                milliseconds:
-                                    100,
+                    Expanded(
+                      child: Padding(
+                        padding:
+                            const EdgeInsets
+                                .symmetric(
+                          horizontal: 8,
+                        ),
+                        child: Center(
+                          child: Container(
+                            key: boardKey,
+                            width: boardSize,
+                            height: boardSize,
+                            decoration:
+                                BoxDecoration(
+                              color:
+                                  const Color(
+                                0xFFDCCFEA,
                               ),
-                            );
-
-                            if (!mounted) {
-                              return;
-                            }
-
-                            final placedCount =
-                                controller
-                                    .pieces
-                                    .where(
-                                      (p) =>
-                                          p.isPlaced,
-                                    )
-                                    .length;
-
-                            if (placedCount >
-                                lastPlacedCount) {
-                              lastPlacedCount =
-                                  placedCount;
-
-                              await _audioPlayer
-                                  .play(
-                                AssetSource(
-                                  'audio/piece_correct.mp3',
+                              borderRadius:
+                                  BorderRadius
+                                      .circular(
+                                24,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors
+                                      .black
+                                      .withOpacity(
+                                    0.35,
+                                  ),
+                                  blurRadius:
+                                      25,
+                                  spreadRadius:
+                                      2,
                                 ),
-                              );
-
-                              if (controller
-                                      .lastPlacedPosition !=
-                                  null) {
-                                final RenderBox
-                                    overlayBox =
-                                    overlayKey
-                                        .currentContext!
-                                        .findRenderObject()
-                                        as RenderBox;
-
-                                final start =
-                                    overlayBox
-                                        .localToGlobal(
-                                  controller
-                                      .lastPlacedPosition!,
-                                );
-
-                                final localStart =
-                                    overlayBox
-                                        .globalToLocal(
-                                  start,
-                                );
-
-                                setState(() {
-                                  coinAnimationStart =
-                                      localStart;
-
-                                  showCoinAnimation =
-                                      true;
-                                });
-                              }
-                            }
-
-                            await checkWin();
-                          },
-
-                          child:
-                              CustomPaint(
-                            painter:
-                                PuzzlePainter(
-                              pieces:
-                                  controller
-                                      .pieces,
-                              image:
-                                  image!,
-                              boardRect:
-                                  controller
-                                      .boardRect,
-                              rows:
-                                  gridSize,
-                              cols:
-                                  gridSize,
-                              repaint:
-                                  controller,
+                              ],
+                              border:
+                                  Border.all(
+                                color:
+                                    const Color(
+                                  0xFFF7F2FD,
+                                ),
+                                width: 2,
+                              ),
                             ),
+                            child:
+                                showBoardImage
+                                    ? ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(
+                                          18,
+                                        ),
+                                        child:
+                                            Opacity(
+                                          opacity:
+                                              0.18,
+                                          child: widget.isCustomImage &&
+                                                  widget.customImagePath !=
+                                                      null
+                                              ? Image.file(
+                                                  File(
+                                                    widget.customImagePath!,
+                                                  ),
+                                                  width:
+                                                      boardSize,
+                                                  height:
+                                                      boardSize,
+                                                  fit:
+                                                      BoxFit.cover,
+                                                )
+                                              : Image.asset(
+                                                  widget.level!.image,
+                                                  width:
+                                                      boardSize,
+                                                  height:
+                                                      boardSize,
+                                                  fit:
+                                                      BoxFit.cover,
+                                                ),
+                                        ),
+                                      )
+                                    : const SizedBox
+                                        .shrink(),
                           ),
                         ),
                       ),
+                    ),
 
-                    //==================================================
-                    // 🎮 Toolbar
-                    //==================================================
+                    const SizedBox(
+                      height: 15,
+                    ),
 
-                    Positioned(
-                      top: 0,
-                      left: 8,
-                      right: 8,
-                      child:
-                          GameToolbar(
-                        starKey:
-                            starKey,
-                        gemKey:
-                            gemKey,
-                        coinKey:
-                            coinKey,
-                        soundEnabled:
-                            soundEnabled,
+                    Container(
+                      key: trayKey,
+                      height: trayHeight,
+                      margin:
+                          const EdgeInsets
+                              .symmetric(
+                        horizontal: 12,
+                      ),
+                      decoration:
+                          BoxDecoration(
+                        color: const Color(
+                          0xFFDCCFEA,
+                        ),
+                        borderRadius:
+                            BorderRadius
+                                .circular(
+                          22,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors
+                                .black
+                                .withOpacity(
+                              0.25,
+                            ),
+                            blurRadius: 20,
+                            offset:
+                                const Offset(
+                              0,
+                              8,
+                            ),
+                          ),
+                        ],
+                        border: Border.all(
+                          color: const Color(
+                            0xFFF7F2FD,
+                          ),
+                        ),
+                      ),
+                    ),
 
-                        onSave:
-                            () async {
-                          await saveCurrentGame();
+                    const SizedBox(
+                      height: 15,
+                    ),
+                  ],
+                ),
+
+                //==================================================
+                // 🪙 حركة العملة
+                //==================================================
+
+                if (showCoinAnimation &&
+                    coinAnimationStart !=
+                        null)
+                  Builder(
+                    builder: (context) {
+                      final target =
+                          getCoinTargetPosition();
+
+                      if (target == null) {
+                        return const SizedBox
+                            .shrink();
+                      }
+
+                      return FlyingCoin(
+                        start:
+                            coinAnimationStart!,
+                        end: target,
+                        onFinished: () async {
+                          await RewardManager
+                              .addCoins(
+                            1,
+                          );
 
                           if (!mounted) {
                             return;
                           }
 
-                          ScaffoldMessenger
-                              .of(context)
+                          setState(() {
+                            showCoinAnimation =
+                                false;
+                          });
+                        },
+                      );
+                    },
+                  ),
+
+                //==================================================
+                // 🧩 البازل
+                //==================================================
+
+                if (puzzleCreated)
+                  Positioned.fill(
+                    child: GestureDetector(
+                      behavior:
+                          HitTestBehavior
+                              .translucent,
+
+                      onPanStart: (details) {
+                        controller
+                            .onPanStart(
+                          details.localPosition,
+                        );
+                      },
+
+                      onPanUpdate: (details) {
+                        controller
+                            .onPanUpdate(
+                          details.localPosition,
+                        );
+                      },
+
+                      onPanEnd: (_) async {
+                        controller.onPanEnd();
+
+                        moves++;
+
+                        await Future.delayed(
+                          const Duration(
+                            milliseconds: 100,
+                          ),
+                        );
+
+                        if (!mounted) {
+                          return;
+                        }
+
+                        final placedCount =
+                            controller.pieces
+                                .where(
+                                  (p) =>
+                                      p.isPlaced,
+                                )
+                                .length;
+
+                        if (placedCount >
+                            lastPlacedCount) {
+                          lastPlacedCount =
+                              placedCount;
+
+                          await _audioPlayer
+                              .play(
+                            AssetSource(
+                              'audio/piece_correct.mp3',
+                            ),
+                          );
+
+                          if (controller
+                                  .lastPlacedPosition !=
+                              null) {
+                            final RenderBox
+                                overlayBox =
+                                overlayKey
+                                    .currentContext!
+                                    .findRenderObject()
+                                    as RenderBox;
+
+                            final start =
+                                overlayBox
+                                    .localToGlobal(
+                              controller
+                                  .lastPlacedPosition!,
+                            );
+
+                            final localStart =
+                                overlayBox
+                                    .globalToLocal(
+                              start,
+                            );
+
+                            setState(() {
+                              coinAnimationStart =
+                                  localStart;
+
+                              showCoinAnimation =
+                                  true;
+                            });
+                          }
+                        }
+
+                        await checkWin();
+                      },
+
+                      child: CustomPaint(
+                        painter:
+                            PuzzlePainter(
+                          pieces:
+                              controller.pieces,
+                          image: image!,
+                          boardRect:
+                              controller
+                                  .boardRect,
+                          rows: gridSize,
+                          cols: gridSize,
+                          repaint: controller,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                //==================================================
+                // 🎮 Toolbar
+                //==================================================
+
+                Positioned(
+                  top: 0,
+                  left: 8,
+                  right: 8,
+                  child: GameToolbar(
+                    starKey: starKey,
+                    gemKey: gemKey,
+                    coinKey: coinKey,
+                    soundEnabled:
+                        soundEnabled,
+
+                    onSave: () async {
+                      await saveCurrentGame();
+
+                      if (!mounted) {
+                        return;
+                      }
+
+                      ScaffoldMessenger.of(
+                              context)
+                          .showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            "تم الحفظ بنجاح",
+                          ),
+                          behavior:
+                              SnackBarBehavior
+                                  .floating,
+                        ),
+                      );
+                    },
+
+                    onRestart: () {
+                      restartGame();
+                    },
+
+                    onExit: () async {
+                      await saveCurrentGame();
+
+                      stopwatch.stop();
+
+                      if (!mounted) {
+                        return;
+                      }
+
+                      Navigator.pop(
+                        context,
+                      );
+                    },
+
+                    onSoundChanged:
+                        (enabled) {
+                      setState(() {
+                        soundEnabled =
+                            enabled;
+                      });
+
+                      _audioPlayer
+                          .setVolume(
+                        enabled ? 1 : 0,
+                      );
+                    },
+                  ),
+                ),
+
+                //==================================================
+                // 🔀 زر إعادة التجميع
+                //==================================================
+
+                if (showRegroupButton)
+                  FloatingRegroupButton(
+                    onPressed: () {
+                      AdsManager()
+                          .showRewardedAd(
+                        onRewardEarned: () {
+                          if (!mounted) {
+                            return;
+                          }
+
+                          controller
+                              .regroupPieces();
+
+                          setState(() {
+                            showRegroupButton =
+                                false;
+                          });
+                        },
+
+                        onAdFailed: () {
+                          if (!mounted) {
+                            return;
+                          }
+
+                          ScaffoldMessenger.of(
+                                  context)
                               .showSnackBar(
-                            SnackBar(
-                              content:
-                                  Text(
-                                language.text(
-                                  ar:
-                                      "تم الحفظ بنجاح",
-                                  en:
-                                      "Game saved successfully",
-                                ),
+                            const SnackBar(
+                              content: Text(
+                                "لم يتم تشغيل الإعلان، حاول مرة أخرى",
                               ),
                               behavior:
                                   SnackBarBehavior
@@ -1309,103 +1299,14 @@ class _PuzzleGameScreenState
                             ),
                           );
                         },
-
-                        onRestart:
-                            () {
-                          restartGame();
-                        },
-
-                        onExit:
-                            () async {
-                          await saveCurrentGame();
-
-                          stopwatch.stop();
-
-                          if (!mounted) {
-                            return;
-                          }
-
-                          Navigator.pop(
-                            context,
-                          );
-                        },
-
-                        onSoundChanged:
-                            (enabled) {
-                          setState(() {
-                            soundEnabled =
-                                enabled;
-                          });
-
-                          _audioPlayer
-                              .setVolume(
-                            enabled
-                                ? 1
-                                : 0,
-                          );
-                        },
-                      ),
-                    ),
-
-                    //==================================================
-                    // 🔀 زر إعادة التجميع
-                    //==================================================
-
-                    if (showRegroupButton)
-                      FloatingRegroupButton(
-                        onPressed: () {
-                          AdsManager()
-                              .showRewardedAd(
-                            onRewardEarned:
-                                () {
-                              if (!mounted) {
-                                return;
-                              }
-
-                              controller
-                                  .regroupPieces();
-
-                              setState(() {
-                                showRegroupButton =
-                                    false;
-                              });
-                            },
-
-                            onAdFailed:
-                                () {
-                              if (!mounted) {
-                                return;
-                              }
-
-                              ScaffoldMessenger
-                                  .of(context)
-                                  .showSnackBar(
-                                SnackBar(
-                                  content:
-                                      Text(
-                                    language.text(
-                                      ar:
-                                          "لم يتم تشغيل الإعلان، حاول مرة أخرى",
-                                      en:
-                                          "The ad could not be played. Please try again.",
-                                    ),
-                                  ),
-                                  behavior:
-                                      SnackBarBehavior
-                                          .floating,
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                  ],
-                ),
-              ),
+                      );
+                    },
+                  ),
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -1427,10 +1328,8 @@ class _PuzzleGameScreenState
         puzzleId:
             widget.island?.id ??
                 "custom_island",
-        levelId:
-            currentLevelId,
-        pieces:
-            controller.pieces,
+        levelId: currentLevelId,
+        pieces: controller.pieces,
         moves: moves,
         seconds:
             stopwatch.elapsed.inSeconds,
