@@ -669,50 +669,39 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                 Positioned(
                   bottom: bottomPadding + 20,
                   right: 18,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: unlockingPrivateIsland
-                          ? null
-                          : () async {
-                              await openPrivateIsland();
-                            },
-                      borderRadius: BorderRadius.circular(20),
-                      splashColor: const Color(0xFFD6B8FF).withOpacity(0.18),
-                      highlightColor: const Color(0xFFD6B8FF).withOpacity(0.08),
-                      child: AnimatedBuilder(
-                        animation: iconGlowController,
-                        builder: (
-                          context,
-                          child,
-                        ) {
-                          final pulse = iconGlowController.value;
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () async {
+                      await playClickSound();
 
-                          return Transform.scale(
-                            scale: 1.0 + pulse * 0.035,
-                            child: SizedBox(
-                              width: 76,
-                              height: 76,
-                              child: Image.asset(
-                                "assets/images/ui/private_island.png",
-                                width: 76,
-                                height: 76,
-                                fit: BoxFit.contain,
-                                filterQuality: FilterQuality.high,
-                                errorBuilder: (
-                                  context,
-                                  error,
-                                  stack,
-                                ) {
-                                  return const Icon(
-                                    Icons.photo_library_rounded,
-                                    color: Color(0xFFD6B8FF),
-                                    size: 46,
-                                  );
-                                },
-                              ),
-                            ),
+                      if (!mounted) return;
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PrivateIslandScreen(),
+                        ),
+                      );
+                    },
+                    child: SizedBox(
+                      width: 76,
+                      height: 76,
+                      child: Image.asset(
+                        "assets/images/islands/private_island.png",
+                        width: 76,
+                        height: 76,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.high,
+                        errorBuilder: (
+                          context,
+                          error,
+                          stackTrace,
+                        ) {
+                          debugPrint(
+                            "Private Island image error: $error",
                           );
+
+                          return const SizedBox.shrink();
                         },
                       ),
                     ),
@@ -898,9 +887,9 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                       ),
                       decoration: BoxDecoration(
                         color: const Color(
-                          0xFF2A1B3D,
+                          0xFF5B3A7D,
                         ).withOpacity(
-                          0.95,
+                          0.96,
                         ),
                         borderRadius: BorderRadius.circular(
                           18,
@@ -1429,279 +1418,6 @@ class _WorldMapScreenState extends State<WorldMapScreen>
           ar: "الجديدة",
           en: "New",
         );
-    }
-  }
-
-  // ============================================================
-  // 🏝️ الجزيرة الخاصة
-  // ============================================================
-  Future<void> openPrivateIsland() async {
-    await playClickSound();
-    if (!mounted) return;
-    final unlocked = await PuzzleProgressManager.isPrivateIslandUnlocked();
-    if (unlocked) {
-      setState(() {
-        privateIslandUnlocked = true;
-      });
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const PrivateIslandScreen(),
-        ),
-      );
-      return;
-    }
-    final gems = await PuzzleProgressManager.getGems();
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF2A1B3D),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              20,
-            ),
-          ),
-          title: Text(
-            t(
-              ar: "الجزيرة الخاصة",
-              en: "Private Island",
-            ),
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.amber,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                t(
-                  ar: "افتح جزيرتك الخاصة وأنشئ ألغازك من صورك الخاصة.",
-                  en: "Unlock your private island and create puzzles from your own photos.",
-                ),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    "assets/images/rewards/gem.png",
-                    width: 48,
-                    height: 48,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(
-                    width: 8,
-                  ),
-                  Text(
-                    "$privateIslandGemCost",
-                    style: const TextStyle(
-                      color: Colors.amber,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 12,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    t(
-                      ar: "رصيدك الحالي: ",
-                      en: "Your balance: ",
-                    ),
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    "$gems",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(
-                    width: 5,
-                  ),
-                  Image.asset(
-                    "assets/images/rewards/gem.png",
-                    width: 24,
-                    height: 24,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(
-                  dialogContext,
-                );
-              },
-              child: Text(
-                t(
-                  ar: "إلغاء",
-                  en: "Cancel",
-                ),
-                style: const TextStyle(
-                  color: Colors.white70,
-                ),
-              ),
-            ),
-            ElevatedButton.icon(
-              icon: Image.asset(
-                "assets/images/rewards/gem.png",
-                width: 22,
-                height: 22,
-              ),
-              label: Text(
-                t(
-                  ar: "شراء وفتح",
-                  en: "Buy & Unlock",
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber,
-                foregroundColor: const Color(
-                  0xFF1A0B2E,
-                ),
-              ),
-              onPressed: unlockingPrivateIsland
-                  ? null
-                  : () async {
-                      await buyPrivateIsland(
-                        dialogContext,
-                      );
-                    },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // ============================================================
-  // 💎 شراء الجزيرة الخاصة
-  // ============================================================
-  Future<void> buyPrivateIsland(
-    BuildContext dialogContext,
-  ) async {
-    if (unlockingPrivateIsland) {
-      return;
-    }
-    setState(() {
-      unlockingPrivateIsland = true;
-    });
-    try {
-      final paid = await PuzzleProgressManager.buyPrivateIslandWithGems();
-
-      // ========================================================
-      // ❌ لا توجد جواهر كافية
-      // ========================================================
-      if (!paid) {
-        if (!mounted) return;
-        setState(() {
-          unlockingPrivateIsland = false;
-        });
-        if (dialogContext.mounted) {
-          Navigator.pop(
-            dialogContext,
-          );
-        }
-        await Future<void>.delayed(
-          const Duration(
-            milliseconds: 150,
-          ),
-        );
-        if (!mounted) return;
-        showMessage(
-          t(
-            ar: "لا تملك $privateIslandGemCost 💎 لفتح الجزيرة الخاصة.",
-            en: "You don't have $privateIslandGemCost 💎 to unlock the private island.",
-          ),
-        );
-        return;
-      }
-
-      // ========================================================
-      // ✅ نجاح الفتح
-      // ========================================================
-      if (!mounted) return;
-      setState(() {
-        privateIslandUnlocked = true;
-        unlockingPrivateIsland = false;
-      });
-      if (dialogContext.mounted) {
-        Navigator.pop(
-          dialogContext,
-        );
-      }
-      await Future<void>.delayed(
-        const Duration(
-          milliseconds: 150,
-        ),
-      );
-      if (!mounted) return;
-      showMessage(
-        t(
-          ar: "تم فتح جزيرتك الخاصة بنجاح! 💎",
-          en: "Your private island is unlocked! 💎",
-        ),
-      );
-      await Future<void>.delayed(
-        const Duration(
-          milliseconds: 500,
-        ),
-      );
-      if (!mounted) return;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const PrivateIslandScreen(),
-        ),
-      );
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          unlockingPrivateIsland = false;
-        });
-      }
-      if (dialogContext.mounted) {
-        Navigator.pop(
-          dialogContext,
-        );
-      }
-      await Future<void>.delayed(
-        const Duration(
-          milliseconds: 150,
-        ),
-      );
-      if (!mounted) return;
-      showMessage(
-        t(
-          ar: "حدث خطأ أثناء فتح الجزيرة الخاصة.",
-          en: "An error occurred while unlocking the private island.",
-        ),
-      );
     }
   }
 
