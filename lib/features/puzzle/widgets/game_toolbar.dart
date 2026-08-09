@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../screens/wallet_screen.dart';
 import '../managers/reward_manager.dart';
 import '../models/reward_result_model.dart';
-import '../managers/ads_manager.dart';
 
 class GameToolbar extends StatefulWidget {
   final VoidCallback? onBack;
@@ -406,25 +405,27 @@ class _GameToolbarState extends State<GameToolbar>
             GestureDetector(
               behavior: HitTestBehavior.opaque,
 
-              // الضغط يبدأ مباشرة
               onTapDown: (_) {
                 _settingsAnimController.forward();
               },
 
-              // إلغاء التأثير عند رفع الإصبع
-              onTapUp: (_) {
+              onTapUp: (_) async {
                 _settingsAnimController.reverse();
+
+                // فتح الإعدادات مباشرة بعد انتهاء حركة الضغط
+                await Future.delayed(
+                  const Duration(milliseconds: 50),
+                );
+
+                if (!mounted) {
+                  return;
+                }
+
+                showSettings(context);
               },
 
-              // إلغاء التأثير إذا خرج الإصبع
               onTapCancel: () {
                 _settingsAnimController.reverse();
-              },
-
-              // ⭐ الأهم:
-              // استخدام onTap يضمن فتح القائمة بشكل موثوق
-              onTap: () {
-                showSettings(context);
               },
 
               child: ScaleTransition(
