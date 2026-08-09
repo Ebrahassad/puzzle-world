@@ -16,10 +16,9 @@ Future<void> main() async {
   await AppLanguageManager.instance.load();
 
   // ============================================================
-  // 🚀 تشغيل التطبيق فورًا
+  // 🚀 تشغيل التطبيق مباشرة
   //
-  // لا ننتظر Unity Ads هنا.
-  // هذا يمنع بقاء التطبيق فترة طويلة على شاشة Flutter.
+  // لا ننتظر تهيئة Unity Ads هنا حتى لا تتأخر شاشة Flutter.
   // ============================================================
 
   runApp(
@@ -27,16 +26,14 @@ Future<void> main() async {
   );
 
   // ============================================================
-  // 📺 تهيئة الإعلانات في الخلفية
-  //
-  // الإعلانات لا تمنع ظهور التطبيق.
+  // 📺 تهيئة الإعلانات في الخلفية بعد تشغيل التطبيق
   // ============================================================
 
-  Future<void>(() async {
+  Future.microtask(() async {
     try {
       await AdsManager().initAds();
     } catch (_) {
-      // فشل الإعلانات لا يجب أن يمنع تشغيل اللعبة.
+      // فشل الإعلانات لا يمنع تشغيل اللعبة.
     }
   });
 }
@@ -54,10 +51,7 @@ class PuzzleWorldApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<Locale>(
       valueListenable:
-          AppLanguageManager
-              .instance
-              .localeNotifier,
-
+          AppLanguageManager.instance.localeNotifier,
       builder: (
         context,
         locale,
@@ -109,9 +103,7 @@ class PuzzleWorldApp extends StatelessWidget {
             snackBarTheme:
                 SnackBarThemeData(
               backgroundColor:
-                  const Color(
-                0xFF4A247A,
-              ),
+                  const Color(0xFF4A247A),
 
               contentTextStyle:
                   const TextStyle(
@@ -127,9 +119,7 @@ class PuzzleWorldApp extends StatelessWidget {
               shape:
                   RoundedRectangleBorder(
                 borderRadius:
-                    BorderRadius.circular(
-                  16,
-                ),
+                    BorderRadius.circular(16),
               ),
 
               elevation: 8,
