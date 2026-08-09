@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../managers/reward_manager.dart';
 import '../managers/ads_manager.dart';
@@ -52,10 +54,19 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   static const int _targetGems = 1;
 
   // ============================================================
-  // ⏱️ Timer العد
+  // ⏱️ عداد المكافأة اليومية
   // ============================================================
 
   Timer? _rewardTimer;
+  Timer? _dailyCountdownTimer;
+
+  Duration _remainingTime = Duration.zero;
+
+  bool _dailyRewardAvailable = true;
+
+  // نفس المفتاح الموجود في RewardManager
+  static const String _dailyRewardKey =
+      RewardManager.dailyRewardKey;
 
   // ============================================================
   // 🚀 INIT
@@ -131,7 +142,170 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
       ),
     );
 
+    // ----------------------------------------------------------
+    // فحص حالة المكافأة والعداد
+    // ----------------------------------------------------------
+
+    _loadDailyRewardStatus();
+
+    // ----------------------------------------------------------
+    // بدء حركة الصندوق
+    // ----------------------------------------------------------
+
     _boxController.forward();
+  }
+
+  // ============================================================
+  // ⏱️ تحميل حالة المكافأة اليومية
+  // ============================================================
+
+  Future<void> _loadDailyRewardStatus() async {
+    try {
+      final available =
+          await RewardManager.canClaimDailyReward();
+
+      if (!mounted) {
+        return;
+      }
+
+      if (available) {
+        setState(() {
+          _dailyRewardAvailable = true;
+          _remainingTime = Duration.zero;
+        });
+
+        _stopDailyCountdown();
+        return;
+      }
+
+      final prefs =
+          await SharedPreferences.getInstance();
+
+      final saved =
+          prefs.getString(_dailyRewardKey);
+
+      if (saved == null) {
+        _setRewardAvailable();
+        return;
+      }
+
+      final lastClaim =
+          DateTime.tryParse(saved);
+
+      if (lastClaim == null) {
+        _setRewardAvailable();
+        return;
+      }
+
+      _startDailyCountdown(lastClaim);
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _dailyRewardAvailable = true;
+        _remainingTime = Duration.zero;
+      });
+    }
+  }
+
+  // ============================================================
+  // ⏱️ بدء عداد اليوم التالي
+  // ============================================================
+
+  void _startDailyCountdown(DateTime lastClaim) {
+    _dailyCountdownTimer?.cancel();
+
+    void updateCountdown() {
+      final now = DateTime.now();
+
+      final nextReward = DateTime(
+        now.year,
+        now.month,
+        now.day + 1,
+      );
+
+      final remaining =
+          nextReward.difference(now);
+
+      if (remaining <= Duration.zero) {
+        _setRewardAvailable();
+        return;
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _dailyRewardAvailable = false;
+        _remainingTime = remaining;
+      });
+    }
+
+    updateCountdown();
+
+    _dailyCountdownTimer =
+        Timer.periodic(
+      const Duration(seconds: 1),
+      (_) {
+        updateCountdown();
+      },
+    );
+  }
+
+  // ============================================================
+  // 🎁 جعل المكافأة متاحة
+  // ============================================================
+
+  void _setRewardAvailable() {
+    _dailyCountdownTimer?.cancel();
+    _dailyCountdownTimer = null;
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _dailyRewardAvailable = true;
+      _remainingTime = Duration.zero;
+    });
+  }
+
+  // ============================================================
+  // 🛑 إيقاف عداد اليوم
+  // ============================================================
+
+  void _stopDailyCountdown() {
+    _dailyCountdownTimer?.cancel();
+    _dailyCountdownTimer = null;
+  }
+
+  // ============================================================
+  // 🕐 تنسيق الوقت
+  // ============================================================
+
+  String _formatRemainingTime(Duration duration) {
+    final hours =
+        duration.inHours
+            .remainder(24)
+            .toString()
+            .padLeft(2, '0');
+
+    final minutes =
+        duration.inMinutes
+            .remainder(60)
+            .toString()
+            .padLeft(2, '0');
+
+    final seconds =
+        duration.inSeconds
+            .remainder(60)
+            .toString()
+            .padLeft(2, '0');
+
+    return '$hours:$minutes:$seconds';
   }
 
   // ============================================================
@@ -141,6 +315,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   @override
   void dispose() {
     _rewardTimer?.cancel();
+    _dailyCountdownTimer?.cancel();
 
     _boxController.dispose();
     _rewardController.dispose();
@@ -154,14 +329,19 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   // ============================================================
 
   Future<void> _onBoxTap() async {
-    if (_isOpen || _isClaimed || _isWatchingAd) {
+    if (_isOpen ||
+        _isClaimed ||
+        _isWatchingAd ||
+        !_dailyRewardAvailable) {
       return;
     }
 
     try {
-      final reward = await RewardManager.claimDailyReward();
+      final reward =
+          await RewardManager.claimDailyReward();
 
       if (reward == null) {
+        await _loadDailyRewardStatus();
         return;
       }
 
@@ -171,7 +351,10 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
 
       setState(() {
         _isOpen = true;
+        _dailyRewardAvailable = false;
       });
+
+      _stopDailyCountdown();
 
       // --------------------------------------------------------
       // فتح الصندوق
@@ -212,7 +395,8 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
 
         step++;
 
-        final progress = (step / 25).clamp(
+        final progress =
+            (step / 25).clamp(
           0.0,
           1.0,
         );
@@ -272,7 +456,15 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     }
 
     // ----------------------------------------------------------
-    // رجوع الصندوق إلى مكانه أعلى الشاشة
+    // بدء عداد المكافأة التالية
+    // ----------------------------------------------------------
+
+    final now = DateTime.now();
+
+    _startDailyCountdown(now);
+
+    // ----------------------------------------------------------
+    // رجوع الصندوق إلى أعلى اليسار
     // ----------------------------------------------------------
 
     await _returnController.forward();
@@ -282,7 +474,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     }
 
     // ----------------------------------------------------------
-    // إغلاق النافذة وإظهار الصندوق المصغر في WorldMapScreen
+    // إغلاق النافذة
     // ----------------------------------------------------------
 
     widget.onRewardClaimed();
@@ -308,10 +500,9 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     AdsManager().showRewardedAd(
       onRewardEarned: () async {
         // ------------------------------------------------------
-        // لا نستدعي claimDailyReward مرة أخرى.
+        // المكافأة الأساسية تمت إضافتها عند فتح الصندوق.
         //
-        // المكافأة الأساسية تم استلامها بالفعل عند فتح الصندوق.
-        // هنا نضيف فقط المكافأة الإضافية.
+        // هنا نضيف فقط النسخة الإضافية.
         // ------------------------------------------------------
 
         await RewardManager.addCoins(
@@ -331,9 +522,15 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
         }
 
         setState(() {
-          _displayCoins = _targetCoins * 2;
-          _displayStars = _targetStars * 2;
-          _displayGems = _targetGems * 2;
+          _displayCoins =
+              _targetCoins * 2;
+
+          _displayStars =
+              _targetStars * 2;
+
+          _displayGems =
+              _targetGems * 2;
+
           _isWatchingAd = false;
           _showRewardUI = false;
         });
@@ -364,7 +561,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              "الإعلان غير متوفر حالياً",
+              'الإعلان غير متوفر حالياً',
             ),
           ),
         );
@@ -392,7 +589,8 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
         final Offset startPosition =
             _boxPosition.value;
 
-        final Offset currentPosition = Offset.lerp(
+        final Offset currentPosition =
+            Offset.lerp(
               startPosition,
               const Offset(
                 -1.15,
@@ -402,7 +600,8 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
             ) ??
             startPosition;
 
-        final double scale = Tween<double>(
+        final double scale =
+            Tween<double>(
           begin: _boxScale.value,
           end: 0.55,
         ).transform(returnValue);
@@ -472,10 +671,11 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
             ),
 
             // ----------------------------------------------------
-            // النص قبل الفتح
+            // 👆 النص قبل الفتح
             // ----------------------------------------------------
 
-            if (!_isOpen)
+            if (!_isOpen &&
+                _dailyRewardAvailable)
               const Padding(
                 padding: EdgeInsets.only(
                   top: 14,
@@ -490,6 +690,104 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
                   ),
                 ),
               ),
+
+            // ----------------------------------------------------
+            // ⏱️ عداد المكافأة التالية
+            // ----------------------------------------------------
+
+            if (!_dailyRewardAvailable)
+              _buildCountdown(),
+
+            // ----------------------------------------------------
+            // 🎁 متاحة الآن
+            // ----------------------------------------------------
+
+            if (_dailyRewardAvailable &&
+                !_isOpen)
+              const Padding(
+                padding: EdgeInsets.only(
+                  top: 8,
+                ),
+                child: Text(
+                  "المكافأة متاحة الآن 🎁",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // ⏱️ Widget العداد
+  // ============================================================
+
+  Widget _buildCountdown() {
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: 12,
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 9,
+        ),
+        decoration: BoxDecoration(
+          color: const Color(
+            0xFF2A1B3D,
+          ),
+          borderRadius:
+              BorderRadius.circular(
+            14,
+          ),
+          border: Border.all(
+            color: Colors.amber.withOpacity(
+              0.75,
+            ),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(
+                0.35,
+              ),
+              blurRadius: 10,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "المكافأة التالية بعد",
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+
+            const SizedBox(
+              height: 4,
+            ),
+
+            Text(
+              _formatRemainingTime(
+                _remainingTime,
+              ),
+              style: const TextStyle(
+                color: Colors.amber,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.5,
+              ),
+            ),
           ],
         ),
       ),
@@ -522,7 +820,8 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
             color: const Color(
               0xFF2A1B3D,
             ),
-            borderRadius: BorderRadius.circular(
+            borderRadius:
+                BorderRadius.circular(
               22,
             ),
             border: Border.all(
@@ -588,9 +887,13 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed:
-                        _isWatchingAd ? null : _claimReward,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
+                        _isWatchingAd
+                            ? null
+                            : _claimReward,
+                    style:
+                        ElevatedButton.styleFrom(
+                      backgroundColor:
+                          Colors.amber,
                       foregroundColor:
                           const Color(
                         0xFF1A0B2E,
@@ -666,9 +969,11 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
             fontSize: 30,
           ),
         ),
+
         const SizedBox(
           height: 5,
         ),
+
         Text(
           "$value",
           style: const TextStyle(
@@ -716,6 +1021,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
               value: value,
               delay: 0.0,
             ),
+
             _flyingReward(
               icon: "⭐",
               begin: const Offset(
@@ -729,6 +1035,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
               value: value,
               delay: 0.08,
             ),
+
             _flyingReward(
               icon: "💎",
               begin: const Offset(
@@ -748,6 +1055,10 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     );
   }
 
+  // ============================================================
+  // 🎯 حركة عنصر مكافأة واحد
+  // ============================================================
+
   Widget _flyingReward({
     required String icon,
     required Offset begin,
@@ -756,15 +1067,20 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     required double delay,
   }) {
     final double progress =
-        ((value - delay) / (1 - delay))
-            .clamp(0.0, 1.0);
+        ((value - delay) /
+                (1 - delay))
+            .clamp(
+      0.0,
+      1.0,
+    );
 
     final curved =
         Curves.easeInOut.transform(
       progress,
     );
 
-    final Offset position = Offset.lerp(
+    final Offset position =
+        Offset.lerp(
           begin,
           end,
           curved,
@@ -772,7 +1088,8 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
         begin;
 
     final double scale =
-        1.0 - (curved * 0.45);
+        1.0 -
+        (curved * 0.45);
 
     final double opacity =
         progress < 0.8
@@ -816,7 +1133,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
           alignment: Alignment.center,
           children: [
             // ----------------------------------------------------
-            // خلفية
+            // 🌑 الخلفية
             // ----------------------------------------------------
 
             Container(
@@ -826,19 +1143,19 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
             ),
 
             // ----------------------------------------------------
-            // الصندوق
+            // 📦 الصندوق + العداد
             // ----------------------------------------------------
 
             _buildBox(),
 
             // ----------------------------------------------------
-            // لوحة المكافأة
+            // 🎁 لوحة المكافأة
             // ----------------------------------------------------
 
             _buildRewardPanel(),
 
             // ----------------------------------------------------
-            // المكافآت الطائرة
+            // 🚀 المكافآت الطائرة
             // ----------------------------------------------------
 
             if (_isClaimed)
