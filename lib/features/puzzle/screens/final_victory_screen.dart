@@ -1026,7 +1026,7 @@ class _FinalVictoryScreenState extends State<FinalVictoryScreen>
     final size =
         MediaQuery.of(context).size;
 
-    return const Directionality(
+    return Directionality(
       textDirection: TextDirection.rtl,
       child: _FinalVictoryContent(),
     );
