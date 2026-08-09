@@ -4,12 +4,11 @@ import 'package:image_picker/image_picker.dart';
 import 'puzzle_game_screen.dart';
 import '../managers/ads_manager.dart';
 import '../../../core/language/app_language_manager.dart';
+
 /// شاشة "جزيرتك الخاصة".
 ///
 /// تسمح للمستخدم باختيار صورة من الجهاز وتحويلها إلى
 /// Puzzle قابل للعب بدرجة الصعوبة التي يختارها.
-///
-/// الشاشة تدعم العربية والإنجليزية من خلال AppLanguageManager.
 class PrivateIslandScreen extends StatefulWidget {
   const PrivateIslandScreen({
     super.key,
@@ -144,11 +143,8 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            _language.text(
-              ar: 'تعذر اختيار الصورة. حاول مرة أخرى.',
-              en: 'Unable to select the image. Please try again.',
-            ),
+          content: const Text(
+            'تعذر اختيار الصورة. حاول مرة أخرى.',
           ),
           backgroundColor: Colors.red.shade700,
           behavior: SnackBarBehavior.floating,
@@ -181,12 +177,9 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    _language.text(
-                      ar: 'اختر مستوى الصعوبة',
-                      en: 'Choose Difficulty',
-                    ),
-                    style: const TextStyle(
+                  const Text(
+                    'اختر مستوى الصعوبة',
+                    style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -196,10 +189,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                   const SizedBox(height: 8),
 
                   Text(
-                    _language.text(
-                      ar: 'حدد حجم الشبكة التي تريد اللعب بها',
-                      en: 'Choose the grid size you want to play with',
-                    ),
+                    'حدد حجم الشبكة التي تريد اللعب بها',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.6),
@@ -210,14 +200,8 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                   const SizedBox(height: 24),
 
                   _DifficultyOption(
-                    label: _language.text(
-                      ar: 'سهل',
-                      en: 'Easy',
-                    ),
-                    subtitle: _language.text(
-                      ar: '4×4 (16 قطعة)',
-                      en: '4×4 (16 pieces)',
-                    ),
+                    label: 'سهل',
+                    subtitle: '4×4 (16 قطعة)',
                     icon: Icons.sentiment_satisfied_alt,
                     color: const Color(0xFF4CAF7D),
                     onTap: () {
@@ -228,14 +212,8 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                   const SizedBox(height: 12),
 
                   _DifficultyOption(
-                    label: _language.text(
-                      ar: 'متوسط',
-                      en: 'Medium',
-                    ),
-                    subtitle: _language.text(
-                      ar: '6×6 (36 قطعة)',
-                      en: '6×6 (36 pieces)',
-                    ),
+                    label: 'متوسط',
+                    subtitle: '6×6 (36 قطعة)',
                     icon: Icons.extension,
                     color: const Color(0xFFE0A63A),
                     onTap: () {
@@ -246,14 +224,8 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                   const SizedBox(height: 12),
 
                   _DifficultyOption(
-                    label: _language.text(
-                      ar: 'خبير',
-                      en: 'Expert',
-                    ),
-                    subtitle: _language.text(
-                      ar: '8×8 (64 قطعة)',
-                      en: '8×8 (64 pieces)',
-                    ),
+                    label: 'خبير',
+                    subtitle: '8×8 (64 قطعة)',
                     icon: Icons.local_fire_department,
                     color: const Color(0xFFD9534F),
                     onTap: () {
@@ -268,10 +240,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                       Navigator.of(dialogContext).pop();
                     },
                     child: Text(
-                      _language.text(
-                        ar: 'إلغاء',
-                        en: 'Cancel',
-                      ),
+                      'إلغاء',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.5),
                       ),
@@ -410,12 +379,9 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
               crossAxisAlignment:
                   CrossAxisAlignment.start,
               children: [
-                Text(
-                  _language.text(
-                    ar: 'مملكتك الخاصة',
-                    en: 'Your Private Kingdom',
-                  ),
-                  style: const TextStyle(
+                const Text(
+                  'مملكتك الخاصة',
+                  style: TextStyle(
                     color: Colors.white,
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -426,10 +392,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                 const SizedBox(height: 2),
 
                 Text(
-                  _language.text(
-                    ar: 'حوّل صورك الخاصة إلى ألغاز فريدة',
-                    en: 'Turn your photos into unique puzzles',
-                  ),
+                  'حوّل صورك الخاصة إلى ألغاز فريدة',
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.7),
                     fontSize: 13,
@@ -507,12 +470,9 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
           const SizedBox(height: 18),
 
-          Text(
-            _language.text(
-              ar: 'استوديو الصور',
-              en: 'Photo Studio',
-            ),
-            style: const TextStyle(
+          const Text(
+            'استوديو الصور',
+            style: TextStyle(
               color: Colors.white,
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -522,12 +482,8 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
           const SizedBox(height: 6),
 
           Text(
-            _language.text(
-              ar: 'اختر صورة من جهازك وحوّلها إلى لغز تفاعلي بحجم\n'
-                  'الشبكة الذي تختاره',
-              en: 'Choose a photo from your device and turn it into\n'
-                  'an interactive puzzle with your chosen grid size',
-            ),
+            'اختر صورة من جهازك وحوّلها إلى لغز تفاعلي بحجم\n'
+            'الشبكة الذي تختاره',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withOpacity(0.7),
@@ -566,12 +522,9 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                         color: Colors.white,
                       ),
                     )
-                  : Text(
-                      _language.text(
-                        ar: 'فتح استوديو الصور',
-                        en: 'Open Photo Studio',
-                      ),
-                      style: const TextStyle(
+                  : const Text(
+                      'فتح استوديو الصور',
+                      style: TextStyle(
                         color: Colors.white,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -606,10 +559,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
         Row(
           children: [
             Text(
-              _language.text(
-                ar: 'مستويات الجزيرة',
-                en: 'Island Levels',
-              ),
+              'مستويات الجزيرة',
               style: TextStyle(
                 color: Colors.white.withOpacity(0.9),
                 fontSize: 16,
@@ -631,10 +581,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                     BorderRadius.circular(8),
               ),
               child: Text(
-                _language.text(
-                  ar: 'قريباً',
-                  en: 'Coming Soon',
-                ),
+                'قريباً',
                 style: TextStyle(
                   color:
                       Colors.white.withOpacity(0.7),
@@ -701,7 +648,7 @@ class _DifficultyOption extends StatelessWidget {
           horizontal: 16,
           vertical: 14,
         ),
-      decoration: BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.04),
           borderRadius:
               BorderRadius.circular(14),
@@ -782,9 +729,6 @@ class _FutureLevelSlot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final language =
-        AppLanguageManager.instance;
-
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.03),
@@ -808,10 +752,7 @@ class _FutureLevelSlot extends StatelessWidget {
           const SizedBox(height: 8),
 
           Text(
-            language.text(
-              ar: 'مستوى $index',
-              en: 'Level $index',
-            ),
+            'مستوى $index',
             style: TextStyle(
               color:
                   Colors.white.withOpacity(0.35),
