@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+Import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -215,81 +215,84 @@ return "${widget.island.id}level$levelNumber";
 // ============================================================
 // 🎮 فتح المرحلة
 // ============================================================
-//
-// النظام:
-//
-// 1️⃣ إذا كانت المرحلة مفتوحة بالفعل → دخول مباشر.
-//
-// 2️⃣ إذا لم تكن مفتوحة:
-//    نتحقق هل المرحلة السابقة مكتملة.
-//
-//    نعم → فتح مجاني + دخول.
-//
-//    لا → عرض نافذة الشراء.
-//
-// 🪙 الشراء لا يعتمد على ترتيب المراحل.
-// يستطيع اللاعب شراء المرحلة 10 مثلاً مباشرة.
-// ============================================================
 
 Future<void> openLevel(
-PuzzleLevelModel level,
+  PuzzleLevelModel level,
 ) async {
-final levelNumber = level.levelNumber;
+  final levelNumber = level.levelNumber;
 
-final levelKey = getLevelKey(  
-  levelNumber,  
-);  
+  final levelKey = getLevelKey(
+    levelNumber,
+  );
 
-// ==========================================================  
-// 🔓 مفتوحة بالفعل  
-// ==========================================================  
+  // ==========================================================
+  // 🆓 المرحلة الأولى مفتوحة دائماً
+  // ==========================================================
 
-final unlocked =  
-    await PuzzleProgressManager.isLevelUnlocked(  
-  levelKey,  
-);  
+  if (levelNumber == 1) {
+    await PuzzleProgressManager.unlockLevel(
+      levelKey,
+    );
 
-if (unlocked) {  
-  await openPuzzle(level);  
-  return;  
-}  
+    if (!mounted) {
+      return;
+    }
 
-// ==========================================================  
-// 🆓 محاولة الفتح المجاني بإكمال المرحلة السابقة  
-// ==========================================================  
+    setState(() {});
 
-if (levelNumber > 1) {  
-  final previousLevelKey = getLevelKey(  
-    levelNumber - 1,  
-  );  
+    await openPuzzle(level);
+    return;
+  }
 
-  final previousCompleted =  
-      await PuzzleProgressManager.isCompleted(  
-    previousLevelKey,  
-  );  
+  // ==========================================================
+  // 🔓 التحقق من فتح المرحلة
+  // ==========================================================
 
-  if (previousCompleted) {  
-    await PuzzleProgressManager.unlockLevel(  
-      levelKey,  
-    );  
+  final unlocked =
+      await PuzzleProgressManager.isLevelUnlocked(
+    levelKey,
+  );
 
-    if (!mounted) {  
-      return;  
-    }  
+  if (unlocked) {
+    await openPuzzle(level);
+    return;
+  }
 
-    setState(() {});  
+  // ==========================================================
+  // 🆓 فتح المرحلة بإكمال المرحلة السابقة
+  // ==========================================================
 
-    await openPuzzle(level);  
-    return;  
-  }  
-}  
+  if (levelNumber > 1) {
+    final previousLevelKey = getLevelKey(
+      levelNumber - 1,
+    );
 
-// ==========================================================  
-// 🪙 المرحلة مغلقة ويمكن شراؤها مباشرة  
-// ==========================================================  
+    final previousCompleted =
+        await PuzzleProgressManager.isCompleted(
+      previousLevelKey,
+    );
 
-await showPurchaseDialog(level);
+    if (previousCompleted) {
+      await PuzzleProgressManager.unlockLevel(
+        levelKey,
+      );
 
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {});
+
+      await openPuzzle(level);
+      return;
+    }
+  }
+
+  // ==========================================================
+  // 🪙 المرحلة مغلقة ويمكن شراؤها
+  // ==========================================================
+
+  await showPurchaseDialog(level);
 }
 
 // ============================================================
@@ -959,7 +962,8 @@ return GestureDetector(
               snapshot,  
             ) {  
               final unlocked =  
-                  snapshot.data ?? false;  
+                  level.levelNumber == 1 ||  
+                  (snapshot.data ?? false);  
 
               return Image.asset(  
                 unlocked  
