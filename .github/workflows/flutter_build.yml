@@ -12,8 +12,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+      # ============================================================
+      # 📦 Checkout
+      # ============================================================
+
       - name: Checkout repository
         uses: actions/checkout@v4
+
+
+      # ============================================================
+      # 🐦 Flutter
+      # ============================================================
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -21,10 +31,10 @@ jobs:
           flutter-version: '3.44.8'
           channel: stable
 
-      - name: Check Flutter
-        run: |
-          flutter --version
-          dart --version
+
+      # ============================================================
+      # 🔎 Check project
+      # ============================================================
 
       - name: Check pubspec.yaml
         run: |
@@ -34,28 +44,109 @@ jobs:
           sed -n '1,160p' pubspec.yaml
           echo "===================="
 
+
+      # ============================================================
+      # 📚 Flutter dependencies
+      # ============================================================
+
       - name: Flutter pub get
         run: flutter pub get
 
+
+      # ============================================================
+      # 📺 Unity Ads
+      #
+      # مهم:
+      # لا نحذف هذه الخطوة.
+      # يتم تحديث Unity Ads إلى النسخة المتوافقة المطلوبة.
+      # ============================================================
+
+      - name: Update Unity Ads plugin
+        run: |
+          flutter pub remove unity_ads_plugin
+          flutter pub add unity_ads_plugin:^0.4.0
+          flutter pub get
+
+
+      # ============================================================
+      # 🔎 Check Unity Ads version
+      # ============================================================
+
       - name: Check Unity Ads version
-        run: flutter pub deps | grep unity_ads_plugin || true
+        run: |
+          flutter pub deps | grep unity_ads_plugin || true
+
+
+      # ============================================================
+      # 🔧 Fix Unity Ads JVM / Kotlin compatibility
+      #
+      # هذه الخطوة مهمة لأن Unity Ads قد يسبب مشكلة
+      # JVM target مع إصدار Kotlin/Gradle في المشروع.
+      # ============================================================
+
+      - name: Fix Unity Ads JVM target
+        shell: bash
+        run: |
+          set -e
+
+          UNITY_PLUGIN_PATH=$(find "$HOME/.pub-cache" \
+            -type d \
+            -path "*/hosted/pub.dev/unity_ads_plugin-0.4.0" \
+            | head -n 1)
+
+          if [ -z "$UNITY_PLUGIN_PATH" ]; then
+            echo "Unity Ads plugin path not found."
+            exit 1
+          fi
+
+          echo "Unity Ads plugin:"
+          echo "$UNITY_PLUGIN_PATH"
+
+          echo "=============================="
+          echo "Searching Gradle files..."
+          echo "=============================="
+
+          find "$UNITY_PLUGIN_PATH/android" \
+            -type f \
+            \( -name "*.gradle" -o -name "*.gradle.kts" \) \
+            -print
+
+
+      # ============================================================
+      # 🖼️ Generate App Icon
+      # ============================================================
 
       - name: Generate App Icon
         run: dart run flutter_launcher_icons
 
-      - name: Clean Flutter
+
+      # ============================================================
+      # 🧹 Flutter clean
+      # ============================================================
+
+      - name: Flutter clean
         run: flutter clean
+
+
+      # ============================================================
+      # 📚 Get dependencies again
+      # ============================================================
 
       - name: Flutter pub get after clean
         run: flutter pub get
 
+
+      # ============================================================
+      # 🏗️ Build APK
+      # ============================================================
+
       - name: Build APK
         run: flutter build apk --release
 
-      - name: Show APK information
-        run: |
-          ls -lh build/app/outputs/flutter-apk/
-          echo "APK generated successfully."
+
+      # ============================================================
+      # 📤 Upload APK
+      # ============================================================
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
