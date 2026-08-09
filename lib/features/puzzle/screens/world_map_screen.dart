@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -127,7 +128,18 @@ bool unlockingPrivateIsland = false;
 // ============================================================
 
 bool showingDailyReward = false;
-bool dailyRewardMiniVisible = false;
+
+// الصندوق يبقى ظاهرًا دائمًا
+bool dailyRewardMiniVisible = true;
+
+// هل المكافأة جاهزة للفتح؟
+bool dailyRewardAvailable = false;
+
+// الوقت المتبقي حتى المكافأة القادمة
+Duration dailyRewardRemaining = Duration.zero;
+
+// Timer للعد التنازلي
+Timer? dailyRewardTimer;
 
 // ============================================================
 // 📍 مواقع الجزر
@@ -269,24 +281,90 @@ _checkDailyReward();
 
 Future<void> _checkDailyReward() async {
   try {
-    final canClaim = await RewardManager.canClaimDailyReward();
+    final canClaim =
+        await RewardManager.canClaimDailyReward();
+
+    final remaining =
+        await RewardManager.getDailyRewardRemaining();
 
     if (!mounted) return;
 
     setState(() {
-      // الصندوق يظهر دائماً في مكانه أعلى الشاشة
-      // إذا كانت المكافأة جاهزة.
-      dailyRewardMiniVisible = canClaim;
-      showingDailyReward = false;
+      // الصندوق لا يختفي أبدًا
+      dailyRewardMiniVisible = true;
+
+      dailyRewardAvailable = canClaim;
+      dailyRewardRemaining = remaining;
     });
+
+    _startDailyRewardTimer();
   } catch (_) {
     if (!mounted) return;
 
     setState(() {
-      dailyRewardMiniVisible = false;
-      showingDailyReward = false;
+      dailyRewardMiniVisible = true;
+      dailyRewardAvailable = true;
+      dailyRewardRemaining = Duration.zero;
     });
   }
+}
+
+// ============================================================
+// ⏱️ العد التنازلي للمكافأة اليومية
+// ============================================================
+
+void _startDailyRewardTimer() {
+  dailyRewardTimer?.cancel();
+
+  dailyRewardTimer = Timer.periodic(
+    const Duration(seconds: 1),
+    (_) async {
+      if (!mounted) return;
+
+      final canClaim =
+          await RewardManager.canClaimDailyReward();
+
+      if (!mounted) return;
+
+      if (canClaim) {
+        setState(() {
+          dailyRewardAvailable = true;
+          dailyRewardRemaining = Duration.zero;
+        });
+
+        dailyRewardTimer?.cancel();
+        return;
+      }
+
+      final remaining =
+          await RewardManager.getDailyRewardRemaining();
+
+      if (!mounted) return;
+
+      setState(() {
+        dailyRewardAvailable = false;
+        dailyRewardRemaining = remaining;
+      });
+    },
+  );
+}
+
+// ============================================================
+// ⏱️ تنسيق العد التنازلي
+// ============================================================
+
+String formatDailyRewardTime(Duration duration) {
+  final hours = duration.inHours;
+
+  final minutes =
+      duration.inMinutes.remainder(60);
+
+  final seconds =
+      duration.inSeconds.remainder(60);
+
+  return '${hours.toString().padLeft(2, '0')}:'
+      '${minutes.toString().padLeft(2, '0')}:'
+      '${seconds.toString().padLeft(2, '0')}';
 }
 
 // ============================================================
@@ -412,6 +490,8 @@ try {
 
 @override
 void dispose() {
+  dailyRewardTimer?.cancel();
+
 worldController.dispose();
 iconGlowController.dispose();
 audioPlayer.dispose();
@@ -559,70 +639,76 @@ return Scaffold(
 
             // ==================================================  
             // 🎁 صندوق المكافأة اليومية  
-            // 📍 أعلى الشاشة - نفس جهة المحفظة  
+            // 📍 ثابت دائمًا يسار الشاشة  
             // ==================================================  
 
-            if (dailyRewardMiniVisible)  
-              Positioned(  
-                top: topPadding + 16,  
-                left: 20,  
-                child: _DailyRewardMiniWidget(  
-                  onTap: () async {  
-                    await playClickSound();  
+            Positioned(
+              top: topPadding + 16,
+              left: 16,
+              child: _DailyRewardMiniWidget(
+                available: dailyRewardAvailable,
+                remaining: dailyRewardRemaining,
+                timeText: formatDailyRewardTime(
+                  dailyRewardRemaining,
+                ),
+                onTap: dailyRewardAvailable
+                    ? () async {
+                        await playClickSound();
 
-                    if (!mounted) return;  
+                        if (!mounted) return;
 
-                    final canClaim =  
-                        await RewardManager.canClaimDailyReward();  
+                        final canClaim =
+                            await RewardManager.canClaimDailyReward();
 
-                    if (!mounted) return;  
+                        if (!mounted) return;
 
-                    if (!canClaim) {  
-                      setState(() {  
-                        dailyRewardMiniVisible = false;  
-                      });  
+                        if (!canClaim) {
+                          await _checkDailyReward();
+                          return;
+                        }
 
-                      showMessage(  
-                        t(  
-                          ar: "لقد استلمت مكافأتك اليومية بالفعل.",  
-                          en: "You have already claimed today's reward.",  
-                        ),  
-                      );  
+                        setState(() {
+                          showingDailyReward = true;
+                          // مهم:
+                          // لا نخفي الصندوق.
+                          dailyRewardMiniVisible = true;
+                        });
 
-                      return;  
-                    }  
+                        await showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (dialogContext) {
+                            return DailyRewardPopup(
+                              onRewardClaimed: () {
+                                if (!mounted) return;
 
-                    setState(() {  
-                      showingDailyReward = true;  
-                      dailyRewardMiniVisible = false;  
-                    });  
+                                setState(() {
+                                  showingDailyReward = false;
 
-                    await showDialog(  
-                      context: context,  
-                      barrierDismissible: false,  
-                      builder: (dialogContext) {  
-                        return DailyRewardPopup(  
-                          onRewardClaimed: () {  
-                            if (!mounted) return;  
+                                  // الصندوق يبقى ظاهرًا
+                                  dailyRewardMiniVisible = true;
 
-                            setState(() {  
-                              showingDailyReward = false;  
-                              dailyRewardMiniVisible = false;  
-                            });  
-                          },  
-                        );  
-                      },  
-                    );  
+                                  // تبدأ فترة الانتظار
+                                  dailyRewardAvailable = false;
+                                });
+                              },
+                            );
+                          },
+                        );
 
-                    if (!mounted) return;  
+                        if (!mounted) return;
 
-                    // بعد انتهاء المكافأة سيتم لاحقاً وضع العد التنازلي هنا.  
-                    setState(() {  
-                      showingDailyReward = false;  
-                    });  
-                  },  
-                ),  
-              ),  
+                        setState(() {
+                          showingDailyReward = false;
+                          dailyRewardMiniVisible = true;
+                        });
+
+                        // إعادة حساب الوقت فورًا
+                        await _checkDailyReward();
+                      }
+                    : null,
+              ),
+            ),
 
             // ==================================================  
             // ⚙️ الإعدادات  
@@ -2086,65 +2172,142 @@ color: Color(0xFFD6B8FF),
 }
 
 // ================================================================
-// 🎁 ودجت صندوق المكافأة اليومية المصغر
+// 🎁 صندوق المكافأة اليومية + العد التنازلي
 // ================================================================
 
 class _DailyRewardMiniWidget extends StatelessWidget {
-final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final bool available;
+  final Duration remaining;
+  final String timeText;
 
-const _DailyRewardMiniWidget({
-required this.onTap,
-});
+  const _DailyRewardMiniWidget({
+    required this.onTap,
+    required this.available,
+    required this.remaining,
+    required this.timeText,
+  });
 
-@override
-Widget build(
-BuildContext context,
-) {
-return GestureDetector(
-onTap: onTap,
-child: Container(
-width: 58,
-height: 58,
-padding: const EdgeInsets.all(5),
-decoration: BoxDecoration(
-shape: BoxShape.circle,
-color: const Color(
-0xFF2A1B3D,
-).withOpacity(0.92),
-border: Border.all(
-color: Colors.amber.withOpacity(
-0.75,
-),
-width: 1.5,
-),
-boxShadow: [
-BoxShadow(
-color: Colors.amber.withOpacity(
-0.25,
-),
-blurRadius: 14,
-spreadRadius: 2,
-),
-],
-),
-child: Image.asset(
-"assets/images/rewards/daly_box_close.png",
-fit: BoxFit.contain,
-errorBuilder: (
-context,
-error,
-stack,
-) {
-return const Icon(
-Icons.card_giftcard_rounded,
-color: Colors.amber,
-size: 34,
-);
-},
-),
-),
-);
-}
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 72,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ==============================================
+            // 🎁 الصندوق
+            // ==============================================
+
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              width: 58,
+              height: 58,
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF2A1B3D)
+                    .withOpacity(0.94),
+                border: Border.all(
+                  color: available
+                      ? Colors.amber.withOpacity(0.95)
+                      : Colors.white24,
+                  width: 1.6,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: available
+                        ? Colors.amber.withOpacity(0.32)
+                        : Colors.black.withOpacity(0.25),
+                    blurRadius: available ? 16 : 10,
+                    spreadRadius: available ? 3 : 1,
+                  ),
+                ],
+              ),
+              child: Image.asset(
+                available
+                    ? "assets/images/rewards/daly_box_close.png"
+                    : "assets/images/rewards/daly_box_close.png",
+                fit: BoxFit.contain,
+                errorBuilder: (
+                  context,
+                  error,
+                  stack,
+                ) {
+                  return Icon(
+                    Icons.card_giftcard_rounded,
+                    color: available
+                        ? Colors.amber
+                        : Colors.white38,
+                    size: 34,
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 4),
+
+            // ==============================================
+            // ⏱️ العد التنازلي
+            // ==============================================
+
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 6,
+                vertical: 3,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A0E2A)
+                    .withOpacity(0.92),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: available
+                      ? Colors.amber.withOpacity(0.80)
+                      : Colors.white24,
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                available
+                    ? "00:00:00"
+                    : timeText,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: available
+                      ? Colors.amber
+                      : Colors.white70,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ),
+
+            // ==============================================
+            // 🎁 حالة الصندوق
+            // ==============================================
+
+            if (available)
+              Padding(
+                padding: const EdgeInsets.only(
+                  top: 2,
+                ),
+                child: Text(
+                  "جاهز",
+                  style: const TextStyle(
+                    color: Colors.amber,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // ================================================================
