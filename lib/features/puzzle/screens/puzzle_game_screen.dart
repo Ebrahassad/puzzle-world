@@ -5,7 +5,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../engine/puzzle_controller.dart';
 import '../engine/puzzle_painter.dart';
@@ -115,6 +114,18 @@ class _PuzzleGameScreenState
 
   int get gridSize {
     if (widget.isCustomImage) {
+      // إذا توجد لعبة محفوظة، تكون الصعوبة المحفوظة
+      // هي المصدر الأساسي.
+      final savedSize =
+          savedGameData?["customGridSize"];
+
+      if (savedSize is num &&
+          savedSize.toInt() >= 2) {
+        return savedSize.toInt();
+      }
+
+      // لعبة جديدة:
+      // نستخدم الصعوبة القادمة من الجزيرة الخاصة.
       return widget.customGridSize ?? 3;
     }
 
@@ -246,12 +257,7 @@ class _PuzzleGameScreenState
   //==================================================
 
   Future<void> _clearCustomSavedGame() async {
-    final prefs =
-        await SharedPreferences.getInstance();
-
-    await prefs.remove(
-      PuzzleProgressManager.gameStateKey,
-    );
+    await PuzzleProgressManager.clearGameState();
   }
 
   //==================================================
@@ -817,15 +823,15 @@ class _PuzzleGameScreenState
         };
       }).toList(),
 
-      //==================================================
-      // 🏝️ مهم جداً:
-      // صورة الجزيرة الخاصة مرتبطة بالحفظ.
-      //==================================================
-
       if (widget.isCustomImage &&
           widget.customImagePath != null)
         "customImagePath":
             widget.customImagePath,
+
+      // 🏝️ صعوبة الجزيرة الخاصة
+      if (widget.isCustomImage)
+        "customGridSize":
+            gridSize,
     };
   }
 
@@ -1578,6 +1584,16 @@ class _PuzzleGameScreenState
                             });
                           }
                         }
+
+                        //==================================================
+                        // 💾 حفظ آخر حالة بعد الحركة
+                        //==================================================
+
+                        await saveCurrentGame();
+
+                        //==================================================
+                        // 🏆 فحص الفوز
+                        //==================================================
 
                         await checkWin();
                       },
