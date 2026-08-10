@@ -55,13 +55,28 @@ jobs:
           echo "PNG files:"
           find assets -type f -iname "*.png" | wc -l
 
+          echo ""
+          echo "Puzzle images:"
+          du -sh assets/images/Puzzle 2>/dev/null || true
+
       # ============================================================
-      # 🗜️ تثبيت oxipng
+      # 🦀 Setup Rust
+      # ============================================================
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      # ============================================================
+      # 🗜️ تثبيت oxipng بدون APT
       # ============================================================
       - name: Install PNG optimizer
         run: |
-          sudo apt-get update
-          sudo apt-get install -y oxipng
+          echo "========================================"
+          echo "INSTALLING OXIPNG"
+          echo "========================================"
+
+          cargo install oxipng --locked
+
+          oxipng --version
 
       # ============================================================
       # 🗜️ ضغط جميع PNG تلقائياً
@@ -96,6 +111,10 @@ jobs:
           echo ""
           echo "PNG files:"
           find assets -type f -iname "*.png" | wc -l
+
+          echo ""
+          echo "Puzzle images:"
+          du -sh assets/images/Puzzle 2>/dev/null || true
 
       # ============================================================
       # 📊 تقرير تفصيلي
