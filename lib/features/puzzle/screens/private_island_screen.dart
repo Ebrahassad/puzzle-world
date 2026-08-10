@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 
 import 'puzzle_game_screen.dart';
 import '../managers/ads_manager.dart';
+import '../managers/puzzle_progress_manager.dart';
 
 /// ===============================================================
 /// 🏝️ الجزيرة الغامضة
@@ -153,6 +154,10 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
         final String preparedPath =
             await _prepareSquareImage(
           picked.path,
+        );
+
+        await PuzzleProgressManager.savePrivateIslandImagePath(
+          preparedPath,
         );
 
         if (!mounted) {
@@ -491,20 +496,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                   ),
                 ),
 
-                const SizedBox(height: 8),
-
-                Text(
-                  'اختر عدد قطع البازل',
-                  textAlign:
-                      TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white
-                        .withOpacity(0.6),
-                    fontSize: 13,
-                  ),
-                ),
-
-                const SizedBox(height: 24),
+                
 
                 // ==================================================
                 // 4 × 4
@@ -512,8 +504,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
                 _DifficultyOption(
                   label: 'سهل',
-                  subtitle:
-                      '4×4 • 16 قطعة',
+                  
                   icon:
                       Icons.sentiment_satisfied_alt,
                   color:
@@ -533,8 +524,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
                 _DifficultyOption(
                   label: 'متوسط',
-                  subtitle:
-                      '6×6 • 36 قطعة',
+                  
                   icon: Icons.extension,
                   color:
                       const Color(0xFFE0A63A),
@@ -553,8 +543,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
                 _DifficultyOption(
                   label: 'خبير',
-                  subtitle:
-                      '8×8 • 64 قطعة',
+                  
                   icon:
                       Icons.local_fire_department,
                   color:
