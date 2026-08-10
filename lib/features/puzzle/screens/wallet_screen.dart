@@ -527,20 +527,22 @@ class _WalletScreenState extends State<WalletScreen>
             //================================================
             // زر الرجوع — ثابت دائماً في اليسار
             //================================================
-            leading: Padding(
-              padding: const EdgeInsets.all(9),
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.pop(context);
-                },
-                child: Image.asset(
-                  "assets/images/ui/back_screen.png",
-                  width: 30,
-                  height: 30,
-                  fit: BoxFit.contain,
+            actions: [
+              Padding(
+                padding: const EdgeInsets.all(7),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: Image.asset(
+                    "assets/images/ui/back_screen.png",
+                    width: 38,
+                    height: 38,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
-            ),
+            ],
 
             //================================================
             // العنوان — في المنتصف
@@ -587,7 +589,7 @@ class _WalletScreenState extends State<WalletScreen>
 
         //================================================
         // BODY
-        //================================================
+        //================================----------------
 
         body: Stack(
           children: [
