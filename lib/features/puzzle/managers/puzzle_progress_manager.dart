@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -67,6 +68,9 @@ class PuzzleProgressManager {
 
   static const String firstDailyRewardClaimedKey =
       "puzzle_first_daily_reward_claimed";
+
+  static const String privateIslandImagePathKey =
+      "private_island_image_path";
 
   //==================================================
   // 💰 النظام الجديد - أسعار التحويل من الإعلانات
@@ -1501,6 +1505,59 @@ class PuzzleProgressManager {
   }
 
   //==================================================
+  // 🏝️📸 صورة الجزيرة الخاصة المؤقتة
+  //==================================================
+
+  /// حفظ مسار صورة الجزيرة الخاصة مؤقتاً.
+  static Future<void> savePrivateIslandImagePath(
+    String imagePath,
+  ) async {
+    final prefs = await _prefs;
+
+    await prefs.setString(
+      privateIslandImagePathKey,
+      imagePath,
+    );
+  }
+
+  /// الحصول على مسار صورة الجزيرة الخاصة المحفوظة.
+  static Future<String?> getPrivateIslandImagePath() async {
+    final prefs = await _prefs;
+
+    return prefs.getString(
+      privateIslandImagePathKey,
+    );
+  }
+
+  /// حذف صورة الجزيرة الخاصة من الجهاز
+  /// وحذف مسارها من SharedPreferences.
+  ///
+  /// يتم استدعاؤها فقط بعد إكمال البازل بنجاح.
+  static Future<void> clearPrivateIslandImage() async {
+    final prefs = await _prefs;
+
+    final imagePath = prefs.getString(
+      privateIslandImagePathKey,
+    );
+
+    if (imagePath != null && imagePath.isNotEmpty) {
+      try {
+        final file = File(imagePath);
+
+        if (await file.exists()) {
+          await file.delete();
+        }
+      } catch (_) {
+        // إذا فشل حذف الملف لا نوقف اللعبة.
+      }
+    }
+
+    await prefs.remove(
+      privateIslandImagePathKey,
+    );
+  }
+
+  //==================================================
   // ⚙️ الإعدادات
   //==================================================
 
@@ -1635,6 +1692,7 @@ class PuzzleProgressManager {
     await prefs.remove(purchasedStarsKey);
     await prefs.remove(purchasedGemsKey);
     await prefs.remove(privateIslandKey);
+    await prefs.remove(privateIslandImagePathKey);
   }
 
   //==================================================
