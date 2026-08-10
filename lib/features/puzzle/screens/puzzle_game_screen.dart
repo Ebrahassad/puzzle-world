@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../engine/puzzle_controller.dart';
 import '../engine/puzzle_painter.dart';
@@ -69,10 +70,6 @@ class _PuzzleGameScreenState
 
   late Stopwatch stopwatch;
 
-  // الوقت المحفوظ سابقاً.
-  //
-  // Stopwatch يبدأ من الصفر بعد الاسترجاع،
-  // لذلك نحتفظ بالوقت القديم هنا.
   int savedSeconds = 0;
 
   int lastPlacedCount = 0;
@@ -114,8 +111,6 @@ class _PuzzleGameScreenState
 
   int get gridSize {
     if (widget.isCustomImage) {
-      // إذا توجد لعبة محفوظة، تكون الصعوبة المحفوظة
-      // هي المصدر الأساسي.
       final savedSize =
           savedGameData?["customGridSize"];
 
@@ -124,8 +119,6 @@ class _PuzzleGameScreenState
         return savedSize.toInt();
       }
 
-      // لعبة جديدة:
-      // نستخدم الصعوبة القادمة من الجزيرة الخاصة.
       return widget.customGridSize ?? 3;
     }
 
@@ -145,7 +138,7 @@ class _PuzzleGameScreenState
   }
 
   //==================================================
-  // 🆔 معرف الحفظ العادي
+  // 🆔 معرف البازل العادي
   //==================================================
 
   String get normalPuzzleId {
@@ -153,14 +146,14 @@ class _PuzzleGameScreenState
   }
 
   //==================================================
-  // 🏝️ معرف حفظ الجزيرة الخاصة
+  // 🏝️ معرف الجزيرة الخاصة
   //==================================================
 
   static const String customPuzzleId =
       "custom_island";
 
   //==================================================
-  // ⏱️ الوقت الفعلي للعبة
+  // ⏱️ الوقت الفعلي
   //==================================================
 
   int get currentElapsedSeconds {
@@ -169,7 +162,7 @@ class _PuzzleGameScreenState
   }
 
   //==================================================
-  // 🏁 هل هذه المرحلة الأخيرة؟
+  // 🏁 هل هذه آخر مرحلة؟
   //==================================================
 
   bool get isFinalLevelOfIsland {
@@ -212,7 +205,7 @@ class _PuzzleGameScreenState
   }
 
   //==================================================
-  // 🗺️ العودة إلى خريطة العالم
+  // 🗺️ العودة للخريطة
   //==================================================
 
   void _returnToWorldMap() {
@@ -251,13 +244,18 @@ class _PuzzleGameScreenState
   //
   // الجزيرة الخاصة تستخدم gameStateKey.
   //
-  // المراحل العادية تستخدم progressKey.
+  // البازل العادي يستخدم progressKey.
   //
-  // لذلك لا نستخدم clearProgress() للجزيرة الخاصة.
+  // لا يتم استخدام clearProgress() هنا.
   //==================================================
 
   Future<void> _clearCustomSavedGame() async {
-    await PuzzleProgressManager.clearGameState();
+    final prefs =
+        await SharedPreferences.getInstance();
+
+    await prefs.remove(
+      PuzzleProgressManager.gameStateKey,
+    );
   }
 
   //==================================================
@@ -267,7 +265,7 @@ class _PuzzleGameScreenState
   Future<void> _checkCustomSavedGame() async {
     final saved =
         await PuzzleProgressManager
-            .loadPrivateIslandGameState();
+            .loadGameState();
 
     if (saved == null ||
         saved.isEmpty) {
@@ -285,8 +283,8 @@ class _PuzzleGameScreenState
         saved["customImagePath"];
 
     //==================================================
-    // 🏝️ التأكد أن الحفظ يخص الجزيرة الخاصة
-    // والصورة الحالية نفسها.
+    // 🏝️ التأكد من أن الحفظ يخص الجزيرة الخاصة
+    // والصورة الحالية
     //==================================================
 
     final isSameGame =
@@ -298,11 +296,6 @@ class _PuzzleGameScreenState
                 widget.customImagePath;
 
     if (!isSameGame) {
-      // لا نحذف هنا حفظ اللعبة العادية.
-      //
-      // إذا كان gameState يحتوي على حفظ قديم
-      // لصورة أخرى من الجزيرة الخاصة فقط،
-      // نستبدله لاحقاً عند بدء لعبة جديدة.
       savedGameData = null;
       return;
     }
@@ -356,8 +349,6 @@ class _PuzzleGameScreenState
                       return;
                     }
 
-                    // الإعلان غير متوفر.
-                    // يسمح بالدخول مباشرة.
                     Navigator.pop(
                       context,
                       true,
@@ -379,20 +370,14 @@ class _PuzzleGameScreenState
     //==================================================
 
     if (resume != true) {
-      if (widget.isCustomImage) {
-        await PuzzleProgressManager
-            .clearPrivateIslandGameState();
-      } else {
-        await PuzzleProgressManager
-            .clearGameState();
-      }
+      await _clearCustomSavedGame();
 
       savedGameData = null;
     }
   }
 
   //==================================================
-  // 💾 فحص حفظ المراحل العادية
+  // 💾 فحص حفظ البازل العادي
   //==================================================
 
   Future<void> _checkNormalSavedGame() async {
@@ -404,10 +389,6 @@ class _PuzzleGameScreenState
       savedGameData = null;
       return;
     }
-
-    //==================================================
-    // التأكد أن الحفظ يخص الجزيرة والمرحلة الحالية.
-    //==================================================
 
     final samePuzzle =
         saved["puzzleId"] ==
@@ -471,8 +452,6 @@ class _PuzzleGameScreenState
                       return;
                     }
 
-                    // الإعلان غير متوفر.
-                    // يسمح بالدخول مباشرة.
                     Navigator.pop(
                       context,
                       true,
@@ -489,10 +468,6 @@ class _PuzzleGameScreenState
       },
     );
 
-    //==================================================
-    // 🆕 لعبة جديدة
-    //==================================================
-
     if (resume != true) {
       await PuzzleProgressManager
           .clearProgress();
@@ -502,7 +477,7 @@ class _PuzzleGameScreenState
   }
 
   //==================================================
-  // 💾 فحص اللعبة المحفوظة
+  // 💾 فحص الحفظ
   //==================================================
 
   Future<void> _checkSavedGame() async {
@@ -527,7 +502,7 @@ class _PuzzleGameScreenState
     }
 
     //==================================================
-    // 🌍 المراحل العادية
+    // 🌍 البازل العادي
     //==================================================
 
     if (widget.level == null) {
@@ -565,7 +540,9 @@ class _PuzzleGameScreenState
     if (widget.isCustomImage &&
         widget.customImagePath != null) {
       provider = FileImage(
-        File(widget.customImagePath!),
+        File(
+          widget.customImagePath!,
+        ),
       );
     } else {
       provider = AssetImage(
@@ -834,7 +811,6 @@ class _PuzzleGameScreenState
         "customImagePath":
             widget.customImagePath,
 
-      // 🏝️ صعوبة الجزيرة الخاصة
       if (widget.isCustomImage)
         "customGridSize":
             gridSize,
@@ -845,9 +821,9 @@ class _PuzzleGameScreenState
   // 💾 حفظ الجزيرة الخاصة
   //==================================================
   //
-  // الجزيرة الخاصة لا تستخدم progressKey.
+  // الجزيرة الخاصة تستخدم gameStateKey.
   //
-  // تستخدم gameStateKey فقط.
+  // البازل العادي لا يلمس هذا المفتاح.
   //==================================================
 
   Future<void> _saveCustomGame() async {
@@ -859,16 +835,10 @@ class _PuzzleGameScreenState
     final state =
         _buildSaveData();
 
-    if (widget.isCustomImage) {
-      await PuzzleProgressManager
-          .savePrivateIslandGameState(state);
-    } else {
-      await PuzzleProgressManager
-          .saveGameState(state);
-    }
+    await PuzzleProgressManager
+        .saveGameState(state);
 
-    // نحفظ أيضاً مسار الصورة في مدير الجزيرة
-    // حتى تبقى الصورة مرتبطة بالحفظ.
+    // حفظ مسار صورة الجزيرة الخاصة
     if (widget.customImagePath != null) {
       await PuzzleProgressManager
           .savePrivateIslandImagePath(
@@ -878,10 +848,10 @@ class _PuzzleGameScreenState
   }
 
   //==================================================
-  // 💾 حفظ المرحلة العادية
+  // 💾 حفظ البازل العادي
   //==================================================
   //
-  // تستخدم progressKey فقط.
+  // يستخدم progressKey فقط.
   //==================================================
 
   Future<void> _saveNormalGame() async {
@@ -923,8 +893,7 @@ class _PuzzleGameScreenState
 
   Future<void> _clearCurrentSavedGame() async {
     if (widget.isCustomImage) {
-      await PuzzleProgressManager
-          .clearPrivateIslandGameState();
+      await _clearCustomSavedGame();
     } else {
       await PuzzleProgressManager
           .clearProgress();
@@ -984,17 +953,14 @@ class _PuzzleGameScreenState
     savedGameData = null;
 
     //==================================================
-    // حذف الحفظ المناسب فقط.
+    // حذف الحفظ المناسب فقط
     //==================================================
 
     await _clearCurrentSavedGame();
 
     //==================================================
     // الجزيرة الخاصة:
-    // لا نحذف صورة المستخدم هنا.
-    //
-    // لأن المستخدم اختار "إعادة اللعبة"
-    // والصورة ما زالت مطلوبة للعب من جديد.
+    // لا نحذف الصورة هنا.
     //==================================================
 
     setState(() {
@@ -1076,36 +1042,37 @@ class _PuzzleGameScreenState
     stopwatch.stop();
 
     //==================================================
-    // 🧹 حذف الحفظ المناسب فقط بعد الفوز
+    // 🧹 حذف الحفظ المناسب فقط
     //==================================================
 
     if (widget.isCustomImage) {
       // الجزيرة الخاصة:
-      // نحذف gameState فقط.
-      await PuzzleProgressManager
-          .clearPrivateIslandGameState();
+      // حذف gameState فقط
+      await _clearCustomSavedGame();
 
+      // حذف صورة الجزيرة الخاصة
       await PuzzleProgressManager
           .clearPrivateIslandImage();
     } else {
-      // المراحل العادية:
-      // نحذف progress فقط.
+      // البازل العادي:
+      // حذف progress فقط
       await PuzzleProgressManager
           .clearProgress();
     }
 
     //==================================================
-    // 🏆 تسجيل إكمال المرحلة
+    // 🏆 تسجيل إكمال المرحلة العادية
     //==================================================
 
     if (!widget.isCustomImage) {
-      await PuzzleProgressManager.completeLevel(
+      await PuzzleProgressManager
+          .completeLevel(
         currentLevelId,
       );
     }
 
     //==================================================
-    // 🔓 فتح المرحلة / الجزيرة التالية
+    // 🔓 فتح التالي
     //==================================================
 
     if (isFinalLevelOfIsland) {
@@ -1292,7 +1259,8 @@ class _PuzzleGameScreenState
         textDirection: TextDirection.rtl,
         child: Scaffold(
           body: Center(
-            child: CircularProgressIndicator(),
+            child:
+                CircularProgressIndicator(),
           ),
         ),
       );
@@ -1302,7 +1270,8 @@ class _PuzzleGameScreenState
       textDirection: TextDirection.rtl,
       child: Scaffold(
         body: Container(
-          decoration: const BoxDecoration(
+          decoration:
+              const BoxDecoration(
             color: Color(
               0xFFE8E1F3,
             ),
@@ -1351,10 +1320,8 @@ class _PuzzleGameScreenState
                                       .withOpacity(
                                     0.35,
                                   ),
-                                  blurRadius:
-                                      25,
-                                  spreadRadius:
-                                      2,
+                                  blurRadius: 25,
+                                  spreadRadius: 2,
                                 ),
                               ],
                               border:
@@ -1377,29 +1344,30 @@ class _PuzzleGameScreenState
                                             Opacity(
                                           opacity:
                                               0.18,
-                                          child: widget.isCustomImage &&
-                                                  widget.customImagePath !=
-                                                      null
-                                              ? Image.file(
-                                                  File(
-                                                    widget.customImagePath!,
-                                                  ),
-                                                  width:
-                                                      boardSize,
-                                                  height:
-                                                      boardSize,
-                                                  fit:
-                                                      BoxFit.cover,
-                                                )
-                                              : Image.asset(
-                                                  widget.level!.image,
-                                                  width:
-                                                      boardSize,
-                                                  height:
-                                                      boardSize,
-                                                  fit:
-                                                      BoxFit.cover,
-                                                ),
+                                          child:
+                                              widget.isCustomImage &&
+                                                      widget.customImagePath !=
+                                                          null
+                                                  ? Image.file(
+                                                      File(
+                                                        widget.customImagePath!,
+                                                      ),
+                                                      width:
+                                                          boardSize,
+                                                      height:
+                                                          boardSize,
+                                                      fit:
+                                                          BoxFit.cover,
+                                                    )
+                                                  : Image.asset(
+                                                      widget.level!.image,
+                                                      width:
+                                                          boardSize,
+                                                      height:
+                                                          boardSize,
+                                                      fit:
+                                                          BoxFit.cover,
+                                                    ),
                                         ),
                                       )
                                     : const SizedBox
@@ -1446,8 +1414,10 @@ class _PuzzleGameScreenState
                             ),
                           ),
                         ],
-                        border: Border.all(
-                          color: const Color(
+                        border:
+                            Border.all(
+                          color:
+                              const Color(
                             0xFFF7F2FD,
                           ),
                         ),
@@ -1483,9 +1453,7 @@ class _PuzzleGameScreenState
                         end: target,
                         onFinished: () async {
                           await RewardManager
-                              .addCoins(
-                            1,
-                          );
+                              .addCoins(1);
 
                           if (!mounted) {
                             return;
@@ -1506,27 +1474,34 @@ class _PuzzleGameScreenState
 
                 if (puzzleCreated)
                   Positioned.fill(
-                    child: GestureDetector(
+                    child:
+                        GestureDetector(
                       behavior:
                           HitTestBehavior
                               .translucent,
 
-                      onPanStart: (details) {
+                      onPanStart:
+                          (details) {
                         controller
                             .onPanStart(
-                          details.localPosition,
+                          details
+                              .localPosition,
                         );
                       },
 
-                      onPanUpdate: (details) {
+                      onPanUpdate:
+                          (details) {
                         controller
                             .onPanUpdate(
-                          details.localPosition,
+                          details
+                              .localPosition,
                         );
                       },
 
-                      onPanEnd: (_) async {
-                        controller.onPanEnd();
+                      onPanEnd:
+                          (_) async {
+                        controller
+                            .onPanEnd();
 
                         moves++;
 
@@ -1541,7 +1516,8 @@ class _PuzzleGameScreenState
                         }
 
                         final placedCount =
-                            controller.pieces
+                            controller
+                                .pieces
                                 .where(
                                   (p) =>
                                       p.isPlaced,
@@ -1594,7 +1570,7 @@ class _PuzzleGameScreenState
                         }
 
                         //==================================================
-                        // 💾 حفظ آخر حالة بعد الحركة
+                        // 💾 حفظ الحالة
                         //==================================================
 
                         await saveCurrentGame();
@@ -1606,18 +1582,21 @@ class _PuzzleGameScreenState
                         await checkWin();
                       },
 
-                      child: CustomPaint(
+                      child:
+                          CustomPaint(
                         painter:
                             PuzzlePainter(
                           pieces:
-                              controller.pieces,
+                              controller
+                                  .pieces,
                           image: image!,
                           boardRect:
                               controller
                                   .boardRect,
                           rows: gridSize,
                           cols: gridSize,
-                          repaint: controller,
+                          repaint:
+                              controller,
                         ),
                       ),
                     ),
@@ -1646,8 +1625,8 @@ class _PuzzleGameScreenState
                       }
 
                       ScaffoldMessenger.of(
-                              context)
-                          .showSnackBar(
+                        context,
+                      ).showSnackBar(
                         const SnackBar(
                           content: Text(
                             "تم الحفظ بنجاح",
@@ -1721,8 +1700,7 @@ class _PuzzleGameScreenState
                           }
 
                           ScaffoldMessenger
-                                  .of(
-                                      context)
+                              .of(context)
                               .showSnackBar(
                             const SnackBar(
                               content: Text(
@@ -1763,13 +1741,14 @@ class _PuzzleGameScreenState
     _regroupTimer?.cancel();
 
     //==================================================
-    // 💾 حفظ آخر حالة عند الخروج المفاجئ / dispose
+    // 💾 حفظ آخر حالة
     //==================================================
     //
-    // لا نحفظ إذا كانت اللعبة اكتملت.
+    // الجزيرة الخاصة:
+    // gameStateKey
     //
-    // الجزيرة الخاصة → gameStateKey
-    // العادية → progressKey
+    // البازل العادي:
+    // progressKey
     //==================================================
 
     if (puzzleCreated &&
@@ -1778,18 +1757,11 @@ class _PuzzleGameScreenState
         final state =
             _buildSaveData();
 
-        // لا يمكن await داخل dispose.
-        //
-        // نرسل عملية الحفظ بشكل مستقل.
-        if (widget.isCustomImage) {
-          PuzzleProgressManager
-              .savePrivateIslandGameState(state);
-        } else {
-          PuzzleProgressManager
-              .saveGameState(state);
-        }
+        PuzzleProgressManager
+            .saveGameState(state);
 
-        if (widget.customImagePath != null) {
+        if (widget.customImagePath !=
+            null) {
           PuzzleProgressManager
               .savePrivateIslandImagePath(
             widget.customImagePath!,
