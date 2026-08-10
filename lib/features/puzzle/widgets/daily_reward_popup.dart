@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../managers/reward_manager.dart';
 import '../managers/ads_manager.dart';
+import '../managers/puzzle_progress_manager.dart';
 
 class DailyRewardPopup extends StatefulWidget {
   final VoidCallback onRewardClaimed;
@@ -49,6 +50,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   int _displayCoins = 0;
   int _displayStars = 0;
   int _displayGems = 0;
+  int _displayAdsBalance = 0;
 
   //==================================================
   // ⏱️ العداد
@@ -203,6 +205,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
           _displayCoins = 0;
           _displayStars = 0;
           _displayGems = 0;
+          _displayAdsBalance = 0;
         });
 
         return;
@@ -254,6 +257,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
         _displayCoins = 0;
         _displayStars = 0;
         _displayGems = 0;
+        _displayAdsBalance = 0;
       });
 
       return;
@@ -455,6 +459,63 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
       return;
     }
 
+    //==================================================
+    // 🎁 مكافأة البداية
+    // 500 رصيد مشاهدات + 10 نجوم + 5 جواهر
+    //==================================================
+
+    final firstReward =
+        await PuzzleProgressManager.claimFirstDailyReward();
+
+    //==================================================
+    // 🎁 إذا كانت هذه أول مرة
+    //==================================================
+
+    if (firstReward) {
+      //==================================================
+      // ⭐ إضافة 10 نجوم
+      // 💎 إضافة 5 جواهر
+      //
+      // ملاحظة:
+      // الـ500 رصيد مشاهدات تتم إضافتها بالفعل
+      // داخل claimFirstDailyReward()
+      // لذلك لا نضيفها هنا مرة ثانية.
+      //==================================================
+
+      await RewardManager.addStars(10);
+      await RewardManager.addGems(5);
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isOpen = true;
+
+        _dailyRewardAvailable = false;
+
+        _remainingTime =
+            _getTimeUntilTomorrow();
+
+        _displayCoins = 0;
+
+        _displayStars = 0;
+        _displayGems = 0;
+        _displayAdsBalance = 0;
+
+        _showRewardUI = false;
+        _isClaimed = false;
+      });
+
+      _startCountingFirstReward();
+
+      return;
+    }
+
+    //==================================================
+    // 🎁 المكافأة اليومية العادية
+    //==================================================
+
     final reward =
         await RewardManager.claimDailyReward();
 
@@ -478,6 +539,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
       _displayCoins = 0;
       _displayStars = 0;
       _displayGems = 0;
+      _displayAdsBalance = 0;
 
       _showRewardUI = false;
       _isClaimed = false;
@@ -522,6 +584,8 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
 
           _displayGems =
               (_targetGems * progress).round();
+
+          _displayAdsBalance = 0;
         });
 
         if (step >= 20) {
@@ -535,6 +599,77 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
             _displayCoins = _targetCoins;
             _displayStars = _targetStars;
             _displayGems = _targetGems;
+            _displayAdsBalance = 0;
+
+            _showRewardUI = true;
+          });
+        }
+      },
+    );
+  }
+
+  //==================================================
+  // 🎁🎉 عد مكافأة البداية
+  // 📺 500 رصيد مشاهدات
+  // ⭐ 10 نجوم
+  // 💎 5 جواهر
+  //==================================================
+
+  void _startCountingFirstReward() {
+    _rewardTimer?.cancel();
+
+    int step = 0;
+
+    const int firstRewardAdsBalance = 500;
+    const int firstRewardStars = 10;
+    const int firstRewardGems = 5;
+
+    _rewardTimer = Timer.periodic(
+      const Duration(
+        milliseconds: 20,
+      ),
+      (timer) {
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
+
+        step++;
+
+        final progress =
+            (step / 25).clamp(0.0, 1.0);
+
+        setState(() {
+          _displayAdsBalance =
+              (firstRewardAdsBalance * progress).round();
+
+          _displayCoins = 0;
+
+          _displayStars =
+              (firstRewardStars * progress).round();
+
+          _displayGems =
+              (firstRewardGems * progress).round();
+        });
+
+        if (step >= 25) {
+          timer.cancel();
+
+          if (!mounted) {
+            return;
+          }
+
+          setState(() {
+            _displayAdsBalance =
+                firstRewardAdsBalance;
+
+            _displayCoins = 0;
+
+            _displayStars =
+                firstRewardStars;
+
+            _displayGems =
+                firstRewardGems;
 
             _showRewardUI = true;
           });
@@ -592,34 +727,49 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
         // نضيف فقط النسخة الإضافية.
         //==================================================
 
-        await RewardManager.addCoins(
-          _targetCoins,
-        );
+        if (_displayAdsBalance > 0) {
+          await PuzzleProgressManager.addAdsBalance(
+            _displayAdsBalance,
+          );
 
-        await RewardManager.addStars(
-          _targetStars,
-        );
+          if (!mounted) {
+            return;
+          }
 
-        await RewardManager.addGems(
-          _targetGems,
-        );
+          setState(() {
+            _displayAdsBalance *= 2;
+            _isDoubling = false;
+          });
+        } else {
+          await RewardManager.addCoins(
+            _targetCoins,
+          );
 
-        if (!mounted) {
-          return;
+          await RewardManager.addStars(
+            _targetStars,
+          );
+
+          await RewardManager.addGems(
+            _targetGems,
+          );
+
+          if (!mounted) {
+            return;
+          }
+
+          setState(() {
+            _displayCoins =
+                _targetCoins * 2;
+
+            _displayStars =
+                _targetStars * 2;
+
+            _displayGems =
+                _targetGems * 2;
+
+            _isDoubling = false;
+          });
         }
-
-        setState(() {
-          _displayCoins =
-              _targetCoins * 2;
-
-          _displayStars =
-              _targetStars * 2;
-
-          _displayGems =
-              _targetGems * 2;
-
-          _isDoubling = false;
-        });
 
         await Future.delayed(
           const Duration(
@@ -872,7 +1022,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
               ),
 
               //==================================================
-              // 🪙 ⭐ 💎
+              // 📺 أو 🪙 ⭐ 💎
               //==================================================
 
               Row(
@@ -880,17 +1030,28 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
                     MainAxisAlignment.spaceAround,
                 children: [
                   _buildRewardItem(
-                    '🪙',
-                    '$_displayCoins',
+                    _displayAdsBalance > 0 ? '📺' : '🪙',
+                    _displayAdsBalance > 0 ? '$_displayAdsBalance' : '$_displayCoins',
                   ),
-                  _buildRewardItem(
-                    '⭐',
-                    '$_displayStars',
-                  ),
-                  _buildRewardItem(
-                    '💎',
-                    '$_displayGems',
-                  ),
+                  if (_displayAdsBalance == 0) ...[
+                    _buildRewardItem(
+                      '⭐',
+                      '$_displayStars',
+                    ),
+                    _buildRewardItem(
+                      '💎',
+                      '$_displayGems',
+                    ),
+                  ] else ...[
+                     _buildRewardItem(
+                      '⭐',
+                      '$_displayStars',
+                    ),
+                    _buildRewardItem(
+                      '💎',
+                      '$_displayGems',
+                    ),
+                  ]
                 ],
               ),
 
