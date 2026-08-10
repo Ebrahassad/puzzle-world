@@ -2,19 +2,13 @@
 
 <resources>
 
-    <!-- الشاشة المؤقتة قبل تشغيل Flutter في الوضع الداكن -->
     <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
-
-        <item name="android:windowBackground">@color/splash_color</item>
-
+        <item name="android:windowBackground">@drawable/launch_background</item>
+        <item name="android:windowNoTitle">true</item>
     </style>
 
-
-    <!-- التطبيق بعد تشغيل Flutter -->
     <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
-
         <item name="android:windowBackground">@android:color/black</item>
-
     </style>
 
 </resources>
