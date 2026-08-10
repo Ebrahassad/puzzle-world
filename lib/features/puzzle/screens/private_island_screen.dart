@@ -635,59 +635,70 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
             ),
 
             // ======================================================
-            // 🏝️ الجزيرة العائمة
+            // 🏝️ الجزيرة العائمة — Responsive
             // ======================================================
 
-            Align(
-              alignment:
-                  Alignment.topCenter,
-              child: Padding(
-                padding:
-                    const EdgeInsets.only(
-                  top: 90,
-                ),
-                child:
-                    AnimatedBuilder(
-                  animation:
-                      _floatingAnimation,
-                  builder:
-                      (
-                    context,
-                    child,
-                  ) {
-                    return Transform.translate(
-                      offset: Offset(
-                        0,
-                        _floatingAnimation
-                            .value,
-                      ),
-                      child: child,
-                    );
-                  },
-                  child:
-                      SizedBox(
-                    width: 180,
-                    height: 180,
-                    child: Image.asset(
-                      'assets/images/islands/private_island.png',
-                      fit: BoxFit.contain,
-                      errorBuilder:
-                          (
+            Builder(
+              builder: (context) {
+                final Size screenSize =
+                    MediaQuery.sizeOf(context);
+
+                // حجم الجزيرة يتناسب مع عرض الجهاز.
+                // مع حد أدنى وأقصى حتى لا تصبح صغيرة جدًا
+                // أو ضخمة جدًا على الأجهزة الكبيرة.
+                final double islandSize =
+                    (screenSize.width * 0.62)
+                        .clamp(220.0, 300.0);
+
+                // موضع الجزيرة يتكيف مع ارتفاع الشاشة.
+                // لا نريدها خلف الشريط العلوي.
+                final double islandTop =
+                    (screenSize.height * 0.13)
+                        .clamp(115.0, 145.0);
+
+                return Align(
+                  alignment: Alignment.topCenter,
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      top: islandTop,
+                    ),
+                    child: AnimatedBuilder(
+                      animation: _floatingAnimation,
+                      builder: (
                         context,
-                        error,
-                        stackTrace,
+                        child,
                       ) {
-                        return const Icon(
-                          Icons.landscape,
-                          color:
-                              Colors.white70,
-                          size: 80,
+                        return Transform.translate(
+                          offset: Offset(
+                            0,
+                            _floatingAnimation.value,
+                          ),
+                          child: child,
                         );
                       },
+                      child: SizedBox(
+                        width: islandSize,
+                        height: islandSize,
+                        child: Image.asset(
+                          'assets/images/islands/private_island.png',
+                          fit: BoxFit.contain,
+                          errorBuilder: (
+                            context,
+                            error,
+                            stackTrace,
+                          ) {
+                            return const Icon(
+                              Icons.landscape,
+                              color: Colors.white70,
+                              size: 80,
+                            );
+                          },
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
 
             // ======================================================
@@ -705,21 +716,19 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                   ),
 
                   const Spacer(
-                    flex: 1,
+                    flex: 3,
                   ),
 
                   Padding(
                     padding:
-                        const EdgeInsets
-                            .symmetric(
+                        const EdgeInsets.symmetric(
                       horizontal: 20,
                     ),
-                    child:
-                        _buildStudioCard(),
+                    child: _buildStudioCard(),
                   ),
 
                   const Spacer(
-                    flex: 2,
+                    flex: 1,
                   ),
                 ],
               ),
@@ -776,8 +785,8 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
       child: Row(
         children: [
           SizedBox(
-            width: 32,
-            height: 32,
+            width: 42,
+            height: 42,
             child: Image.asset(
               'assets/images/ui/add_pic.png',
               fit: BoxFit.contain,
@@ -791,13 +800,13 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                   Icons
                       .add_photo_alternate,
                   color: Colors.white,
-                  size: 28,
+                  size: 32,
                 );
               },
             ),
           ),
 
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
 
           const Expanded(
             child: Text(
