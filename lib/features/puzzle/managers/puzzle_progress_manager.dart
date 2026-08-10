@@ -122,24 +122,39 @@ class PuzzleProgressManager {
     required int moves,
     required int seconds,
   }) async {
-    final prefs = await _prefs;
+    // مهم جداً:
+    // إنشاء نسخة كاملة من بيانات القطع قبل أي await.
+    //
+    // بهذا الشكل حتى لو تم dispose للـ PuzzleController
+    // بعد استدعاء الحفظ، تكون بيانات القطع قد أصبحت
+    // مستقلة عن controller.
+    final piecesData = pieces.map((piece) {
+      return {
+        "id": piece.id,
+        "row": piece.row,
+        "column": piece.col,
 
+        // الموقع الحالي للقطعة
+        "x": piece.currentPosition.dx,
+        "y": piece.currentPosition.dy,
+
+        // هل القطعة مثبتة في مكانها الصحيح؟
+        "placed": piece.isPlaced,
+      };
+    }).toList();
+
+    // بناء بيانات اللعبة كاملة قبل await
     final data = {
       "puzzleId": puzzleId,
       "levelId": levelId,
       "moves": moves,
       "seconds": seconds,
-      "pieces": pieces.map((piece) {
-        return {
-          "id": piece.id,
-          "row": piece.row,
-          "column": piece.col,
-          "x": piece.currentPosition.dx,
-          "y": piece.currentPosition.dy,
-          "placed": piece.isPlaced,
-        };
-      }).toList(),
+      "pieces": piecesData,
     };
+
+    // بعد أن أصبحت البيانات في الذاكرة بشكل مستقل،
+    // يمكن الآن الوصول إلى SharedPreferences.
+    final prefs = await _prefs;
 
     await prefs.setString(
       progressKey,
