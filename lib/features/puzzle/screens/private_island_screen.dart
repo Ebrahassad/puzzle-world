@@ -13,28 +13,18 @@ import '../managers/puzzle_progress_manager.dart';
 /// ===============================================================
 /// 🏝️ الجزيرة الغامضة
 ///
-/// هذه الشاشة مستقلة عن مستويات البازل العادية.
+/// شاشة مستقلة عن مستويات البازل العادية.
 ///
-/// الوظيفة:
+/// الوظائف:
 /// 1. اختيار صورة من الجهاز.
-/// 2. تجهيز الصورة لتكون مربعة بدون قص محتواها.
-/// 3. اختيار مستوى:
+/// 2. تجهيز الصورة لتكون مربعة بدون قص المحتوى.
+/// 3. اختيار مستوى الصعوبة:
 ///      4 × 4
 ///      6 × 6
 ///      8 × 8
-/// 4. الانتقال مباشرة إلى PuzzleGameScreen.
+/// 4. حفظ مسار الصورة في نظام الجزيرة الخاصة.
+/// 5. الانتقال إلى PuzzleGameScreen.
 ///
-/// نظام الحفظ:
-/// - حفظ المراحل العادية يتم بواسطة نظام المراحل العادية.
-/// - الجزيرة الخاصة تستخدم:
-///      puzzleId = custom_island
-///      levelId = custom_image_puzzle
-///      customImagePath = مسار الصورة
-///      customGridSize = حجم الشبكة
-///
-/// ملاحظة:
-/// لا يتم تعديل PuzzleGenerator أو PuzzleController أو
-/// مستويات اللعبة الأساسية.
 /// ===============================================================
 class PrivateIslandScreen extends StatefulWidget {
   const PrivateIslandScreen({super.key});
@@ -44,7 +34,8 @@ class PrivateIslandScreen extends StatefulWidget {
       _PrivateIslandScreenState();
 }
 
-class _PrivateIslandScreenState extends State<PrivateIslandScreen>
+class _PrivateIslandScreenState
+    extends State<PrivateIslandScreen>
     with TickerProviderStateMixin {
   // ============================================================
   // 🎞️ Animation
@@ -96,7 +87,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
   }
 
   // ============================================================
-  // 🖼️ فتح الاستوديو
+  // 🖼️ فتح استوديو الصور
   // ============================================================
 
   Future<void> _openImageStudio() async {
@@ -142,8 +133,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
         // ======================================================
         // 🟪 تجهيز الصورة لتكون مربعة
-        //
-        // لا نقص أي جزء من صورة المستخدم.
+        // بدون قص أي جزء من الصورة.
         // ======================================================
 
         final String preparedPath =
@@ -156,11 +146,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
         }
 
         // ======================================================
-        // 🎯 اختيار الصعوبة
-        //
-        // مهم:
-        // لا نحفظ الصورة في نظام الحفظ قبل أن يختار
-        // المستخدم مستوى الصعوبة.
+        // 🎯 اختيار مستوى الصعوبة
         // ======================================================
 
         final int? gridSize =
@@ -179,12 +165,12 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
         }
 
         // ======================================================
-        // 💾 حفظ مسار صورة الجزيرة الخاصة
+        // 💾 حفظ صورة الجزيرة الخاصة
         //
-        // يتم ذلك بعد اختيار الشبكة فقط.
+        // هذه الدالة موجودة فعليًا في
+        // PuzzleProgressManager الحالي.
         //
-        // هذه المعلومة خاصة بالجزيرة الخاصة ولا تدخل
-        // في نظام حفظ المراحل العادية.
+        // ولا علاقة لها بحفظ المراحل العادية.
         // ======================================================
 
         await PuzzleProgressManager
@@ -192,31 +178,25 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
           preparedPath,
         );
 
-        // ======================================================
-        // 🎮 الانتقال إلى لعبة البازل
-        //
-        // isCustomImage = true
-        // يجعل PuzzleGameScreen يستخدم نظام حفظ
-        // الجزيرة الخاصة بدل نظام المراحل العادية.
-        // ======================================================
+        if (!mounted) {
+          return;
+        }
 
         setState(() {
           _isPicking = false;
         });
 
+        // ======================================================
+        // 🎮 فتح لعبة الجزيرة الخاصة
+        // ======================================================
+
         await Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) =>
                 PuzzleGameScreen(
-              customImagePath:
-                  preparedPath,
-
-              // الجزيرة الخاصة
+              customImagePath: preparedPath,
               isCustomImage: true,
-
-              // 4 أو 6 أو 8
-              customGridSize:
-                  gridSize,
+              customGridSize: gridSize,
             ),
           ),
         );
@@ -250,11 +230,6 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
     // ============================================================
     // 📺 الإعلان المكافئ
-    //
-    // لم يتم تغيير نظام الإعلانات.
-    //
-    // - إذا نجح → نفتح الاستوديو.
-    // - إذا فشل أو غير جاهز → نفتح الاستوديو مباشرة.
     // ============================================================
 
     AdsManager().showRewardedAd(
@@ -300,10 +275,9 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
     final int sourceHeight =
         sourceImage.height;
 
-    // ------------------------------------------------------------
-    // إذا كانت الصورة مربعة أصلًا:
-    // لا نعيد تصنيعها.
-    // ------------------------------------------------------------
+    // ============================================================
+    // الصورة مربعة أصلًا
+    // ============================================================
 
     if (sourceWidth == sourceHeight) {
       sourceImage.dispose();
@@ -312,9 +286,9 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
       return sourcePath;
     }
 
-    // ------------------------------------------------------------
-    // أكبر ضلع يصبح حجم الصورة الجديدة.
-    // ------------------------------------------------------------
+    // ============================================================
+    // أكبر ضلع يصبح حجم الصورة الجديدة
+    // ============================================================
 
     final int squareSize =
         sourceWidth > sourceHeight
@@ -335,9 +309,9 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
       squareSize.toDouble(),
     );
 
-    // ------------------------------------------------------------
-    // خلفية بسيطة.
-    // ------------------------------------------------------------
+    // ============================================================
+    // خلفية
+    // ============================================================
 
     final Paint backgroundPaint =
         Paint()
@@ -349,9 +323,9 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
       backgroundPaint,
     );
 
-    // ------------------------------------------------------------
-    // وضع الصورة في المنتصف بدون قص.
-    // ------------------------------------------------------------
+    // ============================================================
+    // وضع الصورة في المنتصف بدون قص
+    // ============================================================
 
     final double dx =
         (squareSize - sourceWidth) / 2;
@@ -387,9 +361,9 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
       imagePaint,
     );
 
-    // ------------------------------------------------------------
-    // إنشاء الصورة النهائية.
-    // ------------------------------------------------------------
+    // ============================================================
+    // إنشاء الصورة النهائية
+    // ============================================================
 
     final ui.Picture picture =
         recorder.endRecording();
@@ -418,9 +392,9 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
     final Uint8List pngBytes =
         byteData.buffer.asUint8List();
 
-    // ------------------------------------------------------------
-    // حفظ نسخة مؤقتة.
-    // ------------------------------------------------------------
+    // ============================================================
+    // حفظ نسخة مؤقتة
+    // ============================================================
 
     final Directory tempDirectory =
         Directory.systemTemp;
@@ -446,7 +420,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
   }
 
   // ============================================================
-  // 🎯 اختيار مستوى البازل
+  // 🎯 اختيار مستوى الصعوبة
   // ============================================================
 
   Future<int?> _showDifficultyDialog() {
@@ -480,6 +454,8 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                         FontWeight.bold,
                   ),
                 ),
+
+                const SizedBox(height: 18),
 
                 // ==================================================
                 // 4 × 4
@@ -601,13 +577,14 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
             Positioned.fill(
               child: Container(
                 color:
-                    Colors.black
-                        .withOpacity(0.35),
+                    Colors.black.withOpacity(
+                  0.35,
+                ),
               ),
             ),
 
             // ======================================================
-            // 🏝️ الجزيرة العائمة — Responsive
+            // 🏝️ الجزيرة العائمة
             // ======================================================
 
             Builder(
@@ -617,17 +594,24 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
                 final double islandSize =
                     (screenSize.width * 0.62)
-                        .clamp(220.0, 300.0);
+                        .clamp(
+                  220.0,
+                  300.0,
+                );
 
                 final double islandTop =
                     (screenSize.height * 0.13)
-                        .clamp(115.0, 145.0);
+                        .clamp(
+                  115.0,
+                  145.0,
+                );
 
                 return Align(
                   alignment:
                       Alignment.topCenter,
                   child: Padding(
-                    padding: EdgeInsets.only(
+                    padding:
+                        EdgeInsets.only(
                       top: islandTop,
                     ),
                     child: AnimatedBuilder(
@@ -651,7 +635,8 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                         height: islandSize,
                         child: Image.asset(
                           'assets/images/islands/private_island.png',
-                          fit: BoxFit.contain,
+                          fit:
+                              BoxFit.contain,
                           errorBuilder: (
                             context,
                             error,
@@ -772,7 +757,8 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                 return const Icon(
                   Icons
                       .add_photo_alternate,
-                  color: Colors.white,
+                  color:
+                      Colors.white,
                   size: 32,
                 );
               },
@@ -811,7 +797,8 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
             ),
             constraints:
                 const BoxConstraints(),
-            padding: EdgeInsets.zero,
+            padding:
+                EdgeInsets.zero,
           ),
         ],
       ),
@@ -843,8 +830,9 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
         ),
         border: Border.all(
           color:
-              Colors.white
-                  .withOpacity(0.12),
+              Colors.white.withOpacity(
+            0.12,
+          ),
         ),
         boxShadow: [
           BoxShadow(
