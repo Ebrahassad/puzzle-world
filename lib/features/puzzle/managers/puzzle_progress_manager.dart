@@ -65,6 +65,9 @@ class PuzzleProgressManager {
 
   static const String unlockedIslandsKey = "puzzle_unlocked_islands";
 
+  static const String firstDailyRewardClaimedKey =
+      "puzzle_first_daily_reward_claimed";
+
   //==================================================
   // 💰 النظام الجديد - أسعار التحويل من الإعلانات
   //==================================================
@@ -91,8 +94,8 @@ class PuzzleProgressManager {
   /// رصيد تجريبي مبدئي لاختبار عمليات الشراء داخل التطبيق.
   ///
   /// عند عدم وجود رصيد محفوظ في SharedPreferences،
-  /// يبدأ اللاعب بـ 1000 مشاهدة إعلان.
-  static const int initialAdsBalance = 1000;
+  /// يبدأ اللاعب بـ 10000 مشاهدة إعلان.
+  static const int initialAdsBalance = 10000;
 
   //==================================================
   // 🏝️ أسعار الجزيرة الخاصة
@@ -562,42 +565,43 @@ class PuzzleProgressManager {
   //==================================================
 
   static int getLevelCoinCost(int level) {
-  if (level <= 1) {
-    return 0;
+    if (level <= 1) {
+      return 0;
+    }
+
+    switch (level) {
+      case 2:
+        return 75;
+
+      case 3:
+        return 150;
+
+      case 4:
+        return 250;
+
+      case 5:
+        return 350;
+
+      case 6:
+        return 450;
+
+      case 7:
+        return 600;
+
+      case 8:
+        return 750;
+
+      case 9:
+        return 875;
+
+      case 10:
+        return 1000;
+
+      default:
+        return 1000;
+    }
   }
 
-  switch (level) {
-    case 2:
-      return 75;
-
-    case 3:
-      return 150;
-
-    case 4:
-      return 250;
-
-    case 5:
-      return 350;
-
-    case 6:
-      return 450;
-
-    case 7:
-      return 600;
-
-    case 8:
-      return 750;
-
-    case 9:
-      return 875;
-
-    case 10:
-      return 1000;
-
-    default:
-      return 1000;
-  }
-}
   //==================================================
   // ⭐ أسعار فتح المراحل بالنجوم
   //==================================================
@@ -1328,6 +1332,34 @@ class PuzzleProgressManager {
 
     await addGems(
       gemPurchaseAmount,
+    );
+
+    return true;
+  }
+
+  //==================================================
+  // 🎁🎉 مكافأة البداية - 500 عملة مرة واحدة فقط
+  //==================================================
+
+  static Future<bool> claimFirstDailyReward() async {
+    final prefs = await _prefs;
+
+    // إذا تم استلام مكافأة البداية سابقاً
+    // لا يتم منحها مرة أخرى.
+    final alreadyClaimed =
+        prefs.getBool(firstDailyRewardClaimedKey) ?? false;
+
+    if (alreadyClaimed) {
+      return false;
+    }
+
+    // منح 500 عملة.
+    await addCoins(500);
+
+    // تسجيل أن مكافأة البداية تم استلامها.
+    await prefs.setBool(
+      firstDailyRewardClaimedKey,
+      true,
     );
 
     return true;
