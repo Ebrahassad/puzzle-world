@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:ui' as ui;
 import 'dart:async';
 import 'dart:io';
@@ -197,15 +198,7 @@ class _PuzzleGameScreenState
 
     stopwatch = Stopwatch();
 
-    //==================================================
-    // 🏝️ الجزيرة الخاصة
-    //==================================================
-    //
-    // الجزيرة الخاصة أصبحت تحفظ تقدمها مؤقتاً أيضاً.
-    //
-    // لذلك يتم فحص الحفظ أولاً، مثل المراحل العادية.
-    //==================================================
-
+    // الجزيرة الخاصة تحتاج أيضاً إلى فحص الحفظ.
     _checkSavedGame();
 
     _startRegroupHelper();
@@ -221,49 +214,129 @@ class _PuzzleGameScreenState
             .loadProgress();
 
     //==================================================
-    // 🔍 تحديد هل الحفظ يخص اللعبة الحالية
+    // 🏝️ الجزيرة الخاصة
+    //==================================================
+    //
+    // يتم استخدام معرف ثابت للعبة الجزيرة الخاصة.
+    // الحفظ مرتبط أيضاً بمسار الصورة حتى لا يتم
+    // استرجاع تقدم لصورة مختلفة.
     //==================================================
 
-    bool isCurrentSavedGame = false;
+    if (widget.isCustomImage) {
+      if (saved != null &&
+          saved["levelId"] ==
+              currentLevelId &&
+          saved["puzzleId"] ==
+              "custom_island" &&
+          saved["customImagePath"] ==
+              widget.customImagePath) {
+        savedGameData = saved;
 
-    if (saved != null) {
-      if (widget.isCustomImage) {
-        // الجزيرة الخاصة
-        //
-        // يجب أن يكون الحفظ للـ custom image.
-        // كما نتحقق من مسار الصورة حتى لا يتم
-        // استرجاع صورة خاصة قديمة مختلفة.
-        final savedPuzzleId =
-            saved["puzzleId"];
+        if (!mounted) {
+          return;
+        }
 
-        final savedLevelId =
-            saved["levelId"];
+        final resume =
+            await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text(
+                "توجد لعبة محفوظة",
+              ),
+              content: const Text(
+                "هل تريد الاستمرار في اللعبة السابقة؟",
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(
+                      context,
+                      false,
+                    );
+                  },
+                  child: const Text(
+                    "لعبة جديدة",
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    AdsManager()
+                        .showRewardedAd(
+                      onRewardEarned: () {
+                        if (!context.mounted) {
+                          return;
+                        }
 
-        final savedImagePath =
-            saved["customImagePath"];
+                        Navigator.pop(
+                          context,
+                          true,
+                        );
+                      },
+                      onAdFailed: () {
+                        if (!context.mounted) {
+                          return;
+                        }
 
-        isCurrentSavedGame =
-            savedPuzzleId ==
-                    "custom_island" &&
-                savedLevelId ==
-                    "custom_image_puzzle" &&
-                savedImagePath ==
-                    widget.customImagePath;
-      } else {
-        // المراحل العادية
-        if (widget.level != null) {
-          isCurrentSavedGame =
-              saved["levelId"] ==
-                  widget.level!.id;
+                        // الإعلان غير متوفر
+                        // ندخل مباشرة بدون حذف الحفظ.
+                        Navigator.pop(
+                          context,
+                          true,
+                        );
+                      },
+                    );
+                  },
+                  child: const Text(
+                    "استمرار",
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+
+        if (resume != true) {
+          await PuzzleProgressManager
+              .clearProgress();
+
+          savedGameData = null;
         }
       }
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        checkingSavedGame = false;
+      });
+
+      _loadImage();
+
+      return;
     }
 
     //==================================================
-    // 📺 توجد لعبة محفوظة
+    // 🌍 المراحل العادية
     //==================================================
 
-    if (isCurrentSavedGame) {
+    if (widget.level == null) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        checkingSavedGame = false;
+      });
+
+      return;
+    }
+
+    if (saved != null &&
+        saved["levelId"] ==
+            widget.level!.id) {
       savedGameData = saved;
 
       if (!mounted) {
@@ -283,10 +356,6 @@ class _PuzzleGameScreenState
               "هل تريد الاستمرار في اللعبة السابقة؟",
             ),
             actions: [
-              //==================================================
-              // 🆕 لعبة جديدة
-              //==================================================
-
               TextButton(
                 onPressed: () {
                   Navigator.pop(
@@ -298,11 +367,6 @@ class _PuzzleGameScreenState
                   "لعبة جديدة",
                 ),
               ),
-
-              //==================================================
-              // ▶️ استمرار
-              //==================================================
-
               TextButton(
                 onPressed: () {
                   AdsManager()
@@ -317,19 +381,13 @@ class _PuzzleGameScreenState
                         true,
                       );
                     },
-
-                    //==================================================
-                    // 📺 الإعلان غير متوفر
-                    //
-                    // يدخل اللاعب مباشرة إلى اللعبة
-                    // بدون حذف الحفظ.
-                    //==================================================
-
                     onAdFailed: () {
                       if (!context.mounted) {
                         return;
                       }
 
+                      // الإعلان غير متوفر → الدخول مباشرة
+                      // بدون حذف اللعبة المحفوظة.
                       Navigator.pop(
                         context,
                         true,
@@ -346,24 +404,12 @@ class _PuzzleGameScreenState
         },
       );
 
-      //==================================================
-      // 🆕 بدأ لعبة جديدة
-      //==================================================
-
       if (resume != true) {
         await PuzzleProgressManager
             .clearProgress();
 
         savedGameData = null;
       }
-    } else {
-      //==================================================
-      // 🧹 الحفظ الموجود لا يخص اللعبة الحالية
-      //
-      // لا نستخدمه.
-      //==================================================
-
-      savedGameData = null;
     }
 
     if (!mounted) {
@@ -594,24 +640,26 @@ class _PuzzleGameScreenState
               .length;
 
       moves =
-          (savedGameData!["moves"] as num?)
-                  ?.toInt() ??
-              0;
+          savedGameData!["moves"] is num
+              ? (savedGameData!["moves"] as num)
+                  .toInt()
+              : 0;
 
       final savedSeconds =
-          (savedGameData!["seconds"] as num?)
-                  ?.toInt() ??
-              0;
+          savedGameData!["seconds"] is num
+              ? (savedGameData!["seconds"] as num)
+                  .toInt()
+              : 0;
 
       stopwatch
-        ..reset();
+        ..reset()
+        ..start();
 
       if (savedSeconds > 0) {
-        // Stopwatch لا يمكن ضبطه مباشرة بقيمة.
-        // لذلك نستخدم Timer داخلي فقط للحساب المستمر
-        // من وقت الاسترجاع.
+        // Stopwatch يبدأ من الصفر، لذلك نستخدم
+        // elapsedOffset بشكل منفصل داخل الحفظ القادم.
         //
-        // لا نغير منطق اللعبة أو المؤقت الحالي.
+        // لا نحتاج إلى تعديل Stopwatch نفسه هنا.
       }
     }
 
@@ -631,14 +679,7 @@ class _PuzzleGameScreenState
       return;
     }
 
-    // الجزيرة الخاصة أصبحت تحفظ تقدمها مؤقتاً.
-    //
-    // أما المراحل العادية فتبقى كما هي.
-    final dataPieces =
-        controller.pieces;
-
-    final prefsData =
-        <String, dynamic>{
+    final data = <String, dynamic>{
       "puzzleId":
           widget.isCustomImage
               ? "custom_island"
@@ -655,7 +696,7 @@ class _PuzzleGameScreenState
           stopwatch.elapsed.inSeconds,
 
       "pieces":
-          dataPieces.map((piece) {
+          controller.pieces.map((piece) {
         return {
           "id": piece.id,
           "row": piece.row,
@@ -666,28 +707,15 @@ class _PuzzleGameScreenState
         };
       }).toList(),
 
-      //==================================================
-      // 🏝️ مسار صورة الجزيرة الخاصة
-      //==================================================
-
-      if (widget.isCustomImage &&
-          widget.customImagePath != null)
+      // مهم للجزيرة الخاصة:
+      // نربط الحفظ بالصورة الحالية.
+      if (widget.isCustomImage)
         "customImagePath":
             widget.customImagePath,
     };
 
-    // نستخدم نفس نظام PuzzleProgressManager.
     await PuzzleProgressManager
-        .saveGameState(
-      prefsData,
-    );
-
-    //==================================================
-    // حفظ أيضاً في progressKey
-    //
-    // حتى يستخدم controller.restoreProgress()
-    // الموجود حالياً.
-    //==================================================
+        .saveGameState(data);
 
     await PuzzleProgressManager
         .saveProgress(
@@ -703,10 +731,14 @@ class _PuzzleGameScreenState
           stopwatch.elapsed.inSeconds,
     );
 
-    //==================================================
-    // إضافة مسار الصورة إلى gameState
-    // لا نغير saveProgress لأنه مستخدم في بقية اللعبة.
-    //==================================================
+    // حفظ معلومات الصورة الخاصة مع التقدم.
+    if (widget.isCustomImage &&
+        widget.customImagePath != null) {
+      await PuzzleProgressManager
+          .savePrivateIslandImagePath(
+        widget.customImagePath!,
+      );
+    }
   }
 
   //==================================================
@@ -755,21 +787,15 @@ class _PuzzleGameScreenState
       return;
     }
 
-    //==================================================
-    // 🗑️ حذف الحفظ عند اختيار إعادة اللعبة
-    //==================================================
-
-    await PuzzleProgressManager
-        .clearProgress();
-
-    await PuzzleProgressManager
-        .saveGameState({});
-
     if (puzzleCreated) {
       controller.dispose();
     }
 
     savedGameData = null;
+
+    // حذف الحفظ عند اختيار بدء لعبة جديدة.
+    await PuzzleProgressManager
+        .clearProgress();
 
     setState(() {
       puzzleCreated = false;
@@ -849,16 +875,21 @@ class _PuzzleGameScreenState
     stopwatch.stop();
 
     //==================================================
+    // 🧹 حذف الحفظ فقط بعد إكمال البازل بنجاح
+    //==================================================
+
+    await PuzzleProgressManager
+        .clearProgress();
+
+    //==================================================
     // 🏝️ الجزيرة الخاصة
+    //==================================================
     //
-    // بعد إكمال البازل بنجاح يتم حذف الحفظ
-    // والصورة المؤقتة.
+    // بعد إكمال الصورة يتم حذف صورة الجزيرة الخاصة
+    // والحفظ المؤقت.
     //==================================================
 
     if (widget.isCustomImage) {
-      await PuzzleProgressManager
-          .clearProgress();
-
       await PuzzleProgressManager
           .clearPrivateIslandImage();
     }
@@ -1497,12 +1528,6 @@ class _PuzzleGameScreenState
 
     _regroupTimer?.cancel();
 
-    //==================================================
-    // 💾 حفظ مؤقت عند الخروج
-    //
-    // الجزيرة الخاصة أصبحت مشمولة في الحفظ.
-    //==================================================
-
     if (puzzleCreated &&
         !gameFinished) {
       PuzzleProgressManager
@@ -1518,6 +1543,14 @@ class _PuzzleGameScreenState
         seconds:
             stopwatch.elapsed.inSeconds,
       );
+
+      if (widget.isCustomImage &&
+          widget.customImagePath != null) {
+        PuzzleProgressManager
+            .savePrivateIslandImagePath(
+          widget.customImagePath!,
+        );
+      }
     }
 
     if (puzzleCreated) {
