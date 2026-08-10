@@ -1,20 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<resources>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- الشاشة المؤقتة قبل تشغيل Flutter -->
-    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+    <!-- الخلفية البنفسجية الملكية -->
+    <item android:drawable="@color/splash_color" />
 
-        <item name="android:windowBackground">@color/splash_color</item>
+    <!-- أيقونة التطبيق في المنتصف -->
+    <item>
 
-    </style>
+        <bitmap
+            android:src="@mipmap/ic_launcher"
+            android:gravity="center" />
 
+    </item>
 
-    <!-- التطبيق بعد تشغيل Flutter -->
-    <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
-
-        <item name="android:windowBackground">@android:color/white</item>
-
-    </style>
-
-</resources>
+</layer-list>
