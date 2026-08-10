@@ -1,16 +1,16 @@
-import 'dart:convert';
-import 'dart:ui' as ui;
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../engine/puzzle_controller.dart';
 import '../engine/puzzle_painter.dart';
+
 import '../models/puzzle_level_model.dart';
 import '../models/puzzle_model.dart';
+
 import '../managers/reward_manager.dart';
 import '../managers/puzzle_progress_manager.dart';
 import '../managers/ads_manager.dart';
@@ -27,6 +27,7 @@ import 'world_map_screen.dart';
 class PuzzleGameScreen extends StatefulWidget {
   final PuzzleLevelModel? level;
   final PuzzleModel? island;
+
   final String? customImagePath;
   final bool isCustomImage;
   final int? customGridSize;
@@ -47,9 +48,9 @@ class PuzzleGameScreen extends StatefulWidget {
 
 class _PuzzleGameScreenState
     extends State<PuzzleGameScreen> {
-  //==================================================
+  // ============================================================
   // 🖼️ الصورة
-  //==================================================
+  // ============================================================
 
   ui.Image? image;
 
@@ -59,12 +60,21 @@ class _PuzzleGameScreenState
   bool puzzleCreated = false;
   bool gameFinished = false;
   bool checkingSavedGame = true;
+
   bool soundEnabled = true;
   bool showBoardImage = true;
+
+  // ============================================================
+  // 🔀 إعادة التجميع
+  // ============================================================
 
   Timer? _regroupTimer;
 
   bool showRegroupButton = false;
+
+  // ============================================================
+  // 💾 الحفظ
+  // ============================================================
 
   Map<String, dynamic>? savedGameData;
 
@@ -75,14 +85,31 @@ class _PuzzleGameScreenState
   int lastPlacedCount = 0;
   int moves = 0;
 
+  // ============================================================
+  // 🪙 العملة
+  // ============================================================
+
   Offset? coinAnimationStart;
+
   bool showCoinAnimation = false;
+
+  // ============================================================
+  // 🔊 الصوت
+  // ============================================================
 
   final AudioPlayer _audioPlayer =
       AudioPlayer();
 
+  // ============================================================
+  // 📐 أحجام اللعبة
+  // ============================================================
+
   final double boardSize = 350;
   final double trayHeight = 110;
+
+  // ============================================================
+  // 🔑 Keys
+  // ============================================================
 
   final GlobalKey overlayKey =
       GlobalKey();
@@ -93,9 +120,6 @@ class _PuzzleGameScreenState
   final GlobalKey trayKey =
       GlobalKey();
 
-  Rect boardRect = Rect.zero;
-  Rect scatterArea = Rect.zero;
-
   final GlobalKey starKey =
       GlobalKey();
 
@@ -105,11 +129,23 @@ class _PuzzleGameScreenState
   final GlobalKey coinKey =
       GlobalKey();
 
-  //==================================================
+  // ============================================================
+  // 📍 مواقع اللعبة
+  // ============================================================
+
+  Rect boardRect = Rect.zero;
+
+  Rect scatterArea = Rect.zero;
+
+  // ============================================================
   // 🔢 حجم الشبكة
-  //==================================================
+  // ============================================================
 
   int get gridSize {
+    // ----------------------------------------------------------
+    // 🏝️ الجزيرة الخاصة
+    // ----------------------------------------------------------
+
     if (widget.isCustomImage) {
       final savedSize =
           savedGameData?["customGridSize"];
@@ -122,12 +158,16 @@ class _PuzzleGameScreenState
       return widget.customGridSize ?? 3;
     }
 
+    // ----------------------------------------------------------
+    // 🌍 المراحل العادية
+    // ----------------------------------------------------------
+
     return widget.level?.gridSize ?? 3;
   }
 
-  //==================================================
-  // 🆔 معرف المرحلة الحالية
-  //==================================================
+  // ============================================================
+  // 🆔 معرف المرحلة
+  // ============================================================
 
   String get currentLevelId {
     if (widget.isCustomImage) {
@@ -137,33 +177,34 @@ class _PuzzleGameScreenState
     return widget.level!.id;
   }
 
-  //==================================================
+  // ============================================================
   // 🆔 معرف البازل العادي
-  //==================================================
+  // ============================================================
 
   String get normalPuzzleId {
-    return widget.island?.id ?? "unknown_island";
+    return widget.island?.id ??
+        "unknown_island";
   }
 
-  //==================================================
+  // ============================================================
   // 🏝️ معرف الجزيرة الخاصة
-  //==================================================
+  // ============================================================
 
   static const String customPuzzleId =
       "custom_island";
 
-  //==================================================
-  // ⏱️ الوقت الفعلي
-  //==================================================
+  // ============================================================
+  // ⏱️ الوقت
+  // ============================================================
 
   int get currentElapsedSeconds {
     return savedSeconds +
         stopwatch.elapsed.inSeconds;
   }
 
-  //==================================================
-  // 🏁 هل هذه آخر مرحلة؟
-  //==================================================
+  // ============================================================
+  // 🏁 آخر مرحلة في الجزيرة
+  // ============================================================
 
   bool get isFinalLevelOfIsland {
     if (widget.isCustomImage) {
@@ -184,9 +225,9 @@ class _PuzzleGameScreenState
         levels.length;
   }
 
-  //==================================================
+  // ============================================================
   // 🏝️ فتح الجزيرة التالية
-  //==================================================
+  // ============================================================
 
   Future<void>
       _unlockNextIslandIfNeeded() async {
@@ -204,9 +245,9 @@ class _PuzzleGameScreenState
     );
   }
 
-  //==================================================
-  // 🗺️ العودة للخريطة
-  //==================================================
+  // ============================================================
+  // 🗺️ العودة لخريطة العالم
+  // ============================================================
 
   void _returnToWorldMap() {
     if (!mounted) {
@@ -223,9 +264,9 @@ class _PuzzleGameScreenState
     );
   }
 
-  //==================================================
+  // ============================================================
   // 🚀 INIT
-  //==================================================
+  // ============================================================
 
   @override
   void initState() {
@@ -238,34 +279,36 @@ class _PuzzleGameScreenState
     _startRegroupHelper();
   }
 
-  //==================================================
-  // 💾 حذف حفظ الجزيرة الخاصة فقط
-  //==================================================
+  // ============================================================
+  // 💾 حذف حفظ الجزيرة الخاصة
+  // ============================================================
   //
-  // الجزيرة الخاصة تستخدم gameStateKey.
+  // مهم:
+  // لا نستخدم SharedPreferences هنا.
   //
-  // البازل العادي يستخدم progressKey.
-  //
-  // لا يتم استخدام clearProgress() هنا.
-  //==================================================
+  // الجزيرة الخاصة لديها نظام حفظ مستقل داخل
+  // PuzzleProgressManager.
+  // ============================================================
 
-  Future<void> _clearCustomSavedGame() async {
-    final prefs =
-        await SharedPreferences.getInstance();
-
-    await prefs.remove(
-      PuzzleProgressManager.gameStateKey,
-    );
+  Future<void>
+      _clearCustomSavedGame() async {
+    await PuzzleProgressManager
+        .clearPrivateIslandGameState();
   }
 
-  //==================================================
+  // ============================================================
   // 💾 فحص حفظ الجزيرة الخاصة
-  //==================================================
+  // ============================================================
 
-  Future<void> _checkCustomSavedGame() async {
+  Future<void>
+      _checkCustomSavedGame() async {
     final saved =
         await PuzzleProgressManager
-            .loadGameState();
+            .loadPrivateIslandGameState();
+
+    // ----------------------------------------------------------
+    // لا يوجد حفظ
+    // ----------------------------------------------------------
 
     if (saved == null ||
         saved.isEmpty) {
@@ -282,10 +325,13 @@ class _PuzzleGameScreenState
     final savedImagePath =
         saved["customImagePath"];
 
-    //==================================================
-    // 🏝️ التأكد من أن الحفظ يخص الجزيرة الخاصة
-    // والصورة الحالية
-    //==================================================
+    // ----------------------------------------------------------
+    // التأكد أن الحفظ:
+    //
+    // 1. للجزيرة الخاصة
+    // 2. لنفس اللعبة
+    // 3. لنفس الصورة
+    // ----------------------------------------------------------
 
     final isSameGame =
         savedPuzzleId ==
@@ -306,11 +352,15 @@ class _PuzzleGameScreenState
       return;
     }
 
+    // ----------------------------------------------------------
+    // سؤال المستخدم عن استكمال اللعبة
+    // ----------------------------------------------------------
+
     final resume =
         await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text(
             "توجد لعبة محفوظة",
@@ -322,7 +372,7 @@ class _PuzzleGameScreenState
             TextButton(
               onPressed: () {
                 Navigator.pop(
-                  context,
+                  dialogContext,
                   false,
                 );
               },
@@ -335,22 +385,24 @@ class _PuzzleGameScreenState
                 AdsManager()
                     .showRewardedAd(
                   onRewardEarned: () {
-                    if (!context.mounted) {
+                    if (!dialogContext.mounted) {
                       return;
                     }
 
                     Navigator.pop(
-                      context,
+                      dialogContext,
                       true,
                     );
                   },
                   onAdFailed: () {
-                    if (!context.mounted) {
+                    if (!dialogContext.mounted) {
                       return;
                     }
 
+                    // الإعلان غير متوفر،
+                    // يسمح بالاستمرار مباشرة.
                     Navigator.pop(
-                      context,
+                      dialogContext,
                       true,
                     );
                   },
@@ -365,9 +417,9 @@ class _PuzzleGameScreenState
       },
     );
 
-    //==================================================
+    // ----------------------------------------------------------
     // 🆕 لعبة جديدة
-    //==================================================
+    // ----------------------------------------------------------
 
     if (resume != true) {
       await _clearCustomSavedGame();
@@ -376,11 +428,12 @@ class _PuzzleGameScreenState
     }
   }
 
-  //==================================================
+  // ============================================================
   // 💾 فحص حفظ البازل العادي
-  //==================================================
+  // ============================================================
 
-  Future<void> _checkNormalSavedGame() async {
+  Future<void>
+      _checkNormalSavedGame() async {
     final saved =
         await PuzzleProgressManager
             .loadProgress();
@@ -413,7 +466,7 @@ class _PuzzleGameScreenState
         await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text(
             "توجد لعبة محفوظة",
@@ -425,7 +478,7 @@ class _PuzzleGameScreenState
             TextButton(
               onPressed: () {
                 Navigator.pop(
-                  context,
+                  dialogContext,
                   false,
                 );
               },
@@ -438,22 +491,22 @@ class _PuzzleGameScreenState
                 AdsManager()
                     .showRewardedAd(
                   onRewardEarned: () {
-                    if (!context.mounted) {
+                    if (!dialogContext.mounted) {
                       return;
                     }
 
                     Navigator.pop(
-                      context,
+                      dialogContext,
                       true,
                     );
                   },
                   onAdFailed: () {
-                    if (!context.mounted) {
+                    if (!dialogContext.mounted) {
                       return;
                     }
 
                     Navigator.pop(
-                      context,
+                      dialogContext,
                       true,
                     );
                   },
@@ -476,14 +529,14 @@ class _PuzzleGameScreenState
     }
   }
 
-  //==================================================
+  // ============================================================
   // 💾 فحص الحفظ
-  //==================================================
+  // ============================================================
 
   Future<void> _checkSavedGame() async {
-    //==================================================
+    // ----------------------------------------------------------
     // 🏝️ الجزيرة الخاصة
-    //==================================================
+    // ----------------------------------------------------------
 
     if (widget.isCustomImage) {
       await _checkCustomSavedGame();
@@ -501,9 +554,9 @@ class _PuzzleGameScreenState
       return;
     }
 
-    //==================================================
-    // 🌍 البازل العادي
-    //==================================================
+    // ----------------------------------------------------------
+    // 🌍 المراحل العادية
+    // ----------------------------------------------------------
 
     if (widget.level == null) {
       if (!mounted) {
@@ -530,12 +583,12 @@ class _PuzzleGameScreenState
     _loadImage();
   }
 
-  //==================================================
+  // ============================================================
   // 🖼️ تحميل الصورة
-  //==================================================
+  // ============================================================
 
   Future<void> _loadImage() async {
-    ImageProvider provider;
+    late ImageProvider provider;
 
     if (widget.isCustomImage &&
         widget.customImagePath != null) {
@@ -589,9 +642,9 @@ class _PuzzleGameScreenState
     );
   }
 
-  //==================================================
+  // ============================================================
   // 📐 حساب مكان اللوحة والصينية
-  //==================================================
+  // ============================================================
 
   void _calculateBoardPosition() {
     WidgetsBinding.instance
@@ -675,9 +728,9 @@ class _PuzzleGameScreenState
     );
   }
 
-  //==================================================
+  // ============================================================
   // 🪙 مكان وصول العملة
-  //==================================================
+  // ============================================================
 
   Offset? getCoinTargetPosition() {
     final context =
@@ -698,9 +751,15 @@ class _PuzzleGameScreenState
       ),
     );
 
+    final overlayContext =
+        overlayKey.currentContext;
+
+    if (overlayContext == null) {
+      return null;
+    }
+
     final overlayBox =
-        overlayKey.currentContext!
-                .findRenderObject()
+        overlayContext.findRenderObject()
             as RenderBox;
 
     return overlayBox.globalToLocal(
@@ -708,9 +767,9 @@ class _PuzzleGameScreenState
     );
   }
 
-  //==================================================
+  // ============================================================
   // 🧩 إنشاء البازل
-  //==================================================
+  // ============================================================
 
   void _createPuzzle() {
     if (image == null ||
@@ -732,9 +791,9 @@ class _PuzzleGameScreenState
       scatterArea: scatterArea,
     );
 
-    //==================================================
-    // 💾 استرجاع التقدم
-    //==================================================
+    // ----------------------------------------------------------
+    // 💾 استرجاع الحفظ
+    // ----------------------------------------------------------
 
     if (savedGameData != null) {
       controller.restoreProgress(
@@ -750,13 +809,15 @@ class _PuzzleGameScreenState
 
       moves =
           savedGameData!["moves"] is num
-              ? (savedGameData!["moves"] as num)
+              ? (savedGameData!["moves"]
+                      as num)
                   .toInt()
               : 0;
 
       savedSeconds =
           savedGameData!["seconds"] is num
-              ? (savedGameData!["seconds"] as num)
+              ? (savedGameData!["seconds"]
+                      as num)
                   .toInt()
               : 0;
 
@@ -771,12 +832,14 @@ class _PuzzleGameScreenState
         ..start();
     }
 
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
-  //==================================================
+  // ============================================================
   // 💾 بناء بيانات الحفظ
-  //==================================================
+  // ============================================================
 
   Map<String, dynamic> _buildSaveData() {
     return {
@@ -800,11 +863,18 @@ class _PuzzleGameScreenState
           "id": piece.id,
           "row": piece.row,
           "column": piece.col,
-          "x": piece.currentPosition.dx,
-          "y": piece.currentPosition.dy,
-          "placed": piece.isPlaced,
+          "x":
+              piece.currentPosition.dx,
+          "y":
+              piece.currentPosition.dy,
+          "placed":
+              piece.isPlaced,
         };
       }).toList(),
+
+      // --------------------------------------------------------
+      // 🏝️ بيانات الجزيرة الخاصة
+      // --------------------------------------------------------
 
       if (widget.isCustomImage &&
           widget.customImagePath != null)
@@ -817,14 +887,9 @@ class _PuzzleGameScreenState
     };
   }
 
-  //==================================================
+  // ============================================================
   // 💾 حفظ الجزيرة الخاصة
-  //==================================================
-  //
-  // الجزيرة الخاصة تستخدم gameStateKey.
-  //
-  // البازل العادي لا يلمس هذا المفتاح.
-  //==================================================
+  // ============================================================
 
   Future<void> _saveCustomGame() async {
     if (!puzzleCreated ||
@@ -835,10 +900,19 @@ class _PuzzleGameScreenState
     final state =
         _buildSaveData();
 
-    await PuzzleProgressManager
-        .saveGameState(state);
+    // ----------------------------------------------------------
+    // 🏝️ نظام الجزيرة الخاصة فقط
+    // ----------------------------------------------------------
 
-    // حفظ مسار صورة الجزيرة الخاصة
+    await PuzzleProgressManager
+        .savePrivateIslandGameState(
+      state,
+    );
+
+    // ----------------------------------------------------------
+    // 🖼️ حفظ مسار الصورة في نظام الجزيرة الخاصة
+    // ----------------------------------------------------------
+
     if (widget.customImagePath != null) {
       await PuzzleProgressManager
           .savePrivateIslandImagePath(
@@ -847,12 +921,9 @@ class _PuzzleGameScreenState
     }
   }
 
-  //==================================================
-  // 💾 حفظ البازل العادي
-  //==================================================
-  //
-  // يستخدم progressKey فقط.
-  //==================================================
+  // ============================================================
+  // 💾 حفظ المرحلة العادية
+  // ============================================================
 
   Future<void> _saveNormalGame() async {
     if (!puzzleCreated ||
@@ -862,17 +933,22 @@ class _PuzzleGameScreenState
 
     await PuzzleProgressManager
         .saveProgress(
-      puzzleId: normalPuzzleId,
-      levelId: currentLevelId,
-      pieces: controller.pieces,
-      moves: moves,
-      seconds: currentElapsedSeconds,
+      puzzleId:
+          normalPuzzleId,
+      levelId:
+          currentLevelId,
+      pieces:
+          controller.pieces,
+      moves:
+          moves,
+      seconds:
+          currentElapsedSeconds,
     );
   }
 
-  //==================================================
+  // ============================================================
   // 💾 الحفظ العام
-  //==================================================
+  // ============================================================
 
   Future<void> saveCurrentGame() async {
     if (!puzzleCreated ||
@@ -887,28 +963,30 @@ class _PuzzleGameScreenState
     }
   }
 
-  //==================================================
-  // 🗑️ حذف الحفظ الحالي فقط
-  //==================================================
+  // ============================================================
+  // 🗑️ حذف الحفظ الحالي
+  // ============================================================
 
-  Future<void> _clearCurrentSavedGame() async {
+  Future<void>
+      _clearCurrentSavedGame() async {
     if (widget.isCustomImage) {
-      await _clearCustomSavedGame();
+      await PuzzleProgressManager
+          .clearPrivateIslandGameState();
     } else {
       await PuzzleProgressManager
           .clearProgress();
     }
   }
 
-  //==================================================
+  // ============================================================
   // 🔄 إعادة اللعبة
-  //==================================================
+  // ============================================================
 
   Future<void> restartGame() async {
     final confirm =
         await showDialog<bool>(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text(
             "إعادة اللعبة",
@@ -918,21 +996,23 @@ class _PuzzleGameScreenState
           ),
           actions: [
             TextButton(
-              onPressed: () =>
-                  Navigator.pop(
-                context,
-                false,
-              ),
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                  false,
+                );
+              },
               child: const Text(
                 "لا",
               ),
             ),
             ElevatedButton(
-              onPressed: () =>
-                  Navigator.pop(
-                context,
-                true,
-              ),
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                  true,
+                );
+              },
               child: const Text(
                 "نعم",
               ),
@@ -946,29 +1026,36 @@ class _PuzzleGameScreenState
       return;
     }
 
+    // ----------------------------------------------------------
+    // إيقاف البازل الحالي
+    // ----------------------------------------------------------
+
     if (puzzleCreated) {
       controller.dispose();
     }
 
     savedGameData = null;
 
-    //==================================================
-    // حذف الحفظ المناسب فقط
-    //==================================================
+    // ----------------------------------------------------------
+    // حذف الحفظ فقط
+    //
+    // لا نحذف صورة الجزيرة الخاصة.
+    // ----------------------------------------------------------
 
     await _clearCurrentSavedGame();
 
-    //==================================================
-    // الجزيرة الخاصة:
-    // لا نحذف الصورة هنا.
-    //==================================================
+    if (!mounted) {
+      return;
+    }
 
     setState(() {
       puzzleCreated = false;
       gameFinished = false;
+
       moves = 0;
       savedSeconds = 0;
       lastPlacedCount = 0;
+
       showBoardImage = true;
     });
 
@@ -979,9 +1066,9 @@ class _PuzzleGameScreenState
     _calculateBoardPosition();
   }
 
-  //==================================================
+  // ============================================================
   // ➡️ فتح المرحلة التالية
-  //==================================================
+  // ============================================================
 
   void openNextLevel() {
     if (widget.isCustomImage) {
@@ -1024,9 +1111,9 @@ class _PuzzleGameScreenState
     );
   }
 
-  //==================================================
+  // ============================================================
   // 🏆 الفوز
-  //==================================================
+  // ============================================================
 
   Future<void> checkWin() async {
     if (gameFinished) {
@@ -1041,28 +1128,27 @@ class _PuzzleGameScreenState
 
     stopwatch.stop();
 
-    //==================================================
+    // ----------------------------------------------------------
     // 🧹 حذف الحفظ المناسب فقط
-    //==================================================
+    // ----------------------------------------------------------
 
     if (widget.isCustomImage) {
-      // الجزيرة الخاصة:
-      // حذف gameState فقط
-      await _clearCustomSavedGame();
+      // 🏝️ الجزيرة الخاصة
+      await PuzzleProgressManager
+          .clearPrivateIslandGameState();
 
-      // حذف صورة الجزيرة الخاصة
+      // 🖼️ حذف الصورة المرتبطة باللعبة
       await PuzzleProgressManager
           .clearPrivateIslandImage();
     } else {
-      // البازل العادي:
-      // حذف progress فقط
+      // 🌍 البازل العادي
       await PuzzleProgressManager
           .clearProgress();
     }
 
-    //==================================================
-    // 🏆 تسجيل إكمال المرحلة العادية
-    //==================================================
+    // ----------------------------------------------------------
+    // 🏆 إكمال المرحلة العادية
+    // ----------------------------------------------------------
 
     if (!widget.isCustomImage) {
       await PuzzleProgressManager
@@ -1071,9 +1157,9 @@ class _PuzzleGameScreenState
       );
     }
 
-    //==================================================
+    // ----------------------------------------------------------
     // 🔓 فتح التالي
-    //==================================================
+    // ----------------------------------------------------------
 
     if (isFinalLevelOfIsland) {
       await _unlockNextIslandIfNeeded();
@@ -1116,10 +1202,15 @@ class _PuzzleGameScreenState
                         .levelNumber,
             isFinalLevel:
                 isFinalLevelOfIsland,
-            starTargetKey: starKey,
-            pieces: controller.pieces,
+            starTargetKey:
+                starKey,
+            pieces:
+                controller.pieces,
+
             onFinished: () {
-              Navigator.pop(context);
+              Navigator.pop(
+                context,
+              );
 
               if (isFinalLevelOfIsland) {
                 Future.delayed(
@@ -1136,8 +1227,11 @@ class _PuzzleGameScreenState
                 );
               }
             },
+
             onNext: () async {
-              Navigator.pop(context);
+              Navigator.pop(
+                context,
+              );
 
               await Future.delayed(
                 const Duration(
@@ -1155,17 +1249,21 @@ class _PuzzleGameScreenState
                 openNextLevel();
               }
             },
+
             onMap: () {
               _returnToWorldMap();
             },
+
             onReplay: () {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
                   builder: (_) =>
                       PuzzleGameScreen(
-                    level: widget.level,
-                    island: widget.island,
+                    level:
+                        widget.level,
+                    island:
+                        widget.island,
                     customImagePath:
                         widget.customImagePath,
                     isCustomImage:
@@ -1186,13 +1284,15 @@ class _PuzzleGameScreenState
     );
   }
 
-  //==================================================
+  // ============================================================
   // 🔀 مساعد إعادة التجميع
-  //==================================================
+  // ============================================================
 
   void _startRegroupHelper() {
     Future.delayed(
-      const Duration(minutes: 1),
+      const Duration(
+        minutes: 1,
+      ),
       () {
         if (!mounted ||
             gameFinished) {
@@ -1230,7 +1330,9 @@ class _PuzzleGameScreenState
     });
 
     Future.delayed(
-      const Duration(seconds: 20),
+      const Duration(
+        seconds: 20,
+      ),
       () {
         if (!mounted ||
             gameFinished) {
@@ -1244,9 +1346,9 @@ class _PuzzleGameScreenState
     );
   }
 
-  //==================================================
+  // ============================================================
   // 🎨 BUILD
-  //==================================================
+  // ============================================================
 
   @override
   Widget build(
@@ -1256,7 +1358,8 @@ class _PuzzleGameScreenState
         image == null ||
         loading) {
       return const Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection:
+            TextDirection.rtl,
         child: Scaffold(
           body: Center(
             child:
@@ -1267,22 +1370,22 @@ class _PuzzleGameScreenState
     }
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection:
+          TextDirection.rtl,
       child: Scaffold(
         body: Container(
           decoration:
               const BoxDecoration(
-            color: Color(
-              0xFFE8E1F3,
-            ),
+            color:
+                Color(0xFFE8E1F3),
           ),
           child: SafeArea(
             child: Stack(
               key: overlayKey,
               children: [
-                //==================================================
+                // ==================================================
                 // BOARD + TRAY
-                //==================================================
+                // ==================================================
 
                 Column(
                   children: [
@@ -1299,9 +1402,12 @@ class _PuzzleGameScreenState
                         ),
                         child: Center(
                           child: Container(
-                            key: boardKey,
-                            width: boardSize,
-                            height: boardSize,
+                            key:
+                                boardKey,
+                            width:
+                                boardSize,
+                            height:
+                                boardSize,
                             decoration:
                                 BoxDecoration(
                               color:
@@ -1320,8 +1426,10 @@ class _PuzzleGameScreenState
                                       .withOpacity(
                                     0.35,
                                   ),
-                                  blurRadius: 25,
-                                  spreadRadius: 2,
+                                  blurRadius:
+                                      25,
+                                  spreadRadius:
+                                      2,
                                 ),
                               ],
                               border:
@@ -1330,7 +1438,8 @@ class _PuzzleGameScreenState
                                     const Color(
                                   0xFFF7F2FD,
                                 ),
-                                width: 2,
+                                width:
+                                    2,
                               ),
                             ),
                             child:
@@ -1382,8 +1491,10 @@ class _PuzzleGameScreenState
                     ),
 
                     Container(
-                      key: trayKey,
-                      height: trayHeight,
+                      key:
+                          trayKey,
+                      height:
+                          trayHeight,
                       margin:
                           const EdgeInsets
                               .symmetric(
@@ -1391,7 +1502,8 @@ class _PuzzleGameScreenState
                       ),
                       decoration:
                           BoxDecoration(
-                        color: const Color(
+                        color:
+                            const Color(
                           0xFFDCCFEA,
                         ),
                         borderRadius:
@@ -1406,7 +1518,8 @@ class _PuzzleGameScreenState
                                 .withOpacity(
                               0.25,
                             ),
-                            blurRadius: 20,
+                            blurRadius:
+                                20,
                             offset:
                                 const Offset(
                               0,
@@ -1430,19 +1543,21 @@ class _PuzzleGameScreenState
                   ],
                 ),
 
-                //==================================================
+                // ==================================================
                 // 🪙 حركة العملة
-                //==================================================
+                // ==================================================
 
                 if (showCoinAnimation &&
                     coinAnimationStart !=
                         null)
                   Builder(
-                    builder: (context) {
+                    builder:
+                        (context) {
                       final target =
                           getCoinTargetPosition();
 
-                      if (target == null) {
+                      if (target ==
+                          null) {
                         return const SizedBox
                             .shrink();
                       }
@@ -1450,10 +1565,14 @@ class _PuzzleGameScreenState
                       return FlyingCoin(
                         start:
                             coinAnimationStart!,
-                        end: target,
-                        onFinished: () async {
+                        end:
+                            target,
+                        onFinished:
+                            () async {
                           await RewardManager
-                              .addCoins(1);
+                              .addCoins(
+                            1,
+                          );
 
                           if (!mounted) {
                             return;
@@ -1468,9 +1587,9 @@ class _PuzzleGameScreenState
                     },
                   ),
 
-                //==================================================
+                // ==================================================
                 // 🧩 البازل
-                //==================================================
+                // ==================================================
 
                 if (puzzleCreated)
                   Positioned.fill(
@@ -1507,7 +1626,8 @@ class _PuzzleGameScreenState
 
                         await Future.delayed(
                           const Duration(
-                            milliseconds: 100,
+                            milliseconds:
+                                100,
                           ),
                         );
 
@@ -1529,55 +1649,63 @@ class _PuzzleGameScreenState
                           lastPlacedCount =
                               placedCount;
 
-                          await _audioPlayer
-                              .play(
-                            AssetSource(
-                              'audio/piece_correct.mp3',
-                            ),
-                          );
+                          if (soundEnabled) {
+                            await _audioPlayer
+                                .play(
+                              AssetSource(
+                                'audio/piece_correct.mp3',
+                              ),
+                            );
+                          }
 
                           if (controller
                                   .lastPlacedPosition !=
                               null) {
-                            final RenderBox
-                                overlayBox =
+                            final overlayContext =
                                 overlayKey
-                                    .currentContext!
-                                    .findRenderObject()
-                                    as RenderBox;
+                                    .currentContext;
 
-                            final start =
-                                overlayBox
-                                    .localToGlobal(
-                              controller
-                                  .lastPlacedPosition!,
-                            );
+                            if (overlayContext !=
+                                null) {
+                              final RenderBox
+                                  overlayBox =
+                                  overlayContext
+                                      .findRenderObject()
+                                      as RenderBox;
 
-                            final localStart =
-                                overlayBox
-                                    .globalToLocal(
-                              start,
-                            );
+                              final start =
+                                  overlayBox
+                                      .localToGlobal(
+                                controller
+                                    .lastPlacedPosition!,
+                              );
 
-                            setState(() {
-                              coinAnimationStart =
-                                  localStart;
+                              final localStart =
+                                  overlayBox
+                                      .globalToLocal(
+                                start,
+                              );
 
-                              showCoinAnimation =
-                                  true;
-                            });
+                              setState(() {
+                                coinAnimationStart =
+                                    localStart;
+
+                                showCoinAnimation =
+                                    true;
+                              });
+                            }
                           }
                         }
 
-                        //==================================================
-                        // 💾 حفظ الحالة
-                        //==================================================
+                        // ==================================================
+                        // 💾 حفظ آخر حالة
+                        // ==================================================
 
                         await saveCurrentGame();
 
-                        //==================================================
+                        // ==================================================
                         // 🏆 فحص الفوز
-                        //==================================================
+                        // ==================================================
 
                         await checkWin();
                       },
@@ -1589,12 +1717,15 @@ class _PuzzleGameScreenState
                           pieces:
                               controller
                                   .pieces,
-                          image: image!,
+                          image:
+                              image!,
                           boardRect:
                               controller
                                   .boardRect,
-                          rows: gridSize,
-                          cols: gridSize,
+                          rows:
+                              gridSize,
+                          cols:
+                              gridSize,
                           repaint:
                               controller,
                         ),
@@ -1602,33 +1733,41 @@ class _PuzzleGameScreenState
                     ),
                   ),
 
-                //==================================================
+                // ==================================================
                 // 🎮 Toolbar
-                //==================================================
+                // ==================================================
 
                 Positioned(
                   top: 0,
                   left: 8,
                   right: 8,
-                  child: GameToolbar(
-                    starKey: starKey,
-                    gemKey: gemKey,
-                    coinKey: coinKey,
+                  child:
+                      GameToolbar(
+                    starKey:
+                        starKey,
+                    gemKey:
+                        gemKey,
+                    coinKey:
+                        coinKey,
                     soundEnabled:
                         soundEnabled,
 
-                    onSave: () async {
+                    onSave:
+                        () async {
                       await saveCurrentGame();
 
                       if (!mounted) {
                         return;
                       }
 
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(
+                      ScaffoldMessenger
+                              .of(
+                            context,
+                          )
+                          .showSnackBar(
                         const SnackBar(
-                          content: Text(
+                          content:
+                              Text(
                             "تم الحفظ بنجاح",
                           ),
                           behavior:
@@ -1638,11 +1777,13 @@ class _PuzzleGameScreenState
                       );
                     },
 
-                    onRestart: () {
+                    onRestart:
+                        () {
                       restartGame();
                     },
 
-                    onExit: () async {
+                    onExit:
+                        () async {
                       await saveCurrentGame();
 
                       stopwatch.stop();
@@ -1665,22 +1806,26 @@ class _PuzzleGameScreenState
 
                       _audioPlayer
                           .setVolume(
-                        enabled ? 1 : 0,
+                        enabled
+                            ? 1
+                            : 0,
                       );
                     },
                   ),
                 ),
 
-                //==================================================
+                // ==================================================
                 // 🔀 زر إعادة التجميع
-                //==================================================
+                // ==================================================
 
                 if (showRegroupButton)
                   FloatingRegroupButton(
-                    onPressed: () {
+                    onPressed:
+                        () {
                       AdsManager()
                           .showRewardedAd(
-                        onRewardEarned: () {
+                        onRewardEarned:
+                            () {
                           if (!mounted) {
                             return;
                           }
@@ -1694,16 +1839,20 @@ class _PuzzleGameScreenState
                           });
                         },
 
-                        onAdFailed: () {
+                        onAdFailed:
+                            () {
                           if (!mounted) {
                             return;
                           }
 
                           ScaffoldMessenger
-                              .of(context)
+                                  .of(
+                                context,
+                              )
                               .showSnackBar(
                             const SnackBar(
-                              content: Text(
+                              content:
+                                  Text(
                                 "التجميع غير متوفر حاليًا، حاول لاحقًا",
                                 textAlign:
                                     TextAlign
@@ -1714,7 +1863,8 @@ class _PuzzleGameScreenState
                                       .floating,
                               duration:
                                   Duration(
-                                seconds: 2,
+                                seconds:
+                                    2,
                               ),
                             ),
                           );
@@ -1730,9 +1880,9 @@ class _PuzzleGameScreenState
     );
   }
 
-  //==================================================
+  // ============================================================
   // 🧹 DISPOSE
-  //==================================================
+  // ============================================================
 
   @override
   void dispose() {
@@ -1740,16 +1890,14 @@ class _PuzzleGameScreenState
 
     _regroupTimer?.cancel();
 
-    //==================================================
-    // 💾 حفظ آخر حالة
-    //==================================================
+    // ----------------------------------------------------------
+    // 💾 حفظ آخر حالة عند الخروج
     //
-    // الجزيرة الخاصة:
-    // gameStateKey
+    // لا نستعمل await داخل dispose.
     //
-    // البازل العادي:
-    // progressKey
-    //==================================================
+    // الجزيرة الخاصة → نظام الحفظ الخاص بها.
+    // البازل العادي → نظام progress.
+    // ----------------------------------------------------------
 
     if (puzzleCreated &&
         !gameFinished) {
@@ -1758,7 +1906,9 @@ class _PuzzleGameScreenState
             _buildSaveData();
 
         PuzzleProgressManager
-            .saveGameState(state);
+            .savePrivateIslandGameState(
+          state,
+        );
 
         if (widget.customImagePath !=
             null) {
