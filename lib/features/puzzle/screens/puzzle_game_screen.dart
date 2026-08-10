@@ -272,9 +272,11 @@ class _PuzzleGameScreenState
                         return;
                       }
 
+                      // الإعلان غير متوفر → الدخول مباشرة
+                      // بدون حذف اللعبة المحفوظة.
                       Navigator.pop(
                         context,
-                        false,
+                        true,
                       );
                     },
                   );
@@ -1282,21 +1284,15 @@ class _PuzzleGameScreenState
                         },
 
                         onAdFailed: () {
-                          if (!mounted) {
+                          if (!context.mounted) {
                             return;
                           }
 
-                          ScaffoldMessenger.of(
-                                  context)
-                              .showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                "لم يتم تشغيل الإعلان، حاول مرة أخرى",
-                              ),
-                              behavior:
-                                  SnackBarBehavior
-                                      .floating,
-                            ),
+                          // الإعلان غير متوفر → الدخول مباشرة
+                          // بدون حذف اللعبة المحفوظة.
+                          Navigator.pop(
+                            context,
+                            true,
                           );
                         },
                       );
