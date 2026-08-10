@@ -24,6 +24,10 @@ import '../managers/puzzle_progress_manager.dart';
 ///      8 × 8
 /// 4. حفظ مسار الصورة في نظام الجزيرة الخاصة.
 /// 5. الانتقال إلى PuzzleGameScreen.
+/// 6. اكتشاف وجود لعبة محفوظة سابقًا (نفس نظام حفظ الجزيرة
+///    الخاصة المستقل: privateIslandGameStateKey +
+///    privateIslandImagePathKey) وعرض خيار "متابعة" مباشرة
+///    بدل إجبار المستخدم على اختيار صورة جديدة في كل مرة.
 ///
 /// ===============================================================
 class PrivateIslandScreen extends StatefulWidget {
@@ -38,7 +42,7 @@ class _PrivateIslandScreenState
     extends State<PrivateIslandScreen>
     with TickerProviderStateMixin {
   // ============================================================
-  // 🎞️ Animation
+  // 🎈 Animation
   // ============================================================
 
   late final AnimationController _floatingController;
@@ -51,6 +55,15 @@ class _PrivateIslandScreenState
   final ImagePicker _imagePicker = ImagePicker();
 
   bool _isPicking = false;
+
+  // ============================================================
+  // 🔄 حالة الحفظ السابق للجزيرة الخاصة
+  // ============================================================
+
+  bool _checkingSavedGame = true;
+  bool _hasSavedGame = false;
+  String? _savedImagePath;
+  int _savedGridSize = 4;
 
   // ============================================================
   // 🚀 INIT
@@ -74,6 +87,8 @@ class _PrivateIslandScreenState
         curve: Curves.easeInOut,
       ),
     );
+
+    _checkSavedGame();
   }
 
   // ============================================================
@@ -84,6 +99,136 @@ class _PrivateIslandScreenState
   void dispose() {
     _floatingController.dispose();
     super.dispose();
+  }
+
+  // ============================================================
+  // 🔄 فحص وجود لعبة جزيرة خاصة محفوظة
+  // ============================================================
+
+  Future<void> _checkSavedGame() async {
+    final isValid =
+        await PuzzleProgressManager.hasValidPrivateIslandSave();
+
+    if (!isValid) {
+      // ينظف فقط إذا كان هناك حفظ ناقص/تالف (مثلًا حالة بازل
+      // بدون صورة، أو صورة بدون حالة بازل، أو صورة محذوفة).
+      await PuzzleProgressManager
+          .clearInvalidPrivateIslandSave();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _checkingSavedGame = false;
+        _hasSavedGame = false;
+        _savedImagePath = null;
+      });
+
+      return;
+    }
+
+    final imagePath =
+        await PuzzleProgressManager
+            .getPrivateIslandImagePath();
+
+    final state =
+        await PuzzleProgressManager
+            .loadPrivateIslandGameState();
+
+    int gridSize = 4;
+
+    final savedSize = state?["customGridSize"];
+
+    if (savedSize is num && savedSize.toInt() >= 2) {
+      gridSize = savedSize.toInt();
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _checkingSavedGame = false;
+      _hasSavedGame = true;
+      _savedImagePath = imagePath;
+      _savedGridSize = gridSize;
+    });
+  }
+
+  // ============================================================
+  // ▶️ متابعة اللعبة المحفوظة
+  // ============================================================
+
+  Future<void> _continueSavedGame() async {
+    final imagePath = _savedImagePath;
+
+    if (imagePath == null || imagePath.isEmpty) {
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // 🔒 تحقق أخير وآمن من وجود الملف قبل فتح اللعبة، تفاديًا
+    // لأي احتمال أن يكون الملف قد حُذف بعد فحصنا الأول.
+    // ----------------------------------------------------------
+
+    bool exists = false;
+
+    try {
+      exists = await File(imagePath).exists();
+    } catch (_) {
+      exists = false;
+    }
+
+    if (!exists) {
+      await PuzzleProgressManager
+          .clearInvalidPrivateIslandSave();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _hasSavedGame = false;
+        _savedImagePath = null;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "تعذر العثور على اللعبة المحفوظة، الصورة لم تعد متوفرة.",
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      return;
+    }
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PuzzleGameScreen(
+          customImagePath: imagePath,
+          isCustomImage: true,
+          customGridSize: _savedGridSize,
+        ),
+      ),
+    );
+
+    // ----------------------------------------------------------
+    // عند العودة من اللعبة، نعيد فحص حالة الحفظ (قد يكون
+    // المستخدم أنهى اللعبة أو بدأ لعبة جديدة).
+    // ----------------------------------------------------------
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _checkingSavedGame = true;
+    });
+
+    await _checkSavedGame();
   }
 
   // ============================================================
@@ -132,7 +277,7 @@ class _PrivateIslandScreenState
         }
 
         // ======================================================
-        // 🟪 تجهيز الصورة لتكون مربعة
+        // 🪄 تجهيز الصورة لتكون مربعة
         // بدون قص أي جزء من الصورة.
         // ======================================================
 
@@ -165,10 +310,21 @@ class _PrivateIslandScreenState
         }
 
         // ======================================================
-        // 💾 حفظ صورة الجزيرة الخاصة
+        // 🆕 صورة جديدة = لعبة جديدة.
         //
-        // هذه الدالة موجودة فعليًا في
-        // PuzzleProgressManager الحالي.
+        // نحذف أي حفظ سابق للجزيرة الخاصة (إن وُجد) قبل بدء
+        // اللعبة بصورة مختلفة، حتى لا يحاول PuzzleGameScreen
+        // مطابقة حالة بازل قديمة مع صورة جديدة عن طريق الخطأ.
+        // (لا نلمس progressKey إطلاقًا هنا).
+        // ======================================================
+
+        await PuzzleProgressManager
+            .clearPrivateIslandGameState();
+
+        // ======================================================
+        // 🔄 حفظ صورة الجزيرة الخاصة
+        //
+        // هذه الدالة موجودة فعليًا في PuzzleProgressManager الحالي.
         //
         // ولا علاقة لها بحفظ المراحل العادية.
         // ======================================================
@@ -200,6 +356,20 @@ class _PrivateIslandScreenState
             ),
           ),
         );
+
+        // ======================================================
+        // تحديث حالة الحفظ بعد العودة من اللعبة
+        // ======================================================
+
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          _checkingSavedGame = true;
+        });
+
+        await _checkSavedGame();
       } catch (error, stackTrace) {
         debugPrint(
           '❌ Private Island image error: $error',
@@ -243,7 +413,7 @@ class _PrivateIslandScreenState
   }
 
   // ============================================================
-  // 🟪 تجهيز الصورة المربعة
+  // 🪄 تجهيز الصورة المربعة
   // ============================================================
 
   Future<String> _prepareSquareImage(
@@ -310,7 +480,7 @@ class _PrivateIslandScreenState
     );
 
     // ============================================================
-    // خلفية
+    // الخلفية
     // ============================================================
 
     final Paint backgroundPaint =
@@ -539,7 +709,7 @@ class _PrivateIslandScreenState
   }
 
   // ============================================================
-  // 🎨 BUILD
+  // 🏗️ BUILD
   // ============================================================
 
   @override
@@ -553,7 +723,7 @@ class _PrivateIslandScreenState
         body: Stack(
           children: [
             // ======================================================
-            // 🌌 الخلفية
+            // 🏞️ الخلفية
             // ======================================================
 
             Positioned.fill(
@@ -658,7 +828,7 @@ class _PrivateIslandScreenState
             ),
 
             // ======================================================
-            // 📱 المحتوى
+            // 📋 المحتوى
             // ======================================================
 
             SafeArea(
@@ -674,6 +844,21 @@ class _PrivateIslandScreenState
                   const Spacer(
                     flex: 3,
                   ),
+
+                  if (!_checkingSavedGame &&
+                      _hasSavedGame)
+                    Padding(
+                      padding:
+                          const EdgeInsets
+                              .fromLTRB(
+                        20,
+                        0,
+                        20,
+                        14,
+                      ),
+                      child:
+                          _buildContinueCard(),
+                    ),
 
                   Padding(
                     padding:
@@ -698,7 +883,7 @@ class _PrivateIslandScreenState
   }
 
   // ============================================================
-  // 🏷️ الشريط العلوي
+  // 🔝 الشريط العلوي
   // ============================================================
 
   Widget _buildHeaderBar(
@@ -806,7 +991,90 @@ class _PrivateIslandScreenState
   }
 
   // ============================================================
-  // 🖼️ بطاقة الاستوديو
+  // ▶️ بطاقة متابعة اللعبة المحفوظة
+  // ============================================================
+
+  Widget _buildContinueCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: const Color(0xFF1B3A57),
+        border: Border.all(
+          color: const Color(0xFF4CAF7D).withOpacity(0.6),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.35),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          if (_savedImagePath != null)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: 48,
+                height: 48,
+                child: Image.file(
+                  File(_savedImagePath!),
+                  fit: BoxFit.cover,
+                  errorBuilder: (
+                    context,
+                    error,
+                    stackTrace,
+                  ) {
+                    return const Icon(
+                      Icons.image_not_supported,
+                      color: Colors.white54,
+                    );
+                  },
+                ),
+              ),
+            ),
+
+          const SizedBox(width: 12),
+
+          const Expanded(
+            child: Text(
+              'لديك لعبة محفوظة في الجزيرة الغامضة',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 10),
+
+          ElevatedButton(
+            onPressed: _continueSavedGame,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4CAF7D),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+            child: const Text(
+              'متابعة',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // 🖼️ بطاقة استوديو الصور
   // ============================================================
 
   Widget _buildStudioCard() {
@@ -861,7 +1129,9 @@ class _PrivateIslandScreenState
           const SizedBox(height: 6),
 
           Text(
-            'اختر صورة من جهازك وحوّلها إلى لغز تفاعلي',
+            _hasSavedGame
+                ? 'اختر صورة جديدة لبدء لغز مختلف'
+                : 'اختر صورة من جهازك وحوّلها إلى لغز تفاعلي',
             textAlign:
                 TextAlign.center,
             style: TextStyle(
@@ -913,7 +1183,7 @@ class _PrivateIslandScreenState
                       ),
                     )
                   : const Text(
-                      'افتح الاستوديو',
+                      'فتح استوديو الصور',
                       style: TextStyle(
                         color:
                             Colors.white,
