@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-
   workflow_dispatch:
 
 jobs:
@@ -16,99 +15,180 @@ jobs:
       # ============================================================
       # 📦 Checkout
       # ============================================================
-
       - name: Checkout repository
         uses: actions/checkout@v4
-
 
       # ============================================================
       # 🐦 Setup Flutter
       # ============================================================
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.44.8'
           channel: stable
 
-
       # ============================================================
       # ☕ Setup Java 17
       # ============================================================
-
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-
       # ============================================================
-      # 🔎 Check project
+      # 📊 حجم assets قبل الضغط
       # ============================================================
-
-      - name: Check pubspec.yaml
+      - name: Check assets size BEFORE compression
         run: |
-          pwd
-          ls -la
-          echo "===================="
-          sed -n '1,160p' pubspec.yaml
-          echo "===================="
+          echo "========================================"
+          echo "ASSETS SIZE BEFORE COMPRESSION"
+          echo "========================================"
 
+          du -sh assets
+
+          echo ""
+          echo "Images size:"
+          du -sh assets/images
+
+          echo ""
+          echo "PNG files:"
+          find assets -type f -iname "*.png" | wc -l
 
       # ============================================================
-      # 📚 Dependencies
+      # 🗜️ تثبيت oxipng
       # ============================================================
+      - name: Install PNG optimizer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y oxipng
 
+      # ============================================================
+      # 🗜️ ضغط جميع PNG تلقائياً
+      # ============================================================
+      - name: Optimize all PNG images
+        run: |
+          echo "========================================"
+          echo "OPTIMIZING PNG IMAGES"
+          echo "========================================"
+
+          find assets -type f -iname "*.png" -print0 | \
+          xargs -0 -r oxipng \
+            -o 4 \
+            --strip safe \
+            --preserve
+
+      # ============================================================
+      # 📊 حجم assets بعد الضغط
+      # ============================================================
+      - name: Check assets size AFTER compression
+        run: |
+          echo "========================================"
+          echo "ASSETS SIZE AFTER COMPRESSION"
+          echo "========================================"
+
+          du -sh assets
+
+          echo ""
+          echo "Images size:"
+          du -sh assets/images
+
+          echo ""
+          echo "PNG files:"
+          find assets -type f -iname "*.png" | wc -l
+
+      # ============================================================
+      # 📊 تقرير تفصيلي
+      # ============================================================
+      - name: Compression report
+        run: |
+          echo "========================================"
+          echo "COMPRESSION REPORT"
+          echo "========================================"
+
+          echo ""
+          echo "Assets total:"
+          du -sh assets
+
+          echo ""
+          echo "World:"
+          du -sh assets/images/world 2>/dev/null || true
+
+          echo ""
+          echo "Islands:"
+          du -sh assets/images/islands 2>/dev/null || true
+
+          echo ""
+          echo "Puzzle:"
+          du -sh assets/images/Puzzle 2>/dev/null || true
+
+          echo ""
+          echo "Background:"
+          du -sh assets/images/background 2>/dev/null || true
+
+          echo ""
+          echo "UI:"
+          du -sh assets/images/ui 2>/dev/null || true
+
+          echo ""
+          echo "Rewards:"
+          du -sh assets/images/rewards 2>/dev/null || true
+
+          echo ""
+          echo "Largest files:"
+          find assets -type f -printf '%s %p\n' | \
+          sort -nr | \
+          head -20 | \
+          awk '{printf "%.2f MB  %s\n", $1/1024/1024, $2}'
+
+      # ============================================================
+      # 📚 Flutter dependencies
+      # ============================================================
       - name: Flutter pub get
         run: flutter pub get
 
-
       # ============================================================
-      # 📺 Check Unity Ads
+      # 🧹 Flutter clean
       # ============================================================
-
-      - name: Check Unity Ads version
-        run: |
-          flutter pub deps | grep unity_ads_plugin || true
-
-
-      # ============================================================
-      # 🧹 Clean
-      # ============================================================
-
       - name: Flutter clean
         run: flutter clean
 
-
       # ============================================================
-      # 📚 Get dependencies after clean
+      # 📚 Dependencies after clean
       # ============================================================
-
       - name: Flutter pub get after clean
         run: flutter pub get
-
 
       # ============================================================
       # 🖼️ Generate App Icon
       # ============================================================
-
       - name: Generate App Icon
         run: dart run flutter_launcher_icons
 
-
       # ============================================================
-      # 🏗️ Build APK
+      # 🏗️ Build Release APK
       # ============================================================
-
       - name: Build APK
         run: flutter build apk --release
 
+      # ============================================================
+      # 📦 فحص حجم APK
+      # ============================================================
+      - name: Check APK size
+        run: |
+          echo "========================================"
+          echo "FINAL APK SIZE"
+          echo "========================================"
+
+          ls -lh build/app/outputs/flutter-apk/
+
+          echo ""
+          echo "APK size:"
+          du -h build/app/outputs/flutter-apk/app-release.apk
 
       # ============================================================
       # 📤 Upload APK
       # ============================================================
-
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
