@@ -1267,32 +1267,31 @@ class _PuzzleGameScreenState
                 if (showRegroupButton)
                   FloatingRegroupButton(
                     onPressed: () {
-                      AdsManager()
-                          .showRewardedAd(
+                      AdsManager().showRewardedAd(
                         onRewardEarned: () {
                           if (!mounted) {
                             return;
                           }
 
-                          controller
-                              .regroupPieces();
+                          controller.regroupPieces();
 
                           setState(() {
-                            showRegroupButton =
-                                false;
+                            showRegroupButton = false;
                           });
                         },
 
                         onAdFailed: () {
-                          if (!context.mounted) {
-                            return;
-                          }
+                          if (!mounted) return;
 
-                          // الإعلان غير متوفر → الدخول مباشرة
-                          // بدون حذف اللعبة المحفوظة.
-                          Navigator.pop(
-                            context,
-                            true,
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+             "التجميع غير متوفر حاليًا، حاول لاحقًا",
+                                textAlign: TextAlign.center,
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                              duration: Duration(seconds: 2),
+                            ),
                           );
                         },
                       );
