@@ -1338,7 +1338,7 @@ class PuzzleProgressManager {
   }
 
   //==================================================
-  // 🎁🎉 مكافأة البداية - 500 عملة مرة واحدة فقط
+  // 🎁🎉 مكافأة البداية - 500 رصيد إعلانات مرة واحدة فقط
   //==================================================
 
   static Future<bool> claimFirstDailyReward() async {
@@ -1353,8 +1353,9 @@ class PuzzleProgressManager {
       return false;
     }
 
-    // منح 500 عملة.
-    await addCoins(500);
+    // منح 500 رصيد إعلانات.
+    // هذه ليست عملات ولا نجوم ولا جواهر.
+    await addAdsBalance(500);
 
     // تسجيل أن مكافأة البداية تم استلامها.
     await prefs.setBool(
