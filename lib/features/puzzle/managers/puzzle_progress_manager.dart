@@ -26,45 +26,78 @@ class PuzzleProgressManager {
 
   static const String lastLevelKey = "puzzle_last_level";
 
-  static const String completedLevelsKey = "puzzle_completed_levels";
+  static const String completedLevelsKey =
+      "puzzle_completed_levels";
 
-  static const String claimedRewardsKey = "puzzle_claimed_rewards";
+  static const String claimedRewardsKey =
+      "puzzle_claimed_rewards";
 
-  static const String unlockedLevelsKey = "puzzle_unlocked_levels";
+  static const String unlockedLevelsKey =
+      "puzzle_unlocked_levels";
 
-  static const String levelStarsKey = "puzzle_level_stars";
+  static const String levelStarsKey =
+      "puzzle_level_stars";
 
-  static const String gameStateKey = "puzzle_game_state";
+  //==================================================
+  // 💾 الحفظ العام للعبة
+  //==================================================
 
-  static const String gamesPlayedKey = "puzzle_games_played";
+  static const String gameStateKey =
+      "puzzle_game_state";
 
-  static const String totalMovesKey = "puzzle_total_moves";
+  //==================================================
+  // 🏝️ حفظ الجزيرة الخاصة
+  //
+  // منفصل تمامًا عن progressKey.
+  //==================================================
 
-  static const String bestTimeKey = "puzzle_best_time";
+  static const String privateIslandGameStateKey =
+      "private_island_game_state";
 
-  static const String achievementsKey = "puzzle_achievements";
+  static const String gamesPlayedKey =
+      "puzzle_games_played";
 
-  static const String experienceKey = "puzzle_experience";
+  static const String totalMovesKey =
+      "puzzle_total_moves";
 
-  static const String dailyMissionKey = "puzzle_daily_missions";
+  static const String bestTimeKey =
+      "puzzle_best_time";
 
-  static const String purchasedLevelsKey = "puzzle_purchased_levels";
+  static const String achievementsKey =
+      "puzzle_achievements";
 
-  static const String purchasedIslandsKey = "puzzle_purchased_islands";
+  static const String experienceKey =
+      "puzzle_experience";
 
-  static const String privateIslandKey = "private_island_unlocked";
+  static const String dailyMissionKey =
+      "puzzle_daily_missions";
 
-  static const String adsBalanceKey = "puzzle_ads_balance";
+  static const String purchasedLevelsKey =
+      "puzzle_purchased_levels";
 
-  static const String purchasedStarsKey = "puzzle_star_unlocks";
+  static const String purchasedIslandsKey =
+      "puzzle_purchased_islands";
 
-  static const String purchasedGemsKey = "puzzle_gem_unlocks";
+  static const String privateIslandKey =
+      "private_island_unlocked";
 
-  static const String levelAdsKey = "puzzle_level_ads";
+  static const String adsBalanceKey =
+      "puzzle_ads_balance";
 
-  static const String unlockedWorldsKey = "puzzle_unlocked_worlds";
+  static const String purchasedStarsKey =
+      "puzzle_star_unlocks";
 
-  static const String unlockedIslandsKey = "puzzle_unlocked_islands";
+  static const String purchasedGemsKey =
+      "puzzle_gem_unlocks";
+
+  static const String levelAdsKey =
+      "puzzle_level_ads";
+
+  static const String unlockedWorldsKey =
+      "puzzle_unlocked_worlds";
+
+  static const String unlockedIslandsKey =
+      "puzzle_unlocked_islands";
 
   static const String firstDailyRewardClaimedKey =
       "puzzle_first_daily_reward_claimed";
@@ -95,10 +128,6 @@ class PuzzleProgressManager {
   // 📺 رصيد الإعلانات التجريبي
   //==================================================
 
-  /// رصيد تجريبي مبدئي لاختبار عمليات الشراء داخل التطبيق.
-  ///
-  /// عند عدم وجود رصيد محفوظ في SharedPreferences،
-  /// يبدأ اللاعب بـ 10000 مشاهدة إعلان.
   static const int initialAdsBalance = 10000;
 
   //==================================================
@@ -116,7 +145,7 @@ class PuzzleProgressManager {
   }
 
   //==================================================
-  // 💾 حفظ حالة البازل الحالية
+  // 💾 حفظ حالة البازل الحالية - المراحل العادية
   //==================================================
 
   static Future<void> saveProgress({
@@ -154,42 +183,7 @@ class PuzzleProgressManager {
   }
 
   //==================================================
-  // 💾 حفظ Game State
-  //==================================================
-
-  static Future<void> saveGameState(
-    Map<String, dynamic> state,
-  ) async {
-    final prefs = await _prefs;
-
-    await prefs.setString(
-      gameStateKey,
-      jsonEncode(state),
-    );
-  }
-
-  static Future<Map<String, dynamic>?> loadGameState() async {
-    final prefs = await _prefs;
-
-    final value = prefs.getString(gameStateKey);
-
-    if (value == null) {
-      return null;
-    }
-
-    try {
-      final decoded = jsonDecode(value);
-
-      if (decoded is Map) {
-        return Map<String, dynamic>.from(decoded);
-      }
-    } catch (_) {}
-
-    return null;
-  }
-
-  //==================================================
-  // 📖 قراءة حالة البازل
+  // 📖 قراءة حالة البازل - المراحل العادية
   //==================================================
 
   static Future<Map<String, dynamic>?> loadProgress() async {
@@ -213,13 +207,119 @@ class PuzzleProgressManager {
   }
 
   //==================================================
-  // 🗑️ حذف حالة البازل
+  // 🗑️ حذف حالة البازل - المراحل العادية
   //==================================================
 
   static Future<void> clearProgress() async {
     final prefs = await _prefs;
 
     await prefs.remove(progressKey);
+  }
+
+  //==================================================
+  // 💾 حفظ Game State العام
+  //==================================================
+
+  static Future<void> saveGameState(
+    Map<String, dynamic> state,
+  ) async {
+    final prefs = await _prefs;
+
+    await prefs.setString(
+      gameStateKey,
+      jsonEncode(state),
+    );
+  }
+
+  //==================================================
+  // 📖 قراءة Game State العام
+  //==================================================
+
+  static Future<Map<String, dynamic>?> loadGameState() async {
+    final prefs = await _prefs;
+
+    final value = prefs.getString(gameStateKey);
+
+    if (value == null) {
+      return null;
+    }
+
+    try {
+      final decoded = jsonDecode(value);
+
+      if (decoded is Map) {
+        return Map<String, dynamic>.from(decoded);
+      }
+    } catch (_) {}
+
+    return null;
+  }
+
+  //==================================================
+  // 🗑️ حذف Game State العام
+  //==================================================
+
+  static Future<void> clearGameState() async {
+    final prefs = await _prefs;
+
+    await prefs.remove(gameStateKey);
+  }
+
+  //==================================================
+  // 🏝️💾 حفظ لعبة الجزيرة الخاصة
+  //
+  // هذا النظام مستقل تمامًا عن progressKey.
+  //==================================================
+
+  static Future<void> savePrivateIslandGameState(
+    Map<String, dynamic> state,
+  ) async {
+    final prefs = await _prefs;
+
+    await prefs.setString(
+      privateIslandGameStateKey,
+      jsonEncode(state),
+    );
+  }
+
+  //==================================================
+  // 🏝️📖 قراءة لعبة الجزيرة الخاصة
+  //==================================================
+
+  static Future<Map<String, dynamic>?>
+      loadPrivateIslandGameState() async {
+    final prefs = await _prefs;
+
+    final value = prefs.getString(
+      privateIslandGameStateKey,
+    );
+
+    if (value == null) {
+      return null;
+    }
+
+    try {
+      final decoded = jsonDecode(value);
+
+      if (decoded is Map) {
+        return Map<String, dynamic>.from(decoded);
+      }
+    } catch (_) {}
+
+    return null;
+  }
+
+  //==================================================
+  // 🏝️🗑️ حذف حفظ لعبة الجزيرة الخاصة فقط
+  //==================================================
+
+  static Future<void>
+      clearPrivateIslandGameState() async {
+    final prefs = await _prefs;
+
+    await prefs.remove(
+      privateIslandGameStateKey,
+    );
   }
 
   //==================================================
@@ -245,7 +345,8 @@ class PuzzleProgressManager {
 
     final current = prefs.getInt(starsKey) ?? 0;
 
-    final value = (current + amount).clamp(0, 999999999);
+    final value =
+        (current + amount).clamp(0, 999999999);
 
     await prefs.setInt(
       starsKey,
@@ -354,7 +455,8 @@ class PuzzleProgressManager {
 
     final current = prefs.getInt(coinsKey) ?? 0;
 
-    final value = (current + amount).clamp(0, 999999999);
+    final value =
+        (current + amount).clamp(0, 999999999);
 
     await prefs.setInt(
       coinsKey,
@@ -411,7 +513,8 @@ class PuzzleProgressManager {
 
     final current = prefs.getInt(gemsKey) ?? 0;
 
-    final value = (current + amount).clamp(0, 999999999);
+    final value =
+        (current + amount).clamp(0, 999999999);
 
     await prefs.setInt(
       gemsKey,
@@ -468,7 +571,8 @@ class PuzzleProgressManager {
 
     final current = prefs.getInt(hintsKey) ?? 0;
 
-    final value = (current + amount).clamp(0, 999999999);
+    final value =
+        (current + amount).clamp(0, 999999999);
 
     await prefs.setInt(
       hintsKey,
@@ -529,7 +633,10 @@ class PuzzleProgressManager {
   static Future<int> getCompletedCount() async {
     final prefs = await _prefs;
 
-    return (prefs.getStringList(completedLevelsKey) ?? [])
+    return (prefs.getStringList(
+              completedLevelsKey,
+            ) ??
+            [])
         .length;
   }
 
@@ -578,31 +685,22 @@ class PuzzleProgressManager {
     switch (level) {
       case 2:
         return 75;
-
       case 3:
         return 150;
-
       case 4:
         return 250;
-
       case 5:
         return 350;
-
       case 6:
         return 450;
-
       case 7:
         return 600;
-
       case 8:
         return 750;
-
       case 9:
         return 875;
-
       case 10:
         return 1000;
-
       default:
         return 1000;
     }
@@ -642,19 +740,14 @@ class PuzzleProgressManager {
     switch (islandId) {
       case "animals":
         return 0;
-
       case "nature":
         return 50;
-
       case "cars":
         return 75;
-
       case "landmarks":
         return 100;
-
       case "space":
         return 150;
-
       default:
         return 999999;
     }
@@ -698,7 +791,10 @@ class PuzzleProgressManager {
     final prefs = await _prefs;
 
     final purchased =
-        prefs.getStringList(purchasedIslandsKey) ?? [];
+        prefs.getStringList(
+              purchasedIslandsKey,
+            ) ??
+            [];
 
     if (!purchased.contains(islandId)) {
       purchased.add(islandId);
@@ -797,7 +893,10 @@ class PuzzleProgressManager {
     final prefs = await _prefs;
 
     final purchased =
-        prefs.getStringList(purchasedLevelsKey) ?? [];
+        prefs.getStringList(
+              purchasedLevelsKey,
+            ) ??
+            [];
 
     if (!purchased.contains(levelId)) {
       purchased.add(levelId);
@@ -821,7 +920,10 @@ class PuzzleProgressManager {
     final prefs = await _prefs;
 
     final levels =
-        prefs.getStringList(purchasedLevelsKey) ?? [];
+        prefs.getStringList(
+              purchasedLevelsKey,
+            ) ??
+            [];
 
     return levels.contains(levelId);
   }
@@ -1030,7 +1132,8 @@ class PuzzleProgressManager {
     );
   }
 
-  static Future<Map<String, String>?> getLastPuzzle() async {
+  static Future<Map<String, String>?>
+      getLastPuzzle() async {
     final prefs = await _prefs;
 
     final world =
@@ -1171,7 +1274,8 @@ class PuzzleProgressManager {
       if (data is List) {
         return List<Map<String, dynamic>>.from(
           data.map(
-            (item) => Map<String, dynamic>.from(item),
+            (item) =>
+                Map<String, dynamic>.from(item),
           ),
         );
       }
@@ -1341,7 +1445,10 @@ class PuzzleProgressManager {
     final prefs = await _prefs;
 
     final alreadyClaimed =
-        prefs.getBool(firstDailyRewardClaimedKey) ?? false;
+        prefs.getBool(
+              firstDailyRewardClaimedKey,
+            ) ??
+            false;
 
     if (alreadyClaimed) {
       return false;
@@ -1371,7 +1478,10 @@ class PuzzleProgressManager {
     final prefs = await _prefs;
 
     final islands =
-        prefs.getStringList(unlockedIslandsKey) ?? [];
+        prefs.getStringList(
+              unlockedIslandsKey,
+            ) ??
+            [];
 
     if (!islands.contains(islandId)) {
       islands.add(islandId);
@@ -1393,7 +1503,10 @@ class PuzzleProgressManager {
     final prefs = await _prefs;
 
     final islands =
-        prefs.getStringList(unlockedIslandsKey) ?? [];
+        prefs.getStringList(
+              unlockedIslandsKey,
+            ) ??
+            [];
 
     return islands.contains(islandId);
   }
@@ -1431,18 +1544,22 @@ class PuzzleProgressManager {
   // 🏝️ الجزيرة الخاصة
   //==================================================
 
-  static Future<bool> buyPrivateIslandWithGems() async {
+  static Future<bool>
+      buyPrivateIslandWithGems() async {
     final prefs = await _prefs;
 
     final alreadyUnlocked =
-        prefs.getBool(privateIslandKey) ?? false;
+        prefs.getBool(privateIslandKey) ??
+            false;
 
     if (alreadyUnlocked) {
       return true;
     }
 
     final paid =
-        await spendGems(privateIslandGemCost);
+        await spendGems(
+      privateIslandGemCost,
+    );
 
     if (!paid) {
       return false;
@@ -1456,7 +1573,8 @@ class PuzzleProgressManager {
     return true;
   }
 
-  static Future<bool> isPrivateIslandUnlocked() async {
+  static Future<bool>
+      isPrivateIslandUnlocked() async {
     final prefs = await _prefs;
 
     return prefs.getBool(
@@ -1466,10 +1584,11 @@ class PuzzleProgressManager {
   }
 
   //==================================================
-  // 🏝️📸 صورة الجزيرة الخاصة المؤقتة
+  // 🏝️📸 صورة الجزيرة الخاصة
   //==================================================
 
-  static Future<void> savePrivateIslandImagePath(
+  static Future<void>
+      savePrivateIslandImagePath(
     String imagePath,
   ) async {
     final prefs = await _prefs;
@@ -1480,7 +1599,8 @@ class PuzzleProgressManager {
     );
   }
 
-  static Future<String?> getPrivateIslandImagePath() async {
+  static Future<String?>
+      getPrivateIslandImagePath() async {
     final prefs = await _prefs;
 
     return prefs.getString(
@@ -1488,14 +1608,17 @@ class PuzzleProgressManager {
     );
   }
 
-  static Future<void> clearPrivateIslandImage() async {
+  static Future<void>
+      clearPrivateIslandImage() async {
     final prefs = await _prefs;
 
-    final imagePath = prefs.getString(
+    final imagePath =
+        prefs.getString(
       privateIslandImagePathKey,
     );
 
-    if (imagePath != null && imagePath.isNotEmpty) {
+    if (imagePath != null &&
+        imagePath.isNotEmpty) {
       try {
         final file = File(imagePath);
 
@@ -1514,17 +1637,24 @@ class PuzzleProgressManager {
   // ⚙️ الإعدادات
   //==================================================
 
-  static const String soundKey = "puzzle_sound";
+  static const String soundKey =
+      "puzzle_sound";
 
-  static const String vibrationKey = "puzzle_vibration";
+  static const String vibrationKey =
+      "puzzle_vibration";
 
-  static const String darkModeKey = "puzzle_dark_mode";
+  static const String darkModeKey =
+      "puzzle_dark_mode";
 
-  static Future<bool> isSoundEnabled() async {
-    return (await _prefs).getBool(soundKey) ?? true;
+  static Future<bool>
+      isSoundEnabled() async {
+    return (await _prefs)
+            .getBool(soundKey) ??
+        true;
   }
 
-  static Future<void> saveSoundEnabled(
+  static Future<void>
+      saveSoundEnabled(
     bool value,
   ) async {
     await (await _prefs).setBool(
@@ -1533,11 +1663,15 @@ class PuzzleProgressManager {
     );
   }
 
-  static Future<bool> isVibrationEnabled() async {
-    return (await _prefs).getBool(vibrationKey) ?? true;
+  static Future<bool>
+      isVibrationEnabled() async {
+    return (await _prefs)
+            .getBool(vibrationKey) ??
+        true;
   }
 
-  static Future<void> saveVibrationEnabled(
+  static Future<void>
+      saveVibrationEnabled(
     bool value,
   ) async {
     await (await _prefs).setBool(
@@ -1546,11 +1680,15 @@ class PuzzleProgressManager {
     );
   }
 
-  static Future<bool> isDarkMode() async {
-    return (await _prefs).getBool(darkModeKey) ?? false;
+  static Future<bool>
+      isDarkMode() async {
+    return (await _prefs)
+            .getBool(darkModeKey) ??
+        false;
   }
 
-  static Future<void> saveDarkMode(
+  static Future<void>
+      saveDarkMode(
     bool value,
   ) async {
     await (await _prefs).setBool(
@@ -1563,10 +1701,12 @@ class PuzzleProgressManager {
   // 💾 تصدير البيانات
   //==================================================
 
-  static Future<Map<String, dynamic>> exportData() async {
+  static Future<Map<String, dynamic>>
+      exportData() async {
     final prefs = await _prefs;
 
-    final data = <String, dynamic>{};
+    final data =
+        <String, dynamic>{};
 
     for (final key in prefs.getKeys()) {
       data[key] = prefs.get(key);
@@ -1612,7 +1752,8 @@ class PuzzleProgressManager {
             .whereType<String>()
             .toList();
 
-        if (stringList.length == value.length) {
+        if (stringList.length ==
+            value.length) {
           await prefs.setStringList(
             item.key,
             stringList,
@@ -1629,6 +1770,7 @@ class PuzzleProgressManager {
   static Future<void> resetProgress() async {
     final prefs = await _prefs;
 
+    // المراحل العادية فقط.
     await prefs.remove(progressKey);
     await prefs.remove(completedLevelsKey);
     await prefs.remove(unlockedLevelsKey);
@@ -1644,6 +1786,8 @@ class PuzzleProgressManager {
     await prefs.remove(purchasedStarsKey);
     await prefs.remove(purchasedGemsKey);
     await prefs.remove(privateIslandKey);
+
+    // لا نحذف حفظ الجزيرة الخاصة هنا.
   }
 
   //==================================================
