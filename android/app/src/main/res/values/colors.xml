@@ -2,6 +2,6 @@
 
 <resources>
 
-    <color name="splash_color">#000000</color>
+    <color name="launch_background">#4B267A</color>
 
 </resources>
