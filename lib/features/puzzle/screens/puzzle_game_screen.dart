@@ -267,7 +267,7 @@ class _PuzzleGameScreenState
   Future<void> _checkCustomSavedGame() async {
     final saved =
         await PuzzleProgressManager
-            .loadGameState();
+            .loadPrivateIslandGameState();
 
     if (saved == null ||
         saved.isEmpty) {
@@ -379,7 +379,13 @@ class _PuzzleGameScreenState
     //==================================================
 
     if (resume != true) {
-      await _clearCustomSavedGame();
+      if (widget.isCustomImage) {
+        await PuzzleProgressManager
+            .clearPrivateIslandGameState();
+      } else {
+        await PuzzleProgressManager
+            .clearGameState();
+      }
 
       savedGameData = null;
     }
@@ -850,11 +856,16 @@ class _PuzzleGameScreenState
       return;
     }
 
-    final data =
+    final state =
         _buildSaveData();
 
-    await PuzzleProgressManager
-        .saveGameState(data);
+    if (widget.isCustomImage) {
+      await PuzzleProgressManager
+          .savePrivateIslandGameState(state);
+    } else {
+      await PuzzleProgressManager
+          .saveGameState(state);
+    }
 
     // نحفظ أيضاً مسار الصورة في مدير الجزيرة
     // حتى تبقى الصورة مرتبطة بالحفظ.
@@ -912,7 +923,8 @@ class _PuzzleGameScreenState
 
   Future<void> _clearCurrentSavedGame() async {
     if (widget.isCustomImage) {
-      await _clearCustomSavedGame();
+      await PuzzleProgressManager
+          .clearPrivateIslandGameState();
     } else {
       await PuzzleProgressManager
           .clearProgress();
@@ -1070,7 +1082,11 @@ class _PuzzleGameScreenState
     if (widget.isCustomImage) {
       // الجزيرة الخاصة:
       // نحذف gameState فقط.
-      await _clearCustomSavedGame();
+      await PuzzleProgressManager
+          .clearPrivateIslandGameState();
+
+      await PuzzleProgressManager
+          .clearPrivateIslandImage();
     } else {
       // المراحل العادية:
       // نحذف progress فقط.
@@ -1079,22 +1095,14 @@ class _PuzzleGameScreenState
     }
 
     //==================================================
-    // 🏝️ الجزيرة الخاصة
-    //==================================================
-
-    if (widget.isCustomImage) {
-      await PuzzleProgressManager
-          .clearPrivateIslandImage();
-    }
-
-    //==================================================
     // 🏆 تسجيل إكمال المرحلة
     //==================================================
 
-    await PuzzleProgressManager
-        .completeLevel(
-      currentLevelId,
-    );
+    if (!widget.isCustomImage) {
+      await PuzzleProgressManager.completeLevel(
+        currentLevelId,
+      );
+    }
 
     //==================================================
     // 🔓 فتح المرحلة / الجزيرة التالية
@@ -1767,14 +1775,19 @@ class _PuzzleGameScreenState
     if (puzzleCreated &&
         !gameFinished) {
       if (widget.isCustomImage) {
-        final data =
+        final state =
             _buildSaveData();
 
         // لا يمكن await داخل dispose.
         //
         // نرسل عملية الحفظ بشكل مستقل.
-        PuzzleProgressManager
-            .saveGameState(data);
+        if (widget.isCustomImage) {
+          PuzzleProgressManager
+              .savePrivateIslandGameState(state);
+        } else {
+          PuzzleProgressManager
+              .saveGameState(state);
+        }
 
         if (widget.customImagePath != null) {
           PuzzleProgressManager
