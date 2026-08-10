@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
 
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -24,6 +23,14 @@ import '../managers/puzzle_progress_manager.dart';
 ///      6 × 6
 ///      8 × 8
 /// 4. الانتقال مباشرة إلى PuzzleGameScreen.
+///
+/// نظام الحفظ:
+/// - حفظ المراحل العادية يتم بواسطة نظام المراحل العادية.
+/// - الجزيرة الخاصة تستخدم:
+///      puzzleId = custom_island
+///      levelId = custom_image_puzzle
+///      customImagePath = مسار الصورة
+///      customGridSize = حجم الشبكة
 ///
 /// ملاحظة:
 /// لا يتم تعديل PuzzleGenerator أو PuzzleController أو
@@ -136,28 +143,12 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
         // ======================================================
         // 🟪 تجهيز الصورة لتكون مربعة
         //
-        // مهم:
-        // لا نقص الصورة.
-        //
-        // إذا كانت:
-        // 1920 × 1080
-        //
-        // تصبح:
-        // 1920 × 1920
-        //
-        // مع وضع الصورة في المنتصف وخلفية مناسبة.
-        //
-        // بهذا PuzzleGameScreen الذي يستخدم BoxFit.cover
-        // لن يقص أجزاء من صورة المستخدم.
+        // لا نقص أي جزء من صورة المستخدم.
         // ======================================================
 
         final String preparedPath =
             await _prepareSquareImage(
           picked.path,
-        );
-
-        await PuzzleProgressManager.savePrivateIslandImagePath(
-          preparedPath,
         );
 
         if (!mounted) {
@@ -166,6 +157,10 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
         // ======================================================
         // 🎯 اختيار الصعوبة
+        //
+        // مهم:
+        // لا نحفظ الصورة في نظام الحفظ قبل أن يختار
+        // المستخدم مستوى الصعوبة.
         // ======================================================
 
         final int? gridSize =
@@ -184,7 +179,25 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
         }
 
         // ======================================================
+        // 💾 حفظ مسار صورة الجزيرة الخاصة
+        //
+        // يتم ذلك بعد اختيار الشبكة فقط.
+        //
+        // هذه المعلومة خاصة بالجزيرة الخاصة ولا تدخل
+        // في نظام حفظ المراحل العادية.
+        // ======================================================
+
+        await PuzzleProgressManager
+            .savePrivateIslandImagePath(
+          preparedPath,
+        );
+
+        // ======================================================
         // 🎮 الانتقال إلى لعبة البازل
+        //
+        // isCustomImage = true
+        // يجعل PuzzleGameScreen يستخدم نظام حفظ
+        // الجزيرة الخاصة بدل نظام المراحل العادية.
         // ======================================================
 
         setState(() {
@@ -193,20 +206,17 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
         await Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => PuzzleGameScreen(
-              customImagePath: preparedPath,
+            builder: (_) =>
+                PuzzleGameScreen(
+              customImagePath:
+                  preparedPath,
 
-              // هذه هي النقطة التي تجعل اللعبة
-              // تستخدم نظام الجزيرة الغامضة.
+              // الجزيرة الخاصة
               isCustomImage: true,
 
               // 4 أو 6 أو 8
-              //
-              // عند 8:
-              // rows = 8
-              // cols = 8
-              // 8 × 8 = 64 قطعة.
-              customGridSize: gridSize,
+              customGridSize:
+                  gridSize,
             ),
           ),
         );
@@ -241,11 +251,10 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
     // ============================================================
     // 📺 الإعلان المكافئ
     //
-    // الإعلان اختياري:
+    // لم يتم تغيير نظام الإعلانات.
+    //
     // - إذا نجح → نفتح الاستوديو.
     // - إذا فشل أو غير جاهز → نفتح الاستوديو مباشرة.
-    //
-    // لا نمنع المستخدم من استخدام الجزيرة الغامضة.
     // ============================================================
 
     AdsManager().showRewardedAd(
@@ -260,28 +269,6 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
   // ============================================================
   // 🟪 تجهيز الصورة المربعة
-  // ============================================================
-  //
-  // الهدف:
-  //
-  // صورة المستخدم:
-  //
-  //   ┌───────────────────────┐
-  //   │       الصورة          │
-  //   └───────────────────────┘
-  //
-  // تصبح داخل Canvas مربع:
-  //
-  //   ┌───────────────────────┐
-  //   │       مساحة           │
-  //   │   ┌───────────────┐   │
-  //   │   │    الصورة     │   │
-  //   │   └───────────────┘   │
-  //   │       مساحة           │
-  //   └───────────────────────┘
-  //
-  // بدون فقدان أي جزء من الصورة.
-  //
   // ============================================================
 
   Future<String> _prepareSquareImage(
@@ -315,7 +302,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
     // ------------------------------------------------------------
     // إذا كانت الصورة مربعة أصلًا:
-    // لا نحتاج إلى إعادة تصنيعها.
+    // لا نعيد تصنيعها.
     // ------------------------------------------------------------
 
     if (sourceWidth == sourceHeight) {
@@ -350,13 +337,12 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
     // ------------------------------------------------------------
     // خلفية بسيطة.
-    //
-    // يمكن تغييرها لاحقًا إذا أردت تصميمًا معينًا.
     // ------------------------------------------------------------
 
     final Paint backgroundPaint =
         Paint()
-          ..color = const Color(0xFF101827);
+          ..color =
+              const Color(0xFF101827);
 
     canvas.drawRect(
       outputRect,
@@ -364,7 +350,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
     );
 
     // ------------------------------------------------------------
-    // حساب مكان الصورة في منتصف المربع.
+    // وضع الصورة في المنتصف بدون قص.
     // ------------------------------------------------------------
 
     final double dx =
@@ -391,7 +377,8 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
     final Paint imagePaint =
         Paint()
-          ..filterQuality = FilterQuality.high;
+          ..filterQuality =
+              FilterQuality.high;
 
     canvas.drawImageRect(
       sourceImage,
@@ -433,8 +420,6 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
     // ------------------------------------------------------------
     // حفظ نسخة مؤقتة.
-    //
-    // سيتم استخدامها فقط في جلسة الجزيرة الغامضة.
     // ------------------------------------------------------------
 
     final Directory tempDirectory =
@@ -496,15 +481,13 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                   ),
                 ),
 
-                
-
                 // ==================================================
                 // 4 × 4
                 // ==================================================
 
                 _DifficultyOption(
                   label: 'سهل',
-                  
+                  subtitle: '4 × 4',
                   icon:
                       Icons.sentiment_satisfied_alt,
                   color:
@@ -524,7 +507,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
                 _DifficultyOption(
                   label: 'متوسط',
-                  
+                  subtitle: '6 × 6',
                   icon: Icons.extension,
                   color:
                       const Color(0xFFE0A63A),
@@ -543,7 +526,7 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
                 _DifficultyOption(
                   label: 'خبير',
-                  
+                  subtitle: '8 × 8',
                   icon:
                       Icons.local_fire_department,
                   color:
@@ -632,27 +615,24 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                 final Size screenSize =
                     MediaQuery.sizeOf(context);
 
-                // حجم الجزيرة يتناسب مع عرض الجهاز.
-                // مع حد أدنى وأقصى حتى لا تصبح صغيرة جدًا
-                // أو ضخمة جدًا على الأجهزة الكبيرة.
                 final double islandSize =
                     (screenSize.width * 0.62)
                         .clamp(220.0, 300.0);
 
-                // موضع الجزيرة يتكيف مع ارتفاع الشاشة.
-                // لا نريدها خلف الشريط العلوي.
                 final double islandTop =
                     (screenSize.height * 0.13)
                         .clamp(115.0, 145.0);
 
                 return Align(
-                  alignment: Alignment.topCenter,
+                  alignment:
+                      Alignment.topCenter,
                   child: Padding(
                     padding: EdgeInsets.only(
                       top: islandTop,
                     ),
                     child: AnimatedBuilder(
-                      animation: _floatingAnimation,
+                      animation:
+                          _floatingAnimation,
                       builder: (
                         context,
                         child,
@@ -660,7 +640,8 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                         return Transform.translate(
                           offset: Offset(
                             0,
-                            _floatingAnimation.value,
+                            _floatingAnimation
+                                .value,
                           ),
                           child: child,
                         );
@@ -678,7 +659,8 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
                           ) {
                             return const Icon(
                               Icons.landscape,
-                              color: Colors.white70,
+                              color:
+                                  Colors.white70,
                               size: 80,
                             );
                           },
@@ -710,10 +692,12 @@ class _PrivateIslandScreenState extends State<PrivateIslandScreen>
 
                   Padding(
                     padding:
-                        const EdgeInsets.symmetric(
+                        const EdgeInsets
+                            .symmetric(
                       horizontal: 20,
                     ),
-                    child: _buildStudioCard(),
+                    child:
+                        _buildStudioCard(),
                   ),
 
                   const Spacer(
