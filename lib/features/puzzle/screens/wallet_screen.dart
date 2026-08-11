@@ -517,77 +517,76 @@ class _WalletScreenState extends State<WalletScreen>
         //================================================
 
         appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(
-            kToolbarHeight,
-          ),
-          child: AppBar(
-            automaticallyImplyLeading: false,
+  preferredSize: const Size.fromHeight(
+    kToolbarHeight,
+  ),
+  child: AppBar(
+    automaticallyImplyLeading: false,
 
-            //================================================
-            // زر الرجوع — في طرف الشريط
-            //================================================
+    //================================================
+    // 👜 صورة المحفظة — الطرف الأيسر
+    //================================================
 
-            leading: Padding(
-              padding: const EdgeInsets.all(7),
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.pop(context);
-                },
-                child: Image.asset(
-                  "assets/images/ui/back_screen.png",
-                  width: 38,
-                  height: 38,
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
+    leading: Padding(
+      padding: const EdgeInsets.all(5),
+      child: Image.asset(
+        "assets/images/ui/open_wallet.png",
+        width: 46,
+        height: 46,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) {
+          return const Icon(
+            Icons.account_balance_wallet_rounded,
+            color: Color(0xFF5B2A86),
+            size: 42,
+          );
+        },
+      ),
+    ),
 
-            //================================================
-            // صورة المحفظة — في الطرف الآخر
-            // مجرد صورة بدون أي وظيفة
-            //================================================
+    //================================================
+    // ◀️ زر الرجوع — الطرف الأيمن
+    //================================================
 
-            actions: [
-              Padding(
-                padding: const EdgeInsets.all(5),
-                child: Image.asset(
-                  "assets/images/ui/open_wallet.png",
-                  width: 46,
-                  height: 46,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) {
-                    return const Icon(
-                      Icons.account_balance_wallet_rounded,
-                      color: Color(0xFF5B2A86),
-                      size: 42,
-                    );
-                  },
-                ),
-              ),
-            ],
-
-            //================================================
-            // العنوان — يبقى في المنتصف
-            //================================================
-
-            title: const Text(
-              "المحفظة والمتجر",
-              style: TextStyle(
-                color: Color(0xFF5B2A86),
-                fontWeight: FontWeight.bold,
-                fontSize: 19,
-              ),
-            ),
-
-            centerTitle: true,
-            backgroundColor: cardDarkColor,
-            elevation: 3,
-
-            iconTheme: const IconThemeData(
-              color: purpleDark,
-            ),
+    actions: [
+      Padding(
+        padding: const EdgeInsets.all(7),
+        child: GestureDetector(
+          onTap: () {
+            Navigator.pop(context);
+          },
+          child: Image.asset(
+            "assets/images/ui/back_screen.png",
+            width: 38,
+            height: 38,
+            fit: BoxFit.contain,
           ),
         ),
+      ),
+    ],
+
+    //================================================
+    // العنوان — يبقى في المنتصف
+    //================================================
+
+    title: const Text(
+      "المحفظة والمتجر",
+      style: TextStyle(
+        color: Color(0xFF5B2A86),
+        fontWeight: FontWeight.bold,
+        fontSize: 19,
+      ),
+    ),
+
+    centerTitle: true,
+    backgroundColor: cardDarkColor,
+    elevation: 3,
+
+    iconTheme: const IconThemeData(
+      color: purpleDark,
+    ),
+  ),
+),
 
         //================================================
         // BODY
