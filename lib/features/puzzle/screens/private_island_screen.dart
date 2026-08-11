@@ -153,10 +153,6 @@ class _PrivateIslandScreenState
 
   // ============================================================
   // ▶️ متابعة اللعبة المحفوظة
-  // ============================================================
-
-  // ============================================================
-  // ▶️ متابعة اللعبة المحفوظة
   //
   // 🎁 Rewarded Ad:
   // - إذا كان الإعلان جاهزًا → يظهر قبل الدخول.
@@ -260,6 +256,7 @@ class _PrivateIslandScreenState
       },
     );
   }
+
   // ============================================================
   // 🖼️ فتح استوديو الصور
   // ============================================================
@@ -619,7 +616,6 @@ class _PrivateIslandScreenState
 
                 _DifficultyOption(
                   label: 'سهل',
-                  subtitle: 'لعبة بسيطة وممتعة',
                   icon: Icons.sentiment_satisfied_alt,
                   color: const Color(0xFF4CAF7D),
                   onTap: () {
@@ -633,7 +629,6 @@ class _PrivateIslandScreenState
 
                 _DifficultyOption(
                   label: 'متوسط',
-                  subtitle: 'تحدٍ مناسب للمغامرين',
                   icon: Icons.extension,
                   color: const Color(0xFFE0A63A),
                   onTap: () {
@@ -647,7 +642,6 @@ class _PrivateIslandScreenState
 
                 _DifficultyOption(
                   label: 'خبير',
-                  subtitle: 'تحدٍ كبير للمحترفين',
                   icon: Icons.local_fire_department,
                   color: const Color(0xFFD9534F),
                   onTap: () {
@@ -728,8 +722,7 @@ class _PrivateIslandScreenState
 
             // ======================================================
             // 🏝️ الجزيرة
-            // حركة تكبير وتصغير بدل الطفو
-            // وتم إنزالها إلى أسفل الشاشة
+            // أسفل الشاشة
             // ======================================================
 
             Builder(
@@ -744,20 +737,13 @@ class _PrivateIslandScreenState
                   300.0,
                 );
 
-                final double islandTop =
-                    (screenSize.height * 0.40)
-                        .clamp(
-                  260.0,
-                  430.0,
-                );
-
                 return Align(
                   alignment:
-                      Alignment.topCenter,
+                      Alignment.bottomCenter,
                   child: Padding(
                     padding:
-                        EdgeInsets.only(
-                      top: islandTop,
+                        const EdgeInsets.only(
+                      bottom: 8,
                     ),
                     child: AnimatedBuilder(
                       animation:
@@ -811,7 +797,6 @@ class _PrivateIslandScreenState
                 children: [
                   // ==================================================
                   // 🔝 العنوان والأيقونات
-                  // الشريط العلوي أُزيل
                   // ==================================================
 
                   _buildPageHeader(
@@ -834,12 +819,9 @@ class _PrivateIslandScreenState
                         _buildStudioCard(),
                   ),
 
-                  const Spacer(
-                    flex: 1,
-                  ),
-
                   // ==================================================
                   // ▶️ اللعبة المحفوظة
+                  // مباشرة أسفل استوديو الصور
                   // ==================================================
 
                   if (!_checkingSavedGame &&
@@ -849,15 +831,15 @@ class _PrivateIslandScreenState
                           const EdgeInsets
                               .fromLTRB(
                         20,
-                        0,
-                        20,
                         14,
+                        20,
+                        0,
                       ),
                       child:
                           _buildContinueCard(),
                     ),
 
-                  const SizedBox(height: 12),
+                  const Spacer(),
                 ],
               ),
             ),
@@ -1227,14 +1209,12 @@ class _PrivateIslandScreenState
 class _DifficultyOption
     extends StatelessWidget {
   final String label;
-  final String subtitle;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
 
   const _DifficultyOption({
     required this.label,
-    required this.subtitle,
     required this.icon,
     required this.color,
     required this.onTap,
@@ -1299,19 +1279,6 @@ class _DifficultyOption
                 ),
               ),
             ),
-
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: Colors.white
-                    .withOpacity(0.5),
-                fontSize: 13,
-                fontWeight:
-                    FontWeight.w500,
-              ),
-            ),
-
-            const SizedBox(width: 6),
 
             Icon(
               Icons.arrow_back_ios,
