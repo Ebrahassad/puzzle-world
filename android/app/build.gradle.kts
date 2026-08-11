@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -16,10 +18,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     defaultConfig {
         applicationId = "com.example.puzzle_world"
 
@@ -36,24 +34,24 @@ android {
                 rootProject.file("key.properties")
 
             if (keystorePropertiesFile.exists()) {
-                val keystoreProperties = java.util.Properties()
+                val keystoreProperties = Properties()
 
                 keystorePropertiesFile.inputStream().use {
                     keystoreProperties.load(it)
                 }
 
                 storeFile = file(
-                    keystoreProperties["storeFile"] as String
+                    keystoreProperties.getProperty("storeFile")
                 )
 
                 storePassword =
-                    keystoreProperties["storePassword"] as String
+                    keystoreProperties.getProperty("storePassword")
 
                 keyAlias =
-                    keystoreProperties["keyAlias"] as String
+                    keystoreProperties.getProperty("keyAlias")
 
                 keyPassword =
-                    keystoreProperties["keyPassword"] as String
+                    keystoreProperties.getProperty("keyPassword")
             }
         }
     }
@@ -65,6 +63,15 @@ android {
 
             isMinifyEnabled = false
             isShrinkResources = false
+        }
+    }
+
+    // Kotlin JVM 17
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        compilerOptions {
+            jvmTarget.set(
+                org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+            )
         }
     }
 }
