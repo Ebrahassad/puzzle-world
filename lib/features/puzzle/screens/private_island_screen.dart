@@ -619,11 +619,9 @@ class _PrivateIslandScreenState
 
                 _DifficultyOption(
                   label: 'سهل',
-                  
-                  icon:
-                      Icons.sentiment_satisfied_alt,
-                  color:
-                      const Color(0xFF4CAF7D),
+                  subtitle: 'لعبة بسيطة وممتعة',
+                  icon: Icons.sentiment_satisfied_alt,
+                  color: const Color(0xFF4CAF7D),
                   onTap: () {
                     Navigator.of(
                       dialogContext,
@@ -635,10 +633,9 @@ class _PrivateIslandScreenState
 
                 _DifficultyOption(
                   label: 'متوسط',
-                  
+                  subtitle: 'تحدٍ مناسب للمغامرين',
                   icon: Icons.extension,
-                  color:
-                      const Color(0xFFE0A63A),
+                  color: const Color(0xFFE0A63A),
                   onTap: () {
                     Navigator.of(
                       dialogContext,
@@ -650,11 +647,9 @@ class _PrivateIslandScreenState
 
                 _DifficultyOption(
                   label: 'خبير',
-                  
-                  icon:
-                      Icons.local_fire_department,
-                  color:
-                      const Color(0xFFD9534F),
+                  subtitle: 'تحدٍ كبير للمحترفين',
+                  icon: Icons.local_fire_department,
+                  color: const Color(0xFFD9534F),
                   onTap: () {
                     Navigator.of(
                       dialogContext,
