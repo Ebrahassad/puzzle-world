@@ -159,9 +159,6 @@ class _WalletScreenState extends State<WalletScreen>
       gems = currentGems;
       adsBalance = ads;
 
-      // إبقاء reward مستخدماً حتى لا نغيّر
-      // أي نظام مكافآت آخر موجود بالمشروع.
-      // ignore: unnecessary_statements
       reward;
 
       loading = false;
@@ -520,37 +517,40 @@ class _WalletScreenState extends State<WalletScreen>
         //================================================
 
         appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(kToolbarHeight),
+          preferredSize: const Size.fromHeight(
+            kToolbarHeight,
+          ),
           child: AppBar(
             automaticallyImplyLeading: false,
 
             //================================================
-            // زر الرجوع — ثابت دائماً في اليسار
+            // زر الرجوع — في طرف الشريط
             //================================================
-            actions: [
-              Padding(
-                padding: const EdgeInsets.all(7),
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  child: Image.asset(
-                    "assets/images/ui/back_screen.png",
-                    width: 38,
-                    height: 38,
-                    fit: BoxFit.contain,
-                  ),
+
+            leading: Padding(
+              padding: const EdgeInsets.all(7),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                },
+                child: Image.asset(
+                  "assets/images/ui/back_screen.png",
+                  width: 38,
+                  height: 38,
+                  fit: BoxFit.contain,
                 ),
               ),
-            ],
+            ),
 
             //================================================
-            // العنوان — في المنتصف
+            // صورة المحفظة — في الطرف الآخر
+            // مجرد صورة بدون أي وظيفة
             //================================================
-            title: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset(
+
+            actions: [
+              Padding(
+                padding: const EdgeInsets.all(5),
+                child: Image.asset(
                   "assets/images/ui/open_wallet.png",
                   width: 46,
                   height: 46,
@@ -563,18 +563,20 @@ class _WalletScreenState extends State<WalletScreen>
                     );
                   },
                 ),
+              ),
+            ],
 
-                const SizedBox(width: 9),
+            //================================================
+            // العنوان — يبقى في المنتصف
+            //================================================
 
-                const Text(
-                  "المحفظة والمتجر",
-                  style: TextStyle(
-                    color: Color(0xFF5B2A86),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 19,
-                  ),
-                ),
-              ],
+            title: const Text(
+              "المحفظة والمتجر",
+              style: TextStyle(
+                color: Color(0xFF5B2A86),
+                fontWeight: FontWeight.bold,
+                fontSize: 19,
+              ),
             ),
 
             centerTitle: true,
@@ -589,7 +591,7 @@ class _WalletScreenState extends State<WalletScreen>
 
         //================================================
         // BODY
-        //================================----------------
+        //================================================
 
         body: Stack(
           children: [
@@ -1124,7 +1126,6 @@ class _WalletScreenState extends State<WalletScreen>
 
           //==========================================
           // 📺 زر مشاهدة الإعلان وفتح الصندوق
-          // يبقى داخل مربع الصندوق وتحت الصندوق مباشرة
           //==========================================
 
           SizedBox(
