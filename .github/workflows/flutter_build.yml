@@ -96,7 +96,7 @@ jobs:
           echo "$SOURCE"
 
           # --------------------------------------------------------
-          # Create Android mipmap directories
+          # Create mipmap directories
           # --------------------------------------------------------
 
           mkdir -p "$RES/mipmap-mdpi"
@@ -225,6 +225,11 @@ jobs:
 
       # ============================================================
       # Fix Unity Ads JVM Target
+      #
+      # Important:
+      # This version avoids the Broken pipe problem caused by:
+      #
+      # find ... | head -n 1
       # ============================================================
 
       - name: Fix Unity Ads JVM target
@@ -232,29 +237,53 @@ jobs:
         run: |
           set -e
 
-          UNITY_PLUGIN_PATH=$(find "$HOME/.pub-cache" \
-            -type d \
-            -path "*/unity_ads_plugin-*" \
-            | head -n 1)
+          UNITY_PLUGIN_PATH=""
+
+          while IFS= read -r path; do
+            UNITY_PLUGIN_PATH="$path"
+            break
+          done < <(
+            find "$HOME/.pub-cache" \
+              -type d \
+              -path "*/unity_ads_plugin-*" \
+              2>/dev/null
+          )
 
           if [ -n "$UNITY_PLUGIN_PATH" ]; then
 
+            echo "=========================================="
             echo "Unity Ads plugin found:"
             echo "$UNITY_PLUGIN_PATH"
+            echo "=========================================="
 
-            find "$UNITY_PLUGIN_PATH/android" \
-              -type f \
-              \( -name "build.gradle" -o -name "build.gradle.kts" \) \
-              -print \
-              -exec sed -i \
-                's/jvmTarget[[:space:]]*=[[:space:]]*["'\'']1\.8["'\'']/jvmTarget = "17"/g' \
-                {} \; \
-              || true
+            if [ -d "$UNITY_PLUGIN_PATH/android" ]; then
+
+              find "$UNITY_PLUGIN_PATH/android" \
+                -type f \
+                \( -name "build.gradle" -o -name "build.gradle.kts" \) \
+                -print0 |
+              while IFS= read -r -d '' file; do
+
+                echo "Checking:"
+                echo "$file"
+
+                sed -i \
+                  's/jvmTarget[[:space:]]*=[[:space:]]*["'\'']1\.8["'\'']/jvmTarget = "17"/g' \
+                  "$file"
+
+              done
+
+            else
+
+              echo "Unity Ads android directory not found."
+              echo "Continuing..."
+
+            fi
 
           else
 
             echo "Unity Ads plugin path not found."
-            echo "Continuing..."
+            echo "Continuing without modification."
 
           fi
 
@@ -276,7 +305,7 @@ jobs:
 
 
       # ============================================================
-      # Flutter Pub Get
+      # Flutter Pub Get Again
       # ============================================================
 
       - name: Flutter Pub Get
