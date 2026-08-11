@@ -31,7 +31,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   late Animation<Offset> _positionAnimation;
 
   //==================================================
-  // ✨ Animation وهج صندوق المكافأة
+  // ✨ Animation وهج المكافأة
   //==================================================
 
   late AnimationController _rewardGlowController;
@@ -45,16 +45,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   bool _showRewardUI = false;
   bool _isDoubling = false;
 
-  //==================================================
-  // ✨ التحكم الصريح في الوهج
-  //
-  // الوهج يعمل فقط عندما تكون المكافأة جاهزة
-  // وقبل الضغط على الصندوق.
-  //
-  // بمجرد الضغط على الصندوق يتم تعطيله.
-  // ولا يعود إلا عند توفر المكافأة في اليوم التالي.
-  //==================================================
-
+  // الوهج يظهر فقط في الأسفل عندما تكون المكافأة متاحة
   bool _glowEnabled = true;
 
   //==================================================
@@ -88,10 +79,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   @override
   void initState() {
     super.initState();
-
-    //==================================================
-    // 🎬 حركة دخول الصندوق
-    //==================================================
 
     _mainController = AnimationController(
       vsync: this,
@@ -127,14 +114,35 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
       _mainController,
     );
 
-    _rotationAnimation = Tween<double>(
-      begin: -0.05,
-      end: 0.05,
-    ).animate(
-      CurvedAnimation(
-        parent: _mainController,
-        curve: Curves.easeInOutSine,
+    //==================================================
+    // الصندوق يميل أثناء الحركة فقط ثم ينتهي مستقيم
+    //==================================================
+
+    _rotationAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: -0.05,
+          end: 0.05,
+        ).chain(
+          CurveTween(
+            curve: Curves.easeInOut,
+          ),
+        ),
+        weight: 70,
       ),
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 0.05,
+          end: 0.0,
+        ).chain(
+          CurveTween(
+            curve: Curves.easeOut,
+          ),
+        ),
+        weight: 30,
+      ),
+    ]).animate(
+      _mainController,
     );
 
     _positionAnimation = Tween<Offset>(
@@ -146,21 +154,14 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     ).animate(
       CurvedAnimation(
         parent: _mainController,
-        curve: const Interval(
-          0.0,
-          1.0,
-          curve: Curves.easeInOutCubic,
-        ),
+        curve: Curves.easeInOutCubic,
       ),
     );
 
     _mainController.forward();
 
     //==================================================
-    // ✨ وهج المكافأة اليومية
-    //
-    // يعمل باستمرار في الخلفية، لكن يتم عرضه فقط
-    // عندما تكون المكافأة جاهزة.
+    // ✨ وهج المكافأة
     //==================================================
 
     _rewardGlowController = AnimationController(
@@ -171,10 +172,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     )..repeat(
         reverse: true,
       );
-
-    //==================================================
-    // ⏱️ تهيئة العداد
-    //==================================================
 
     _initializeCountdown();
   }
@@ -216,7 +213,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   }
 
   //==================================================
-  // ⏱️ تحديث حالة المكافأة من التخزين
+  // ⏱️ تحديث حالة المكافأة
   //==================================================
 
   Future<void> _updateDailyRewardStatus() async {
@@ -243,10 +240,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
           _displayGems = 0;
           _displayAdsBalance = 0;
 
-          //================================================
-          // ✨ عودة الوهج عند توفر مكافأة جديدة
-          //================================================
-
           _glowEnabled = true;
         });
 
@@ -258,20 +251,13 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
       setState(() {
         _dailyRewardAvailable = false;
         _remainingTime = remaining;
-
-        //================================================
-        // ❌ المكافأة غير متاحة = لا يوجد وهج
-        //================================================
-
         _glowEnabled = false;
       });
-    } catch (_) {
-      // لا نوقف الواجهة عند حدوث خطأ.
-    }
+    } catch (_) {}
   }
 
   //==================================================
-  // ⏱️ نبضة العداد كل ثانية
+  // ⏱️ نبضة العداد
   //==================================================
 
   void _tickCountdown() {
@@ -284,10 +270,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     }
 
     final newRemaining = _getTimeUntilTomorrow();
-
-    //==================================================
-    // 🕛 انتهى اليوم
-    //==================================================
 
     if (newRemaining <= Duration.zero) {
       setState(() {
@@ -305,11 +287,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
         _displayGems = 0;
         _displayAdsBalance = 0;
 
-        //================================================
-        // ✨ المكافأة الجديدة أصبحت جاهزة
-        // لذلك يعود الوهج تلقائيًا.
-        //================================================
-
         _glowEnabled = true;
       });
 
@@ -323,7 +300,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   }
 
   //==================================================
-  // ⏰ حساب الوقت حتى بداية اليوم التالي
+  // ⏰ الوقت حتى الغد
   //==================================================
 
   Duration _getTimeUntilTomorrow() {
@@ -361,7 +338,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   }
 
   //==================================================
-  // ✨ ديكور وهج صندوق المكافأة
+  // ✨ وهج أسفل الصندوق فقط
   //==================================================
 
   BoxDecoration _rewardGlowDecoration() {
@@ -370,33 +347,21 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
         (_rewardGlowController.value * 0.30);
 
     return BoxDecoration(
-      shape: BoxShape.circle,
+      borderRadius: BorderRadius.circular(18),
       boxShadow: [
         BoxShadow(
           color: Colors.amber.withOpacity(
             glowStrength,
           ),
-          blurRadius: 16,
-          spreadRadius: 4,
+          blurRadius: 18,
+          spreadRadius: 3,
+          offset: const Offset(
+            0,
+            8,
+          ),
         ),
       ],
     );
-  }
-
-  //==================================================
-  // ✨ مقياس الصندوق
-  //==================================================
-
-  double get _rewardPulseScale {
-    if (!_glowEnabled ||
-        !_dailyRewardAvailable ||
-        _isOpen ||
-        _isClaimed) {
-      return 1.0;
-    }
-
-    return 1.035 -
-        (_rewardGlowController.value * 0.035);
   }
 
   //==================================================
@@ -404,39 +369,39 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   //==================================================
 
   Widget _buildCountdown() {
-    //==================================================
-    // 🎁 المكافأة متاحة
-    //==================================================
-
     if (_dailyRewardAvailable) {
-      return Container(
-        margin: const EdgeInsets.only(
-          top: 12,
-        ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 8,
-        ),
-        decoration: BoxDecoration(
-          color: const Color(
-            0xFF2A1B3D,
-          ),
-          borderRadius: BorderRadius.circular(
-            14,
-          ),
-          border: Border.all(
-            color: Colors.amber,
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(
-                0.25,
-              ),
-              blurRadius: 8,
+      return AnimatedBuilder(
+        animation: _rewardGlowController,
+        builder: (
+          context,
+          child,
+        ) {
+          return Container(
+            margin: const EdgeInsets.only(
+              top: 12,
             ),
-          ],
-        ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 18,
+              vertical: 8,
+            ),
+            decoration: _glowEnabled
+                ? _rewardGlowDecoration().copyWith(
+                    color: const Color(
+                      0xFF2A1B3D,
+                    ),
+                  )
+                : const BoxDecoration(
+                    color: Color(
+                      0xFF2A1B3D,
+                    ),
+                    borderRadius:
+                        BorderRadius.all(
+                      Radius.circular(14),
+                    ),
+                  ),
+            child: child,
+          );
+        },
         child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -460,10 +425,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
         ),
       );
     }
-
-    //==================================================
-    // ⏳ المكافأة غير متاحة
-    //==================================================
 
     return Container(
       margin: const EdgeInsets.only(
@@ -550,10 +511,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
 
     //==================================================
     // ❌ إيقاف الوهج فور الضغط
-    //
-    // مهم:
-    // لا ننتظر انتهاء عملية جلب المكافأة.
-    // بمجرد الضغط يختفي الوهج.
     //==================================================
 
     if (mounted) {
@@ -563,16 +520,21 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     }
 
     //==================================================
+    // تحريك الصندوق للمنتصف
+    //==================================================
+
+    await _mainController.forward();
+
+    if (!mounted) {
+      return;
+    }
+
+    //==================================================
     // 🎁 مكافأة البداية
-    // 500 رصيد مشاهدات + 10 نجوم + 5 جواهر
     //==================================================
 
     final firstReward =
         await PuzzleProgressManager.claimFirstDailyReward();
-
-    //==================================================
-    // 🎁 إذا كانت هذه أول مرة
-    //==================================================
 
     if (firstReward) {
       await RewardManager.addStars(10);
@@ -598,11 +560,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
         _showRewardUI = false;
         _isClaimed = false;
 
-        //================================================
-        // ❌ تأكيد بقاء الوهج مغلقًا
-        // حتى اليوم التالي.
-        //================================================
-
         _glowEnabled = false;
       });
 
@@ -612,7 +569,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     }
 
     //==================================================
-    // 🎁 المكافأة اليومية العادية
+    // 🎁 المكافأة اليومية
     //==================================================
 
     final reward =
@@ -643,10 +600,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
       _showRewardUI = false;
       _isClaimed = false;
 
-      //================================================
-      // ❌ الوهج مغلق حتى اليوم التالي
-      //================================================
-
       _glowEnabled = false;
     });
 
@@ -654,7 +607,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   }
 
   //==================================================
-  // 🔢 عد المكافأة تدريجياً
+  // 🔢 عد المكافأة
   //==================================================
 
   void _startCountingReward() {
@@ -714,10 +667,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   }
 
   //==================================================
-  // 🎁🎉 عد مكافأة البداية
-  // 📺 500 رصيد مشاهدات
-  // ⭐ 10 نجوم
-  // 💎 5 جواهر
+  // 🎁 عد مكافأة البداية
   //==================================================
 
   void _startCountingFirstReward() {
@@ -787,7 +737,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   }
 
   //==================================================
-  // 🔄 إعادة الصندوق إلى مكانه الطبيعي
+  // 🔄 إعادة الصندوق
   //==================================================
 
   Future<void> _returnBoxToPosition() async {
@@ -795,64 +745,49 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
       return;
     }
 
-    //==================================================
-    // نعيد حالة حركة الدخول من البداية ثم نشغلها
-    // بحيث يرجع الصندوق بسلاسة إلى موضعه الأصلي.
-    //==================================================
-
-    _mainController.reset();
-
-    await _mainController.forward();
+    await _mainController.reverse();
 
     if (!mounted) {
       return;
     }
-  }
-
-  //==================================================
-  // ✅ استلام المكافأة
-  //==================================================
-
-  Future<void> _claimReward() async {
-    if (_isClaimed || _isDoubling) {
-      return;
-    }
-
-    _rewardTimer?.cancel();
 
     setState(() {
-      _isClaimed = true;
-
-      //================================================
-      // إخفاء لوحة المكافأة
-      //================================================
-
+      _isOpen = false;
       _showRewardUI = false;
-
-      //================================================
-      // الوهج يبقى مغلقًا
-      //================================================
-
+      _isClaimed = false;
+      _isDoubling = false;
       _glowEnabled = false;
     });
-
-    //==================================================
-    // 🔄 إعادة الصندوق إلى مكانه الطبيعي
-    //==================================================
-
-    await _returnBoxToPosition();
-
-    //==================================================
-    // 📦 الصندوق يبقى ظاهرًا
-    // ⏱️ العداد يبقى ظاهرًا
-    // ❌ لا Navigator.pop()
-    //==================================================
 
     widget.onRewardClaimed();
   }
 
   //==================================================
-  // 📺 مضاعفة المكافأة بالإعلان
+  // ❌ إلغاء / إنهاء المكافأة
+  //==================================================
+
+  Future<void> _cancelReward() async {
+    if (_isDoubling) {
+      return;
+    }
+
+    _rewardTimer?.cancel();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isClaimed = true;
+      _showRewardUI = false;
+      _glowEnabled = false;
+    });
+
+    await _returnBoxToPosition();
+  }
+
+  //==================================================
+  // 📺 مضاعفة المكافأة
   //==================================================
 
   void _watchAdToDouble() {
@@ -920,7 +855,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
           return;
         }
 
-        await _claimReward();
+        await _returnBoxToPosition();
       },
       onAdFailed: () {
         if (!mounted) {
@@ -987,106 +922,52 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              //==================================================
-              // 📦 الصندوق
-              //==================================================
-
               GestureDetector(
                 onTap: _onBoxTap,
-                child: AnimatedBuilder(
-                  animation: _rewardGlowController,
-                  builder: (
-                    context,
-                    child,
-                  ) {
-                    //================================================
-                    // ✨ الوهج يظهر فقط عندما:
-                    //
-                    // 1. المكافأة متاحة
-                    // 2. الصندوق مغلق
-                    // 3. المكافأة لم تستلم
-                    // 4. الوهج مفعّل
-                    //
-                    // بمجرد الضغط يختفي الوهج.
-                    //================================================
-
-                    final bool shouldGlow =
-                        _glowEnabled &&
-                        !_isOpen &&
-                        !_isClaimed &&
-                        _dailyRewardAvailable;
-
-                    if (!shouldGlow) {
-                      return child!;
-                    }
-
-                    //================================================
-                    // ✨ حركة الصندوق عكس الوهج
-                    //================================================
-
-                    final pulseScale =
-                        _rewardPulseScale;
-
-                    return Transform.scale(
-                      scale: pulseScale,
-                      child: Container(
-                        width: 200,
-                        height: 200,
-                        decoration:
-                            _rewardGlowDecoration(),
-                        child: child,
+                child: SizedBox(
+                  width: 200,
+                  height: 200,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(
+                      milliseconds: 350,
+                    ),
+                    transitionBuilder: (
+                      child,
+                      animation,
+                    ) {
+                      return ScaleTransition(
+                        scale: animation,
+                        child: FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: Image.asset(
+                      _isOpen
+                          ? 'assets/images/rewards/daly_box_open.png'
+                          : 'assets/images/rewards/daly_box_close.png',
+                      key: ValueKey<bool>(
+                        _isOpen,
                       ),
-                    );
-                  },
-                  child: SizedBox(
-                    width: 200,
-                    height: 200,
-                    child: AnimatedSwitcher(
-                      duration: const Duration(
-                        milliseconds: 350,
-                      ),
-                      transitionBuilder: (
-                        child,
-                        animation,
+                      fit: BoxFit.contain,
+                      errorBuilder: (
+                        _,
+                        __,
+                        ___,
                       ) {
-                        return ScaleTransition(
-                          scale: animation,
-                          child: FadeTransition(
-                            opacity: animation,
-                            child: child,
-                          ),
+                        return Icon(
+                          _isOpen
+                              ? Icons.card_giftcard_rounded
+                              : Icons.card_giftcard_outlined,
+                          size: 100,
+                          color: Colors.amber,
                         );
                       },
-                      child: Image.asset(
-                        _isOpen
-                            ? 'assets/images/rewards/daly_box_open.png'
-                            : 'assets/images/rewards/daly_box_close.png',
-                        key: ValueKey<bool>(
-                          _isOpen,
-                        ),
-                        fit: BoxFit.contain,
-                        errorBuilder: (
-                          _,
-                          __,
-                          ___,
-                        ) {
-                          return Icon(
-                            _isOpen
-                                ? Icons.card_giftcard_rounded
-                                : Icons.card_giftcard_outlined,
-                            size: 100,
-                            color: Colors.amber,
-                          );
-                        },
-                      ),
                     ),
                   ),
                 ),
               ),
-
-              //==================================================
-              // 👆 رسالة فتح الصندوق
-              //==================================================
 
               if (!_isOpen &&
                   _dailyRewardAvailable)
@@ -1104,10 +985,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
                     ),
                   ),
                 ),
-
-              //==================================================
-              // ⏱️ العداد تحت الصندوق
-              //==================================================
 
               _buildCountdown(),
             ],
@@ -1185,10 +1062,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              //==================================================
-              // 🎉 العنوان
-              //==================================================
-
               const Text(
                 'مبروك! حصلت على مكافأتك',
                 textAlign: TextAlign.center,
@@ -1202,10 +1075,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
               const SizedBox(
                 height: 15,
               ),
-
-              //==================================================
-              // 📺 أو 🪙 ⭐ 💎
-              //==================================================
 
               Row(
                 mainAxisAlignment:
@@ -1230,17 +1099,13 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
                 ],
               ),
 
-              //==================================================
-              // 🎮 الأزرار
-              //==================================================
-
               if (_showRewardUI) ...[
                 const SizedBox(
                   height: 20,
                 ),
 
                 //==================================================
-                // ✅ استلام
+                // 📺 مكافأة إضافية
                 //==================================================
 
                 SizedBox(
@@ -1269,15 +1134,25 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
                         _isDoubling ||
                                 _isClaimed
                             ? null
-                            : _claimReward,
-                    child: const Text(
-                      'استلام المكافأة',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight:
-                            FontWeight.bold,
-                      ),
-                    ),
+                            : _watchAdToDouble,
+                    child: _isDoubling
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child:
+                                CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.black,
+                            ),
+                          )
+                        : const Text(
+                            'مكافأة إضافية 🎥',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight:
+                                  FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
 
@@ -1286,33 +1161,47 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
                 ),
 
                 //==================================================
-                // 📺 مضاعفة المكافأة
+                // ❌ إلغاء
                 //==================================================
 
-                TextButton(
-                  onPressed:
-                      _isDoubling ||
-                              _isClaimed
-                          ? null
-                          : _watchAdToDouble,
-                  child: _isDoubling
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child:
-                              CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color:
-                                Colors.amberAccent,
-                          ),
-                        )
-                      : const Text(
-                          'مضاعفة المكافأة عبر الفيديو 🎥',
-                          style: TextStyle(
-                            color:
-                                Colors.amberAccent,
-                          ),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed:
+                        _isDoubling ||
+                                _isClaimed
+                            ? null
+                            : _cancelReward,
+                    style:
+                        OutlinedButton.styleFrom(
+                      foregroundColor:
+                          Colors.white,
+                      side: BorderSide(
+                        color:
+                            Colors.white.withOpacity(
+                          0.5,
                         ),
+                      ),
+                      padding:
+                          const EdgeInsets.symmetric(
+                        vertical: 11,
+                      ),
+                      shape:
+                          RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(
+                          12,
+                        ),
+                      ),
+                    ),
+                    child: const Text(
+                      'إلغاء',
+                      style: TextStyle(
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ],
@@ -1338,10 +1227,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
         child: Stack(
           alignment: Alignment.center,
           children: [
-            //==================================================
-            // 🌑 الخلفية
-            //==================================================
-
             Container(
               color:
                   Colors.black.withOpacity(
@@ -1349,15 +1234,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
               ),
             ),
 
-            //==================================================
-            // 🎁 الصندوق + العداد
-            //==================================================
-
             _buildBox(),
-
-            //==================================================
-            // 🎁 لوحة المكافأة
-            //==================================================
 
             _buildRewardPanel(),
           ],
