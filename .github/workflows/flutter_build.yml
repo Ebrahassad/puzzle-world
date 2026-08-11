@@ -37,6 +37,27 @@ jobs:
           java-version: '17'
 
       # ============================================================
+      # 🔐 Setup Release Keystore
+      # ============================================================
+      - name: Setup Release Keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/puzzle-world-release.jks
+
+          cat > android/key.properties <<EOF
+          storePassword=$KEYSTORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=../puzzle-world-release.jks
+          EOF
+
+          echo "Release signing configuration created."
+
+      # ============================================================
       # 📊 حجم assets قبل الضغط
       # ============================================================
       - name: Check assets size BEFORE compression
@@ -66,27 +87,18 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       # ============================================================
-      # 🗜️ تثبيت oxipng بدون APT
+      # 🗜️ تثبيت oxipng
       # ============================================================
       - name: Install PNG optimizer
         run: |
-          echo "========================================"
-          echo "INSTALLING OXIPNG"
-          echo "========================================"
-
           cargo install oxipng --locked
-
           oxipng --version
 
       # ============================================================
-      # 🗜️ ضغط جميع PNG تلقائياً
+      # 🗜️ ضغط جميع PNG
       # ============================================================
       - name: Optimize all PNG images
         run: |
-          echo "========================================"
-          echo "OPTIMIZING PNG IMAGES"
-          echo "========================================"
-
           find assets -type f -iname "*.png" -print0 | \
           xargs -0 -r oxipng \
             -o 4 \
@@ -185,6 +197,21 @@ jobs:
         run: dart run flutter_launcher_icons
 
       # ============================================================
+      # 🔍 Verify Keystore
+      # ============================================================
+      - name: Verify Release Signing
+        run: |
+          echo "========================================"
+          echo "VERIFYING RELEASE SIGNING"
+          echo "========================================"
+
+          test -f android/puzzle-world-release.jks
+          test -f android/key.properties
+
+          echo "Release keystore found."
+          echo "Signing configuration found."
+
+      # ============================================================
       # 🏗️ Build Release APK
       # ============================================================
       - name: Build APK
@@ -202,7 +229,6 @@ jobs:
           ls -lh build/app/outputs/flutter-apk/
 
           echo ""
-          echo "APK size:"
           du -h build/app/outputs/flutter-apk/app-release.apk
 
       # ============================================================
