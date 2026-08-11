@@ -46,6 +46,18 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   bool _isDoubling = false;
 
   //==================================================
+  // ✨ التحكم الصريح في الوهج
+  //
+  // الوهج يعمل فقط عندما تكون المكافأة جاهزة
+  // وقبل الضغط على الصندوق.
+  //
+  // بمجرد الضغط على الصندوق يتم تعطيله.
+  // ولا يعود إلا عند توفر المكافأة في اليوم التالي.
+  //==================================================
+
+  bool _glowEnabled = true;
+
+  //==================================================
   // 🎁 قيم المكافأة اليومية
   //==================================================
 
@@ -147,17 +159,8 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     //==================================================
     // ✨ وهج المكافأة اليومية
     //
-    // نفس أسلوب وهج المحفظة والرجوع في IslandScreen.
-    //
-    // عند ارتفاع قيمة الأنيميشن:
-    // - الوهج يصبح أقوى
-    // - الصندوق يصغر قليلاً
-    //
-    // عند انخفاض القيمة:
-    // - الوهج يخف
-    // - الصندوق يكبر قليلاً
-    //
-    // النتيجة: حركة تناغمية عكسية.
+    // يعمل باستمرار في الخلفية، لكن يتم عرضه فقط
+    // عندما تكون المكافأة جاهزة.
     //==================================================
 
     _rewardGlowController = AnimationController(
@@ -230,15 +233,21 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
           _dailyRewardAvailable = true;
           _remainingTime = Duration.zero;
 
-          // إعادة الصندوق إلى الحالة الأصلية
           _isOpen = false;
           _isClaimed = false;
           _showRewardUI = false;
+          _isDoubling = false;
 
           _displayCoins = 0;
           _displayStars = 0;
           _displayGems = 0;
           _displayAdsBalance = 0;
+
+          //================================================
+          // ✨ عودة الوهج عند توفر مكافأة جديدة
+          //================================================
+
+          _glowEnabled = true;
         });
 
         return;
@@ -249,6 +258,12 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
       setState(() {
         _dailyRewardAvailable = false;
         _remainingTime = remaining;
+
+        //================================================
+        // ❌ المكافأة غير متاحة = لا يوجد وهج
+        //================================================
+
+        _glowEnabled = false;
       });
     } catch (_) {
       // لا نوقف الواجهة عند حدوث خطأ.
@@ -264,7 +279,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
       return;
     }
 
-    // إذا كانت المكافأة متاحة بالفعل
     if (_dailyRewardAvailable) {
       return;
     }
@@ -281,7 +295,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
 
         _dailyRewardAvailable = true;
 
-        // إعادة الصندوق إلى الحالة المغلقة
         _isOpen = false;
         _isClaimed = false;
         _showRewardUI = false;
@@ -291,6 +304,13 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
         _displayStars = 0;
         _displayGems = 0;
         _displayAdsBalance = 0;
+
+        //================================================
+        // ✨ المكافأة الجديدة أصبحت جاهزة
+        // لذلك يعود الوهج تلقائيًا.
+        //================================================
+
+        _glowEnabled = true;
       });
 
       return;
@@ -298,6 +318,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
 
     setState(() {
       _remainingTime = newRemaining;
+      _glowEnabled = false;
     });
   }
 
@@ -341,8 +362,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
 
   //==================================================
   // ✨ ديكور وهج صندوق المكافأة
-  //
-  // مطابق لفكرة وهج المحفظة والرجوع في IslandScreen
   //==================================================
 
   BoxDecoration _rewardGlowDecoration() {
@@ -366,16 +385,11 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
 
   //==================================================
   // ✨ مقياس الصندوق
-  //
-  // الحركة عكس الوهج:
-  //
-  // وهج قوي  → الصندوق يصغر قليلاً
-  // وهج ضعيف → الصندوق يكبر قليلاً
-  //
   //==================================================
 
   double get _rewardPulseScale {
-    if (!_dailyRewardAvailable ||
+    if (!_glowEnabled ||
+        !_dailyRewardAvailable ||
         _isOpen ||
         _isClaimed) {
       return 1.0;
@@ -535,6 +549,20 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     }
 
     //==================================================
+    // ❌ إيقاف الوهج فور الضغط
+    //
+    // مهم:
+    // لا ننتظر انتهاء عملية جلب المكافأة.
+    // بمجرد الضغط يختفي الوهج.
+    //==================================================
+
+    if (mounted) {
+      setState(() {
+        _glowEnabled = false;
+      });
+    }
+
+    //==================================================
     // 🎁 مكافأة البداية
     // 500 رصيد مشاهدات + 10 نجوم + 5 جواهر
     //==================================================
@@ -569,6 +597,13 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
 
         _showRewardUI = false;
         _isClaimed = false;
+
+        //================================================
+        // ❌ تأكيد بقاء الوهج مغلقًا
+        // حتى اليوم التالي.
+        //================================================
+
+        _glowEnabled = false;
       });
 
       _startCountingFirstReward();
@@ -607,6 +642,12 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
 
       _showRewardUI = false;
       _isClaimed = false;
+
+      //================================================
+      // ❌ الوهج مغلق حتى اليوم التالي
+      //================================================
+
+      _glowEnabled = false;
     });
 
     _startCountingReward();
@@ -746,10 +787,33 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   }
 
   //==================================================
+  // 🔄 إعادة الصندوق إلى مكانه الطبيعي
+  //==================================================
+
+  Future<void> _returnBoxToPosition() async {
+    if (!mounted) {
+      return;
+    }
+
+    //==================================================
+    // نعيد حالة حركة الدخول من البداية ثم نشغلها
+    // بحيث يرجع الصندوق بسلاسة إلى موضعه الأصلي.
+    //==================================================
+
+    _mainController.reset();
+
+    await _mainController.forward();
+
+    if (!mounted) {
+      return;
+    }
+  }
+
+  //==================================================
   // ✅ استلام المكافأة
   //==================================================
 
-  void _claimReward() {
+  Future<void> _claimReward() async {
     if (_isClaimed || _isDoubling) {
       return;
     }
@@ -759,14 +823,28 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     setState(() {
       _isClaimed = true;
 
-      // إخفاء لوحة المكافأة فقط
-      // وليس الصندوق.
+      //================================================
+      // إخفاء لوحة المكافأة
+      //================================================
+
       _showRewardUI = false;
+
+      //================================================
+      // الوهج يبقى مغلقًا
+      //================================================
+
+      _glowEnabled = false;
     });
 
     //==================================================
-    // 📦 الصندوق يبقى ظاهراً
-    // ⏱️ العداد يبقى تحته
+    // 🔄 إعادة الصندوق إلى مكانه الطبيعي
+    //==================================================
+
+    await _returnBoxToPosition();
+
+    //==================================================
+    // 📦 الصندوق يبقى ظاهرًا
+    // ⏱️ العداد يبقى ظاهرًا
     // ❌ لا Navigator.pop()
     //==================================================
 
@@ -842,7 +920,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
           return;
         }
 
-        _claimReward();
+        await _claimReward();
       },
       onAdFailed: () {
         if (!mounted) {
@@ -922,10 +1000,18 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
                     child,
                   ) {
                     //================================================
-                    // ✨ الوهج يعمل فقط عندما تكون المكافأة جاهزة
+                    // ✨ الوهج يظهر فقط عندما:
+                    //
+                    // 1. المكافأة متاحة
+                    // 2. الصندوق مغلق
+                    // 3. المكافأة لم تستلم
+                    // 4. الوهج مفعّل
+                    //
+                    // بمجرد الضغط يختفي الوهج.
                     //================================================
 
                     final bool shouldGlow =
+                        _glowEnabled &&
                         !_isOpen &&
                         !_isClaimed &&
                         _dailyRewardAvailable;
