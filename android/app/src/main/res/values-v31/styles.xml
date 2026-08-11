@@ -4,15 +4,13 @@
 
     <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
 
-        <!-- خلفية شاشة Android 12 الافتراضية -->
+        <!-- خلفية شاشة Android 12 -->
         <item name="android:windowSplashScreenBackground">@color/splash_color</item>
 
-        <!-- لا نحدد Splash Icon مخصصة -->
+        <!-- الأيقونة تستخدم أيقونة التطبيق الافتراضية للنظام -->
 
-        <!-- منع العنوان -->
         <item name="android:windowNoTitle">true</item>
 
-        <!-- الخلفية -->
         <item name="android:windowBackground">@color/splash_color</item>
 
     </style>
