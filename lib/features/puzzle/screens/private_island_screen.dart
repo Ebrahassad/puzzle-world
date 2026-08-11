@@ -24,11 +24,7 @@ import '../managers/puzzle_progress_manager.dart';
 ///      8 × 8
 /// 4. حفظ مسار الصورة في نظام الجزيرة الخاصة.
 /// 5. الانتقال إلى PuzzleGameScreen.
-/// 6. اكتشاف وجود لعبة محفوظة سابقًا (نفس نظام حفظ الجزيرة
-///    الخاصة المستقل: privateIslandGameStateKey +
-///    privateIslandImagePathKey) وعرض خيار "متابعة" مباشرة
-///    بدل إجبار المستخدم على اختيار صورة جديدة في كل مرة.
-///
+/// 6. اكتشاف وجود لعبة محفوظة سابقًا.
 /// ===============================================================
 class PrivateIslandScreen extends StatefulWidget {
   const PrivateIslandScreen({super.key});
@@ -73,14 +69,18 @@ class _PrivateIslandScreenState
   void initState() {
     super.initState();
 
+    // ============================================================
+    // 🔍 حركة التكبير والتصغير
+    // ============================================================
+
     _floatingController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
     )..repeat(reverse: true);
 
     _floatingAnimation = Tween<double>(
-      begin: -8,
-      end: 8,
+      begin: 0.94,
+      end: 1.06,
     ).animate(
       CurvedAnimation(
         parent: _floatingController,
@@ -110,10 +110,7 @@ class _PrivateIslandScreenState
         await PuzzleProgressManager.hasValidPrivateIslandSave();
 
     if (!isValid) {
-      // ينظف فقط إذا كان هناك حفظ ناقص/تالف (مثلًا حالة بازل
-      // بدون صورة، أو صورة بدون حالة بازل، أو صورة محذوفة).
-      await PuzzleProgressManager
-          .clearInvalidPrivateIslandSave();
+      await PuzzleProgressManager.clearInvalidPrivateIslandSave();
 
       if (!mounted) {
         return;
@@ -129,12 +126,10 @@ class _PrivateIslandScreenState
     }
 
     final imagePath =
-        await PuzzleProgressManager
-            .getPrivateIslandImagePath();
+        await PuzzleProgressManager.getPrivateIslandImagePath();
 
     final state =
-        await PuzzleProgressManager
-            .loadPrivateIslandGameState();
+        await PuzzleProgressManager.loadPrivateIslandGameState();
 
     int gridSize = 4;
 
@@ -167,11 +162,6 @@ class _PrivateIslandScreenState
       return;
     }
 
-    // ----------------------------------------------------------
-    // 🔒 تحقق أخير وآمن من وجود الملف قبل فتح اللعبة، تفاديًا
-    // لأي احتمال أن يكون الملف قد حُذف بعد فحصنا الأول.
-    // ----------------------------------------------------------
-
     bool exists = false;
 
     try {
@@ -181,8 +171,7 @@ class _PrivateIslandScreenState
     }
 
     if (!exists) {
-      await PuzzleProgressManager
-          .clearInvalidPrivateIslandSave();
+      await PuzzleProgressManager.clearInvalidPrivateIslandSave();
 
       if (!mounted) {
         return;
@@ -214,11 +203,6 @@ class _PrivateIslandScreenState
         ),
       ),
     );
-
-    // ----------------------------------------------------------
-    // عند العودة من اللعبة، نعيد فحص حالة الحفظ (قد يكون
-    // المستخدم أنهى اللعبة أو بدأ لعبة جديدة).
-    // ----------------------------------------------------------
 
     if (!mounted) {
       return;
@@ -254,10 +238,6 @@ class _PrivateIslandScreenState
       studioOpened = true;
 
       try {
-        // ======================================================
-        // 🖼️ اختيار الصورة
-        // ======================================================
-
         final XFile? picked =
             await _imagePicker.pickImage(
           source: ImageSource.gallery,
@@ -276,11 +256,6 @@ class _PrivateIslandScreenState
           return;
         }
 
-        // ======================================================
-        // 🪄 تجهيز الصورة لتكون مربعة
-        // بدون قص أي جزء من الصورة.
-        // ======================================================
-
         final String preparedPath =
             await _prepareSquareImage(
           picked.path,
@@ -289,10 +264,6 @@ class _PrivateIslandScreenState
         if (!mounted) {
           return;
         }
-
-        // ======================================================
-        // 🎯 اختيار مستوى الصعوبة
-        // ======================================================
 
         final int? gridSize =
             await _showDifficultyDialog();
@@ -309,25 +280,8 @@ class _PrivateIslandScreenState
           return;
         }
 
-        // ======================================================
-        // 🆕 صورة جديدة = لعبة جديدة.
-        //
-        // نحذف أي حفظ سابق للجزيرة الخاصة (إن وُجد) قبل بدء
-        // اللعبة بصورة مختلفة، حتى لا يحاول PuzzleGameScreen
-        // مطابقة حالة بازل قديمة مع صورة جديدة عن طريق الخطأ.
-        // (لا نلمس progressKey إطلاقًا هنا).
-        // ======================================================
-
         await PuzzleProgressManager
             .clearPrivateIslandGameState();
-
-        // ======================================================
-        // 🔄 حفظ صورة الجزيرة الخاصة
-        //
-        // هذه الدالة موجودة فعليًا في PuzzleProgressManager الحالي.
-        //
-        // ولا علاقة لها بحفظ المراحل العادية.
-        // ======================================================
 
         await PuzzleProgressManager
             .savePrivateIslandImagePath(
@@ -342,24 +296,15 @@ class _PrivateIslandScreenState
           _isPicking = false;
         });
 
-        // ======================================================
-        // 🎮 فتح لعبة الجزيرة الخاصة
-        // ======================================================
-
         await Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) =>
-                PuzzleGameScreen(
+            builder: (_) => PuzzleGameScreen(
               customImagePath: preparedPath,
               isCustomImage: true,
               customGridSize: gridSize,
             ),
           ),
         );
-
-        // ======================================================
-        // تحديث حالة الحفظ بعد العودة من اللعبة
-        // ======================================================
 
         if (!mounted) {
           return;
@@ -627,10 +572,6 @@ class _PrivateIslandScreenState
 
                 const SizedBox(height: 18),
 
-                // ==================================================
-                // 4 × 4
-                // ==================================================
-
                 _DifficultyOption(
                   label: 'سهل',
                   subtitle: '4 × 4',
@@ -647,10 +588,6 @@ class _PrivateIslandScreenState
 
                 const SizedBox(height: 12),
 
-                // ==================================================
-                // 6 × 6
-                // ==================================================
-
                 _DifficultyOption(
                   label: 'متوسط',
                   subtitle: '6 × 6',
@@ -665,10 +602,6 @@ class _PrivateIslandScreenState
                 ),
 
                 const SizedBox(height: 12),
-
-                // ==================================================
-                // 8 × 8
-                // ==================================================
 
                 _DifficultyOption(
                   label: 'خبير',
@@ -754,7 +687,9 @@ class _PrivateIslandScreenState
             ),
 
             // ======================================================
-            // 🏝️ الجزيرة العائمة
+            // 🏝️ الجزيرة
+            // حركة تكبير وتصغير بدل الطفو
+            // وتم إنزالها إلى أسفل الشاشة
             // ======================================================
 
             Builder(
@@ -770,10 +705,10 @@ class _PrivateIslandScreenState
                 );
 
                 final double islandTop =
-                    (screenSize.height * 0.13)
+                    (screenSize.height * 0.40)
                         .clamp(
-                  115.0,
-                  145.0,
+                  260.0,
+                  430.0,
                 );
 
                 return Align(
@@ -791,12 +726,9 @@ class _PrivateIslandScreenState
                         context,
                         child,
                       ) {
-                        return Transform.translate(
-                          offset: Offset(
-                            0,
-                            _floatingAnimation
-                                .value,
-                          ),
+                        return Transform.scale(
+                          scale:
+                              _floatingAnimation.value,
                           child: child,
                         );
                       },
@@ -837,13 +769,38 @@ class _PrivateIslandScreenState
                     CrossAxisAlignment
                         .stretch,
                 children: [
-                  _buildHeaderBar(
+                  // ==================================================
+                  // 🔝 العنوان والأيقونات
+                  // الشريط العلوي أُزيل
+                  // ==================================================
+
+                  _buildPageHeader(
                     context,
                   ),
 
-                  const Spacer(
-                    flex: 3,
+                  // ==================================================
+                  // 🖼️ استوديو الصور تحت العنوان
+                  // ==================================================
+
+                  const SizedBox(height: 18),
+
+                  Padding(
+                    padding:
+                        const EdgeInsets
+                            .symmetric(
+                      horizontal: 20,
+                    ),
+                    child:
+                        _buildStudioCard(),
                   ),
+
+                  const Spacer(
+                    flex: 1,
+                  ),
+
+                  // ==================================================
+                  // ▶️ اللعبة المحفوظة
+                  // ==================================================
 
                   if (!_checkingSavedGame &&
                       _hasSavedGame)
@@ -860,19 +817,7 @@ class _PrivateIslandScreenState
                           _buildContinueCard(),
                     ),
 
-                  Padding(
-                    padding:
-                        const EdgeInsets
-                            .symmetric(
-                      horizontal: 20,
-                    ),
-                    child:
-                        _buildStudioCard(),
-                  ),
-
-                  const Spacer(
-                    flex: 1,
-                  ),
+                  const SizedBox(height: 12),
                 ],
               ),
             ),
@@ -883,53 +828,29 @@ class _PrivateIslandScreenState
   }
 
   // ============================================================
-  // 🔝 الشريط العلوي
+  // 🔝 عنوان الصفحة بعد إزالة الشريط العلوي
   // ============================================================
 
-  Widget _buildHeaderBar(
+  Widget _buildPageHeader(
     BuildContext context,
   ) {
-    return Container(
-      margin:
-          const EdgeInsets.fromLTRB(
-        16,
-        12,
-        16,
-        0,
-      ),
+    return Padding(
       padding:
-          const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 10,
-      ),
-      decoration:
-          BoxDecoration(
-        color:
-            const Color(0xFF2E1A47),
-        borderRadius:
-            BorderRadius.circular(16),
-        border: Border.all(
-          color:
-              const Color(0xFFB8860B),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color:
-                Colors.black.withOpacity(
-              0.4,
-            ),
-            blurRadius: 8,
-            offset:
-                const Offset(0, 4),
-          ),
-        ],
+          const EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        0,
       ),
       child: Row(
         children: [
+          // ========================================================
+          // 🖼️ أيقونة تحميل الصورة
+          // ========================================================
+
           SizedBox(
-            width: 42,
-            height: 42,
+            width: 48,
+            height: 48,
             child: Image.asset(
               'assets/images/ui/add_pic.png',
               fit: BoxFit.contain,
@@ -940,17 +861,19 @@ class _PrivateIslandScreenState
                 stackTrace,
               ) {
                 return const Icon(
-                  Icons
-                      .add_photo_alternate,
-                  color:
-                      Colors.white,
-                  size: 32,
+                  Icons.add_photo_alternate,
+                  color: Colors.white,
+                  size: 34,
                 );
               },
             ),
           ),
 
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
+
+          // ========================================================
+          // 🏝️ عنوان الجزيرة الغامضة
+          // ========================================================
 
           const Expanded(
             child: Text(
@@ -958,32 +881,70 @@ class _PrivateIslandScreenState
               textAlign:
                   TextAlign.center,
               style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
+                color:
+                    Color(0xFFD9A7FF),
+                fontSize: 24,
                 fontWeight:
-                    FontWeight.bold,
-                letterSpacing: 0.5,
+                    FontWeight.w900,
+                letterSpacing: 0.8,
+                shadows: [
+                  Shadow(
+                    color:
+                        Color(0xFF9B4DFF),
+                    blurRadius: 14,
+                    offset:
+                        Offset(0, 0),
+                  ),
+                  Shadow(
+                    color:
+                        Color(0xFF6A1B9A),
+                    blurRadius: 24,
+                    offset:
+                        Offset(0, 4),
+                  ),
+                  Shadow(
+                    color:
+                        Colors.black87,
+                    blurRadius: 6,
+                    offset:
+                        Offset(0, 3),
+                  ),
+                ],
               ),
             ),
           ),
 
           const SizedBox(width: 12),
 
-          IconButton(
-            onPressed: () =>
-                Navigator.of(
+          // ========================================================
+          // ◀️ زر الرجوع
+          // ========================================================
+
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context).maybePop();
+            },
+            child: SizedBox(
+              width: 46,
+              height: 46,
+              child: Image.asset(
+                'assets/images/ui/back_screen.png',
+                fit: BoxFit.contain,
+                errorBuilder:
+                    (
                   context,
-                ).maybePop(),
-            icon: const Icon(
-              Icons.arrow_forward_ios,
-              color:
-                  Colors.white70,
-              size: 20,
+                  error,
+                  stackTrace,
+                ) {
+                  return const Icon(
+                    Icons.arrow_forward,
+                    color:
+                        Colors.white,
+                    size: 30,
+                  );
+                },
+              ),
             ),
-            constraints:
-                const BoxConstraints(),
-            padding:
-                EdgeInsets.zero,
           ),
         ],
       ),
@@ -998,16 +959,24 @@ class _PrivateIslandScreenState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: const Color(0xFF1B3A57),
+        borderRadius:
+            BorderRadius.circular(20),
+        color:
+            const Color(0xFF1B3A57),
         border: Border.all(
-          color: const Color(0xFF4CAF7D).withOpacity(0.6),
+          color:
+              const Color(0xFF4CAF7D)
+                  .withOpacity(0.6),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.35),
+            color:
+                Colors.black.withOpacity(
+              0.35,
+            ),
             blurRadius: 14,
-            offset: const Offset(0, 6),
+            offset:
+                const Offset(0, 6),
           ),
         ],
       ),
@@ -1015,7 +984,8 @@ class _PrivateIslandScreenState
         children: [
           if (_savedImagePath != null)
             ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius:
+                  BorderRadius.circular(12),
               child: SizedBox(
                 width: 48,
                 height: 48,
@@ -1029,7 +999,8 @@ class _PrivateIslandScreenState
                   ) {
                     return const Icon(
                       Icons.image_not_supported,
-                      color: Colors.white54,
+                      color:
+                          Colors.white54,
                     );
                   },
                 ),
@@ -1044,7 +1015,8 @@ class _PrivateIslandScreenState
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 14,
-                fontWeight: FontWeight.w600,
+                fontWeight:
+                    FontWeight.w600,
               ),
             ),
           ),
@@ -1052,11 +1024,18 @@ class _PrivateIslandScreenState
           const SizedBox(width: 10),
 
           ElevatedButton(
-            onPressed: _continueSavedGame,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4CAF7D),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            onPressed:
+                _continueSavedGame,
+            style:
+                ElevatedButton.styleFrom(
+              backgroundColor:
+                  const Color(0xFF4CAF7D),
+              shape:
+                  RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(
+                  12,
+                ),
               ),
               elevation: 0,
             ),
@@ -1064,7 +1043,8 @@ class _PrivateIslandScreenState
               'متابعة',
               style: TextStyle(
                 color: Colors.white,
-                fontWeight: FontWeight.w700,
+                fontWeight:
+                    FontWeight.w700,
               ),
             ),
           ),
