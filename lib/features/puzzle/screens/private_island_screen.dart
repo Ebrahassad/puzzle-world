@@ -155,6 +155,16 @@ class _PrivateIslandScreenState
   // ▶️ متابعة اللعبة المحفوظة
   // ============================================================
 
+  // ============================================================
+  // ▶️ متابعة اللعبة المحفوظة
+  //
+  // 🎁 Rewarded Ad:
+  // - إذا كان الإعلان جاهزًا → يظهر قبل الدخول.
+  // - إذا لم يكن جاهزًا → الدخول مباشرة.
+  // - لا يتم انتظار الإعلان.
+  // - AdsManager يتولى إعادة تحميل الإعلان في الخلفية.
+  // ============================================================
+
   Future<void> _continueSavedGame() async {
     final imagePath = _savedImagePath;
 
@@ -171,7 +181,8 @@ class _PrivateIslandScreenState
     }
 
     if (!exists) {
-      await PuzzleProgressManager.clearInvalidPrivateIslandSave();
+      await PuzzleProgressManager
+          .clearInvalidPrivateIslandSave();
 
       if (!mounted) {
         return;
@@ -194,27 +205,61 @@ class _PrivateIslandScreenState
       return;
     }
 
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => PuzzleGameScreen(
-          customImagePath: imagePath,
-          isCustomImage: true,
-          customGridSize: _savedGridSize,
-        ),
-      ),
-    );
+    // ==========================================================
+    // 🔒 حماية من تنفيذ الانتقال أكثر من مرة
+    // ==========================================================
 
-    if (!mounted) {
-      return;
+    bool gameOpened = false;
+
+    Future<void> openSavedGame() async {
+      if (gameOpened || !mounted) {
+        return;
+      }
+
+      gameOpened = true;
+
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => PuzzleGameScreen(
+            customImagePath: imagePath,
+            isCustomImage: true,
+            customGridSize: _savedGridSize,
+          ),
+        ),
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _checkingSavedGame = true;
+      });
+
+      await _checkSavedGame();
     }
 
-    setState(() {
-      _checkingSavedGame = true;
-    });
+    // ==========================================================
+    // 🎁 عرض إعلان مكافأة إن كان متوفرًا
+    //
+    // إذا كان جاهزًا:
+    //     يظهر الإعلان ثم نفتح اللعبة.
+    //
+    // إذا لم يكن جاهزًا:
+    //     نفتح اللعبة مباشرة.
+    //
+    // AdsManager سيواصل تحميل الإعلان في الخلفية.
+    // ==========================================================
 
-    await _checkSavedGame();
+    AdsManager().showRewardedAd(
+      onRewardEarned: () {
+        openSavedGame();
+      },
+      onAdFailed: () {
+        openSavedGame();
+      },
+    );
   }
-
   // ============================================================
   // 🖼️ فتح استوديو الصور
   // ============================================================
@@ -574,7 +619,7 @@ class _PrivateIslandScreenState
 
                 _DifficultyOption(
                   label: 'سهل',
-                  subtitle: '4 × 4',
+                  
                   icon:
                       Icons.sentiment_satisfied_alt,
                   color:
@@ -590,7 +635,7 @@ class _PrivateIslandScreenState
 
                 _DifficultyOption(
                   label: 'متوسط',
-                  subtitle: '6 × 6',
+                  
                   icon: Icons.extension,
                   color:
                       const Color(0xFFE0A63A),
@@ -605,7 +650,7 @@ class _PrivateIslandScreenState
 
                 _DifficultyOption(
                   label: 'خبير',
-                  subtitle: '8 × 8',
+                  
                   icon:
                       Icons.local_fire_department,
                   color:
