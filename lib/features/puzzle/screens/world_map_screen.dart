@@ -1598,122 +1598,122 @@ class _WorldMapScreenState extends State<WorldMapScreen>
     );
   }
 
-  // ============================================================
-  // ℹ️ حول التطبيق
-  // ============================================================
-  Future<void> showAboutDialog() async {
-await showDialog(
-context: context,
-builder: (dialogContext) {
-return AlertDialog(
-backgroundColor: const Color(0xFF241337),
-shape: RoundedRectangleBorder(
-borderRadius: BorderRadius.circular(22),
-),
-title: const Text(
-"حول Puzzle World",
-textAlign: TextAlign.center,
-style: TextStyle(
-color: Colors.white,
-fontWeight: FontWeight.bold,
-fontSize: 20,
-),
-),
-content: SingleChildScrollView(
-child: Column(
-mainAxisSize: MainAxisSize.min,
-children: [
-const Text(
-"Puzzle World",
-style: TextStyle(
-color: Color(0xFFD6B8FF),
-fontSize: 21,
-fontWeight: FontWeight.bold,
-),
-),
-const SizedBox(height: 6),
-const Text(
-"الإصدار 1.0.0",
-style: TextStyle(
-color: Colors.white54,
-fontSize: 12,
-),
-),
-const SizedBox(height: 16),
-
-          // ==========================================
-          // 🏝️ نظام فتح الجزر
-          // ==========================================
-          const _AboutSection(
-            title: "نظام فتح الجزر",
-            icon: Icons.public_rounded,
-            text:
-                "تفتح الجزيرة تلقائيًا بعد إكمال مراحل الجزيرة المفتوحة. "
-                "كما يمكنك استخدام النجوم لشراء أي جزيرة تريد.",
-          ),
-
-          const SizedBox(height: 10),
-
-          // ==========================================
-          // 🧩 نظام فتح المراحل
-          // ==========================================
-          const _AboutSection(
-            title: "نظام فتح المراحل",
-            icon: Icons.extension_rounded,
-            text:
-                "يمكنك فتح المراحل تلقائيًا، أو شراء أي مرحلة تريد باستخدام العملات.",
-          ),
-
-          const SizedBox(height: 10),
-
-          // ==========================================
-          // 🛍️ نظام الشراء والمكافآت
-          // ==========================================
-          const _AboutSection(
-            title: "نظام الشراء والمكافآت",
-            icon: Icons.shopping_bag_rounded,
-            text:
- "تستخدم اللعبة العملات والنجوم والجواهر لإدارة المكافآت "
-                " وفتح الميزات المختلفة استخدم المحفظة لادارة مكافئاتك.",
-          ),
-
-          const SizedBox(height: 10),
-
-          // ==========================================
-          // 👛 المحفظة
-          // ==========================================
-          
-          // ==========================================
-          // 🏝️ الجزيرة الغامضة
-          // ==========================================
-          const _AboutSection(
-            title: "الجزيرة الغامضة",
-            icon: Icons.auto_awesome_rounded,
-            text:
-                "أكمل المراحل، واشترِ الجزيرة، واستكشف عالمك الخاص.",
-          ),
-        ],
-      ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () {
-          Navigator.pop(dialogContext);
-        },
-        child: const Text(
-          "إغلاق",
+ // ============================================================
+// ℹ️ حول التطبيق
+// ============================================================
+Future<void> showAboutDialog() async {
+  await showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (dialogContext) {
+      return AlertDialog(
+        backgroundColor: const Color(0xFF241337),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+        ),
+        title: const Text(
+          "حول Puzzle World",
+          textAlign: TextAlign.center,
           style: TextStyle(
-            color: Color(0xFFD6B8FF),
-            fontSize: 14,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
           ),
         ),
-      ),
-    ],
-  );
-},
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Puzzle World",
+                style: TextStyle(
+                  color: Color(0xFFD6B8FF),
+                  fontSize: 21,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
 
-);
+              const SizedBox(height: 6),
+
+              const Text(
+                "الإصدار 1.0.0",
+                style: TextStyle(
+                  color: Colors.white54,
+                  fontSize: 12,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // ==========================================
+              // 🏝️ نظام فتح الجزر
+              // ==========================================
+              const _AboutSection(
+                title: "نظام فتح الجزر",
+                icon: Icons.public_rounded,
+                text:
+                    "تفتح الجزيرة تلقائيًا بعد إكمال مراحل الجزيرة المفتوحة. "
+                    "كما يمكنك استخدام النجوم لشراء أي جزيرة تريد.",
+              ),
+
+              const SizedBox(height: 10),
+
+              // ==========================================
+              // 🧩 نظام فتح المراحل
+              // ==========================================
+              const _AboutSection(
+                title: "نظام فتح المراحل",
+                icon: Icons.extension_rounded,
+                text:
+                    "يمكنك فتح المراحل تلقائيًا، أو شراء أي مرحلة تريد باستخدام العملات.",
+              ),
+
+              const SizedBox(height: 10),
+
+              // ==========================================
+              // 🛍️ نظام الشراء والمكافآت
+              // ==========================================
+              const _AboutSection(
+                title: "نظام الشراء والمكافآت",
+                icon: Icons.shopping_bag_rounded,
+                text:
+                    "تستخدم اللعبة العملات والنجوم والجواهر لإدارة مكافآتك "
+                    "وفتح الميزات المختلفة. استخدم المحفظة لإدارة مكافآتك.",
+              ),
+
+              const SizedBox(height: 10),
+
+              // ==========================================
+              // 🏝️ الجزيرة الغامضة
+              // ==========================================
+              const _AboutSection(
+                title: "الجزيرة الغامضة",
+                icon: Icons.auto_awesome_rounded,
+                text:
+                    "أكمل المراحل، واشترِ الجزيرة، واستكشف عالمك الخاص.",
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+            },
+            child: const Text(
+              "إغلاق",
+              style: TextStyle(
+                color: Color(0xFFD6B8FF),
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      );
+    },
+  );
 }
+
 // ================================================================
 // 🎁 صندوق المكافأة اليومية + العد التنازلي
 // ================================================================
@@ -1729,17 +1729,12 @@ class _DailyRewardMiniWidget extends StatelessWidget {
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return SizedBox(
       width: 72,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ==============================================
-          // 🎁 الصندوق
-          // ==============================================
           SizedBox(
             width: 64,
             height: 64,
@@ -1763,33 +1758,18 @@ class _DailyRewardMiniWidget extends StatelessWidget {
               },
             ),
           ),
-
-          const SizedBox(
-            height: 4,
-          ),
-
-          // ==============================================
-          // ⏱️ العد التنازلي
-          // ==============================================
+          const SizedBox(height: 4),
           Container(
             padding: const EdgeInsets.symmetric(
               horizontal: 6,
               vertical: 3,
             ),
             decoration: BoxDecoration(
-              color: const Color(
-                0xFF1A0E2A,
-              ).withOpacity(
-                0.92,
-              ),
-              borderRadius: BorderRadius.circular(
-                8,
-              ),
+              color: const Color(0xFF1A0E2A).withOpacity(0.92),
+              borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: available
-                    ? Colors.amber.withOpacity(
-                        0.80,
-                      )
+                    ? Colors.amber.withOpacity(0.80)
                     : Colors.white24,
                 width: 1,
               ),
@@ -1807,15 +1787,9 @@ class _DailyRewardMiniWidget extends StatelessWidget {
               ),
             ),
           ),
-
-          // ==============================================
-          // 🎁 حالة الصندوق
-          // ==============================================
           if (available)
             const Padding(
-              padding: EdgeInsets.only(
-                top: 2,
-              ),
+              padding: EdgeInsets.only(top: 2),
               child: Text(
                 "جاهز",
                 style: TextStyle(
@@ -1836,29 +1810,24 @@ class _DailyRewardMiniWidget extends StatelessWidget {
 // ================================================================
 class _AnimatedRoyalWallet extends StatelessWidget {
   final Animation<double> controller;
+
   const _AnimatedRoyalWallet({
     required this.controller,
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: controller,
-      builder: (
-        context,
-        child,
-      ) {
+      builder: (context, child) {
         final pulse = controller.value;
+
         return Container(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: const Color(
-                  0xFF6A35C9,
-                ).withOpacity(
+                color: const Color(0xFF6A35C9).withOpacity(
                   0.25 + pulse * 0.12,
                 ),
                 blurRadius: 16 + pulse * 5,
@@ -1889,15 +1858,10 @@ class _AnimatedRoyalImageIcon extends StatelessWidget {
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: controller,
-      builder: (
-        context,
-        child,
-      ) {
+      builder: (context, child) {
         final pulse = controller.value;
 
         return SizedBox(
@@ -1917,9 +1881,7 @@ class _AnimatedRoyalImageIcon extends StatelessWidget {
               ) {
                 return const Icon(
                   Icons.settings_rounded,
-                  color: Color(
-                    0xFFD6B8FF,
-                  ),
+                  color: Color(0xFFD6B8FF),
                   size: 29,
                 );
               },
@@ -1941,21 +1903,18 @@ class _SettingsTile extends StatelessWidget {
   final Widget? trailing;
   final VoidCallback? onTap;
   final Color iconColor;
+
   const _SettingsTile({
     required this.icon,
     required this.title,
     this.subtitle,
     this.trailing,
     this.onTap,
-    this.iconColor = const Color(
-      0xFFD6B8FF,
-    ),
+    this.iconColor = const Color(0xFFD6B8FF),
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(
         horizontal: 4,
@@ -1966,11 +1925,7 @@ class _SettingsTile extends StatelessWidget {
         height: 42,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: const Color(
-            0xFF6A35C9,
-          ).withOpacity(
-            0.16,
-          ),
+          color: const Color(0xFF6A35C9).withOpacity(0.16),
         ),
         child: Icon(
           icon,
@@ -1995,8 +1950,7 @@ class _SettingsTile extends StatelessWidget {
                 fontSize: 12,
               ),
             ),
-      trailing:
-          trailing ??
+      trailing: trailing ??
           const Icon(
             Icons.chevron_left_rounded,
             color: Colors.white38,
@@ -2013,6 +1967,7 @@ class _AboutSection extends StatelessWidget {
   final String title;
   final IconData icon;
   final String text;
+
   const _AboutSection({
     required this.title,
     required this.icon,
@@ -2020,25 +1975,15 @@ class _AboutSection extends StatelessWidget {
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(
-        14,
-      ),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(
-          0xFF6A35C9,
-        ).withOpacity(0.10),
-        borderRadius: BorderRadius.circular(
-          16,
-        ),
+        color: const Color(0xFF6A35C9).withOpacity(0.10),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(
-            0xFFD6B8FF,
-          ).withOpacity(0.12),
+          color: const Color(0xFFD6B8FF).withOpacity(0.12),
         ),
       ),
       child: Column(
@@ -2047,14 +1992,10 @@ class _AboutSection extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                color: const Color(
-                  0xFFD6B8FF,
-                ),
+                color: const Color(0xFFD6B8FF),
                 size: 22,
               ),
-              const SizedBox(
-                width: 8,
-              ),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   title,
@@ -2067,9 +2008,7 @@ class _AboutSection extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(
-            height: 8,
-          ),
+          const SizedBox(height: 8),
           Text(
             text,
             textAlign: TextAlign.right,
