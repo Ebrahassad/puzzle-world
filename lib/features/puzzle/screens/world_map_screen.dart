@@ -1632,9 +1632,7 @@ Future<void> showAboutDialog() async {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 6),
-
               const Text(
                 "الإصدار 1.0.0",
                 style: TextStyle(
@@ -1642,7 +1640,6 @@ Future<void> showAboutDialog() async {
                   fontSize: 12,
                 ),
               ),
-
               const SizedBox(height: 16),
 
               // ==========================================
@@ -1712,6 +1709,11 @@ Future<void> showAboutDialog() async {
       );
     },
   );
+}
+
+// ============================================================
+// 🔚 نهاية _WorldMapScreenState
+// ============================================================
 }
 
 // ================================================================
@@ -1804,6 +1806,7 @@ class _DailyRewardMiniWidget extends StatelessWidget {
     );
   }
 }
+
 // ================================================================
 // 👛 المحفظة
 // ================================================================
