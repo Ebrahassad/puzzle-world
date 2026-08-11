@@ -462,70 +462,53 @@ static Future<bool> spendStars(
 
 
   static Future<bool> canClaimDailyReward() async {
-
-
     try {
+      final prefs = await SharedPreferences.getInstance();
 
+      final saved = prefs.getString(dailyRewardKey);
 
-      final prefs =
-          await SharedPreferences.getInstance();
-
-
-
-      final saved =
-          prefs.getString(dailyRewardKey);
-
-
-
-
-      if(saved == null){
-
+      // لم يستلم المكافأة من قبل
+      if (saved == null) {
         return true;
-
       }
 
+      final last = DateTime.tryParse(saved);
 
-
-
-
-      final last =
-          DateTime.tryParse(saved);
-
-
-
-      if(last == null){
-
+      if (last == null) {
         return true;
-
       }
 
+      final now = DateTime.now();
 
-
-
-
-      final now =
-          DateTime.now();
-
-
-
-
-
-      return last.year != now.year ||
-          last.month != now.month ||
-          last.day != now.day;
-
-
-
-    }catch(_){
-
-
+      // المكافأة تصبح متاحة بعد مرور 24 ساعة كاملة
+      return now.difference(last) >=
+          const Duration(hours: 24);
+    } catch (_) {
       return true;
-
-
     }
-
-
   }
+
+
+
+
+
+
+
+
+//==================================================
+// ⏱️ بدء فترة الانتظار بعد مكافأة البداية
+//==================================================
+
+static Future<void> startDailyRewardCooldown() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setString(
+      dailyRewardKey,
+      DateTime.now().toIso8601String(),
+    );
+  } catch (_) {}
+}
 
 
 
@@ -557,14 +540,12 @@ static Future<Duration> getDailyRewardRemaining() async {
 
     final now = DateTime.now();
 
-    // إذا أصبحت المكافأة متاحة
-    final nextReward = DateTime(
-      now.year,
-      now.month,
-      now.day + 1,
-    );
+    // المكافأة التالية بعد 24 ساعة من آخر استلام
+    final nextReward =
+        last.add(const Duration(hours: 24));
 
-    final remaining = nextReward.difference(now);
+    final remaining =
+        nextReward.difference(now);
 
     if (remaining.isNegative) {
       return Duration.zero;
