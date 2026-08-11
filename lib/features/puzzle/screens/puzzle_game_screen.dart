@@ -708,7 +708,7 @@ stream.addListener(
 // 📐 حساب مكان اللوحة والصينية
 // ============================================================
 
-void calculateBoardPosition() {
+void _calculateBoardPosition() {
 WidgetsBinding.instance.addPostFrameCallback(
 () {
 if (!mounted) {
