@@ -206,8 +206,8 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
 
     _countdownTimer = Timer.periodic(
       const Duration(seconds: 1),
-      (_) {
-        _tickCountdown();
+      (_) async {
+        await _tickCountdown();
       },
     );
   }
@@ -246,12 +246,28 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
         return;
       }
 
-      final remaining = _getTimeUntilTomorrow();
+      // ==============================================
+      // ⏱️ المتبقي من 24 ساعة منذ استلام المكافأة
+      // ==============================================
+
+      final remaining =
+          await RewardManager.getDailyRewardRemaining();
+
+      if (!mounted) {
+        return;
+      }
 
       setState(() {
-        _dailyRewardAvailable = false;
-        _remainingTime = remaining;
-        _glowEnabled = false;
+        _dailyRewardAvailable =
+            remaining <= Duration.zero;
+
+        _remainingTime =
+            remaining <= Duration.zero
+                ? Duration.zero
+                : remaining;
+
+        _glowEnabled =
+            remaining <= Duration.zero;
       });
     } catch (_) {}
   }
@@ -260,7 +276,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   // ⏱️ نبضة العداد
   //==================================================
 
-  void _tickCountdown() {
+  Future<void> _tickCountdown() async {
     if (!mounted) {
       return;
     }
@@ -269,7 +285,12 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
       return;
     }
 
-    final newRemaining = _getTimeUntilTomorrow();
+    final newRemaining =
+        await RewardManager.getDailyRewardRemaining();
+
+    if (!mounted) {
+      return;
+    }
 
     if (newRemaining <= Duration.zero) {
       setState(() {
@@ -297,22 +318,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
       _remainingTime = newRemaining;
       _glowEnabled = false;
     });
-  }
-
-  //==================================================
-  // ⏰ الوقت حتى الغد
-  //==================================================
-
-  Duration _getTimeUntilTomorrow() {
-    final now = DateTime.now();
-
-    final tomorrow = DateTime(
-      now.year,
-      now.month,
-      now.day + 1,
-    );
-
-    return tomorrow.difference(now);
   }
 
   //==================================================
@@ -540,6 +545,9 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
       await RewardManager.addStars(10);
       await RewardManager.addGems(5);
 
+      // بدء عداد 24 ساعة من لحظة استلام مكافأة البداية
+      await RewardManager.startDailyRewardCooldown();
+
       if (!mounted) {
         return;
       }
@@ -550,7 +558,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
         _dailyRewardAvailable = false;
 
         _remainingTime =
-            _getTimeUntilTomorrow();
+            const Duration(hours: 24);
 
         _displayCoins = 0;
         _displayStars = 0;
@@ -590,7 +598,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
       _dailyRewardAvailable = false;
 
       _remainingTime =
-          _getTimeUntilTomorrow();
+          const Duration(hours: 24);
 
       _displayCoins = 0;
       _displayStars = 0;
@@ -740,7 +748,9 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   // 🔄 إعادة الصندوق
   //==================================================
 
-  Future<void> _returnBoxToPosition() async {
+  Future<void> _returnBoxToPosition({
+    bool closeDialog = true,
+  }) async {
     if (!mounted) {
       return;
     }
@@ -760,6 +770,10 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     });
 
     widget.onRewardClaimed();
+
+    if (closeDialog && mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   //==================================================
@@ -909,6 +923,51 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   }
 
   //==================================================
+  // ✨ وهج الصندوق المتاح
+  //==================================================
+
+  Widget _buildAvailableBoxGlow({
+    required Widget child,
+  }) {
+    if (!_dailyRewardAvailable ||
+        _isOpen ||
+        !_glowEnabled) {
+      return child;
+    }
+
+    return AnimatedBuilder(
+      animation: _rewardGlowController,
+      builder: (context, _) {
+        final glowStrength =
+            0.35 +
+            (_rewardGlowController.value * 0.45);
+
+        final blur =
+            12 +
+            (_rewardGlowController.value * 18);
+
+        return Container(
+          width: 220,
+          height: 220,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(40),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.amber.withOpacity(
+                  glowStrength,
+                ),
+                blurRadius: blur,
+                spreadRadius: 5,
+              ),
+            ],
+          ),
+          child: child,
+        );
+      },
+    );
+  }
+
+  //==================================================
   // 🎨 الصندوق
   //==================================================
 
@@ -924,46 +983,48 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
             children: [
               GestureDetector(
                 onTap: _onBoxTap,
-                child: SizedBox(
-                  width: 200,
-                  height: 200,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(
-                      milliseconds: 350,
-                    ),
-                    transitionBuilder: (
-                      child,
-                      animation,
-                    ) {
-                      return ScaleTransition(
-                        scale: animation,
-                        child: FadeTransition(
-                          opacity: animation,
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: Image.asset(
-                      _isOpen
-                          ? 'assets/images/rewards/daly_box_open.png'
-                          : 'assets/images/rewards/daly_box_close.png',
-                      key: ValueKey<bool>(
-                        _isOpen,
+                child: _buildAvailableBoxGlow(
+                  child: SizedBox(
+                    width: 200,
+                    height: 200,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(
+                        milliseconds: 350,
                       ),
-                      fit: BoxFit.contain,
-                      errorBuilder: (
-                        _,
-                        __,
-                        ___,
+                      transitionBuilder: (
+                        child,
+                        animation,
                       ) {
-                        return Icon(
-                          _isOpen
-                              ? Icons.card_giftcard_rounded
-                              : Icons.card_giftcard_outlined,
-                          size: 100,
-                          color: Colors.amber,
+                        return ScaleTransition(
+                          scale: animation,
+                          child: FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          ),
                         );
                       },
+                      child: Image.asset(
+                        _isOpen
+                            ? 'assets/images/rewards/daly_box_open.png'
+                            : 'assets/images/rewards/daly_box_close.png',
+                        key: ValueKey<bool>(
+                          _isOpen,
+                        ),
+                        fit: BoxFit.contain,
+                        errorBuilder: (
+                          _,
+                          __,
+                          ___,
+                        ) {
+                          return Icon(
+                            _isOpen
+                                ? Icons.card_giftcard_rounded
+                                : Icons.card_giftcard_outlined,
+                            size: 100,
+                            color: Colors.amber,
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
