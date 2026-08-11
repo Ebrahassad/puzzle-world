@@ -709,74 +709,73 @@ stream.addListener(
 // ============================================================
 
 void _calculateBoardPosition() {
-WidgetsBinding.instance.addPostFrameCallback(
-() {
-if (!mounted) {
-return;
-}
+  WidgetsBinding.instance.addPostFrameCallback(
+    (_) {
+      if (!mounted) {
+        return;
+      }
 
-    final overlayContext = overlayKey.currentContext;
+      final overlayContext = overlayKey.currentContext;
 
-    final boardContext = boardKey.currentContext;
+      final boardContext = boardKey.currentContext;
 
-    final trayContext = trayKey.currentContext;
+      final trayContext = trayKey.currentContext;
 
-    if (overlayContext == null ||
-        boardContext == null ||
-        trayContext == null) {
-      Future.delayed(
-        const Duration(
-          milliseconds: 100,
+      if (overlayContext == null ||
+          boardContext == null ||
+          trayContext == null) {
+        Future.delayed(
+          const Duration(
+            milliseconds: 100,
+          ),
+          () {
+            if (mounted) {
+              _calculateBoardPosition();
+            }
+          },
+        );
+
+        return;
+      }
+
+      final RenderBox overlayBox =
+          overlayContext.findRenderObject() as RenderBox;
+
+      final RenderBox boardBox =
+          boardContext.findRenderObject() as RenderBox;
+
+      final RenderBox trayBox =
+          trayContext.findRenderObject() as RenderBox;
+
+      final boardLocal = overlayBox.globalToLocal(
+        boardBox.localToGlobal(
+          Offset.zero,
         ),
-        () {
-          if (mounted) {
-            _calculateBoardPosition();
-          }
-        },
       );
 
-      return;
-    }
+      final trayLocal = overlayBox.globalToLocal(
+        trayBox.localToGlobal(
+          Offset.zero,
+        ),
+      );
 
-    final RenderBox overlayBox =
-        overlayContext.findRenderObject() as RenderBox;
+      boardRect = Rect.fromLTWH(
+        boardLocal.dx,
+        boardLocal.dy,
+        boardSize,
+        boardSize,
+      );
 
-    final RenderBox boardBox =
-        boardContext.findRenderObject() as RenderBox;
+      scatterArea = Rect.fromLTWH(
+        trayLocal.dx,
+        trayLocal.dy,
+        trayBox.size.width,
+        trayBox.size.height,
+      );
 
-    final RenderBox trayBox =
-        trayContext.findRenderObject() as RenderBox;
-
-    final boardLocal = overlayBox.globalToLocal(
-      boardBox.localToGlobal(
-        Offset.zero,
-      ),
-    );
-
-    final trayLocal = overlayBox.globalToLocal(
-      trayBox.localToGlobal(
-        Offset.zero,
-      ),
-    );
-
-    boardRect = Rect.fromLTWH(
-      boardLocal.dx,
-      boardLocal.dy,
-      boardSize,
-      boardSize,
-    );
-
-    scatterArea = Rect.fromLTWH(
-      trayLocal.dx,
-      trayLocal.dy,
-      trayBox.size.width,
-      trayBox.size.height,
-    );
-
-    _createPuzzle();
-  },
-);
-
+      _createPuzzle();
+    },
+  );
 }
 
 // ============================================================
