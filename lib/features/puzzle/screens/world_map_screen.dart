@@ -1602,97 +1602,118 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // ℹ️ حول التطبيق
   // ============================================================
   Future<void> showAboutDialog() async {
-    await showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF241337),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              22,
-            ),
-          ),
-          title: const Text(
-            "حول Puzzle World",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  "Puzzle World",
-                  style: TextStyle(
-                    color: Color(
-                      0xFFD6B8FF,
-                    ),
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                const Text(
-                  "الإصدار 1.0.0",
-                  style: TextStyle(
-                    color: Colors.white54,
-                  ),
-                ),
-                const SizedBox(
-                  height: 22,
-                ),
-                const _AboutSection(
-                  title: "نظام فتح الجزر",
-                  icon: Icons.public_rounded,
-                  text: "تبدأ جزيرة الحيوانات مفتوحة. أما باقي الجزر فتُفتح باستخدام النجوم.",
-                ),
-                const SizedBox(
-                  height: 14,
-                ),
-                const _AboutSection(
-                  title: "نظام الجزيرة الخاصة",
-                  icon: Icons.photo_library_rounded,
-                  text: "يمكنك فتح الجزيرة الخاصة باستخدام 100 جوهرة، ثم إنشاء ألغاز من صورك الخاصة.",
-                ),
-                const SizedBox(
-                  height: 14,
-                ),
-                const _AboutSection(
-                  title: "نظام الشراء والمكافآت",
-                  icon: Icons.shopping_bag_rounded,
-                  text: "تستخدم اللعبة العملات والنجوم والجواهر لإدارة المكافآت وفتح الميزات المختلفة.",
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(
-                  dialogContext,
-                );
-              },
-              child: const Text(
-                "إغلاق",
-                style: TextStyle(
-                  color: Color(
-                    0xFFD6B8FF,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
+await showDialog(
+context: context,
+builder: (dialogContext) {
+return AlertDialog(
+backgroundColor: const Color(0xFF241337),
+shape: RoundedRectangleBorder(
+borderRadius: BorderRadius.circular(22),
+),
+title: const Text(
+"حول Puzzle World",
+textAlign: TextAlign.center,
+style: TextStyle(
+color: Colors.white,
+fontWeight: FontWeight.bold,
+fontSize: 20,
+),
+),
+content: SingleChildScrollView(
+child: Column(
+mainAxisSize: MainAxisSize.min,
+children: [
+const Text(
+"Puzzle World",
+style: TextStyle(
+color: Color(0xFFD6B8FF),
+fontSize: 21,
+fontWeight: FontWeight.bold,
+),
+),
+const SizedBox(height: 6),
+const Text(
+"الإصدار 1.0.0",
+style: TextStyle(
+color: Colors.white54,
+fontSize: 12,
+),
+),
+const SizedBox(height: 16),
 
+          // ==========================================
+          // 🏝️ نظام فتح الجزر
+          // ==========================================
+          const _AboutSection(
+            title: "نظام فتح الجزر",
+            icon: Icons.public_rounded,
+            text:
+                "تفتح الجزيرة تلقائيًا بعد إكمال مراحل الجزيرة المفتوحة. "
+                "كما يمكنك استخدام النجوم لشراء أي جزيرة تريد.",
+          ),
+
+          const SizedBox(height: 10),
+
+          // ==========================================
+          // 🧩 نظام فتح المراحل
+          // ==========================================
+          const _AboutSection(
+            title: "نظام فتح المراحل",
+            icon: Icons.extension_rounded,
+            text:
+                "يمكنك فتح المراحل تلقائيًا، أو شراء أي مرحلة تريد باستخدام العملات.",
+          ),
+
+          const SizedBox(height: 10),
+
+          // ==========================================
+          // 🛍️ نظام الشراء والمكافآت
+          // ==========================================
+          const _AboutSection(
+            title: "نظام الشراء والمكافآت",
+            icon: Icons.shopping_bag_rounded,
+            text:
+ "تستخدم اللعبة العملات والنجوم والجواهر لإدارة المكافآت "
+                " وفتح الميزات المختلفة استخدم المحفظة لادارة مكافئاتك.",
+          ),
+
+          const SizedBox(height: 10),
+
+          // ==========================================
+          // 👛 المحفظة
+          // ==========================================
+          
+          // ==========================================
+          // 🏝️ الجزيرة الغامضة
+          // ==========================================
+          const _AboutSection(
+            title: "الجزيرة الغامضة",
+            icon: Icons.auto_awesome_rounded,
+            text:
+                "أكمل المراحل، واشترِ الجزيرة، واستكشف عالمك الخاص.",
+          ),
+        ],
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () {
+          Navigator.pop(dialogContext);
+        },
+        child: const Text(
+          "إغلاق",
+          style: TextStyle(
+            color: Color(0xFFD6B8FF),
+            fontSize: 14,
+          ),
+        ),
+      ),
+    ],
+  );
+},
+
+);
+}
 // ================================================================
 // 🎁 صندوق المكافأة اليومية + العد التنازلي
 // ================================================================
