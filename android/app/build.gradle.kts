@@ -18,6 +18,14 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(
+                org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+            )
+        }
+    }
+
     defaultConfig {
         applicationId = "com.example.puzzle_world"
 
@@ -27,6 +35,10 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
+
+    // ============================================================
+    // Release Signing
+    // ============================================================
 
     signingConfigs {
         create("release") {
@@ -40,18 +52,32 @@ android {
                     keystoreProperties.load(it)
                 }
 
-                storeFile = file(
+                val storeFilePath =
                     keystoreProperties.getProperty("storeFile")
-                )
 
-                storePassword =
+                val storePasswordValue =
                     keystoreProperties.getProperty("storePassword")
 
-                keyAlias =
+                val keyAliasValue =
                     keystoreProperties.getProperty("keyAlias")
 
-                keyPassword =
+                val keyPasswordValue =
                     keystoreProperties.getProperty("keyPassword")
+
+                if (
+                    storeFilePath != null &&
+                    storePasswordValue != null &&
+                    keyAliasValue != null &&
+                    keyPasswordValue != null
+                ) {
+                    storeFile = file(storeFilePath)
+
+                    storePassword = storePasswordValue
+
+                    keyAlias = keyAliasValue
+
+                    keyPassword = keyPasswordValue
+                }
             }
         }
     }
@@ -63,15 +89,6 @@ android {
 
             isMinifyEnabled = false
             isShrinkResources = false
-        }
-    }
-
-    // Kotlin JVM 17
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-        compilerOptions {
-            jvmTarget.set(
-                org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
-            )
         }
     }
 }
