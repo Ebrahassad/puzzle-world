@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+
+        <!-- خلفية شاشة بدء Android 12 -->
+        <item name="android:windowSplashScreenBackground">@color/splash_color</item>
+
+        <!-- صورة بسيطة بدون Adaptive Icon -->
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+
+        <!-- منع العنوان -->
+        <item name="android:windowNoTitle">true</item>
+
+        <!-- الخلفية -->
+        <item name="android:windowBackground">@color/splash_color</item>
+
+    </style>
+
+    <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+
+</resources>
