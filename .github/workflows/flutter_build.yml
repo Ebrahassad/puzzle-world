@@ -66,7 +66,6 @@ jobs:
       # assets/icon/app_icon.png
       #
       # Generated:
-      #
       # mdpi    = 48x48
       # hdpi    = 72x72
       # xhdpi   = 96x96
@@ -95,19 +94,11 @@ jobs:
           echo "Icon found:"
           echo "$SOURCE"
 
-          # --------------------------------------------------------
-          # Create mipmap directories
-          # --------------------------------------------------------
-
           mkdir -p "$RES/mipmap-mdpi"
           mkdir -p "$RES/mipmap-hdpi"
           mkdir -p "$RES/mipmap-xhdpi"
           mkdir -p "$RES/mipmap-xxhdpi"
           mkdir -p "$RES/mipmap-xxxhdpi"
-
-          # --------------------------------------------------------
-          # Generate mdpi
-          # --------------------------------------------------------
 
           convert "$SOURCE" \
             -resize 48x48 \
@@ -116,20 +107,12 @@ jobs:
             -extent 48x48 \
             "$RES/mipmap-mdpi/ic_launcher.png"
 
-          # --------------------------------------------------------
-          # Generate hdpi
-          # --------------------------------------------------------
-
           convert "$SOURCE" \
             -resize 72x72 \
             -background none \
             -gravity center \
             -extent 72x72 \
             "$RES/mipmap-hdpi/ic_launcher.png"
-
-          # --------------------------------------------------------
-          # Generate xhdpi
-          # --------------------------------------------------------
 
           convert "$SOURCE" \
             -resize 96x96 \
@@ -138,20 +121,12 @@ jobs:
             -extent 96x96 \
             "$RES/mipmap-xhdpi/ic_launcher.png"
 
-          # --------------------------------------------------------
-          # Generate xxhdpi
-          # --------------------------------------------------------
-
           convert "$SOURCE" \
             -resize 144x144 \
             -background none \
             -gravity center \
             -extent 144x144 \
             "$RES/mipmap-xxhdpi/ic_launcher.png"
-
-          # --------------------------------------------------------
-          # Generate xxxhdpi
-          # --------------------------------------------------------
 
           convert "$SOURCE" \
             -resize 192x192 \
@@ -161,9 +136,7 @@ jobs:
             "$RES/mipmap-xxxhdpi/ic_launcher.png"
 
           echo ""
-          echo "=========================================="
           echo "Generated launcher icons:"
-          echo "=========================================="
 
           find "$RES" \
             -type f \
@@ -224,12 +197,13 @@ jobs:
 
 
       # ============================================================
-      # Fix Unity Ads JVM Target
+      # Fix Unity Ads JVM target
       #
-      # Important:
-      # This version avoids the Broken pipe problem caused by:
+      # Avoid:
+      # find ... | head
       #
-      # find ... | head -n 1
+      # because it can cause:
+      # Broken pipe
       # ============================================================
 
       - name: Fix Unity Ads JVM target
@@ -251,10 +225,8 @@ jobs:
 
           if [ -n "$UNITY_PLUGIN_PATH" ]; then
 
-            echo "=========================================="
             echo "Unity Ads plugin found:"
             echo "$UNITY_PLUGIN_PATH"
-            echo "=========================================="
 
             if [ -d "$UNITY_PLUGIN_PATH/android" ]; then
 
@@ -273,27 +245,14 @@ jobs:
 
               done
 
-            else
-
-              echo "Unity Ads android directory not found."
-              echo "Continuing..."
-
             fi
 
           else
 
             echo "Unity Ads plugin path not found."
-            echo "Continuing without modification."
+            echo "Continuing..."
 
           fi
-
-
-      # ============================================================
-      # Make Gradle executable
-      # ============================================================
-
-      - name: Make Gradle executable
-        run: chmod +x android/gradlew
 
 
       # ============================================================
