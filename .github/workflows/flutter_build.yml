@@ -42,11 +42,21 @@ jobs:
 
 
       # ============================================================
-      # Flutter dependencies
+      # Flutter Pub Get
       # ============================================================
 
       - name: Flutter Pub Get
         run: flutter pub get
+
+
+      # ============================================================
+      # Install ImageMagick
+      # ============================================================
+
+      - name: Install ImageMagick
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
 
 
       # ============================================================
@@ -55,7 +65,8 @@ jobs:
       # Source:
       # assets/icon/app_icon.png
       #
-      # Android launcher sizes:
+      # Generated:
+      #
       # mdpi    = 48x48
       # hdpi    = 72x72
       # xhdpi   = 96x96
@@ -71,7 +82,9 @@ jobs:
           SOURCE="assets/icon/app_icon.png"
           RES="android/app/src/main/res"
 
-          echo "Checking app icon..."
+          echo "=========================================="
+          echo "Checking application icon..."
+          echo "=========================================="
 
           if [ ! -f "$SOURCE" ]; then
             echo "ERROR: App icon not found:"
@@ -79,19 +92,11 @@ jobs:
             exit 1
           fi
 
-          echo "App icon found:"
+          echo "Icon found:"
           echo "$SOURCE"
 
           # --------------------------------------------------------
-          # Remove old launcher resources that may override
-          # the generated PNG icon on Android 8+
-          # --------------------------------------------------------
-
-          rm -f "$RES/mipmap-anydpi-v26/ic_launcher.xml"
-          rm -f "$RES/mipmap-anydpi-v26/ic_launcher_round.xml"
-
-          # --------------------------------------------------------
-          # Create mipmap folders
+          # Create Android mipmap directories
           # --------------------------------------------------------
 
           mkdir -p "$RES/mipmap-mdpi"
@@ -101,7 +106,7 @@ jobs:
           mkdir -p "$RES/mipmap-xxxhdpi"
 
           # --------------------------------------------------------
-          # Generate launcher icons
+          # Generate mdpi
           # --------------------------------------------------------
 
           convert "$SOURCE" \
@@ -111,12 +116,20 @@ jobs:
             -extent 48x48 \
             "$RES/mipmap-mdpi/ic_launcher.png"
 
+          # --------------------------------------------------------
+          # Generate hdpi
+          # --------------------------------------------------------
+
           convert "$SOURCE" \
             -resize 72x72 \
             -background none \
             -gravity center \
             -extent 72x72 \
             "$RES/mipmap-hdpi/ic_launcher.png"
+
+          # --------------------------------------------------------
+          # Generate xhdpi
+          # --------------------------------------------------------
 
           convert "$SOURCE" \
             -resize 96x96 \
@@ -125,12 +138,20 @@ jobs:
             -extent 96x96 \
             "$RES/mipmap-xhdpi/ic_launcher.png"
 
+          # --------------------------------------------------------
+          # Generate xxhdpi
+          # --------------------------------------------------------
+
           convert "$SOURCE" \
             -resize 144x144 \
             -background none \
             -gravity center \
             -extent 144x144 \
             "$RES/mipmap-xxhdpi/ic_launcher.png"
+
+          # --------------------------------------------------------
+          # Generate xxxhdpi
+          # --------------------------------------------------------
 
           convert "$SOURCE" \
             -resize 192x192 \
@@ -140,12 +161,21 @@ jobs:
             "$RES/mipmap-xxxhdpi/ic_launcher.png"
 
           echo ""
+          echo "=========================================="
           echo "Generated launcher icons:"
-          find "$RES" -type f -name "ic_launcher.png" -print
+          echo "=========================================="
+
+          find "$RES" \
+            -type f \
+            -name "ic_launcher.png" \
+            -print
 
 
       # ============================================================
       # Decode Release Keystore
+      #
+      # Secret:
+      # KEYSTORE_BASE64
       # ============================================================
 
       - name: Decode Release Keystore
@@ -167,6 +197,11 @@ jobs:
 
       # ============================================================
       # Create key.properties
+      #
+      # Secrets:
+      # KEYSTORE_PASSWORD
+      # KEY_ALIAS
+      # KEY_PASSWORD
       # ============================================================
 
       - name: Create key.properties
@@ -176,6 +211,8 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
+          set -e
+
           cat > android/key.properties <<EOF
           storePassword=$KEYSTORE_PASSWORD
           keyPassword=$KEY_PASSWORD
@@ -183,7 +220,7 @@ jobs:
           storeFile=upload-keystore.jks
           EOF
 
-          echo "key.properties created."
+          echo "key.properties created successfully."
 
 
       # ============================================================
@@ -201,6 +238,7 @@ jobs:
             | head -n 1)
 
           if [ -n "$UNITY_PLUGIN_PATH" ]; then
+
             echo "Unity Ads plugin found:"
             echo "$UNITY_PLUGIN_PATH"
 
@@ -212,9 +250,12 @@ jobs:
                 's/jvmTarget[[:space:]]*=[[:space:]]*["'\'']1\.8["'\'']/jvmTarget = "17"/g' \
                 {} \; \
               || true
+
           else
+
             echo "Unity Ads plugin path not found."
             echo "Continuing..."
+
           fi
 
 
@@ -235,7 +276,7 @@ jobs:
 
 
       # ============================================================
-      # Flutter Pub Get again
+      # Flutter Pub Get
       # ============================================================
 
       - name: Flutter Pub Get
@@ -251,7 +292,7 @@ jobs:
 
 
       # ============================================================
-      # Upload APK
+      # Upload Release APK
       # ============================================================
 
       - name: Upload Release APK
