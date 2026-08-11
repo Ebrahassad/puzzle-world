@@ -31,7 +31,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   late Animation<Offset> _positionAnimation;
 
   //==================================================
-  // ✨ Animation وهج المكافأة
+  // ✨ Animation وهج الصندوق
   //==================================================
 
   late AnimationController _rewardGlowController;
@@ -45,7 +45,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   bool _showRewardUI = false;
   bool _isDoubling = false;
 
-  // الوهج يظهر فقط في الأسفل عندما تكون المكافأة متاحة
+  // الوهج يظهر حول الصندوق عندما تكون المكافأة متاحة
   bool _glowEnabled = true;
 
   //==================================================
@@ -161,7 +161,7 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     _mainController.forward();
 
     //==================================================
-    // ✨ وهج المكافأة
+    // ✨ وهج الصندوق
     //==================================================
 
     _rewardGlowController = AnimationController(
@@ -246,9 +246,9 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
         return;
       }
 
-      // ==============================================
-      // ⏱️ المتبقي من 24 ساعة منذ استلام المكافأة
-      // ==============================================
+      //==================================================
+      // ⏱️ الوقت المتبقي من 24 ساعة منذ آخر استلام
+      //==================================================
 
       final remaining =
           await RewardManager.getDailyRewardRemaining();
@@ -343,29 +343,52 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   }
 
   //==================================================
-  // ✨ وهج أسفل الصندوق فقط
+  // ✨ وهج الصندوق
   //==================================================
 
-  BoxDecoration _rewardGlowDecoration() {
-    final glowStrength =
-        0.55 +
-        (_rewardGlowController.value * 0.30);
+  Widget _buildAvailableBoxGlow({
+    required Widget child,
+  }) {
+    if (!_dailyRewardAvailable ||
+        _isOpen ||
+        !_glowEnabled) {
+      return child;
+    }
 
-    return BoxDecoration(
-      borderRadius: BorderRadius.circular(18),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.amber.withOpacity(
-            glowStrength,
+    return AnimatedBuilder(
+      animation: _rewardGlowController,
+      builder: (
+        context,
+        _,
+      ) {
+        final glowStrength =
+            0.35 +
+            (_rewardGlowController.value * 0.45);
+
+        final blur =
+            12 +
+            (_rewardGlowController.value * 18);
+
+        return Container(
+          width: 220,
+          height: 220,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(
+              40,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.amber.withOpacity(
+                  glowStrength,
+                ),
+                blurRadius: blur,
+                spreadRadius: 5,
+              ),
+            ],
           ),
-          blurRadius: 18,
-          spreadRadius: 3,
-          offset: const Offset(
-            0,
-            8,
-          ),
-        ),
-      ],
+          child: child,
+        );
+      },
     );
   }
 
@@ -375,38 +398,36 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
 
   Widget _buildCountdown() {
     if (_dailyRewardAvailable) {
-      return AnimatedBuilder(
-        animation: _rewardGlowController,
-        builder: (
-          context,
-          child,
-        ) {
-          return Container(
-            margin: const EdgeInsets.only(
-              top: 12,
+      return Container(
+        margin: const EdgeInsets.only(
+          top: 12,
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 8,
+        ),
+        decoration: BoxDecoration(
+          color: const Color(
+            0xFF2A1B3D,
+          ),
+          borderRadius: BorderRadius.circular(
+            14,
+          ),
+          border: Border.all(
+            color: Colors.amber.withOpacity(
+              0.35,
             ),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 18,
-              vertical: 8,
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(
+                0.25,
+              ),
+              blurRadius: 8,
             ),
-            decoration: _glowEnabled
-                ? _rewardGlowDecoration().copyWith(
-                    color: const Color(
-                      0xFF2A1B3D,
-                    ),
-                  )
-                : const BoxDecoration(
-                    color: Color(
-                      0xFF2A1B3D,
-                    ),
-                    borderRadius:
-                        BorderRadius.all(
-                      Radius.circular(14),
-                    ),
-                  ),
-            child: child,
-          );
-        },
+          ],
+        ),
         child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -539,13 +560,17 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
     //==================================================
 
     final firstReward =
-        await PuzzleProgressManager.claimFirstDailyReward();
+        await PuzzleProgressManager
+            .claimFirstDailyReward();
 
     if (firstReward) {
       await RewardManager.addStars(10);
       await RewardManager.addGems(5);
 
-      // بدء عداد 24 ساعة من لحظة استلام مكافأة البداية
+      //==================================================
+      // ⏱️ بدء 24 ساعة من لحظة مكافأة البداية
+      //==================================================
+
       await RewardManager.startDailyRewardCooldown();
 
       if (!mounted) {
@@ -745,12 +770,10 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
   }
 
   //==================================================
-  // 🔄 إعادة الصندوق
+  // 🔄 إعادة الصندوق وإغلاق النافذة
   //==================================================
 
-  Future<void> _returnBoxToPosition({
-    bool closeDialog = true,
-  }) async {
+  Future<void> _returnBoxToPosition() async {
     if (!mounted) {
       return;
     }
@@ -771,7 +794,11 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
 
     widget.onRewardClaimed();
 
-    if (closeDialog && mounted) {
+    //==================================================
+    // 🔙 إغلاق Dialog المكافأة فعليًا
+    //==================================================
+
+    if (mounted) {
       Navigator.of(context).pop();
     }
   }
@@ -919,51 +946,6 @@ class _DailyRewardPopupState extends State<DailyRewardPopup>
           ),
         ),
       ],
-    );
-  }
-
-  //==================================================
-  // ✨ وهج الصندوق المتاح
-  //==================================================
-
-  Widget _buildAvailableBoxGlow({
-    required Widget child,
-  }) {
-    if (!_dailyRewardAvailable ||
-        _isOpen ||
-        !_glowEnabled) {
-      return child;
-    }
-
-    return AnimatedBuilder(
-      animation: _rewardGlowController,
-      builder: (context, _) {
-        final glowStrength =
-            0.35 +
-            (_rewardGlowController.value * 0.45);
-
-        final blur =
-            12 +
-            (_rewardGlowController.value * 18);
-
-        return Container(
-          width: 220,
-          height: 220,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(40),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.amber.withOpacity(
-                  glowStrength,
-                ),
-                blurRadius: blur,
-                spreadRadius: 5,
-              ),
-            ],
-          ),
-          child: child,
-        );
-      },
     );
   }
 
