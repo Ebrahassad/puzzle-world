@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:math' as math;
+
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:audioplayers/audioplayers.dart';
+
 import 'private_island_screen.dart';
 import '../data/puzzle_data.dart';
 import '../models/puzzle_model.dart';
@@ -18,6 +20,7 @@ class _RelativeRect {
   final double top;
   final double width;
   final double height;
+
   const _RelativeRect({
     required this.id,
     required this.left,
@@ -33,6 +36,7 @@ class _RelativeCloud {
   final double size;
   final double opacity;
   final Duration duration;
+
   const _RelativeCloud({
     required this.image,
     required this.top,
@@ -56,49 +60,62 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // ============================================================
   // 📢 Scaffold Messenger
   // ============================================================
+
   final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
       GlobalKey<ScaffoldMessengerState>();
 
   // ============================================================
   // 🌍 الخريطة
   // ============================================================
-  static const String mapImage = "assets/images/world/world_map.jpg";
+
+  static const String mapImage =
+      "assets/images/world/world_map.jpg";
+
   static const double worldWidth = 896;
   static const double worldHeight = 1350;
 
   // ============================================================
   // 🏝️ الجزيرة الخاصة
   // ============================================================
+
   static const int privateIslandGemCost = 100;
 
   // ============================================================
   // 📱 إصدار التطبيق
   // ============================================================
+
   static const String appVersion = "1.0.0";
 
   // ============================================================
   // 🗺️ بيانات الجزر
   // ============================================================
+
   late final List<PuzzleModel> islands;
 
   // ============================================================
   // 🎬 Animation
   // ============================================================
+
   late final AnimationController worldController;
   late final Animation<double> worldScale;
   late final Animation<double> worldTranslateY;
+
   late final List<AnimationController> cloudControllers;
+
   late final AnimationController iconGlowController;
 
   // ============================================================
   // 🔊 الصوت
   // ============================================================
+
   late final AudioPlayer audioPlayer;
+
   bool soundEnabled = true;
 
   // ============================================================
   // 🔓 حالة الجزر
   // ============================================================
+
   final Map<String, bool> islandUnlocked = {
     "animals": true,
     "nature": false,
@@ -106,33 +123,45 @@ class _WorldMapScreenState extends State<WorldMapScreen>
     "landmarks": false,
     "space": false,
   };
+
   bool privateIslandUnlocked = false;
 
   // ============================================================
   // 🔄 حالات التحميل
   // ============================================================
+
   bool loadingIslandState = true;
+
   bool unlockingIsland = false;
+
   bool unlockingPrivateIsland = false;
 
   // ============================================================
-  // 📢 رسالة فوق جميع طبقات الخريطة والجزر
+  // 📢 الرسالة العامة
   // ============================================================
+
   String? _worldMessage;
+
   Timer? _worldMessageTimer;
 
   // ============================================================
   // 🎁 المكافأة اليومية
   // ============================================================
-  bool showingDailyReward = false; // الصندوق يبقى ظاهرًا دائمًا
-  bool dailyRewardMiniVisible = true; // هل المكافأة جاهزة للفتح؟
-  bool dailyRewardAvailable = false; // الوقت المتبقي حتى المكافأة القادمة
-  Duration dailyRewardRemaining = Duration.zero; // Timer للعد التنازلي
+
+  bool showingDailyReward = false;
+
+  bool dailyRewardMiniVisible = true;
+
+  bool dailyRewardAvailable = false;
+
+  Duration dailyRewardRemaining = Duration.zero;
+
   Timer? dailyRewardTimer;
 
   // ============================================================
   // 📍 مواقع الجزر
   // ============================================================
+
   static final List<_RelativeRect> _islandRects = [
     _RelativeRect(
       id: "space",
@@ -174,6 +203,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // ============================================================
   // ☁️ السحب
   // ============================================================
+
   static final List<_RelativeCloud> _clouds = [
     _RelativeCloud(
       image: "assets/images/background/cloud_01.png",
@@ -208,21 +238,25 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // ============================================================
   // 🚀 INIT
   // ============================================================
+
   @override
   void initState() {
     super.initState();
+
     islands = PuzzleData.puzzles;
+
     audioPlayer = AudioPlayer();
+
     iconGlowController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1800),
     )..repeat(reverse: true);
-    loadIslandState();
-    loadPrivateIslandState();
+
     worldController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 22),
     )..repeat(reverse: true);
+
     worldScale = Tween<double>(
       begin: 1.00,
       end: 1.035,
@@ -232,6 +266,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
         curve: Curves.easeInOut,
       ),
     );
+
     worldTranslateY = Tween<double>(
       begin: -10,
       end: 10,
@@ -241,6 +276,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
         curve: Curves.easeInOut,
       ),
     );
+
     cloudControllers = _clouds
         .map(
           (cloud) => AnimationController(
@@ -249,26 +285,77 @@ class _WorldMapScreenState extends State<WorldMapScreen>
           )..repeat(),
         )
         .toList();
+
+    loadIslandState();
+    loadPrivateIslandState();
+    loadSoundState();
     _checkDailyReward();
+  }
+
+  // ============================================================
+  // 🔊 تحميل حالة الصوت
+  // ============================================================
+
+  Future<void> loadSoundState() async {
+    try {
+      final enabled =
+          await PuzzleProgressManager.isSoundEnabled();
+
+      if (!mounted) return;
+
+      setState(() {
+        soundEnabled = enabled;
+      });
+    } catch (_) {}
+  }
+
+  // ============================================================
+  // 🏝️ تحميل حالة الجزيرة الخاصة
+  // ============================================================
+
+  Future<void> loadPrivateIslandState() async {
+    try {
+      final unlocked =
+          await PuzzleProgressManager.isPrivateIslandUnlocked();
+
+      if (!mounted) return;
+
+      setState(() {
+        privateIslandUnlocked = unlocked;
+      });
+    } catch (_) {
+      if (!mounted) return;
+
+      setState(() {
+        privateIslandUnlocked = false;
+      });
+    }
   }
 
   // ============================================================
   // 🎁 التحقق من المكافأة اليومية
   // ============================================================
+
   Future<void> _checkDailyReward() async {
     try {
-      final canClaim = await RewardManager.canClaimDailyReward();
-      final remaining = await RewardManager.getDailyRewardRemaining();
+      final canClaim =
+          await RewardManager.canClaimDailyReward();
+
+      final remaining =
+          await RewardManager.getDailyRewardRemaining();
+
       if (!mounted) return;
+
       setState(() {
-        // الصندوق لا يختفي أبدًا
         dailyRewardMiniVisible = true;
         dailyRewardAvailable = canClaim;
         dailyRewardRemaining = remaining;
       });
+
       _startDailyRewardTimer();
     } catch (_) {
       if (!mounted) return;
+
       setState(() {
         dailyRewardMiniVisible = true;
         dailyRewardAvailable = true;
@@ -280,24 +367,36 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // ============================================================
   // ⏱️ العد التنازلي للمكافأة اليومية
   // ============================================================
+
   void _startDailyRewardTimer() {
     dailyRewardTimer?.cancel();
+
     dailyRewardTimer = Timer.periodic(
       const Duration(seconds: 1),
       (_) async {
         if (!mounted) return;
-        final canClaim = await RewardManager.canClaimDailyReward();
+
+        final canClaim =
+            await RewardManager.canClaimDailyReward();
+
         if (!mounted) return;
+
         if (canClaim) {
           setState(() {
             dailyRewardAvailable = true;
             dailyRewardRemaining = Duration.zero;
           });
+
           dailyRewardTimer?.cancel();
+
           return;
         }
-        final remaining = await RewardManager.getDailyRewardRemaining();
+
+        final remaining =
+            await RewardManager.getDailyRewardRemaining();
+
         if (!mounted) return;
+
         setState(() {
           dailyRewardAvailable = false;
           dailyRewardRemaining = remaining;
@@ -309,10 +408,18 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // ============================================================
   // ⏱️ تنسيق العد التنازلي
   // ============================================================
-  String formatDailyRewardTime(Duration duration) {
+
+  String formatDailyRewardTime(
+    Duration duration,
+  ) {
     final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    final seconds = duration.inSeconds.remainder(60);
+
+    final minutes =
+        duration.inMinutes.remainder(60);
+
+    final seconds =
+        duration.inSeconds.remainder(60);
+
     return '${hours.toString().padLeft(2, '0')}:'
         '${minutes.toString().padLeft(2, '0')}:'
         '${seconds.toString().padLeft(2, '0')}';
@@ -321,6 +428,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // ============================================================
   // 🏝️ تحميل حالة الجزر
   // ============================================================
+
   Future<void> loadIslandState() async {
     try {
       for (final islandId in [
@@ -330,41 +438,29 @@ class _WorldMapScreenState extends State<WorldMapScreen>
         "landmarks",
         "space",
       ]) {
-        final unlocked = await PuzzleProgressManager.isIslandUnlocked(
+        final unlocked =
+            await PuzzleProgressManager.isIslandUnlocked(
           islandId,
         );
-        islandUnlocked[islandId] = unlocked || islandId == "animals";
+
+        islandUnlocked[islandId] =
+            unlocked || islandId == "animals";
       }
     } catch (_) {
       islandUnlocked["animals"] = true;
     }
+
     if (!mounted) return;
+
     setState(() {
       loadingIslandState = false;
     });
   }
 
   // ============================================================
-  // 💎 الجزيرة الخاصة
+  // 📢 رسالة فوق جميع طبقات الخريطة
   // ============================================================
-  Future<void> loadPrivateIslandState() async {
-    try {
-      final unlocked = await PuzzleProgressManager.isPrivateIslandUnlocked();
-      if (!mounted) return;
-      setState(() {
-        privateIslandUnlocked = unlocked;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        privateIslandUnlocked = false;
-      });
-    }
-  }
 
-  // ============================================================
-  // 📢 رسالة فوق جميع طبقات الخريطة والجزر
-  // ============================================================
   void showMessage(String message) {
     if (!mounted) return;
 
@@ -389,8 +485,10 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // ============================================================
   // 🔊 صوت الضغط
   // ============================================================
+
   Future<void> playClickSound() async {
     if (!soundEnabled) return;
+
     try {
       await audioPlayer.play(
         AssetSource(
@@ -403,13 +501,17 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // ============================================================
   // 🧹 DISPOSE
   // ============================================================
+
   @override
   void dispose() {
     dailyRewardTimer?.cancel();
+
     _worldMessageTimer?.cancel();
 
     worldController.dispose();
+
     iconGlowController.dispose();
+
     audioPlayer.dispose();
 
     for (final controller in cloudControllers) {
@@ -422,22 +524,31 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // ============================================================
   // 🔎 البحث عن الجزيرة
   // ============================================================
-  PuzzleModel? getIsland(String id) {
+
+  PuzzleModel? getIsland(
+    String id,
+  ) {
     for (final item in islands) {
       if (item.id == id) {
         return item;
       }
     }
+
     return null;
   }
 
   // ============================================================
   // 🗺️ BUILD
   // ============================================================
+
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
-    final topPadding = MediaQuery.of(context).padding.top;
+    final bottomPadding =
+        MediaQuery.of(context).padding.bottom;
+
+    final topPadding =
+        MediaQuery.of(context).padding.top;
+
     return Scaffold(
       key: _scaffoldMessengerKey,
       backgroundColor: const Color(0xff08182b),
@@ -446,19 +557,33 @@ class _WorldMapScreenState extends State<WorldMapScreen>
           context,
           constraints,
         ) {
-          final double screenWidth = constraints.maxWidth;
-          final double screenHeight = constraints.maxHeight;
-          if (screenWidth <= 0 || screenHeight <= 0) {
+          final screenWidth =
+              constraints.maxWidth;
+
+          final screenHeight =
+              constraints.maxHeight;
+
+          if (screenWidth <= 0 ||
+              screenHeight <= 0) {
             return const SizedBox.shrink();
           }
-          final double scale = math.max(
+
+          final scale = math.max(
             screenWidth / worldWidth,
             screenHeight / worldHeight,
           );
-          final double scaledWidth = worldWidth * scale;
-          final double scaledHeight = worldHeight * scale;
-          final double dx = (screenWidth - scaledWidth) / 2;
-          final double dy = (screenHeight - scaledHeight) / 2;
+
+          final scaledWidth =
+              worldWidth * scale;
+
+          final scaledHeight =
+              worldHeight * scale;
+
+          final dx =
+              (screenWidth - scaledWidth) / 2;
+
+          final dy =
+              (screenHeight - scaledHeight) / 2;
 
           return ClipRect(
             child: Stack(
@@ -466,6 +591,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                 // ==================================================
                 // 🌍 الخريطة
                 // ==================================================
+
                 Positioned(
                   left: dx,
                   top: dy,
@@ -502,6 +628,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                               // =================================
                               // 🗺️ صورة الخريطة
                               // =================================
+
                               Positioned.fill(
                                 child: Image.asset(
                                   mapImage,
@@ -515,18 +642,26 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                                   },
                                 ),
                               ),
+
                               // =================================
                               // ☁️ السحب
                               // =================================
-                              for (int i = 0; i < _clouds.length; i++)
+
+                              for (int i = 0;
+                                  i < _clouds.length;
+                                  i++)
                                 cloudWidget(
                                   cloud: _clouds[i],
-                                  controller: cloudControllers[i],
+                                  controller:
+                                      cloudControllers[i],
                                 ),
+
                               // =================================
                               // 🏝️ الجزر
                               // =================================
-                              for (final rect in _islandRects)
+
+                              for (final rect
+                                  in _islandRects)
                                 islandImage(
                                   rect: rect,
                                 ),
@@ -539,13 +674,15 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                 ),
 
                 // ==================================================
-                // ⚙️ الإعدادات (بدل الصندوق - أعلى يسار الشاشة)
+                // ⚙️ الإعدادات - أعلى يسار
                 // ==================================================
+
                 Positioned(
                   top: topPadding + 16,
                   left: 18,
                   child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
+                    behavior:
+                        HitTestBehavior.opaque,
                     onTap: () async {
                       await playClickSound();
 
@@ -553,31 +690,63 @@ class _WorldMapScreenState extends State<WorldMapScreen>
 
                       await showSettingsDialog();
                     },
-                    child: _AnimatedRoyalImageIcon(
-                      controller: iconGlowController,
-                      image: "assets/images/ui/seting_icon.png",
+                    child:
+                        _AnimatedRoyalImageIcon(
+                      controller:
+                          iconGlowController,
+                      image:
+                          "assets/images/ui/seting_icon.png",
                     ),
                   ),
                 ),
 
                 // ==================================================
-                // 🎁 صندوق المكافأة اليومية (بدل الجزيرة - أسفل يمين الشاشة)
+                // 👛 المحفظة - أعلى يمين
                 // ==================================================
+
                 Positioned(
-                  bottom: bottomPadding + 20,
+                  top: topPadding + 16,
                   right: 18,
                   child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
+                    behavior:
+                        HitTestBehavior.opaque,
+                    onTap: () async {
+                      await playClickSound();
+                    },
+                    child:
+                        _AnimatedRoyalWallet(
+                      controller:
+                          iconGlowController,
+                    ),
+                  ),
+                ),
+
+                // ==================================================
+                // 🎁 المكافأة اليومية - أسفل يمين
+                // ==================================================
+
+                Positioned(
+                  bottom:
+                      bottomPadding + 20,
+                  right: 18,
+                  child: GestureDetector(
+                    behavior:
+                        HitTestBehavior.opaque,
                     onTap: dailyRewardAvailable
                         ? () async {
                             await playClickSound();
 
-                            if (!mounted) return;
+                            if (!mounted) {
+                              return;
+                            }
 
                             final canClaim =
-                                await RewardManager.canClaimDailyReward();
+                                await RewardManager
+                                    .canClaimDailyReward();
 
-                            if (!mounted) return;
+                            if (!mounted) {
+                              return;
+                            }
 
                             if (!canClaim) {
                               await _checkDailyReward();
@@ -585,42 +754,63 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                             }
 
                             setState(() {
-                              showingDailyReward = true;
-                              dailyRewardMiniVisible = true;
+                              showingDailyReward =
+                                  true;
+                              dailyRewardMiniVisible =
+                                  true;
                             });
 
                             await showDialog(
                               context: context,
-                              barrierDismissible: false,
-                              builder: (dialogContext) {
+                              barrierDismissible:
+                                  false,
+                              builder:
+                                  (dialogContext) {
                                 return DailyRewardPopup(
-                                  onRewardClaimed: () {
-                                    if (!mounted) return;
+                                  onRewardClaimed:
+                                      () {
+                                    if (!mounted) {
+                                      return;
+                                    }
 
                                     setState(() {
-                                      showingDailyReward = false;
-                                      dailyRewardMiniVisible = true;
-                                      dailyRewardAvailable = false;
+                                      showingDailyReward =
+                                          false;
+
+                                      dailyRewardMiniVisible =
+                                          true;
+
+                                      dailyRewardAvailable =
+                                          false;
                                     });
                                   },
                                 );
                               },
                             );
 
-                            if (!mounted) return;
+                            if (!mounted) {
+                              return;
+                            }
 
                             setState(() {
-                              showingDailyReward = false;
-                              dailyRewardMiniVisible = true;
+                              showingDailyReward =
+                                  false;
+
+                              dailyRewardMiniVisible =
+                                  true;
                             });
 
                             await _checkDailyReward();
                           }
                         : null,
-                    child: _DailyRewardMiniWidget(
-                      available: dailyRewardAvailable,
-                      remaining: dailyRewardRemaining,
-                      timeText: formatDailyRewardTime(
+                    child:
+                        _DailyRewardMiniWidget(
+                      available:
+                          dailyRewardAvailable,
+                      remaining:
+                          dailyRewardRemaining,
+                      timeText:
+                          formatDailyRewardTime(
                         dailyRewardRemaining,
                       ),
                     ),
@@ -628,81 +818,61 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                 ),
 
                 // ==================================================
-                // 🏝️ الجزيرة الخاصة (بدل المحفظة - أسفل يسار الشاشة)
+                // 🏝️ الجزيرة الخاصة - أسفل يسار
                 // ==================================================
+
                 Positioned(
-                  bottom: bottomPadding + 20,
+                  bottom:
+                      bottomPadding + 20,
                   left: 20,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
+                  child:
+                      _PrivateIslandWidget(
+                    unlocked:
+                        privateIslandUnlocked,
+                    unlocking:
+                        unlockingPrivateIsland,
                     onTap: () async {
                       await playClickSound();
 
                       if (!mounted) return;
 
+                      if (!privateIslandUnlocked) {
+                        await showPrivateIslandPurchaseDialog();
+                        return;
+                      }
+
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const PrivateIslandScreen(),
+                          builder: (_) =>
+                              const PrivateIslandScreen(),
                         ),
                       );
                     },
-                    child: SizedBox(
-                      width: 76,
-                      height: 76,
-                      child: Image.asset(
-                        "assets/images/islands/private_island.png",
-                        width: 76,
-                        height: 76,
-                        fit: BoxFit.contain,
-                        filterQuality: FilterQuality.high,
-                        errorBuilder: (
-                          context,
-                          error,
-                          stackTrace,
-                        ) {
-                          debugPrint(
-                            "Private Island image error: $error",
-                          );
-
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-
-                // ==================================================
-                // 👛 المحفظة (بدل الإعدادات - أعلى يمين الشاشة)
-                // ==================================================
-                Positioned(
-                  top: topPadding + 16,
-                  right: 18,
-                  child: GestureDetector(
-                    onTap: () async {
+                    onUnlockTap: () async {
                       await playClickSound();
-                      if (!context.mounted) {
-                        return;
-                      }
+
+                      if (!mounted) return;
+
+                      await showPrivateIslandPurchaseDialog();
                     },
-                    child: _AnimatedRoyalWallet(
-                      controller: iconGlowController,
-                    ),
                   ),
                 ),
 
                 // ==================================================
-                // 🔄 تحميل
+                // 🔄 تحميل حالة الجزر
                 // ==================================================
+
                 if (loadingIslandState)
                   Positioned.fill(
                     child: IgnorePointer(
                       child: Container(
-                        color: Colors.black.withOpacity(
-                          0.12,
-                        ),
-                        child: const Center(
-                          child: CircularProgressIndicator(
+                        color: Colors.black
+                            .withOpacity(0.12),
+                        child:
+                            const Center(
+                          child:
+                              CircularProgressIndicator(
                             color: Colors.amber,
                           ),
                         ),
@@ -710,15 +880,21 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                     ),
                   ),
 
-                if (unlockingIsland || unlockingPrivateIsland)
+                // ==================================================
+                // 🔄 فتح جزيرة
+                // ==================================================
+
+                if (unlockingIsland ||
+                    unlockingPrivateIsland)
                   Positioned.fill(
                     child: IgnorePointer(
                       child: Container(
-                        color: Colors.black.withOpacity(
-                          0.15,
-                        ),
-                        child: const Center(
-                          child: CircularProgressIndicator(
+                        color: Colors.black
+                            .withOpacity(0.15),
+                        child:
+                            const Center(
+                          child:
+                              CircularProgressIndicator(
                             color: Colors.amber,
                           ),
                         ),
@@ -727,85 +903,150 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                   ),
 
                 // ==================================================
-                // 📢 رسالة الشراء / الفتح
-                // 🔝 أعلى طبقة فوق الخريطة والجزر والأزرار
+                // 📢 الرسالة
                 // ==================================================
+
                 if (_worldMessage != null)
                   Positioned(
-                    top: topPadding + 95,
+                    top:
+                        topPadding + 95,
                     left: 20,
                     right: 20,
                     child: IgnorePointer(
                       child: Center(
                         child: Material(
-                          color: Colors.transparent,
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 250),
-                            transitionBuilder: (child, animation) {
+                          color:
+                              Colors.transparent,
+                          child:
+                              AnimatedSwitcher(
+                            duration:
+                                const Duration(
+                              milliseconds: 250,
+                            ),
+                            transitionBuilder:
+                                (
+                              child,
+                              animation,
+                            ) {
                               return FadeTransition(
-                                opacity: animation,
-                                child: ScaleTransition(
-                                  scale: Tween<double>(
-                                    begin: 0.92,
-                                    end: 1.0,
+                                opacity:
+                                    animation,
+                                child:
+                                    ScaleTransition(
+                                  scale:
+                                      Tween<double>(
+                                    begin:
+                                        0.92,
+                                    end:
+                                        1.0,
                                   ).animate(
                                     CurvedAnimation(
-                                      parent: animation,
-                                      curve: Curves.easeOutBack,
+                                      parent:
+                                          animation,
+                                      curve: Curves
+                                          .easeOutBack,
                                     ),
                                   ),
-                                  child: child,
+                                  child:
+                                      child,
                                 ),
                               );
                             },
-                            child: Container(
-                              key: ValueKey(_worldMessage),
-                              constraints: const BoxConstraints(
+                            child:
+                                Container(
+                              key: ValueKey(
+                                _worldMessage,
+                              ),
+                              constraints:
+                                  const BoxConstraints(
                                 maxWidth: 380,
                               ),
-                              padding: const EdgeInsets.symmetric(
+                              padding:
+                                  const EdgeInsets
+                                      .symmetric(
                                 horizontal: 18,
                                 vertical: 13,
                               ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF2A1B3D).withOpacity(0.97),
-                                borderRadius: BorderRadius.circular(18),
-                                border: Border.all(
-                                  color: Colors.amber.withOpacity(0.85),
+                              decoration:
+                                  BoxDecoration(
+                                color:
+                                    const Color(
+                                  0xFF2A1B3D,
+                                ).withOpacity(0.97),
+                                borderRadius:
+                                    BorderRadius
+                                        .circular(
+                                  18,
+                                ),
+                                border:
+                                    Border.all(
+                                  color: Colors
+                                      .amber
+                                      .withOpacity(
+                                    0.85,
+                                  ),
                                   width: 1.5,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.45),
-                                    blurRadius: 16,
-                                    spreadRadius: 2,
-                                    offset: const Offset(0, 5),
+                                    color: Colors
+                                        .black
+                                        .withOpacity(
+                                      0.45,
+                                    ),
+                                    blurRadius:
+                                        16,
+                                    spreadRadius:
+                                        2,
+                                    offset:
+                                        const Offset(
+                                      0,
+                                      5,
+                                    ),
                                   ),
                                   BoxShadow(
-                                    color: Colors.amber.withOpacity(0.15),
-                                    blurRadius: 20,
-                                    spreadRadius: 2,
+                                    color: Colors
+                                        .amber
+                                        .withOpacity(
+                                      0.15,
+                                    ),
+                                    blurRadius:
+                                        20,
+                                    spreadRadius:
+                                        2,
                                   ),
                                 ],
                               ),
                               child: Row(
-                                mainAxisSize: MainAxisSize.min,
+                                mainAxisSize:
+                                    MainAxisSize.min,
                                 children: [
                                   const Icon(
-                                    Icons.info_outline_rounded,
-                                    color: Colors.amber,
+                                    Icons
+                                        .info_outline_rounded,
+                                    color:
+                                        Colors.amber,
                                     size: 23,
                                   ),
-                                  const SizedBox(width: 10),
+                                  const SizedBox(
+                                    width: 10,
+                                  ),
                                   Flexible(
                                     child: Text(
                                       _worldMessage!,
-                                      textAlign: TextAlign.right,
-                                      style: const TextStyle(
-                                        color: Colors.white,
+                                      textAlign:
+                                          TextAlign
+                                              .right,
+                                      style:
+                                          const TextStyle(
+                                        color:
+                                            Colors.white,
                                         fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        height: 1.35,
+                                        fontWeight:
+                                            FontWeight
+                                                .w600,
+                                        height:
+                                            1.35,
                                       ),
                                     ),
                                   ),
@@ -828,12 +1069,17 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // ============================================================
   // ☁️ السحب
   // ============================================================
+
   Widget cloudWidget({
     required _RelativeCloud cloud,
     required AnimationController controller,
   }) {
-    final double top = cloud.top * worldHeight;
-    final double size = cloud.size * worldWidth;
+    final top =
+        cloud.top * worldHeight;
+
+    final size =
+        cloud.size * worldWidth;
+
     return AnimatedBuilder(
       animation: controller,
       builder: (
@@ -841,12 +1087,16 @@ class _WorldMapScreenState extends State<WorldMapScreen>
         child,
       ) {
         return Positioned(
-          left: (worldWidth + 100) - (controller.value * (worldWidth + 400)),
+          left:
+              (worldWidth + 100) -
+                  (controller.value *
+                      (worldWidth + 400)),
           top: top,
           child: Opacity(
             opacity: cloud.opacity,
             child: Transform.rotate(
-              angle: controller.value * 0.15,
+              angle:
+                  controller.value * 0.15,
               child: child,
             ),
           ),
@@ -869,18 +1119,33 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // ============================================================
   // 🏝️ رسم الجزيرة
   // ============================================================
+
   Widget islandImage({
     required _RelativeRect rect,
   }) {
-    final island = getIsland(rect.id);
+    final island =
+        getIsland(rect.id);
+
     if (island == null) {
       return const SizedBox.shrink();
     }
-    final double left = rect.left * worldWidth;
-    final double top = rect.top * worldHeight;
-    final double width = rect.width * worldWidth;
-    final double height = rect.height * worldHeight;
-    final bool locked = !isIslandUnlockedLocal(rect.id);
+
+    final left =
+        rect.left * worldWidth;
+
+    final top =
+        rect.top * worldHeight;
+
+    final width =
+        rect.width * worldWidth;
+
+    final height =
+        rect.height * worldHeight;
+
+    final locked =
+        !isIslandUnlockedLocal(
+      rect.id,
+    );
 
     return Positioned(
       left: left,
@@ -888,23 +1153,30 @@ class _WorldMapScreenState extends State<WorldMapScreen>
       width: width,
       height: height,
       child: GestureDetector(
+        behavior:
+            HitTestBehavior.opaque,
         onTap: locked
             ? null
             : () async {
                 await playClickSound();
+
                 if (!mounted) return;
+
                 await openIsland(island);
               },
-        behavior: HitTestBehavior.opaque,
         child: Stack(
-          alignment: Alignment.center,
+          alignment:
+              Alignment.center,
           children: [
             AnimatedOpacity(
-              duration: const Duration(
+              duration:
+                  const Duration(
                 milliseconds: 450,
               ),
-              curve: Curves.easeInOut,
-              opacity: locked ? 0.48 : 1.0,
+              curve:
+                  Curves.easeInOut,
+              opacity:
+                  locked ? 0.48 : 1.0,
               child: Image.asset(
                 island.image,
                 fit: BoxFit.contain,
@@ -913,10 +1185,12 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                   error,
                   stack,
                 ) {
-                  return const SizedBox.shrink();
+                  return const SizedBox
+                      .shrink();
                 },
               ),
             ),
+
             if (locked)
               Center(
                 child: Image.asset(
@@ -931,60 +1205,82 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                   ) {
                     return const Icon(
                       Icons.lock_rounded,
-                      color: Colors.amber,
+                      color:
+                          Colors.amber,
                       size: 58,
                     );
                   },
                 ),
               ),
+
             if (locked)
               Positioned(
-                bottom: height * 0.10,
+                bottom:
+                    height * 0.10,
                 child: Material(
-                  color: Colors.transparent,
+                  color:
+                      Colors.transparent,
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(
+                    borderRadius:
+                        BorderRadius
+                            .circular(
                       18,
                     ),
-                    onTap: unlockingIsland
-                        ? null
-                        : () async {
-                            await playClickSound();
-                            if (!mounted) return;
-                            await showIslandPurchaseDialog(
-                              island,
-                            );
-                          },
+                    onTap:
+                        unlockingIsland
+                            ? null
+                            : () async {
+                                await playClickSound();
+
+                                if (!mounted) {
+                                  return;
+                                }
+
+                                await showIslandPurchaseDialog(
+                                  island,
+                                );
+                              },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
+                      padding:
+                          const EdgeInsets
+                              .symmetric(
                         horizontal: 18,
                         vertical: 9,
                       ),
-                      decoration: BoxDecoration(
-                        color: const Color(
+                      decoration:
+                          BoxDecoration(
+                        color:
+                            const Color(
                           0xFF5B3A7D,
-                        ).withOpacity(
-                          0.96,
-                        ),
-                        borderRadius: BorderRadius.circular(
+                        ).withOpacity(0.96),
+                        borderRadius:
+                            BorderRadius
+                                .circular(
                           18,
                         ),
-                        border: Border.all(
-                          color: Colors.amber.withOpacity(
+                        border:
+                            Border.all(
+                          color: Colors
+                              .amber
+                              .withOpacity(
                             0.85,
                           ),
                           width: 1.5,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(
+                            color: Colors
+                                .black
+                                .withOpacity(
                               0.30,
                             ),
                             blurRadius: 10,
                             spreadRadius: 1,
                           ),
                           BoxShadow(
-                            color: Colors.amber.withOpacity(
+                            color: Colors
+                                .amber
+                                .withOpacity(
                               0.18,
                             ),
                             blurRadius: 14,
@@ -993,13 +1289,15 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                         ],
                       ),
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                        mainAxisSize:
+                            MainAxisSize.min,
                         children: [
                           Image.asset(
                             "assets/images/rewards/Star_gold.png",
                             width: 22,
                             height: 22,
-                            fit: BoxFit.contain,
+                            fit:
+                                BoxFit.contain,
                             errorBuilder: (
                               context,
                               error,
@@ -1016,10 +1314,14 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                           ),
                           const Text(
                             "فتح",
-                            style: TextStyle(
-                              color: Colors.white,
+                            style:
+                                TextStyle(
+                              color:
+                                  Colors.white,
                               fontSize: 14,
-                              fontWeight: FontWeight.bold,
+                              fontWeight:
+                                  FontWeight
+                                      .bold,
                             ),
                           ),
                         ],
@@ -1037,22 +1339,28 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // ============================================================
   // 🔎 حالة الجزيرة
   // ============================================================
+
   bool isIslandUnlockedLocal(
     String islandId,
   ) {
     if (islandId == "animals") {
       return true;
     }
-    return islandUnlocked[islandId] ?? false;
+
+    return islandUnlocked[
+            islandId] ??
+        false;
   }
 
   // ============================================================
   // ⭐ سعر الجزيرة
   // ============================================================
+
   int getIslandStarCost(
     String islandId,
   ) {
-    return PuzzleProgressManager.getIslandStarCost(
+    return PuzzleProgressManager
+        .getIslandStarCost(
       islandId,
     );
   }
@@ -1060,38 +1368,53 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // ============================================================
   // 🏝️ فتح الجزيرة
   // ============================================================
+
   Future<void> openIsland(
     PuzzleModel island,
   ) async {
     if (island.id == "animals") {
-      await PuzzleProgressManager.unlockIsland(
+      await PuzzleProgressManager
+          .unlockIsland(
         island.id,
       );
+
       if (!mounted) return;
+
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => IslandScreen(
+          builder: (_) =>
+              IslandScreen(
             island: island,
           ),
         ),
       );
+
       return;
     }
-    final unlocked = await PuzzleProgressManager.isIslandUnlocked(
+
+    final unlocked =
+        await PuzzleProgressManager
+            .isIslandUnlocked(
       island.id,
     );
+
     if (!mounted) return;
+
     if (!unlocked) {
       return;
     }
+
     setState(() {
-      islandUnlocked[island.id] = true;
+      islandUnlocked[
+          island.id] = true;
     });
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => IslandScreen(
+        builder: (_) =>
+            IslandScreen(
           island: island,
         ),
       ),
@@ -1101,48 +1424,65 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // ============================================================
   // ⭐ نافذة شراء الجزيرة
   // ============================================================
+
   Future<void> showIslandPurchaseDialog(
     PuzzleModel island,
   ) async {
-    final requiredStars = getIslandStarCost(
+    final requiredStars =
+        getIslandStarCost(
       island.id,
     );
-    final currentStars = await PuzzleProgressManager.getStars();
+
+    final currentStars =
+        await PuzzleProgressManager
+            .getStars();
+
     if (!mounted) return;
-    showDialog(
+
+    await showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (dialogContext) {
+      builder: (
+        dialogContext,
+      ) {
         return StatefulBuilder(
           builder: (
             dialogContext,
             setDialogState,
           ) {
             return AlertDialog(
-              backgroundColor: const Color(
+              backgroundColor:
+                  const Color(
                 0xFF2A1B3D,
               ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(
+              shape:
+                  RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(
                   20,
                 ),
               ),
               title: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment:
+                    MainAxisAlignment
+                        .center,
                 children: [
                   Image.asset(
                     "assets/images/ui/lock.png",
                     width: 38,
                     height: 38,
-                    fit: BoxFit.contain,
+                    fit:
+                        BoxFit.contain,
                     errorBuilder: (
                       context,
                       error,
                       stack,
                     ) {
                       return const Icon(
-                        Icons.lock_rounded,
-                        color: Colors.amber,
+                        Icons
+                            .lock_rounded,
+                        color:
+                            Colors.amber,
                         size: 36,
                       );
                     },
@@ -1153,34 +1493,51 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                   Flexible(
                     child: Text(
                       "${getIslandName(island.id)} مغلقة",
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.amber,
-                        fontWeight: FontWeight.bold,
+                      textAlign:
+                          TextAlign.center,
+                      style:
+                          const TextStyle(
+                        color:
+                            Colors.amber,
+                        fontWeight:
+                            FontWeight.bold,
                       ),
                     ),
                   ),
                 ],
               ),
-              content: FutureBuilder<int>(
-                future: PuzzleProgressManager.getStars(),
+              content:
+                  FutureBuilder<int>(
+                future:
+                    PuzzleProgressManager
+                        .getStars(),
                 builder: (
                   context,
                   snapshot,
                 ) {
-                  final stars = snapshot.data ?? currentStars;
-                  final remaining = math.max(
+                  final stars =
+                      snapshot.data ??
+                          currentStars;
+
+                  final remaining =
+                      math.max(
                     0,
-                    requiredStars - stars,
+                    requiredStars -
+                        stars,
                   );
+
                   return Column(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisSize:
+                        MainAxisSize.min,
                     children: [
                       const Text(
                         "يمكنك شراء هذه الجزيرة باستخدام النجوم.",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
+                        textAlign:
+                            TextAlign.center,
+                        style:
+                            TextStyle(
+                          color:
+                              Colors.white,
                           fontSize: 16,
                         ),
                       ),
@@ -1188,23 +1545,30 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                         height: 20,
                       ),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment:
+                            MainAxisAlignment
+                                .center,
                         children: [
                           Image.asset(
                             "assets/images/rewards/Star_gold.png",
                             width: 38,
                             height: 38,
-                            fit: BoxFit.contain,
+                            fit:
+                                BoxFit.contain,
                           ),
                           const SizedBox(
                             width: 10,
                           ),
                           Text(
                             "$requiredStars",
-                            style: const TextStyle(
-                              color: Colors.amber,
+                            style:
+                                const TextStyle(
+                              color:
+                                  Colors.amber,
                               fontSize: 28,
-                              fontWeight: FontWeight.bold,
+                              fontWeight:
+                                  FontWeight
+                                      .bold,
                             ),
                           ),
                         ],
@@ -1214,31 +1578,43 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                       ),
                       Text(
                         "نجومك الحالية: $stars ⭐",
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        textAlign:
+                            TextAlign.center,
+                        style:
+                            const TextStyle(
+                          color:
+                              Colors.white,
                           fontSize: 16,
                         ),
                       ),
                       const SizedBox(
                         height: 8,
                       ),
-                      if (remaining > 0)
+                      if (remaining >
+                          0)
                         Text(
                           "تحتاج إلى $remaining ⭐ إضافية.",
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          textAlign:
+                              TextAlign.center,
+                          style:
+                              const TextStyle(
+                            color:
+                                Colors.white,
                             fontSize: 15,
                           ),
                         )
                       else
                         const Text(
                           "يمكنك شراء الجزيرة الآن.",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.greenAccent,
-                            fontWeight: FontWeight.bold,
+                          textAlign:
+                              TextAlign.center,
+                          style:
+                              TextStyle(
+                            color:
+                                Colors.greenAccent,
+                            fontWeight:
+                                FontWeight
+                                    .bold,
                             fontSize: 15,
                           ),
                         ),
@@ -1253,10 +1629,13 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                       dialogContext,
                     );
                   },
-                  child: const Text(
+                  child:
+                      const Text(
                     "إلغاء",
-                    style: TextStyle(
-                      color: Colors.white70,
+                    style:
+                        TextStyle(
+                      color:
+                          Colors.white70,
                     ),
                   ),
                 ),
@@ -1265,26 +1644,33 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                     "assets/images/rewards/Star_gold.png",
                     width: 22,
                     height: 22,
-                    fit: BoxFit.contain,
+                    fit:
+                        BoxFit.contain,
                   ),
-                  label: const Text(
+                  label:
+                      const Text(
                     "شراء وفتح",
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
-                    foregroundColor: const Color(
+                  style:
+                      ElevatedButton
+                          .styleFrom(
+                    backgroundColor:
+                        Colors.amber,
+                    foregroundColor:
+                        const Color(
                       0xFF1A0B2E,
                     ),
                   ),
-                  onPressed: unlockingIsland
-                      ? null
-                      : () async {
-                          await buyIsland(
-                            island,
-                            dialogContext,
-                            setDialogState,
-                          );
-                        },
+                  onPressed:
+                      unlockingIsland
+                          ? null
+                          : () async {
+                              await buyIsland(
+                                island,
+                                dialogContext,
+                                setDialogState,
+                              );
+                            },
                 ),
               ],
             );
@@ -1297,6 +1683,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // ============================================================
   // ⭐ شراء الجزيرة
   // ============================================================
+
   Future<void> buyIsland(
     PuzzleModel island,
     BuildContext dialogContext,
@@ -1305,95 +1692,109 @@ class _WorldMapScreenState extends State<WorldMapScreen>
     if (unlockingIsland) {
       return;
     }
+
     setState(() {
       unlockingIsland = true;
     });
+
     setDialogState(() {});
+
     try {
-      final requiredStars = getIslandStarCost(
+      final requiredStars =
+          getIslandStarCost(
         island.id,
       );
-      final currentStars = await PuzzleProgressManager.getStars();
 
-      // ========================================================
-      // ❌ النجوم غير كافية
-      // ========================================================
-      if (currentStars < requiredStars) {
+      final currentStars =
+          await PuzzleProgressManager
+              .getStars();
+
+      if (currentStars <
+          requiredStars) {
         if (mounted) {
           setState(() {
             unlockingIsland = false;
           });
         }
+
         if (dialogContext.mounted) {
           Navigator.pop(
             dialogContext,
           );
         }
+
         await Future<void>.delayed(
           const Duration(
             milliseconds: 150,
           ),
         );
+
         if (!mounted) return;
+
         showMessage(
           "لا تملك نجومًا كافية. تحتاج $requiredStars ⭐ لفتح جزيرة ${getIslandName(island.id)}.",
         );
+
         return;
       }
 
-      // ========================================================
-      // 💰 تنفيذ عملية الشراء
-      // ========================================================
-      final paid = await PuzzleProgressManager.buyIslandWithStars(
+      final paid =
+          await PuzzleProgressManager
+              .buyIslandWithStars(
         island.id,
       );
 
-      // ========================================================
-      // ❌ فشل الدفع
-      // ========================================================
       if (!paid) {
         if (mounted) {
           setState(() {
             unlockingIsland = false;
           });
         }
+
         if (dialogContext.mounted) {
           Navigator.pop(
             dialogContext,
           );
         }
+
         await Future<void>.delayed(
           const Duration(
             milliseconds: 150,
           ),
         );
+
         if (!mounted) return;
+
         showMessage(
           "تعذر شراء الجزيرة. تأكد من رصيد النجوم.",
         );
+
         return;
       }
 
-      // ========================================================
-      // ✅ نجاح الشراء
-      // ========================================================
       if (!mounted) return;
+
       setState(() {
-        islandUnlocked[island.id] = true;
+        islandUnlocked[
+            island.id] = true;
+
         unlockingIsland = false;
       });
+
       if (dialogContext.mounted) {
         Navigator.pop(
           dialogContext,
         );
       }
-      // نعطي الـ Dialog فرصة للاختفاء
+
       await Future<void>.delayed(
         const Duration(
           milliseconds: 150,
         ),
       );
+
       if (!mounted) return;
+
       showMessage(
         "تم شراء وفتح جزيرة ${getIslandName(island.id)} بنجاح! ⭐",
       );
@@ -1403,17 +1804,21 @@ class _WorldMapScreenState extends State<WorldMapScreen>
           unlockingIsland = false;
         });
       }
+
       if (dialogContext.mounted) {
         Navigator.pop(
           dialogContext,
         );
       }
+
       await Future<void>.delayed(
         const Duration(
           milliseconds: 150,
         ),
       );
+
       if (!mounted) return;
+
       showMessage(
         "حدث خطأ أثناء فتح الجزيرة.",
       );
@@ -1421,22 +1826,427 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   }
 
   // ============================================================
+  // 💎 نافذة شراء الجزيرة الخاصة
+  // ============================================================
+
+  Future<void>
+      showPrivateIslandPurchaseDialog() async {
+    const requiredGems =
+        privateIslandGemCost;
+
+    final currentGems =
+        await PuzzleProgressManager
+            .getGems();
+
+    if (!mounted) return;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (
+        dialogContext,
+      ) {
+        return StatefulBuilder(
+          builder: (
+            dialogContext,
+            setDialogState,
+          ) {
+            return AlertDialog(
+              backgroundColor:
+                  const Color(
+                0xFF2A1B3D,
+              ),
+              shape:
+                  RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(
+                  20,
+                ),
+              ),
+              title: Row(
+                mainAxisAlignment:
+                    MainAxisAlignment
+                        .center,
+                children: [
+                  Image.asset(
+                    "assets/images/ui/lock.png",
+                    width: 38,
+                    height: 38,
+                    fit:
+                        BoxFit.contain,
+                    errorBuilder: (
+                      context,
+                      error,
+                      stack,
+                    ) {
+                      return const Icon(
+                        Icons
+                            .lock_rounded,
+                        color:
+                            Colors.amber,
+                        size: 36,
+                      );
+                    },
+                  ),
+                  const SizedBox(
+                    width: 8,
+                  ),
+                  const Flexible(
+                    child: Text(
+                      "الجزيرة الخاصة مغلقة",
+                      textAlign:
+                          TextAlign.center,
+                      style:
+                          TextStyle(
+                        color:
+                            Colors.amber,
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              content:
+                  FutureBuilder<int>(
+                future:
+                    PuzzleProgressManager
+                        .getGems(),
+                builder: (
+                  context,
+                  snapshot,
+                ) {
+                  final gems =
+                      snapshot.data ??
+                          currentGems;
+
+                  final remaining =
+                      math.max(
+                    0,
+                    requiredGems -
+                        gems,
+                  );
+
+                  return Column(
+                    mainAxisSize:
+                        MainAxisSize.min,
+                    children: [
+                      const Text(
+                        "يمكنك شراء الجزيرة الخاصة باستخدام الجواهر.",
+                        textAlign:
+                            TextAlign.center,
+                        style:
+                            TextStyle(
+                          color:
+                              Colors.white,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Row(
+                        mainAxisAlignment:
+                            MainAxisAlignment
+                                .center,
+                        children: [
+                          Image.asset(
+                            "assets/images/rewards/gem.png",
+                            width: 38,
+                            height: 38,
+                            fit:
+                                BoxFit.contain,
+                          ),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          Text(
+                            "$requiredGems",
+                            style:
+                                const TextStyle(
+                              color:
+                                  Colors.amber,
+                              fontSize: 28,
+                              fontWeight:
+                                  FontWeight
+                                      .bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 12,
+                      ),
+                      Text(
+                        "جواهرك الحالية: $gems 💎",
+                        textAlign:
+                            TextAlign.center,
+                        style:
+                            const TextStyle(
+                          color:
+                              Colors.white,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 8,
+                      ),
+                      if (remaining >
+                          0)
+                        Text(
+                          "تحتاج إلى $remaining 💎 إضافية.",
+                          textAlign:
+                              TextAlign.center,
+                          style:
+                              const TextStyle(
+                            color:
+                                Colors.white,
+                            fontSize: 15,
+                          ),
+                        )
+                      else
+                        const Text(
+                          "يمكنك شراء الجزيرة الآن.",
+                          textAlign:
+                              TextAlign.center,
+                          style:
+                              TextStyle(
+                            color:
+                                Colors.greenAccent,
+                            fontWeight:
+                                FontWeight
+                                    .bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(
+                      dialogContext,
+                    );
+                  },
+                  child:
+                      const Text(
+                    "إلغاء",
+                    style:
+                        TextStyle(
+                      color:
+                          Colors.white70,
+                    ),
+                  ),
+                ),
+                ElevatedButton.icon(
+                  icon: Image.asset(
+                    "assets/images/rewards/gem.png",
+                    width: 22,
+                    height: 22,
+                    fit:
+                        BoxFit.contain,
+                  ),
+                  label:
+                      const Text(
+                    "شراء وفتح",
+                  ),
+                  style:
+                      ElevatedButton
+                          .styleFrom(
+                    backgroundColor:
+                        Colors.amber,
+                    foregroundColor:
+                        const Color(
+                      0xFF1A0B2E,
+                    ),
+                  ),
+                  onPressed:
+                      unlockingPrivateIsland
+                          ? null
+                          : () async {
+                              await buyPrivateIsland(
+                                dialogContext,
+                                setDialogState,
+                              );
+                            },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ============================================================
+  // 💎 شراء وفتح الجزيرة الخاصة
+  // ============================================================
+
+  Future<void> buyPrivateIsland(
+    BuildContext dialogContext,
+    StateSetter setDialogState,
+  ) async {
+    if (unlockingPrivateIsland) {
+      return;
+    }
+
+    setState(() {
+      unlockingPrivateIsland = true;
+    });
+
+    setDialogState(() {});
+
+    try {
+      const requiredGems =
+          privateIslandGemCost;
+
+      final currentGems =
+          await PuzzleProgressManager
+              .getGems();
+
+      if (currentGems <
+          requiredGems) {
+        if (mounted) {
+          setState(() {
+            unlockingPrivateIsland =
+                false;
+          });
+        }
+
+        if (dialogContext.mounted) {
+          Navigator.pop(
+            dialogContext,
+          );
+        }
+
+        await Future<void>.delayed(
+          const Duration(
+            milliseconds: 150,
+          ),
+        );
+
+        if (!mounted) return;
+
+        showMessage(
+          "لا تملك جواهر كافية. تحتاج $requiredGems 💎 لفتح الجزيرة الخاصة.",
+        );
+
+        return;
+      }
+
+      final paid =
+          await PuzzleProgressManager
+              .buyPrivateIslandWithGems();
+
+      if (!paid) {
+        if (mounted) {
+          setState(() {
+            unlockingPrivateIsland =
+                false;
+          });
+        }
+
+        if (dialogContext.mounted) {
+          Navigator.pop(
+            dialogContext,
+          );
+        }
+
+        await Future<void>.delayed(
+          const Duration(
+            milliseconds: 150,
+          ),
+        );
+
+        if (!mounted) return;
+
+        showMessage(
+          "تعذر شراء الجزيرة الخاصة. تأكد من رصيد الجواهر.",
+        );
+
+        return;
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        privateIslandUnlocked =
+            true;
+
+        unlockingPrivateIsland =
+            false;
+      });
+
+      if (dialogContext.mounted) {
+        Navigator.pop(
+          dialogContext,
+        );
+      }
+
+      await Future<void>.delayed(
+        const Duration(
+          milliseconds: 150,
+        ),
+      );
+
+      if (!mounted) return;
+
+      showMessage(
+        "تم شراء وفتح الجزيرة الخاصة بنجاح! 💎",
+      );
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          unlockingPrivateIsland =
+              false;
+        });
+      }
+
+      if (dialogContext.mounted) {
+        Navigator.pop(
+          dialogContext,
+        );
+      }
+
+      await Future<void>.delayed(
+        const Duration(
+          milliseconds: 150,
+        ),
+      );
+
+      if (!mounted) return;
+
+      showMessage(
+        "حدث خطأ أثناء فتح الجزيرة الخاصة.",
+      );
+    }
+  }
+
+  // ============================================================
   // 🏷️ اسم الجزيرة
   // ============================================================
+
   String getIslandName(
     String islandId,
   ) {
     switch (islandId) {
       case "animals":
         return "الحيوانات";
+
       case "nature":
         return "الطبيعة";
+
       case "cars":
         return "السيارات";
+
       case "landmarks":
         return "المعالم";
+
       case "space":
         return "الفضاء";
+
       default:
         return "الجديدة";
     }
@@ -1445,40 +2255,53 @@ class _WorldMapScreenState extends State<WorldMapScreen>
   // ============================================================
   // ⚙️ نافذة الإعدادات
   // ============================================================
+
   Future<void> showSettingsDialog() async {
     await showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (dialogContext) {
+      builder: (
+        dialogContext,
+      ) {
         return StatefulBuilder(
           builder: (
             dialogContext,
             setDialogState,
           ) {
             return AlertDialog(
-              backgroundColor: const Color(0xFF241337),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(
+              backgroundColor:
+                  const Color(0xFF241337),
+              shape:
+                  RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(
                   24,
                 ),
               ),
               title: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment:
+                    MainAxisAlignment
+                        .center,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(
+                    padding:
+                        const EdgeInsets.all(
                       8,
                     ),
-                    decoration: BoxDecoration(
-                      color: const Color(
+                    decoration:
+                        BoxDecoration(
+                      color:
+                          const Color(
                         0xFF6A35C9,
                       ).withOpacity(
                         0.22,
                       ),
-                      shape: BoxShape.circle,
+                      shape:
+                          BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(
+                          color:
+                              const Color(
                             0xFF7E57C2,
                           ).withOpacity(
                             0.30,
@@ -1488,9 +2311,12 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.settings_rounded,
-                      color: Color(
+                    child:
+                        const Icon(
+                      Icons
+                          .settings_rounded,
+                      color:
+                          Color(
                         0xFFD6B8FF,
                       ),
                       size: 28,
@@ -1501,90 +2327,119 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                   ),
                   const Text(
                     "الإعدادات",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                    style:
+                        TextStyle(
+                      color:
+                          Colors.white,
+                      fontWeight:
+                          FontWeight.bold,
                     ),
                   ),
                 ],
               ),
-              content: SingleChildScrollView(
+              content:
+                  SingleChildScrollView(
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize:
+                      MainAxisSize.min,
                   children: [
-                    // ==========================================
-                    // 🔊 الصوت
-                    // ==========================================
                     _SettingsTile(
                       icon: soundEnabled
-                          ? Icons.volume_up_rounded
-                          : Icons.volume_off_rounded,
+                          ? Icons
+                              .volume_up_rounded
+                          : Icons
+                              .volume_off_rounded,
                       title: "الصوت",
-                      trailing: Switch(
-                        value: soundEnabled,
-                        activeColor: const Color(
+                      trailing:
+                          Switch(
+                        value:
+                            soundEnabled,
+                        activeColor:
+                            const Color(
                           0xFF9B6DFF,
                         ),
-                        onChanged: (value) {
+                        onChanged:
+                            (value) async {
                           setDialogState(
                             () {
-                              soundEnabled = value;
+                              soundEnabled =
+                                  value;
                             },
                           );
-                          setState(() {
-                            soundEnabled = value;
-                          });
+
+                          setState(
+                            () {
+                              soundEnabled =
+                                  value;
+                            },
+                          );
+
+                          await PuzzleProgressManager
+                              .saveSoundEnabled(
+                            value,
+                          );
                         },
                       ),
                     ),
-                    // ==========================================
-                    // ℹ️ حول
-                    // ==========================================
+
                     _SettingsTile(
-                      icon: Icons.info_outline_rounded,
+                      icon: Icons
+                          .info_outline_rounded,
                       title: "حول",
-                      subtitle: "معلومات Puzzle World",
+                      subtitle:
+                          "معلومات Puzzle World",
                       onTap: () {
                         Navigator.pop(
                           dialogContext,
                         );
+
                         showAboutDialog();
                       },
                     ),
+
                     const SizedBox(
                       height: 8,
                     ),
-                    // ==========================================
-                    // 🚪 إغلاق التطبيق
-                    // ==========================================
+
                     _SettingsTile(
-                      icon: Icons.exit_to_app_rounded,
-                      title: "إغلاق التطبيق",
-                      subtitle: "إغلاق Puzzle World",
-                      iconColor: const Color(
+                      icon: Icons
+                          .exit_to_app_rounded,
+                      title:
+                          "إغلاق التطبيق",
+                      subtitle:
+                          "إغلاق Puzzle World",
+                      iconColor:
+                          const Color(
                         0xFFFF8A9B,
                       ),
                       onTap: () {
                         Navigator.pop(
                           dialogContext,
                         );
+
                         Future.delayed(
                           const Duration(
-                            milliseconds: 150,
+                            milliseconds:
+                                150,
                           ),
                           () {
-                            SystemNavigator.pop();
+                            SystemNavigator
+                                .pop();
                           },
                         );
                       },
                     ),
+
                     const SizedBox(
                       height: 8,
                     ),
+
                     const Text(
                       "الإصدار 1.0.0",
-                      style: TextStyle(
-                        color: Colors.white38,
+                      style:
+                          TextStyle(
+                        color:
+                            Colors.white38,
                         fontSize: 12,
                       ),
                     ),
@@ -1598,128 +2453,376 @@ class _WorldMapScreenState extends State<WorldMapScreen>
     );
   }
 
- // ============================================================
-// ℹ️ حول التطبيق
-// ============================================================
-Future<void> showAboutDialog() async {
-  await showDialog(
-    context: context,
-    barrierDismissible: true,
-    builder: (dialogContext) {
-      return AlertDialog(
-        backgroundColor: const Color(0xFF241337),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(22),
-        ),
-        title: const Text(
-          "حول Puzzle World",
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                "Puzzle World",
-                style: TextStyle(
-                  color: Color(0xFFD6B8FF),
-                  fontSize: 21,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                "الإصدار 1.0.0",
-                style: TextStyle(
-                  color: Colors.white54,
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 16),
+  // ============================================================
+  // ℹ️ حول التطبيق
+  // ============================================================
 
-              // ==========================================
-              // 🏝️ نظام فتح الجزر
-              // ==========================================
-              const _AboutSection(
-                title: "نظام فتح الجزر",
-                icon: Icons.public_rounded,
-                text:
-                    "تفتح الجزيرة تلقائيًا بعد إكمال مراحل الجزيرة المفتوحة. "
-                    "كما يمكنك استخدام النجوم لشراء أي جزيرة تريد.",
-              ),
-
-              const SizedBox(height: 10),
-
-              // ==========================================
-              // 🧩 نظام فتح المراحل
-              // ==========================================
-              const _AboutSection(
-                title: "نظام فتح المراحل",
-                icon: Icons.extension_rounded,
-                text:
-                    "يمكنك فتح المراحل تلقائيًا، أو شراء أي مرحلة تريد باستخدام العملات.",
-              ),
-
-              const SizedBox(height: 10),
-
-              // ==========================================
-              // 🛍️ نظام الشراء والمكافآت
-              // ==========================================
-              const _AboutSection(
-                title: "نظام الشراء والمكافآت",
-                icon: Icons.shopping_bag_rounded,
-                text:
-                    "تستخدم اللعبة العملات والنجوم والجواهر لإدارة مكافآتك "
-                    "وفتح الميزات المختلفة. استخدم المحفظة لإدارة مكافآتك.",
-              ),
-
-              const SizedBox(height: 10),
-
-              // ==========================================
-              // 🏝️ الجزيرة الغامضة
-              // ==========================================
-              const _AboutSection(
-                title: "الجزيرة الغامضة",
-                icon: Icons.auto_awesome_rounded,
-                text:
-                    "أكمل المراحل، واشترِ الجزيرة، واستكشف عالمك الخاص.",
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-            },
-            child: const Text(
-              "إغلاق",
-              style: TextStyle(
-                color: Color(0xFFD6B8FF),
-                fontSize: 14,
-              ),
+  Future<void> showAboutDialog() async {
+    await showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (
+        dialogContext,
+      ) {
+        return AlertDialog(
+          backgroundColor:
+              const Color(0xFF241337),
+          shape:
+              RoundedRectangleBorder(
+            borderRadius:
+                BorderRadius.circular(
+              22,
             ),
           ),
-        ],
-      );
-    },
-  );
-}
+          title: const Text(
+            "حول Puzzle World",
+            textAlign:
+                TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight:
+                  FontWeight.bold,
+              fontSize: 20,
+            ),
+          ),
+          content:
+              SingleChildScrollView(
+            child: Column(
+              mainAxisSize:
+                  MainAxisSize.min,
+              children: [
+                const Text(
+                  "Puzzle World",
+                  style:
+                      TextStyle(
+                    color:
+                        Color(
+                      0xFFD6B8FF,
+                    ),
+                    fontSize: 21,
+                    fontWeight:
+                        FontWeight.bold,
+                  ),
+                ),
 
-// ============================================================
-// 🔚 نهاية _WorldMapScreenState
-// ============================================================
+                const SizedBox(
+                  height: 4,
+                ),
+
+                const Text(
+                  "الإصدار 1.0.0",
+                  style:
+                      TextStyle(
+                    color:
+                        Colors.white54,
+                    fontSize: 11,
+                  ),
+                ),
+
+                const SizedBox(
+                  height: 12,
+                ),
+
+                // ==========================================
+                // 🏝️ نظام فتح الجزر
+                // ==========================================
+
+                const _AboutSection(
+                  title:
+                      "نظام فتح الجزر",
+                  icon: Icons
+                      .public_rounded,
+                  text:
+                      "تفتح الجزيرة تلقائيًا بعد إكمال مراحل الجزيرة المفتوحة، "
+                      "كما يمكنك استخدام النجوم لشراء أي جزيرة تريد.",
+                ),
+
+                const SizedBox(
+                  height: 8,
+                ),
+
+                // ==========================================
+                // 🧩 نظام فتح المراحل
+                // ==========================================
+
+                const _AboutSection(
+                  title:
+                      "نظام فتح المراحل",
+                  icon: Icons
+                      .extension_rounded,
+                  text:
+                      "يمكنك فتح المراحل تلقائيًا، أو شراء أي مرحلة تريد باستخدام العملات.",
+                ),
+
+                const SizedBox(
+                  height: 8,
+                ),
+
+                // ==========================================
+                // 👛 المحفظة
+                // ==========================================
+
+                const _AboutSection(
+                  title: "المحفظة",
+                  icon: Icons
+                      .account_balance_wallet_rounded,
+                  text:
+                      "استخدم المحفظة لإدارة العملات والنجوم والجواهر والمكافآت الخاصة بك.",
+                ),
+
+                const SizedBox(
+                  height: 8,
+                ),
+
+                // ==========================================
+                // 🏝️ الجزيرة الغامضة
+                // ==========================================
+
+                const _AboutSection(
+                  title:
+                      "الجزيرة الغامضة",
+                  icon: Icons
+                      .auto_awesome_rounded,
+                  text:
+                      "استكشف الجزيرة الخاصة، واختر صورك الخاصة، وأنشئ ألغازك بطريقتك.",
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                );
+              },
+              child:
+                  const Text(
+                "إغلاق",
+                style:
+                    TextStyle(
+                  color:
+                      Color(
+                    0xFFD6B8FF,
+                  ),
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 // ================================================================
-// 🎁 صندوق المكافأة اليومية + العد التنازلي
+// 🏝️ الجزيرة الخاصة
 // ================================================================
-class _DailyRewardMiniWidget extends StatelessWidget {
+
+class _PrivateIslandWidget
+    extends StatelessWidget {
+  final bool unlocked;
+  final bool unlocking;
+
+  final VoidCallback onTap;
+  final VoidCallback onUnlockTap;
+
+  const _PrivateIslandWidget({
+    required this.unlocked,
+    required this.unlocking,
+    required this.onTap,
+    required this.onUnlockTap,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    return GestureDetector(
+      behavior:
+          HitTestBehavior.opaque,
+      onTap: onTap,
+      child: SizedBox(
+        width: 86,
+        height: 110,
+        child: Stack(
+          alignment:
+              Alignment.center,
+          children: [
+            AnimatedOpacity(
+              duration:
+                  const Duration(
+                milliseconds: 450,
+              ),
+              curve:
+                  Curves.easeInOut,
+              opacity:
+                  unlocked ? 1.0 : 0.48,
+              child: Image.asset(
+                "assets/images/islands/private_island.png",
+                width: 76,
+                height: 76,
+                fit: BoxFit.contain,
+                filterQuality:
+                    FilterQuality.high,
+                errorBuilder: (
+                  context,
+                  error,
+                  stackTrace,
+                ) {
+                  return const SizedBox
+                      .shrink();
+                },
+              ),
+            ),
+
+            if (!unlocked)
+              Positioned(
+                top: 4,
+                child: Image.asset(
+                  "assets/images/ui/lock.png",
+                  width: 64,
+                  height: 64,
+                  fit:
+                      BoxFit.contain,
+                  errorBuilder: (
+                    context,
+                    error,
+                    stack,
+                  ) {
+                    return const Icon(
+                      Icons
+                          .lock_rounded,
+                      color:
+                          Colors.amber,
+                      size: 58,
+                    );
+                  },
+                ),
+              ),
+
+            if (!unlocked)
+              Positioned(
+                bottom: 0,
+                child: Material(
+                  color:
+                      Colors.transparent,
+                  child: InkWell(
+                    borderRadius:
+                        BorderRadius
+                            .circular(
+                      18,
+                    ),
+                    onTap:
+                        unlocking
+                            ? null
+                            : onUnlockTap,
+                    child: Container(
+                      padding:
+                          const EdgeInsets
+                              .symmetric(
+                        horizontal: 18,
+                        vertical: 9,
+                      ),
+                      decoration:
+                          BoxDecoration(
+                        color:
+                            const Color(
+                          0xFF5B3A7D,
+                        ).withOpacity(
+                          0.96,
+                        ),
+                        borderRadius:
+                            BorderRadius
+                                .circular(
+                          18,
+                        ),
+                        border:
+                            Border.all(
+                          color: Colors
+                              .amber
+                              .withOpacity(
+                            0.85,
+                          ),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors
+                                .black
+                                .withOpacity(
+                              0.30,
+                            ),
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                          ),
+                          BoxShadow(
+                            color: Colors
+                                .amber
+                                .withOpacity(
+                              0.18,
+                            ),
+                            blurRadius: 14,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize:
+                            MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            "assets/images/rewards/gem.png",
+                            width: 22,
+                            height: 22,
+                            fit:
+                                BoxFit.contain,
+                            errorBuilder: (
+                              context,
+                              error,
+                              stack,
+                            ) {
+                              return const SizedBox(
+                                width: 22,
+                                height: 22,
+                              );
+                            },
+                          ),
+                          const SizedBox(
+                            width: 6,
+                          ),
+                          const Text(
+                            "فتح",
+                            style:
+                                TextStyle(
+                              color:
+                                  Colors.white,
+                              fontSize: 14,
+                              fontWeight:
+                                  FontWeight
+                                      .bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ================================================================
+// 🎁 المكافأة اليومية
+// ================================================================
+
+class _DailyRewardMiniWidget
+    extends StatelessWidget {
   final bool available;
   final Duration remaining;
   final String timeText;
@@ -1731,11 +2834,14 @@ class _DailyRewardMiniWidget extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return SizedBox(
       width: 72,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize:
+            MainAxisSize.min,
         children: [
           SizedBox(
             width: 64,
@@ -1744,14 +2850,16 @@ class _DailyRewardMiniWidget extends StatelessWidget {
               "assets/images/rewards/daly_box_close.png",
               width: 58,
               height: 58,
-              fit: BoxFit.contain,
+              fit:
+                  BoxFit.contain,
               errorBuilder: (
                 context,
                 error,
                 stack,
               ) {
                 return Icon(
-                  Icons.card_giftcard_rounded,
+                  Icons
+                      .card_giftcard_rounded,
                   color: available
                       ? Colors.amber
                       : Colors.white38,
@@ -1760,44 +2868,74 @@ class _DailyRewardMiniWidget extends StatelessWidget {
               },
             ),
           ),
-          const SizedBox(height: 4),
+
+          const SizedBox(
+            height: 4,
+          ),
+
           Container(
-            padding: const EdgeInsets.symmetric(
+            padding:
+                const EdgeInsets
+                    .symmetric(
               horizontal: 6,
               vertical: 3,
             ),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A0E2A).withOpacity(0.92),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
+            decoration:
+                BoxDecoration(
+              color:
+                  const Color(
+                0xFF1A0E2A,
+              ).withOpacity(
+                0.92,
+              ),
+              borderRadius:
+                  BorderRadius.circular(
+                8,
+              ),
+              border:
+                  Border.all(
                 color: available
-                    ? Colors.amber.withOpacity(0.80)
+                    ? Colors.amber
+                        .withOpacity(
+                        0.80,
+                      )
                     : Colors.white24,
                 width: 1,
               ),
             ),
             child: Text(
-              available ? "00:00:00" : timeText,
-              textAlign: TextAlign.center,
+              available
+                  ? "00:00:00"
+                  : timeText,
+              textAlign:
+                  TextAlign.center,
               style: TextStyle(
                 color: available
                     ? Colors.amber
                     : Colors.white70,
                 fontSize: 10,
-                fontWeight: FontWeight.bold,
+                fontWeight:
+                    FontWeight.bold,
                 letterSpacing: 0.3,
               ),
             ),
           ),
+
           if (available)
             const Padding(
-              padding: EdgeInsets.only(top: 2),
+              padding:
+                  EdgeInsets.only(
+                top: 2,
+              ),
               child: Text(
                 "جاهز",
-                style: TextStyle(
-                  color: Colors.amber,
+                style:
+                    TextStyle(
+                  color:
+                      Colors.amber,
                   fontSize: 9,
-                  fontWeight: FontWeight.bold,
+                  fontWeight:
+                      FontWeight.bold,
                 ),
               ),
             ),
@@ -1810,36 +2948,57 @@ class _DailyRewardMiniWidget extends StatelessWidget {
 // ================================================================
 // 👛 المحفظة
 // ================================================================
-class _AnimatedRoyalWallet extends StatelessWidget {
-  final Animation<double> controller;
+
+class _AnimatedRoyalWallet
+    extends StatelessWidget {
+  final Animation<double>
+      controller;
 
   const _AnimatedRoyalWallet({
     required this.controller,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return AnimatedBuilder(
       animation: controller,
-      builder: (context, child) {
-        final pulse = controller.value;
+      builder: (
+        context,
+        child,
+      ) {
+        final pulse =
+            controller.value;
 
         return Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
+          decoration:
+              BoxDecoration(
+            shape:
+                BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF6A35C9).withOpacity(
-                  0.25 + pulse * 0.12,
+                color:
+                    const Color(
+                  0xFF6A35C9,
+                ).withOpacity(
+                  0.25 +
+                      pulse * 0.12,
                 ),
-                blurRadius: 16 + pulse * 5,
-                spreadRadius: 2 + pulse * 2,
+                blurRadius:
+                    16 + pulse * 5,
+                spreadRadius:
+                    2 + pulse * 2,
               ),
             ],
           ),
-          child: Transform.scale(
-            scale: 1.15 + pulse * 0.025,
-            child: const WalletIconWidget(),
+          child:
+              Transform.scale(
+            scale:
+                1.15 +
+                    pulse * 0.025,
+            child:
+                const WalletIconWidget(),
           ),
         );
       },
@@ -1848,10 +3007,14 @@ class _AnimatedRoyalWallet extends StatelessWidget {
 }
 
 // ================================================================
-// ⚙️ زر الإعدادات بالصورة الجديدة
+// ⚙️ زر الإعدادات
 // ================================================================
-class _AnimatedRoyalImageIcon extends StatelessWidget {
-  final Animation<double> controller;
+
+class _AnimatedRoyalImageIcon
+    extends StatelessWidget {
+  final Animation<double>
+      controller;
+
   final String image;
 
   const _AnimatedRoyalImageIcon({
@@ -1860,30 +3023,44 @@ class _AnimatedRoyalImageIcon extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return AnimatedBuilder(
       animation: controller,
-      builder: (context, child) {
-        final pulse = controller.value;
+      builder: (
+        context,
+        child,
+      ) {
+        final pulse =
+            controller.value;
 
         return SizedBox(
           width: 56,
           height: 56,
-          child: Transform.scale(
-            scale: 1.0 + pulse * 0.035,
+          child:
+              Transform.scale(
+            scale:
+                1.0 +
+                    pulse * 0.035,
             child: Image.asset(
               image,
               width: 34,
               height: 34,
-              fit: BoxFit.contain,
+              fit:
+                  BoxFit.contain,
               errorBuilder: (
                 context,
                 error,
                 stack,
               ) {
                 return const Icon(
-                  Icons.settings_rounded,
-                  color: Color(0xFFD6B8FF),
+                  Icons
+                      .settings_rounded,
+                  color:
+                      Color(
+                    0xFFD6B8FF,
+                  ),
                   size: 29,
                 );
               },
@@ -1898,7 +3075,9 @@ class _AnimatedRoyalImageIcon extends StatelessWidget {
 // ================================================================
 // ⚙️ عنصر الإعدادات
 // ================================================================
-class _SettingsTile extends StatelessWidget {
+
+class _SettingsTile
+    extends StatelessWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
@@ -1912,51 +3091,77 @@ class _SettingsTile extends StatelessWidget {
     this.subtitle,
     this.trailing,
     this.onTap,
-    this.iconColor = const Color(0xFFD6B8FF),
+    this.iconColor =
+        const Color(
+      0xFFD6B8FF,
+    ),
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(
+      contentPadding:
+          const EdgeInsets
+              .symmetric(
         horizontal: 4,
         vertical: 2,
       ),
       leading: Container(
         width: 42,
         height: 42,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: const Color(0xFF6A35C9).withOpacity(0.16),
+        decoration:
+            BoxDecoration(
+          shape:
+              BoxShape.circle,
+          color:
+              const Color(
+            0xFF6A35C9,
+          ).withOpacity(
+            0.16,
+          ),
         ),
         child: Icon(
           icon,
-          color: iconColor,
+          color:
+              iconColor,
         ),
       ),
       title: Text(
         title,
-        textAlign: TextAlign.right,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
+        textAlign:
+            TextAlign.right,
+        style:
+            const TextStyle(
+          color:
+              Colors.white,
+          fontWeight:
+              FontWeight.w600,
         ),
       ),
-      subtitle: subtitle == null
-          ? null
-          : Text(
-              subtitle!,
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                color: Colors.white54,
-                fontSize: 12,
+      subtitle:
+          subtitle == null
+              ? null
+              : Text(
+                  subtitle!,
+                  textAlign:
+                      TextAlign.right,
+                  style:
+                      const TextStyle(
+                    color:
+                        Colors.white54,
+                    fontSize: 12,
+                  ),
+                ),
+      trailing:
+          trailing ??
+              const Icon(
+                Icons
+                    .chevron_left_rounded,
+                color:
+                    Colors.white38,
               ),
-            ),
-      trailing: trailing ??
-          const Icon(
-            Icons.chevron_left_rounded,
-            color: Colors.white38,
-          ),
       onTap: onTap,
     );
   }
@@ -1965,7 +3170,9 @@ class _SettingsTile extends StatelessWidget {
 // ================================================================
 // ℹ️ قسم معلومات
 // ================================================================
-class _AboutSection extends StatelessWidget {
+
+class _AboutSection
+    extends StatelessWidget {
   final String title;
   final IconData icon;
   final String text;
@@ -1977,15 +3184,35 @@ class _AboutSection extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF6A35C9).withOpacity(0.10),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFD6B8FF).withOpacity(0.12),
+      padding:
+          const EdgeInsets.all(
+        11,
+      ),
+      decoration:
+          BoxDecoration(
+        color:
+            const Color(
+          0xFF6A35C9,
+        ).withOpacity(
+          0.10,
+        ),
+        borderRadius:
+            BorderRadius.circular(
+          15,
+        ),
+        border:
+            Border.all(
+          color:
+              const Color(
+            0xFFD6B8FF,
+          ).withOpacity(
+            0.12,
+          ),
         ),
       ),
       child: Column(
@@ -1994,30 +3221,47 @@ class _AboutSection extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                color: const Color(0xFFD6B8FF),
-                size: 22,
+                color:
+                    const Color(
+                  0xFFD6B8FF,
+                ),
+                size: 21,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(
+                width: 8,
+              ),
               Expanded(
                 child: Text(
                   title,
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                  textAlign:
+                      TextAlign.right,
+                  style:
+                      const TextStyle(
+                    color:
+                        Colors.white,
+                    fontWeight:
+                        FontWeight.bold,
+                    fontSize: 14,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+
+          const SizedBox(
+            height: 6,
+          ),
+
           Text(
             text,
-            textAlign: TextAlign.right,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-              height: 1.5,
+            textAlign:
+                TextAlign.right,
+            style:
+                const TextStyle(
+              color:
+                  Colors.white70,
+              fontSize: 12.5,
+              height: 1.4,
             ),
           ),
         ],
