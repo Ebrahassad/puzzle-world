@@ -51,13 +51,6 @@ jobs:
 
       # ============================================================
       # Generate Android App Icon
-      #
-      # Uses flutter_launcher_icons from pubspec.yaml.
-      #
-      # No custom splash background.
-      # No splash_color.
-      # No ImageMagick.
-      # No adaptive icon configuration.
       # ============================================================
 
       - name: Generate Android App Icon
@@ -66,9 +59,6 @@ jobs:
 
       # ============================================================
       # Decode Release Keystore
-      #
-      # Secret:
-      # KEYSTORE_BASE64
       # ============================================================
 
       - name: Decode Release Keystore
@@ -90,11 +80,6 @@ jobs:
 
       # ============================================================
       # Create key.properties
-      #
-      # Secrets:
-      # KEYSTORE_PASSWORD
-      # KEY_ALIAS
-      # KEY_PASSWORD
       # ============================================================
 
       - name: Create key.properties
@@ -188,11 +173,59 @@ jobs:
       # ============================================================
       # Generate App Icon Again
       #
-      # This guarantees the launcher icon exists after flutter clean.
+      # flutter clean removed generated files,
+      # so generate the launcher icon again.
       # ============================================================
 
       - name: Generate App Icon Again
         run: dart run flutter_launcher_icons
+
+
+      # ============================================================
+      # CHECK GENERATED LAUNCHER ICONS
+      #
+      # This does NOT modify anything.
+      # It only shows us exactly what flutter_launcher_icons
+      # generated inside android/app/src/main/res/
+      # ============================================================
+
+      - name: Check Generated Launcher Icons
+        shell: bash
+        run: |
+          echo ""
+          echo "============================================================"
+          echo "GENERATED ANDROID RES FILES"
+          echo "============================================================"
+
+          find android/app/src/main/res \
+            -maxdepth 3 \
+            -type f \
+            | sort
+
+          echo ""
+          echo "============================================================"
+          echo "LAUNCHER ICON REFERENCES"
+          echo "============================================================"
+
+          grep -R "ic_launcher" \
+            android/app/src/main/res \
+            2>/dev/null || true
+
+          echo ""
+          echo "============================================================"
+          echo "LAUNCHER ICON DIRECTORIES"
+          echo "============================================================"
+
+          find android/app/src/main/res \
+            -maxdepth 2 \
+            -type d \
+            \( -name "mipmap*" -o -name "drawable*" \) \
+            | sort || true
+
+          echo ""
+          echo "============================================================"
+          echo "CHECK COMPLETE"
+          echo "============================================================"
 
 
       # ============================================================
