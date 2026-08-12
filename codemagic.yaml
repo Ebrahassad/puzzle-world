@@ -14,25 +14,30 @@ workflows:
 
     environment:
       flutter: 3.44.8
+
       groups:
         - android_signing
 
     scripts:
 
       # ============================================================
-      # 1. Flutter
+      # 1. CHECK FLUTTER
       # ============================================================
 
       - name: Flutter version
         script: |
           set -e
 
+          echo "============================================================"
+          echo "FLUTTER"
+          echo "============================================================"
+
           flutter --version
           flutter doctor -v
 
 
       # ============================================================
-      # 2. Create Android project from scratch
+      # 2. CREATE ANDROID PROJECT
       # ============================================================
 
       - name: Create Android project
@@ -44,6 +49,9 @@ workflows:
           echo "============================================================"
 
           if [ ! -d "android" ]; then
+
+            echo "Android folder does not exist."
+            echo "Creating Android project from scratch..."
 
             flutter create \
               --platforms=android \
@@ -59,7 +67,7 @@ workflows:
 
 
       # ============================================================
-      # 3. Configure Gradle 8.14
+      # 3. CONFIGURE GRADLE 8.14
       # ============================================================
 
       - name: Configure Gradle 8.14
@@ -75,7 +83,9 @@ workflows:
           python3 - <<'PY'
           from pathlib import Path
 
-          path = Path("android/gradle/wrapper/gradle-wrapper.properties")
+          path = Path(
+              "android/gradle/wrapper/gradle-wrapper.properties"
+          )
 
           text = path.read_text()
 
@@ -84,22 +94,28 @@ workflows:
           for line in text.splitlines():
 
               if line.startswith("distributionUrl="):
+
                   lines.append(
                       "distributionUrl=https\\://services.gradle.org/distributions/gradle-8.14-bin.zip"
                   )
+
               else:
+
                   lines.append(line)
 
-          path.write_text("\n".join(lines) + "\n")
+          path.write_text(
+              "\n".join(lines) + "\n"
+          )
 
           print("Gradle 8.14 configured.")
           PY
 
+          echo ""
           grep "distributionUrl" "$WRAPPER"
 
 
       # ============================================================
-      # 4. Configure AGP 8.6.1 / Kotlin 2.0.21
+      # 4. CONFIGURE AGP 8.9.1 + KOTLIN 2.0.21
       # ============================================================
 
       - name: Configure AGP and Kotlin
@@ -107,7 +123,7 @@ workflows:
           set -e
 
           echo "============================================================"
-          echo "CONFIGURING AGP 8.6.1 / KOTLIN 2.0.21"
+          echo "CONFIGURING AGP 8.9.1 / KOTLIN 2.0.21"
           echo "============================================================"
 
           FILE="android/settings.gradle.kts"
@@ -117,20 +133,23 @@ workflows:
           import re
 
           path = Path("android/settings.gradle.kts")
+
           text = path.read_text()
 
+          # Android Gradle Plugin
           text = re.sub(
               r'(id\("com\.android\.application"\)\s+version\s+")[^"]+(")',
-              r'\g<1>8.6.1\g<2>',
+              r'\g<1>8.9.1\g<2>',
               text
           )
 
           text = re.sub(
               r'(id\("com\.android\.library"\)\s+version\s+")[^"]+(")',
-              r'\g<1>8.6.1\g<2>',
+              r'\g<1>8.9.1\g<2>',
               text
           )
 
+          # Kotlin
           text = re.sub(
               r'(id\("org\.jetbrains\.kotlin\.android"\)\s+version\s+")[^"]+(")',
               r'\g<1>2.0.21\g<2>',
@@ -139,48 +158,58 @@ workflows:
 
           path.write_text(text)
 
-          print("AGP 8.6.1 and Kotlin 2.0.21 configured.")
+          print("AGP 8.9.1 configured.")
+          print("Kotlin 2.0.21 configured.")
           PY
 
+          echo ""
+          echo "Android plugins:"
           grep -n \
             -E "com.android.application|com.android.library|org.jetbrains.kotlin.android" \
             "$FILE" || true
 
 
       # ============================================================
-      # 5. Flutter pub get
+      # 5. FLUTTER PUB GET
       # ============================================================
 
       - name: Flutter pub get
         script: |
           set -e
+
           flutter pub get
 
 
       # ============================================================
-      # 6. Launcher icon
+      # 6. INSTALL APP ICON
       # ============================================================
 
-      - name: Install launcher icon
+      - name: Install Puzzle World launcher icon
         script: |
           set -e
-
-          SOURCE="assets/icon/app_icon.png"
-          RES="android/app/src/main/res"
 
           echo "============================================================"
           echo "INSTALLING PUZZLE WORLD ICON"
           echo "============================================================"
 
+          SOURCE="assets/icon/app_icon.png"
+          RES="android/app/src/main/res"
+
           if [ ! -f "$SOURCE" ]; then
-            echo "ERROR: Missing $SOURCE"
+            echo "ERROR: Icon not found:"
+            echo "$SOURCE"
             exit 1
           fi
 
+          echo "Icon found."
+
+          # Remove generated launcher resources
           rm -rf "$RES"/mipmap-*
 
+          # Create classic PNG mipmap folders
           for density in mdpi hdpi xhdpi xxhdpi xxxhdpi
           do
+
             mkdir -p "$RES/mipmap-$density"
 
             cp "$SOURCE" \
@@ -188,18 +217,23 @@ workflows:
 
             cp "$SOURCE" \
               "$RES/mipmap-$density/ic_launcher_round.png"
+
           done
 
-          echo "Launcher icon installed."
+          echo "Launcher PNG icons installed."
 
 
       # ============================================================
-      # 7. Remove adaptive icons
+      # 7. REMOVE ADAPTIVE ICONS
       # ============================================================
 
       - name: Remove adaptive icons
         script: |
           set -e
+
+          echo "============================================================"
+          echo "REMOVING ADAPTIVE ICONS"
+          echo "============================================================"
 
           RES="android/app/src/main/res"
 
@@ -229,14 +263,20 @@ workflows:
             \) \
             -delete || true
 
+          echo "Adaptive icons removed."
+
 
       # ============================================================
-      # 8. Android Manifest
+      # 8. CONFIGURE ANDROID MANIFEST
       # ============================================================
 
       - name: Configure Android Manifest
         script: |
           set -e
+
+          echo "============================================================"
+          echo "CONFIGURING ANDROID MANIFEST"
+          echo "============================================================"
 
           python3 - <<'PY'
           from pathlib import Path
@@ -248,6 +288,7 @@ workflows:
 
           text = path.read_text()
 
+          # Remove old icon attributes
           text = re.sub(
               r'\s+android:icon="[^"]*"',
               '',
@@ -260,6 +301,7 @@ workflows:
               text
           )
 
+          # Add normal PNG launcher references
           text = text.replace(
               "<application",
               """<application
@@ -270,12 +312,16 @@ workflows:
 
           path.write_text(text)
 
-          print("AndroidManifest configured.")
+          print("Manifest configured.")
           PY
+
+          grep -n \
+            -E "android:icon|android:roundIcon" \
+            android/app/src/main/AndroidManifest.xml
 
 
       # ============================================================
-      # 9. Create release keystore
+      # 9. CREATE RELEASE KEYSTORE
       # ============================================================
 
       - name: Create release keystore
@@ -287,8 +333,12 @@ workflows:
           echo "============================================================"
 
           if [ -z "$KEYSTORE_BASE64" ]; then
-            echo "ERROR: KEYSTORE_BASE64 is empty."
+
+            echo "ERROR:"
+            echo "KEYSTORE_BASE64 is empty."
+
             exit 1
+
           fi
 
           mkdir -p android/app
@@ -298,20 +348,30 @@ workflows:
             > android/app/upload-keystore.jks
 
           if [ ! -s android/app/upload-keystore.jks ]; then
-            echo "ERROR: Generated keystore is empty."
+
+            echo "ERROR:"
+            echo "Keystore file is empty."
+
             exit 1
+
           fi
 
           echo "Keystore created successfully."
 
+          ls -lh android/app/upload-keystore.jks
+
 
       # ============================================================
-      # 10. key.properties
+      # 10. CREATE KEY PROPERTIES
       # ============================================================
 
       - name: Create key properties
         script: |
           set -e
+
+          echo "============================================================"
+          echo "CREATING KEY.PROPERTIES"
+          echo "============================================================"
 
           cat > android/key.properties <<EOF
           storePassword=$KEYSTORE_PASSWORD
@@ -322,31 +382,61 @@ workflows:
 
           echo "key.properties created."
 
+          echo ""
+          echo "Signing alias:"
+          echo "$KEY_ALIAS"
+
 
       # ============================================================
-      # 11. Configure signing
+      # 11. CONFIGURE RELEASE SIGNING
       # ============================================================
 
       - name: Configure release signing
         script: |
           set -e
 
+          echo "============================================================"
+          echo "CONFIGURING RELEASE SIGNING"
+          echo "============================================================"
+
           FILE="android/app/build.gradle.kts"
+
+          if [ ! -f "$FILE" ]; then
+
+            echo "ERROR:"
+            echo "$FILE not found."
+
+            exit 1
+
+          fi
 
           python3 - <<'PY'
           from pathlib import Path
 
-          path = Path("android/app/build.gradle.kts")
+          path = Path(
+              "android/app/build.gradle.kts"
+          )
+
           text = path.read_text()
 
+          # --------------------------------------------------------
+          # Imports
+          # --------------------------------------------------------
+
           if "import java.util.Properties" not in text:
+
               text = (
                   "import java.util.Properties\n"
                   "import java.io.FileInputStream\n\n"
                   + text
               )
 
+          # --------------------------------------------------------
+          # Keystore loader
+          # --------------------------------------------------------
+
           if "val keystorePropertiesFile" not in text:
+
               loader = """
           val keystorePropertiesFile =
               rootProject.file("key.properties")
@@ -367,7 +457,12 @@ workflows:
                   1
               )
 
+          # --------------------------------------------------------
+          # Signing config
+          # --------------------------------------------------------
+
           if 'create("release")' not in text:
+
               signing = """
               signingConfigs {
                   create("release") {
@@ -395,6 +490,10 @@ workflows:
                   1
               )
 
+          # --------------------------------------------------------
+          # Release signing
+          # --------------------------------------------------------
+
           text = text.replace(
               "signingConfig = signingConfigs.debug",
               'signingConfig = signingConfigs.getByName("release")'
@@ -404,6 +503,7 @@ workflows:
               'signingConfig = signingConfigs.getByName("release")'
               not in text
           ):
+
               text = text.replace(
                   "release {",
                   """release {
@@ -419,17 +519,24 @@ workflows:
 
 
       # ============================================================
-      # 12. Java 17
+      # 12. JAVA 17 / KOTLIN JVM
       # ============================================================
 
       - name: Configure Java 17
         script: |
           set -e
 
+          echo "============================================================"
+          echo "CONFIGURING JAVA 17"
+          echo "============================================================"
+
           python3 - <<'PY'
           from pathlib import Path
 
-          path = Path("android/app/build.gradle.kts")
+          path = Path(
+              "android/app/build.gradle.kts"
+          )
+
           text = path.read_text()
 
           text = text.replace(
@@ -459,19 +566,25 @@ workflows:
 
 
       # ============================================================
-      # 13. Unity Ads compatibility
+      # 13. UNITY ADS JVM COMPATIBILITY
       # ============================================================
 
       - name: Configure Unity Ads compatibility
         script: |
           set -e
 
+          echo "============================================================"
+          echo "CHECKING UNITY ADS"
+          echo "============================================================"
+
           UNITY_PATH=""
 
           while IFS= read -r path
           do
+
             UNITY_PATH="$path"
             break
+
           done < <(
             find "$HOME/.pub-cache" \
               -type d \
@@ -481,7 +594,7 @@ workflows:
 
           if [ -n "$UNITY_PATH" ]; then
 
-            echo "Unity Ads found:"
+            echo "Unity Ads plugin found:"
             echo "$UNITY_PATH"
 
             if [ -d "$UNITY_PATH/android" ]; then
@@ -496,6 +609,9 @@ workflows:
               while IFS= read -r -d '' FILE
               do
 
+                echo "Checking:"
+                echo "$FILE"
+
                 sed -i \
                   -E 's/jvmTarget[[:space:]]*=[[:space:]]*["'\'']1\.8["'\'']/jvmTarget = "17"/g' \
                   "$FILE" || true
@@ -509,32 +625,75 @@ workflows:
             fi
 
           else
+
             echo "Unity Ads plugin not found in cache."
+
           fi
 
 
       # ============================================================
-      # 14. Flutter clean
+      # 14. FLUTTER CLEAN
       # ============================================================
 
       - name: Flutter clean
         script: |
           set -e
+
           flutter clean
 
 
       # ============================================================
-      # 15. Pub get
+      # 15. FLUTTER PUB GET FINAL
       # ============================================================
 
       - name: Flutter pub get final
         script: |
           set -e
+
           flutter pub get
 
 
       # ============================================================
-      # 16. Build
+      # 16. VERIFY GRADLE / AGP / KOTLIN
+      # ============================================================
+
+      - name: Verify Android build configuration
+        script: |
+          set -e
+
+          echo "============================================================"
+          echo "ANDROID BUILD CONFIGURATION"
+          echo "============================================================"
+
+          echo ""
+          echo "Gradle:"
+          grep \
+            "distributionUrl" \
+            android/gradle/wrapper/gradle-wrapper.properties
+
+          echo ""
+          echo "Android plugins:"
+          grep -n \
+            -E "com.android.application|org.jetbrains.kotlin.android" \
+            android/settings.gradle.kts || true
+
+          echo ""
+          echo "Keystore:"
+          ls -lh android/app/upload-keystore.jks
+
+          echo ""
+          echo "Launcher icons:"
+          find android/app/src/main/res \
+            -type f \
+            \( \
+              -name "ic_launcher.png" \
+              -o -name "ic_launcher_round.png" \
+            \) \
+            | sort
+
+
+      # ============================================================
+      # 17. BUILD RELEASE APK
       # ============================================================
 
       - name: Build release APK
@@ -569,6 +728,7 @@ workflows:
       email:
         recipients:
           - ebrahassadi@gmail.com
+
         notify:
           success: true
           failure: true
