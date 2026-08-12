@@ -2679,7 +2679,7 @@ class _PrivateIslandWidget
 
             if (!unlocked)
               Positioned(
-                top: 15,
+                top: 20,
                 child: Image.asset(
                   "assets/images/ui/lock.png",
                   width: 35,
