@@ -2712,8 +2712,8 @@ class _PrivateIslandWidget
                     onTap: unlocking ? null : onUnlockTap,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 3,
+                        horizontal: 8,
+                        vertical: 2,
                       ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF5B3A7D).withOpacity(0.96),
@@ -2740,8 +2740,8 @@ class _PrivateIslandWidget
                         children: [
                           Image.asset(
                             "assets/images/rewards/gem.png",
-                            width: 15,
-                            height: 15,
+                            width: 11,
+                            height: 11,
                             fit: BoxFit.contain,
                             errorBuilder: (
                               context,
@@ -2749,8 +2749,8 @@ class _PrivateIslandWidget
                               stack,
                             ) {
                               return const SizedBox(
-                                width: 15,
-                                height: 15,
+                                width: 11,
+                                height: 11,
                               );
                             },
                           ),
@@ -2759,7 +2759,7 @@ class _PrivateIslandWidget
                             "فتح",
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 10,
+                              fontSize: 8,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
