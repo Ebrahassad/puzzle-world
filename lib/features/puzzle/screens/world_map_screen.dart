@@ -2679,11 +2679,11 @@ class _PrivateIslandWidget
 
             if (!unlocked)
               Positioned(
-                top: 10,
+                top: 15,
                 child: Image.asset(
                   "assets/images/ui/lock.png",
-                  width: 40,
-                  height: 40,
+                  width: 35,
+                  height: 35,
                   fit:
                       BoxFit.contain,
                   errorBuilder: (
@@ -2696,7 +2696,7 @@ class _PrivateIslandWidget
                           .lock_rounded,
                       color:
                           Colors.amber,
-                      size: 35,
+                      size: 30,
                     );
                   },
                 ),
