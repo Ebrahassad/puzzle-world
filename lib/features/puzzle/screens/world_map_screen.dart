@@ -1978,7 +1978,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
                         height: 12,
                       ),
                       Text(
-                        "جواهرك الحالية: $gems 💎",
+                        "جواهرك الحالية: $gems ",
                         textAlign:
                             TextAlign.center,
                         style:
@@ -2130,7 +2130,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
         if (!mounted) return;
 
         showMessage(
-          "لا تملك جواهر كافية. تحتاج $requiredGems 💎 لفتح الجزيرة الخاصة.",
+          "لا تملك جواهر كافية. تحتاج $requiredGems  لفتح الجزيرة الخاصة.",
         );
 
         return;
@@ -2194,7 +2194,7 @@ class _WorldMapScreenState extends State<WorldMapScreen>
       if (!mounted) return;
 
       showMessage(
-        "تم شراء وفتح الجزيرة الخاصة بنجاح! 💎",
+        "تم شراء وفتح الجزيرة الخاصة بنجاح! ",
       );
     } catch (_) {
       if (mounted) {
@@ -2712,8 +2712,8 @@ class _PrivateIslandWidget
                     onTap: unlocking ? null : onUnlockTap,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 9,
+                        horizontal: 14,
+                        vertical: 6,
                       ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF5B3A7D).withOpacity(0.96),
@@ -2740,8 +2740,8 @@ class _PrivateIslandWidget
                         children: [
                           Image.asset(
                             "assets/images/rewards/gem.png",
-                            width: 22,
-                            height: 22,
+                            width: 18,
+                            height: 18,
                             fit: BoxFit.contain,
                             errorBuilder: (
                               context,
@@ -2749,17 +2749,17 @@ class _PrivateIslandWidget
                               stack,
                             ) {
                               return const SizedBox(
-                                width: 22,
-                                height: 22,
+                                width: 18,
+                                height: 18,
                               );
                             },
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 5),
                           const Text(
                             "فتح",
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 14,
+                              fontSize: 13,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
