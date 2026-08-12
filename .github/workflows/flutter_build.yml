@@ -42,47 +42,223 @@ jobs:
 
 
       # ============================================================
-      # Flutter Pub Get
+      # Check project
       # ============================================================
 
-      - name: Flutter Pub Get
-        run: flutter pub get
-
-
-      # ============================================================
-      # Check Android Project
-      # ============================================================
-
-      - name: Check Android Project
+      - name: Check Flutter Project
         shell: bash
         run: |
           set -e
 
-          echo "Checking Android project..."
+          echo "Flutter version:"
+          flutter --version
 
-          if [ ! -d "android" ]; then
-            echo "ERROR: android folder does not exist."
+          echo ""
+          echo "Checking pubspec.yaml..."
+
+          if [ ! -f pubspec.yaml ]; then
+            echo "ERROR: pubspec.yaml not found."
             exit 1
           fi
 
-          if [ ! -f "android/app/src/main/AndroidManifest.xml" ]; then
-            echo "ERROR: AndroidManifest.xml does not exist."
+          echo "pubspec.yaml found."
+
+
+      # ============================================================
+      # Generate NEW Android folder
+      #
+      # IMPORTANT:
+      # The android folder was deleted from the repository.
+      # Flutter will create a completely fresh Android project.
+      # ============================================================
+
+      - name: Generate Fresh Android Project
+        shell: bash
+        run: |
+          set -e
+
+          echo ""
+          echo "============================================================"
+          echo "GENERATING FRESH ANDROID PROJECT"
+          echo "============================================================"
+
+          if [ -d android ]; then
+            echo "ERROR: android folder already exists."
+            echo "Remove it from the repository before using this workflow."
             exit 1
           fi
 
-          echo "Android project exists."
+          flutter create \
+            --platforms=android \
+            --org com.puzzleworld \
+            --project-name puzzle_world \
+            .
+
+          echo ""
+          echo "Android project generated successfully."
+
+          test -d android
+          test -f android/app/src/main/AndroidManifest.xml
+          test -f android/app/build.gradle.kts
+
+          echo ""
+          echo "Fresh Android folder is ready."
 
 
       # ============================================================
-      # Generate Launcher Icons
+      # Flutter Pub Get
       # ============================================================
 
-      - name: Generate Android App Icon
-        run: dart run flutter_launcher_icons
+      - name: Flutter Pub Get
+      run: flutter pub get
 
 
       # ============================================================
-      # Decode Release Keystore
+      # Generate launcher icon
+      #
+      # Your pubspec no longer contains flutter_launcher_icons,
+      # therefore we create normal PNG launcher icons ourselves.
+      # ============================================================
+
+      - name: Create Normal Launcher Icon
+        shell: bash
+        run: |
+          set -e
+
+          RES="android/app/src/main/res"
+          ICON="assets/icon/app_icon.png"
+
+          echo ""
+          echo "============================================================"
+          echo "CREATING NORMAL PNG LAUNCHER ICON"
+          echo "============================================================"
+
+          if [ ! -f "$ICON" ]; then
+            echo "ERROR: Missing:"
+            echo "$ICON"
+            exit 1
+          fi
+
+          echo "Icon found."
+
+          # Remove all generated launcher resources
+          rm -rf "$RES"/mipmap-*
+          rm -rf "$RES"/drawable-anydpi*
+          rm -rf "$RES"/drawable*/ic_launcher*
+          rm -rf "$RES"/drawable*/ic_launcher_round*
+
+          # Create normal mipmap folders
+          mkdir -p "$RES/mipmap-mdpi"
+          mkdir -p "$RES/mipmap-hdpi"
+          mkdir -p "$RES/mipmap-xhdpi"
+          mkdir -p "$RES/mipmap-xxhdpi"
+          mkdir -p "$RES/mipmap-xxxhdpi"
+
+          # Copy the ORIGINAL PNG directly.
+          # No background.
+          # No foreground.
+          # No adaptive icon.
+          # No XML.
+          cp "$ICON" "$RES/mipmap-mdpi/ic_launcher.png"
+          cp "$ICON" "$RES/mipmap-hdpi/ic_launcher.png"
+          cp "$ICON" "$RES/mipmap-xhdpi/ic_launcher.png"
+          cp "$ICON" "$RES/mipmap-xxhdpi/ic_launcher.png"
+          cp "$ICON" "$RES/mipmap-xxxhdpi/ic_launcher.png"
+
+          cp "$ICON" "$RES/mipmap-mdpi/ic_launcher_round.png"
+          cp "$ICON" "$RES/mipmap-hdpi/ic_launcher_round.png"
+          cp "$ICON" "$RES/mipmap-xhdpi/ic_launcher_round.png"
+          cp "$ICON" "$RES/mipmap-xxhdpi/ic_launcher_round.png"
+          cp "$ICON" "$RES/mipmap-xxxhdpi/ic_launcher_round.png"
+
+          echo ""
+          echo "Launcher PNG files created."
+
+
+      # ============================================================
+      # Configure AndroidManifest
+      #
+      # Force Android to use the normal PNG icon.
+      # ============================================================
+
+      - name: Configure Android Manifest
+        shell: bash
+        run: |
+          set -e
+
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+
+          echo ""
+          echo "Configuring AndroidManifest..."
+
+          sed -i \
+            's/android:icon="@mipmap\/ic_launcher"/android:icon="@mipmap\/ic_launcher"/' \
+            "$MANIFEST"
+
+          # Remove roundIcon if Flutter generated one.
+          sed -i \
+            's/[[:space:]]*android:roundIcon="@mipmap\/ic_launcher_round"//' \
+            "$MANIFEST"
+
+          echo ""
+          echo "Manifest launcher configuration:"
+          grep -n 'android:icon\|android:roundIcon' "$MANIFEST" || true
+
+
+      # ============================================================
+      # Verify no adaptive icons
+      # ============================================================
+
+      - name: Verify Launcher Structure
+        shell: bash
+        run: |
+          set -e
+
+          RES="android/app/src/main/res"
+
+          echo ""
+          echo "============================================================"
+          echo "CHECKING LAUNCHER RESOURCES"
+          echo "============================================================"
+
+          if find "$RES" \
+            -type f \
+            \( \
+              -name "ic_launcher.xml" \
+              -o -name "ic_launcher_round.xml" \
+            \) \
+            | grep -q .; then
+
+            echo "ERROR: XML launcher icon found."
+            find "$RES" \
+              -type f \
+              \( \
+                -name "ic_launcher.xml" \
+                -o -name "ic_launcher_round.xml" \
+              \)
+
+            exit 1
+          fi
+
+          if find "$RES" \
+            -type d \
+            \( \
+              -name "mipmap-anydpi" \
+              -o -name "mipmap-anydpi-v26" \
+              -o -name "mipmap-anydpi-v27" \
+              -o -name "drawable-anydpi-v24" \
+            \) \
+            | grep -q .; then
+
+            echo "ERROR: Adaptive icon directory found."
+            exit 1
+          fi
+
+          echo "OK: No adaptive launcher icons."
+
+
+      # ============================================================
+      # Decode release keystore
       # ============================================================
 
       - name: Decode Release Keystore
@@ -100,7 +276,7 @@ jobs:
             exit 1
           fi
 
-          echo "Release keystore created successfully."
+          echo "Release keystore created."
 
 
       # ============================================================
@@ -123,14 +299,90 @@ jobs:
           storeFile=upload-keystore.jks
           EOF
 
-          echo "key.properties created successfully."
+          echo "key.properties created."
 
 
       # ============================================================
-      # Fix Unity Ads JVM Target
+      # Configure release signing
       # ============================================================
 
-      - name: Fix Unity Ads JVM target
+      - name: Configure Release Signing
+        shell: bash
+        run: |
+          set -e
+
+          FILE="android/app/build.gradle.kts"
+
+          echo ""
+          echo "Configuring release signing..."
+
+          python3 <<'PY'
+          from pathlib import Path
+
+          path = Path("android/app/build.gradle.kts")
+          text = path.read_text()
+
+          # Add imports
+          if "import java.util.Properties" not in text:
+              text = "import java.util.Properties\nimport java.io.FileInputStream\n\n" + text
+
+          # Add signing config before android block
+          signing = r'''
+          val keystoreProperties = Properties()
+          val keystorePropertiesFile = rootProject.file("key.properties")
+
+          if (keystorePropertiesFile.exists()) {
+              keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+          }
+
+          '''
+
+          if "val keystoreProperties = Properties()" not in text:
+              text = text.replace(
+                  "android {",
+                  signing + "android {",
+                  1
+              )
+
+          # Add signing config inside android block
+          config = r'''
+              signingConfigs {
+                  create("release") {
+                      keyAlias = keystoreProperties["keyAlias"] as String?
+                      keyPassword = keystoreProperties["keyPassword"] as String?
+                      storeFile = keystoreProperties["storeFile"]?.let { file(it) }
+                      storePassword = keystoreProperties["storePassword"] as String?
+                  }
+              }
+
+          '''
+
+          if 'create("release")' not in text:
+              text = text.replace(
+                  "android {",
+                  "android {\n" + config,
+                  1
+              )
+
+          # Force release build to use release signing.
+          if 'signingConfig = signingConfigs.getByName("release")' not in text:
+              text = text.replace(
+                  "buildTypes {",
+                  'buildTypes {\n        getByName("release") {\n            signingConfig = signingConfigs.getByName("release")\n        }\n',
+                  1
+              )
+
+          path.write_text(text)
+          PY
+
+          echo "Release signing configured."
+
+
+      # ============================================================
+      # Fix Unity Ads JVM target
+      # ============================================================
+
+      - name: Fix Unity Ads JVM Target
         shell: bash
         run: |
           set -e
@@ -149,34 +401,27 @@ jobs:
 
           if [ -n "$UNITY_PLUGIN_PATH" ]; then
 
-            echo "Unity Ads plugin found:"
+            echo "Unity Ads plugin:"
             echo "$UNITY_PLUGIN_PATH"
 
-            if [ -d "$UNITY_PLUGIN_PATH/android" ]; then
+            find "$UNITY_PLUGIN_PATH/android" \
+              -type f \
+              \( \
+                -name "build.gradle" \
+                -o -name "build.gradle.kts" \
+              \) \
+              -print0 |
+            while IFS= read -r -d '' file; do
 
-              find "$UNITY_PLUGIN_PATH/android" \
-                -type f \
-                \( \
-                  -name "build.gradle" \
-                  -o -name "build.gradle.kts" \
-                \) \
-                -print0 |
-              while IFS= read -r -d '' file; do
+              sed -i \
+                's/jvmTarget[[:space:]]*=[[:space:]]*["'\'']1\.8["'\'']/jvmTarget = "17"/g' \
+                "$file"
 
-                echo "Checking:"
-                echo "$file"
-
-                sed -i \
-                  's/jvmTarget[[:space:]]*=[[:space:]]*["'\'']1\.8["'\'']/jvmTarget = "17"/g' \
-                  "$file"
-
-              done
-
-            fi
+            done
 
           else
 
-            echo "Unity Ads plugin path not found."
+            echo "Unity Ads plugin not found."
             echo "Continuing..."
 
           fi
@@ -191,39 +436,11 @@ jobs:
 
 
       # ============================================================
-      # Flutter Pub Get
+      # Pub Get
       # ============================================================
 
-      - name: Flutter Pub Get Again
+      - name: Flutter Pub Get Final
         run: flutter pub get
-
-
-      # ============================================================
-      # Verify Launcher Icons
-      # ============================================================
-
-      - name: Verify Launcher Icons
-        shell: bash
-        run: |
-          set -e
-
-          echo ""
-          echo "============================================================"
-          echo "LAUNCHER ICONS"
-          echo "============================================================"
-
-          find android/app/src/main/res \
-            -type f \
-            \( \
-              -name "ic_launcher.png" \
-              -o -name "ic_launcher_round.png" \
-              -o -name "ic_launcher.xml" \
-              -o -name "ic_launcher_round.xml" \
-            \) \
-            | sort
-
-          echo ""
-          echo "Launcher icon check completed."
 
 
       # ============================================================
@@ -235,16 +452,21 @@ jobs:
         run: |
           set -e
 
-          echo "Starting Flutter release build..."
+          echo ""
+          echo "============================================================"
+          echo "BUILDING RELEASE APK"
+          echo "============================================================"
 
           flutter build apk --release
 
           echo ""
+          echo "============================================================"
           echo "BUILD SUCCESSFUL"
+          echo "============================================================"
 
 
       # ============================================================
-      # Upload Release APK
+      # Upload APK
       # ============================================================
 
       - name: Upload Release APK
