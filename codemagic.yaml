@@ -7,10 +7,10 @@ workflows:
         - push
         - tag
         - pull_request
+
       branch_patterns:
         - pattern: main
           include: true
-          source: push
 
     environment:
       flutter: 3.44.8
@@ -84,18 +84,13 @@ workflows:
           for line in text.splitlines():
 
               if line.startswith("distributionUrl="):
-
                   lines.append(
                       "distributionUrl=https\\://services.gradle.org/distributions/gradle-8.14-bin.zip"
                   )
-
               else:
-
                   lines.append(line)
 
-          path.write_text(
-              "\n".join(lines) + "\n"
-          )
+          path.write_text("\n".join(lines) + "\n")
 
           print("Gradle 8.14 configured.")
           PY
@@ -159,7 +154,6 @@ workflows:
       - name: Flutter pub get
         script: |
           set -e
-
           flutter pub get
 
 
@@ -187,7 +181,6 @@ workflows:
 
           for density in mdpi hdpi xhdpi xxhdpi xxxhdpi
           do
-
             mkdir -p "$RES/mipmap-$density"
 
             cp "$SOURCE" \
@@ -195,7 +188,6 @@ workflows:
 
             cp "$SOURCE" \
               "$RES/mipmap-$density/ic_launcher_round.png"
-
           done
 
           echo "Launcher icon installed."
@@ -348,7 +340,6 @@ workflows:
           text = path.read_text()
 
           if "import java.util.Properties" not in text:
-
               text = (
                   "import java.util.Properties\n"
                   "import java.io.FileInputStream\n\n"
@@ -356,7 +347,6 @@ workflows:
               )
 
           if "val keystorePropertiesFile" not in text:
-
               loader = """
           val keystorePropertiesFile =
               rootProject.file("key.properties")
@@ -378,7 +368,6 @@ workflows:
               )
 
           if 'create("release")' not in text:
-
               signing = """
               signingConfigs {
                   create("release") {
@@ -415,7 +404,6 @@ workflows:
               'signingConfig = signingConfigs.getByName("release")'
               not in text
           ):
-
               text = text.replace(
                   "release {",
                   """release {
@@ -431,7 +419,7 @@ workflows:
 
 
       # ============================================================
-      # 12. Java 17 / Kotlin JVM target
+      # 12. Java 17
       # ============================================================
 
       - name: Configure Java 17
@@ -478,10 +466,6 @@ workflows:
         script: |
           set -e
 
-          echo "============================================================"
-          echo "CHECKING UNITY ADS"
-          echo "============================================================"
-
           UNITY_PATH=""
 
           while IFS= read -r path
@@ -500,30 +484,32 @@ workflows:
             echo "Unity Ads found:"
             echo "$UNITY_PATH"
 
-            find "$UNITY_PATH/android" \
-              -type f \
-              \( \
-                -name "build.gradle" \
-                -o -name "build.gradle.kts" \
-              \) \
-              -print0 2>/dev/null |
-            while IFS= read -r -d '' FILE
-            do
+            if [ -d "$UNITY_PATH/android" ]; then
 
-              sed -i \
-                -E 's/jvmTarget[[:space:]]*=[[:space:]]*["'\'']1\.8["'\'']/jvmTarget = "17"/g' \
-                "$FILE" || true
+              find "$UNITY_PATH/android" \
+                -type f \
+                \( \
+                  -name "build.gradle" \
+                  -o -name "build.gradle.kts" \
+                \) \
+                -print0 2>/dev/null |
+              while IFS= read -r -d '' FILE
+              do
 
-              sed -i \
-                -E 's/jvmTarget[[:space:]]*=[[:space:]]*["'\'']11["'\'']/jvmTarget = "17"/g' \
-                "$FILE" || true
+                sed -i \
+                  -E 's/jvmTarget[[:space:]]*=[[:space:]]*["'\'']1\.8["'\'']/jvmTarget = "17"/g' \
+                  "$FILE" || true
 
-            done
+                sed -i \
+                  -E 's/jvmTarget[[:space:]]*=[[:space:]]*["'\'']11["'\'']/jvmTarget = "17"/g' \
+                  "$FILE" || true
+
+              done
+
+            fi
 
           else
-
             echo "Unity Ads plugin not found in cache."
-
           fi
 
 
@@ -534,7 +520,6 @@ workflows:
       - name: Flutter clean
         script: |
           set -e
-
           flutter clean
 
 
@@ -545,123 +530,11 @@ workflows:
       - name: Flutter pub get final
         script: |
           set -e
-
           flutter pub get
 
 
       # ============================================================
-      # 16. Download Gradle 8.14 with retries
-      # ============================================================
-
-      - name: Prepare Gradle 8.14
-        script: |
-          set -e
-
-          echo "============================================================"
-          echo "PREPARING GRADLE 8.14"
-          echo "============================================================"
-
-          GRADLE_VERSION="8.14"
-          GRADLE_HOME="$HOME/gradle-$GRADLE_VERSION"
-          GRADLE_ZIP="$HOME/gradle-$GRADLE_VERSION-bin.zip"
-
-          if [ -x "$GRADLE_HOME/bin/gradle" ]; then
-
-            echo "Gradle 8.14 already exists."
-
-          else
-
-            echo "Downloading Gradle 8.14..."
-
-            rm -f "$GRADLE_ZIP"
-
-            curl \
-              --fail \
-              --location \
-              --retry 10 \
-              --retry-delay 5 \
-              --retry-max-time 300 \
-              --connect-timeout 30 \
-              --max-time 900 \
-              -o "$GRADLE_ZIP" \
-              "https://services.gradle.org/distributions/gradle-8.14-bin.zip"
-
-            echo "Gradle downloaded."
-
-            rm -rf "$GRADLE_HOME"
-
-            unzip -q \
-              "$GRADLE_ZIP" \
-              -d "$HOME"
-
-          fi
-
-          "$GRADLE_HOME/bin/gradle" --version
-
-
-      # ============================================================
-      # 17. Put Gradle 8.14 in wrapper cache
-      # ============================================================
-
-      - name: Prepare Gradle wrapper cache
-        script: |
-          set -e
-
-          GRADLE_VERSION="8.14"
-          GRADLE_HOME="$HOME/gradle-$GRADLE_VERSION"
-
-          echo "Gradle installation:"
-          "$GRADLE_HOME/bin/gradle" --version
-
-          echo ""
-          echo "Wrapper configuration:"
-          cat android/gradle/wrapper/gradle-wrapper.properties
-
-
-      # ============================================================
-      # 18. Final verification
-      # ============================================================
-
-      - name: Final Android verification
-        script: |
-          set -e
-
-          echo "============================================================"
-          echo "FINAL ANDROID VERIFICATION"
-          echo "============================================================"
-
-          echo ""
-          echo "Gradle wrapper:"
-          grep "distributionUrl" \
-            android/gradle/wrapper/gradle-wrapper.properties
-
-          echo ""
-          echo "Android plugins:"
-          grep -n \
-            -E "com.android.application|org.jetbrains.kotlin.android" \
-            android/settings.gradle.kts || true
-
-          echo ""
-          echo "Keystore:"
-          ls -lh android/app/upload-keystore.jks
-
-          echo ""
-          echo "Key properties:"
-          ls -lh android/key.properties
-
-          echo ""
-          echo "Launcher icons:"
-          find android/app/src/main/res \
-            -type f \
-            \( \
-              -name "ic_launcher.png" \
-              -o -name "ic_launcher_round.png" \
-            \) \
-            | sort
-
-
-      # ============================================================
-      # 19. Build release APK
+      # 16. Build
       # ============================================================
 
       - name: Build release APK
@@ -671,8 +544,6 @@ workflows:
           echo "============================================================"
           echo "BUILDING PUZZLE WORLD RELEASE APK"
           echo "============================================================"
-
-          export GRADLE_USER_HOME="$HOME/.gradle"
 
           flutter build apk --release
 
