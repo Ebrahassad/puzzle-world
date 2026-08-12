@@ -1,276 +1,68 @@
-name: Flutter Android Release
-
-on:
-  workflow_dispatch:
-
-jobs:
-  build:
-    name: Build Release APK
-    runs-on: ubuntu-latest
-
-    steps:
-
       # ============================================================
-      # Checkout
+      # Create normal Android launcher icon
+      # NO adaptive icon
+      # NO flutter_launcher_icons
       # ============================================================
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-
-      # ============================================================
-      # Java 17
-      # ============================================================
-
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-
-      # ============================================================
-      # Flutter
-      # ============================================================
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: "3.44.8"
-          channel: stable
-          cache: true
-
-
-      # ============================================================
-      # Pub Get
-      # ============================================================
-
-      - name: Flutter Pub Get
-        run: flutter pub get
-
-
-      # ============================================================
-      # Clean
-      # ============================================================
-
-      - name: Flutter Clean
-        run: flutter clean
-
-
-      # ============================================================
-      # Pub Get Again
-      # ============================================================
-
-      - name: Flutter Pub Get Again
-        run: flutter pub get
-
-
-      # ============================================================
-      # Generate Android Adaptive App Icon
-      # ============================================================
-
-      - name: Generate Android App Icon
-        run: dart run flutter_launcher_icons
-
-
-      # ============================================================
-      # Verify Adaptive Icon
-      # ============================================================
-
-      - name: Verify Generated Launcher Icon
+      - name: Create Android Launcher Icon
         shell: bash
         run: |
           set -e
 
-          echo ""
-          echo "============================================================"
-          echo "ANDROID RES STRUCTURE"
-          echo "============================================================"
+          RES="android/app/src/main/res"
 
-          find android/app/src/main/res \
-            -maxdepth 3 \
+          echo "Removing ALL old launcher icon resources..."
+
+          rm -rf "$RES"/mipmap-*
+          rm -rf "$RES"/drawable-anydpi*
+          rm -rf "$RES"/drawable*/ic_launcher*
+          rm -rf "$RES"/drawable*/ic_launcher_round*
+
+          echo "Creating normal mipmap directories..."
+
+          mkdir -p "$RES/mipmap-mdpi"
+          mkdir -p "$RES/mipmap-hdpi"
+          mkdir -p "$RES/mipmap-xhdpi"
+          mkdir -p "$RES/mipmap-xxhdpi"
+          mkdir -p "$RES/mipmap-xxxhdpi"
+
+          echo "Copying app icon..."
+
+          cp assets/icon/app_icon.png \
+            "$RES/mipmap-mdpi/ic_launcher.png"
+
+          cp assets/icon/app_icon.png \
+            "$RES/mipmap-hdpi/ic_launcher.png"
+
+          cp assets/icon/app_icon.png \
+            "$RES/mipmap-xhdpi/ic_launcher.png"
+
+          cp assets/icon/app_icon.png \
+            "$RES/mipmap-xxhdpi/ic_launcher.png"
+
+          cp assets/icon/app_icon.png \
+            "$RES/mipmap-xxxhdpi/ic_launcher.png"
+
+          echo "Creating round icon..."
+
+          cp assets/icon/app_icon.png \
+            "$RES/mipmap-mdpi/ic_launcher_round.png"
+
+          cp assets/icon/app_icon.png \
+            "$RES/mipmap-hdpi/ic_launcher_round.png"
+
+          cp assets/icon/app_icon.png \
+            "$RES/mipmap-xhdpi/ic_launcher_round.png"
+
+          cp assets/icon/app_icon.png \
+            "$RES/mipmap-xxhdpi/ic_launcher_round.png"
+
+          cp assets/icon/app_icon.png \
+            "$RES/mipmap-xxxhdpi/ic_launcher_round.png"
+
+          echo ""
+          echo "Launcher icons created:"
+          find "$RES" \
             -type f \
+            \( -name "ic_launcher.png" -o -name "ic_launcher_round.png" \) \
             | sort
-
-          echo ""
-          echo "============================================================"
-          echo "CHECKING ADAPTIVE ICON"
-          echo "============================================================"
-
-          if find android/app/src/main/res \
-            -type f \
-            -path "*/mipmap-anydpi-v26/*" \
-            | grep -q .; then
-
-            echo "OK: Adaptive icon files exist."
-
-          else
-
-            echo "ERROR: Adaptive icon files were NOT generated."
-            exit 1
-
-          fi
-
-          echo ""
-          echo "============================================================"
-          echo "LAUNCHER REFERENCES"
-          echo "============================================================"
-
-          grep -R "ic_launcher" \
-            android/app/src/main/res \
-            2>/dev/null || true
-
-
-      # ============================================================
-      # Decode Release Keystore
-      # ============================================================
-
-      - name: Decode Release Keystore
-        shell: bash
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        run: |
-          set -e
-
-          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
-
-          if [ ! -s android/app/upload-keystore.jks ]; then
-            echo "ERROR: Keystore was not created."
-            exit 1
-          fi
-
-          echo "Release keystore created successfully."
-
-
-      # ============================================================
-      # Create key.properties
-      # ============================================================
-
-      - name: Create key.properties
-        shell: bash
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          set -e
-
-          cat > android/key.properties <<EOF
-          storePassword=$KEYSTORE_PASSWORD
-          keyPassword=$KEY_PASSWORD
-          keyAlias=$KEY_ALIAS
-          storeFile=upload-keystore.jks
-          EOF
-
-          echo "key.properties created successfully."
-
-
-      # ============================================================
-      # Fix Unity Ads JVM target
-      # ============================================================
-
-      - name: Fix Unity Ads JVM target
-        shell: bash
-        run: |
-          set -e
-
-          UNITY_PLUGIN_PATH=""
-
-          while IFS= read -r path; do
-            UNITY_PLUGIN_PATH="$path"
-            break
-          done < <(
-            find "$HOME/.pub-cache" \
-              -type d \
-              -path "*/unity_ads_plugin-*" \
-              2>/dev/null
-          )
-
-          if [ -n "$UNITY_PLUGIN_PATH" ]; then
-
-            echo "Unity Ads plugin found:"
-            echo "$UNITY_PLUGIN_PATH"
-
-            if [ -d "$UNITY_PLUGIN_PATH/android" ]; then
-
-              find "$UNITY_PLUGIN_PATH/android" \
-                -type f \
-                \( -name "build.gradle" -o -name "build.gradle.kts" \) \
-                -print0 |
-              while IFS= read -r -d '' file; do
-
-                echo "Checking:"
-                echo "$file"
-
-                sed -i \
-                  's/jvmTarget[[:space:]]*=[[:space:]]*["'\'']1\.8["'\'']/jvmTarget = "17"/g' \
-                  "$file"
-
-              done
-
-            fi
-
-          else
-
-            echo "Unity Ads plugin path not found."
-            echo "Continuing..."
-
-          fi
-
-
-      # ============================================================
-      # Build Release APK
-      # ============================================================
-
-      - name: Build Release APK
-        shell: bash
-        run: |
-          set -e
-
-          echo "Starting Flutter release build..."
-
-          for attempt in 1 2 3; do
-
-            echo ""
-            echo "============================================================"
-            echo "BUILD ATTEMPT $attempt / 3"
-            echo "============================================================"
-
-            if flutter build apk --release; then
-
-              echo ""
-              echo "============================================================"
-              echo "BUILD SUCCESSFUL"
-              echo "============================================================"
-
-              exit 0
-            fi
-
-            if [ "$attempt" -lt 3 ]; then
-
-              echo ""
-              echo "Build failed. Waiting 20 seconds before retry..."
-
-              sleep 20
-            fi
-
-          done
-
-          echo ""
-          echo "============================================================"
-          echo "BUILD FAILED AFTER 3 ATTEMPTS"
-          echo "============================================================"
-
-          exit 1
-
-
-      # ============================================================
-      # Upload Release APK
-      # ============================================================
-
-      - name: Upload Release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: puzzle-world-release
-          path: build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
