@@ -2682,8 +2682,8 @@ class _PrivateIslandWidget
                 top: 4,
                 child: Image.asset(
                   "assets/images/ui/lock.png",
-                  width: 64,
-                  height: 64,
+                  width: 44,
+                  height: 44,
                   fit:
                       BoxFit.contain,
                   errorBuilder: (
@@ -2696,7 +2696,7 @@ class _PrivateIslandWidget
                           .lock_rounded,
                       color:
                           Colors.amber,
-                      size: 58,
+                      size: 40,
                     );
                   },
                 ),
@@ -2712,8 +2712,8 @@ class _PrivateIslandWidget
                     onTap: unlocking ? null : onUnlockTap,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 6,
+                        horizontal: 10,
+                        vertical: 3,
                       ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF5B3A7D).withOpacity(0.96),
@@ -2740,8 +2740,8 @@ class _PrivateIslandWidget
                         children: [
                           Image.asset(
                             "assets/images/rewards/gem.png",
-                            width: 18,
-                            height: 18,
+                            width: 15,
+                            height: 15,
                             fit: BoxFit.contain,
                             errorBuilder: (
                               context,
@@ -2749,17 +2749,17 @@ class _PrivateIslandWidget
                               stack,
                             ) {
                               return const SizedBox(
-                                width: 18,
-                                height: 18,
+                                width: 15,
+                                height: 15,
                               );
                             },
                           ),
-                          const SizedBox(width: 5),
+                          const SizedBox(width: 3),
                           const Text(
                             "فتح",
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 13,
+                              fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
