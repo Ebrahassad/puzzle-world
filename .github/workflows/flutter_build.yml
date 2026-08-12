@@ -42,7 +42,7 @@ jobs:
 
 
       # ============================================================
-      # Flutter Pub Get
+      # Pub Get
       # ============================================================
 
       - name: Flutter Pub Get
@@ -50,7 +50,7 @@ jobs:
 
 
       # ============================================================
-      # Flutter Clean
+      # Clean
       # ============================================================
 
       - name: Flutter Clean
@@ -58,7 +58,7 @@ jobs:
 
 
       # ============================================================
-      # Flutter Pub Get Again
+      # Pub Get Again
       # ============================================================
 
       - name: Flutter Pub Get Again
@@ -66,25 +66,7 @@ jobs:
 
 
       # ============================================================
-      # Remove Old Android Adaptive Icon Files
-      # ============================================================
-
-      - name: Remove Old Android Adaptive Icon Files
-        shell: bash
-        run: |
-          set -e
-
-          echo "Removing old Android adaptive icon resources..."
-
-          rm -rf android/app/src/main/res/mipmap-anydpi-v26
-          rm -rf android/app/src/main/res/mipmap-anydpi
-          rm -rf android/app/src/main/res/drawable-anydpi-v24
-
-          echo "Adaptive icon directories removed."
-
-
-      # ============================================================
-      # Generate Android App Icon
+      # Generate Android Adaptive App Icon
       # ============================================================
 
       - name: Generate Android App Icon
@@ -92,27 +74,51 @@ jobs:
 
 
       # ============================================================
-      # Ensure Normal PNG Launcher Icon
+      # Verify Adaptive Icon
       # ============================================================
 
-      - name: Ensure Normal PNG Launcher Icon
+      - name: Verify Generated Launcher Icon
         shell: bash
         run: |
           set -e
 
-          echo "Checking generated launcher resources..."
-
-          rm -rf android/app/src/main/res/mipmap-anydpi-v26
-          rm -rf android/app/src/main/res/mipmap-anydpi
-          rm -rf android/app/src/main/res/drawable-anydpi-v24
-
           echo ""
-          echo "Launcher icon files:"
+          echo "============================================================"
+          echo "ANDROID RES STRUCTURE"
+          echo "============================================================"
 
           find android/app/src/main/res \
+            -maxdepth 3 \
             -type f \
-            \( -name "ic_launcher.png" -o -name "ic_launcher_round.png" \) \
-            | sort || true
+            | sort
+
+          echo ""
+          echo "============================================================"
+          echo "CHECKING ADAPTIVE ICON"
+          echo "============================================================"
+
+          if find android/app/src/main/res \
+            -type f \
+            -path "*/mipmap-anydpi-v26/*" \
+            | grep -q .; then
+
+            echo "OK: Adaptive icon files exist."
+
+          else
+
+            echo "ERROR: Adaptive icon files were NOT generated."
+            exit 1
+
+          fi
+
+          echo ""
+          echo "============================================================"
+          echo "LAUNCHER REFERENCES"
+          echo "============================================================"
+
+          grep -R "ic_launcher" \
+            android/app/src/main/res \
+            2>/dev/null || true
 
 
       # ============================================================
@@ -213,58 +219,6 @@ jobs:
 
 
       # ============================================================
-      # Final Launcher Icon Check
-      # ============================================================
-
-      - name: Final Launcher Icon Check
-        shell: bash
-        run: |
-          set -e
-
-          echo ""
-          echo "============================================================"
-          echo "ANDROID RES STRUCTURE"
-          echo "============================================================"
-
-          find android/app/src/main/res \
-            -maxdepth 3 \
-            -type f \
-            | sort
-
-          echo ""
-          echo "============================================================"
-          echo "CHECKING FOR ADAPTIVE ICONS"
-          echo "============================================================"
-
-          if find android/app/src/main/res \
-            -type f \
-            \( -path "*/mipmap-anydpi-v26/*" \
-            -o -path "*/mipmap-anydpi/*" \
-            -o -path "*/drawable-anydpi-v24/*" \) \
-            | grep -q .; then
-
-            echo "ERROR: Adaptive icon files still exist."
-            exit 1
-
-          else
-
-            echo "OK: No adaptive icon files found."
-
-          fi
-
-          echo ""
-          echo "============================================================"
-          echo "LAUNCHER PNG FILES"
-          echo "============================================================"
-
-          find android/app/src/main/res \
-            -type f \
-            \( -name "ic_launcher.png" \
-            -o -name "ic_launcher_round.png" \) \
-            | sort
-
-
-      # ============================================================
       # Build Release APK
       # ============================================================
 
@@ -298,7 +252,6 @@ jobs:
               echo "Build failed. Waiting 20 seconds before retry..."
 
               sleep 20
-
             fi
 
           done
