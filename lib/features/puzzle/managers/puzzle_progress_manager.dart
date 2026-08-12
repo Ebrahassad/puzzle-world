@@ -1503,7 +1503,7 @@ class PuzzleProgressManager {
       return false;
     }
 
-    await addAdsBalance(500000);
+    await addAdsBalance(500);
 
     await addStars(10);
 
