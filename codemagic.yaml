@@ -5,6 +5,7 @@ workflows:
     triggering:
       events:
         - push
+
       branch_patterns:
         - pattern: main
           include: true
@@ -23,7 +24,7 @@ workflows:
     scripts:
 
       # ============================================================
-      # 1. Create Android project if it was deleted
+      # 1. CREATE ANDROID PROJECT
       # ============================================================
 
       - name: Generate Android project
@@ -51,21 +52,26 @@ workflows:
           fi
 
       # ============================================================
-      # 2. Flutter dependencies
+      # 2. FLUTTER PUB GET
       # ============================================================
 
       - name: Flutter pub get
         script: |
           set -e
+
           flutter pub get
 
       # ============================================================
-      # 3. Force Gradle 8.14
+      # 3. CONFIGURE GRADLE 8.14 + AGP 8.11.1 + KOTLIN
       # ============================================================
 
-      - name: Configure Gradle 8.14
+      - name: Configure Android build tools
         script: |
           set -e
+
+          echo "============================================================"
+          echo "CONFIGURING ANDROID BUILD TOOLS"
+          echo "============================================================"
 
           WRAPPER="android/gradle/wrapper/gradle-wrapper.properties"
 
@@ -74,28 +80,112 @@ workflows:
             exit 1
           fi
 
+          # --------------------------------------------------------
+          # Gradle 8.14
+          # --------------------------------------------------------
+
           sed -i \
             's#distributionUrl=.*#distributionUrl=https\\://services.gradle.org/distributions/gradle-8.14-bin.zip#' \
             "$WRAPPER"
 
           echo ""
-          echo "Gradle configuration:"
+          echo "Gradle wrapper:"
           grep "distributionUrl" "$WRAPPER"
 
+          # --------------------------------------------------------
+          # AGP + Kotlin
+          # --------------------------------------------------------
+
+          if [ -f "android/settings.gradle.kts" ]; then
+
+            echo ""
+            echo "Using settings.gradle.kts"
+
+            sed -i \
+              's/id("com.android.application") version "[^"]*"/id("com.android.application") version "8.11.1"/' \
+              android/settings.gradle.kts
+
+            sed -i \
+              's/id("org.jetbrains.kotlin.android") version "[^"]*"/id("org.jetbrains.kotlin.android") version "2.2.20"/' \
+              android/settings.gradle.kts
+
+          elif [ -f "android/settings.gradle" ]; then
+
+            echo ""
+            echo "Using settings.gradle"
+
+            sed -i \
+              "s/id 'com.android.application' version '[^']*'/id 'com.android.application' version '8.11.1'/" \
+              android/settings.gradle
+
+            sed -i \
+              "s/id 'org.jetbrains.kotlin.android' version '[^']*'/id 'org.jetbrains.kotlin.android' version '2.2.20'/" \
+              android/settings.gradle
+
+          fi
+
+          echo ""
+          echo "Android plugins after configuration:"
+
+          grep -R \
+            -E 'com.android.application|org.jetbrains.kotlin.android' \
+            android/settings.gradle* \
+            2>/dev/null || true
+
+          echo ""
+          echo "Android build tools configured."
+
       # ============================================================
-      # 4. Install launcher icon
+      # 4. JAVA / KOTLIN 17
+      # ============================================================
+
+      - name: Configure Java and Kotlin 17
+        script: |
+          set -e
+
+          echo "============================================================"
+          echo "CONFIGURING JAVA / KOTLIN 17"
+          echo "============================================================"
+
+          FILE="android/app/build.gradle.kts"
+
+          if [ ! -f "$FILE" ]; then
+            echo "ERROR: $FILE not found."
+            exit 1
+          fi
+
+          sed -i \
+            's/JavaVersion.VERSION_1_8/JavaVersion.VERSION_17/g' \
+            "$FILE"
+
+          sed -i \
+            's/JavaVersion.VERSION_11/JavaVersion.VERSION_17/g' \
+            "$FILE"
+
+          sed -i \
+            's/jvmTarget = "1.8"/jvmTarget = "17"/g' \
+            "$FILE"
+
+          sed -i \
+            's/jvmTarget = "11"/jvmTarget = "17"/g' \
+            "$FILE"
+
+          echo "Java/Kotlin target configured."
+
+      # ============================================================
+      # 5. INSTALL ORIGINAL APP ICON
       # ============================================================
 
       - name: Install Puzzle World launcher icon
         script: |
           set -e
 
-          ICON="assets/icon/app_icon.png"
-          RES="android/app/src/main/res"
-
           echo "============================================================"
           echo "INSTALLING PUZZLE WORLD ICON"
           echo "============================================================"
+
+          ICON="assets/icon/app_icon.png"
+          RES="android/app/src/main/res"
 
           if [ ! -f "$ICON" ]; then
             echo "ERROR: Icon not found:"
@@ -103,12 +193,18 @@ workflows:
             exit 1
           fi
 
+          echo "Icon found:"
+          echo "$ICON"
+
+          # Remove generated mipmap resources
           rm -rf "$RES"/mipmap-*
 
+          # Create normal Android mipmap folders
           for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
 
             mkdir -p "$RES/mipmap-$density"
 
+            # Copy PNG EXACTLY AS IT IS
             cp "$ICON" \
               "$RES/mipmap-$density/ic_launcher.png"
 
@@ -117,17 +213,24 @@ workflows:
 
           done
 
-          echo "Original PNG copied without modification."
+          echo ""
+          echo "Original icon copied without resizing."
+          echo "No processing."
+          echo "No adaptive icon."
+          echo "No foreground."
+          echo "No background."
 
       # ============================================================
-      # 5. Remove adaptive icons
+      # 6. REMOVE ADAPTIVE ICONS
       # ============================================================
 
-      - name: Remove adaptive icons
+      - name: Remove adaptive launcher icons
         script: |
           set -e
 
           RES="android/app/src/main/res"
+
+          echo "Removing adaptive launcher resources..."
 
           rm -rf "$RES/mipmap-anydpi"
           rm -rf "$RES/mipmap-anydpi-v26"
@@ -144,10 +247,10 @@ workflows:
             \) \
             -delete
 
-          echo "Adaptive launcher resources removed."
+          echo "Adaptive icons removed."
 
       # ============================================================
-      # 6. Configure AndroidManifest
+      # 7. CONFIGURE ANDROID MANIFEST
       # ============================================================
 
       - name: Configure launcher manifest
@@ -155,6 +258,8 @@ workflows:
           set -e
 
           MANIFEST="android/app/src/main/AndroidManifest.xml"
+
+          echo "Configuring AndroidManifest.xml..."
 
           sed -i \
             's/android:icon="[^"]*"/android:icon="@mipmap\/ic_launcher"/g' \
@@ -174,15 +279,68 @@ workflows:
 
           fi
 
-          echo "Manifest configured."
+          echo ""
+          echo "Manifest icon configuration:"
+
+          grep -n \
+            -E 'android:icon|android:roundIcon' \
+            "$MANIFEST" || true
 
       # ============================================================
-      # 7. Create release keystore
+      # 8. VERIFY ICON
+      # ============================================================
+
+      - name: Verify launcher icon
+        script: |
+          set -e
+
+          RES="android/app/src/main/res"
+
+          echo "============================================================"
+          echo "VERIFYING LAUNCHER ICON"
+          echo "============================================================"
+
+          for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+
+            if [ ! -f "$RES/mipmap-$density/ic_launcher.png" ]; then
+              echo "ERROR: Missing icon in mipmap-$density"
+              exit 1
+            fi
+
+            if [ ! -f "$RES/mipmap-$density/ic_launcher_round.png" ]; then
+              echo "ERROR: Missing round icon in mipmap-$density"
+              exit 1
+            fi
+
+          done
+
+          if find "$RES" \
+            -type f \
+            \( \
+              -name "ic_launcher.xml" \
+              -o -name "ic_launcher_round.xml" \
+            \) \
+            | grep -q .; then
+
+            echo "ERROR: Adaptive icon XML exists."
+            exit 1
+
+          fi
+
+          echo ""
+          echo "Icon verification successful."
+
+      # ============================================================
+      # 9. CREATE RELEASE KEYSTORE
       # ============================================================
 
       - name: Create release keystore
         script: |
           set -e
+
+          echo "============================================================"
+          echo "CREATING RELEASE KEYSTORE"
+          echo "============================================================"
 
           if [ -z "${KEYSTORE_BASE64:-}" ]; then
             echo "ERROR: KEYSTORE_BASE64 is missing."
@@ -202,12 +360,14 @@ workflows:
           echo "Keystore created successfully."
 
       # ============================================================
-      # 8. Create key.properties
+      # 10. CREATE KEY.PROPERTIES
       # ============================================================
 
       - name: Create signing properties
         script: |
           set -e
+
+          echo "Creating android/key.properties..."
 
           cat > android/key.properties <<EOF
           storePassword=${KEYSTORE_PASSWORD}
@@ -219,7 +379,7 @@ workflows:
           echo "key.properties created."
 
       # ============================================================
-      # 9. Configure release signing
+      # 11. CONFIGURE RELEASE SIGNING
       # ============================================================
 
       - name: Configure release signing
@@ -236,7 +396,11 @@ workflows:
                   "ERROR: android/app/build.gradle.kts not found."
               )
 
-          text = path.read_text()
+          text = path.read_text(encoding="utf-8")
+
+          # --------------------------------------------------------
+          # Imports
+          # --------------------------------------------------------
 
           if "import java.util.Properties" not in text:
               text = (
@@ -244,6 +408,10 @@ workflows:
                   "import java.io.FileInputStream\n\n"
                   + text
               )
+
+          # --------------------------------------------------------
+          # Keystore loader
+          # --------------------------------------------------------
 
           loader = """
           val keystorePropertiesFile =
@@ -265,6 +433,10 @@ workflows:
                   loader + "android {",
                   1
               )
+
+          # --------------------------------------------------------
+          # Signing configuration
+          # --------------------------------------------------------
 
           signing = """
               signingConfigs {
@@ -294,6 +466,10 @@ workflows:
                   1
               )
 
+          # --------------------------------------------------------
+          # Release build type
+          # --------------------------------------------------------
+
           if (
               'signingConfig = signingConfigs.getByName("release")'
               not in text
@@ -302,53 +478,27 @@ workflows:
               text = text.replace(
                   "release {",
                   """release {
-                  signingConfig =
-                      signingConfigs.getByName("release")""",
+                      signingConfig =
+                          signingConfigs.getByName("release")""",
                   1
               )
 
-          path.write_text(text)
+          path.write_text(text, encoding="utf-8")
 
           print("Release signing configured successfully.")
           PY
 
       # ============================================================
-      # 10. Java / Kotlin 17
+      # 12. UNITY ADS
       # ============================================================
 
-      - name: Configure Java and Kotlin 17
+      - name: Verify Unity Ads plugin
         script: |
           set -e
 
-          FILE="android/app/build.gradle.kts"
-
-          sed -i \
-            's/JavaVersion.VERSION_1_8/JavaVersion.VERSION_17/g' \
-            "$FILE"
-
-          sed -i \
-            's/JavaVersion.VERSION_11/JavaVersion.VERSION_17/g' \
-            "$FILE"
-
-          sed -i \
-            's/jvmTarget = "1.8"/jvmTarget = "17"/g' \
-            "$FILE"
-
-          sed -i \
-            's/jvmTarget = "11"/jvmTarget = "17"/g' \
-            "$FILE"
-
-          echo "Java/Kotlin target configured."
-
-      # ============================================================
-      # 11. Unity Ads
-      # ============================================================
-
-      - name: Check Unity Ads plugin
-        script: |
-          set -e
-
-          echo "Checking Unity Ads plugin..."
+          echo "============================================================"
+          echo "CHECKING UNITY ADS"
+          echo "============================================================"
 
           find "$HOME/.pub-cache" \
             -type d \
@@ -359,7 +509,7 @@ workflows:
           echo "Unity Ads check completed."
 
       # ============================================================
-      # 12. Flutter clean
+      # 13. FLUTTER CLEAN
       # ============================================================
 
       - name: Flutter clean
@@ -367,15 +517,20 @@ workflows:
           set -e
 
           flutter clean
+
           flutter pub get
 
       # ============================================================
-      # 13. Verify Gradle
+      # 14. VERIFY GRADLE
       # ============================================================
 
-      - name: Verify Gradle version
+      - name: Verify Gradle 8.14
         script: |
           set -e
+
+          echo "============================================================"
+          echo "VERIFYING GRADLE"
+          echo "============================================================"
 
           cd android
 
@@ -384,10 +539,10 @@ workflows:
           ./gradlew --version
 
       # ============================================================
-      # 14. Build release APK
+      # 15. BUILD RELEASE APK
       # ============================================================
 
-      - name: Build Puzzle World APK
+      - name: Build Puzzle World release APK
         script: |
           set -e
 
@@ -401,6 +556,31 @@ workflows:
           echo "============================================================"
           echo "BUILD SUCCESSFUL"
           echo "============================================================"
+
+      # ============================================================
+      # 16. VERIFY APK
+      # ============================================================
+
+      - name: Verify generated APK
+        script: |
+          set -e
+
+          APK="build/app/outputs/flutter-apk/app-release.apk"
+
+          if [ ! -f "$APK" ]; then
+            echo "ERROR: APK was not generated."
+            exit 1
+          fi
+
+          echo "============================================================"
+          echo "APK GENERATED SUCCESSFULLY"
+          echo "============================================================"
+
+          ls -lh "$APK"
+
+    # ==============================================================
+    # ARTIFACT
+    # ==============================================================
 
     artifacts:
       - build/app/outputs/flutter-apk/app-release.apk
