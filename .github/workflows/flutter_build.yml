@@ -50,209 +50,35 @@ jobs:
 
 
       # ============================================================
-      # Flutter Clean
+      # Check Android Project
       # ============================================================
 
-      - name: Flutter Clean
-        run: flutter clean
-
-
-      # ============================================================
-      # Flutter Pub Get Again
-      # ============================================================
-
-      - name: Flutter Pub Get Again
-        run: flutter pub get
-
-
-      # ============================================================
-      # CREATE NORMAL ANDROID LAUNCHER ICON
-      #
-      # Uses assets/icon/app_icon.png directly.
-      #
-      # NO flutter_launcher_icons
-      # NO adaptive icon
-      # NO XML launcher icon
-      # NO foreground
-      # NO background
-      # ============================================================
-
-      - name: Create Normal Android Launcher Icon
+      - name: Check Android Project
         shell: bash
         run: |
           set -e
 
-          RES="android/app/src/main/res"
-          ICON="assets/icon/app_icon.png"
+          echo "Checking Android project..."
 
-          echo ""
-          echo "============================================================"
-          echo "CREATING NORMAL ANDROID LAUNCHER ICON"
-          echo "============================================================"
-
-          if [ ! -f "$ICON" ]; then
-            echo "ERROR: App icon not found:"
-            echo "$ICON"
+          if [ ! -d "android" ]; then
+            echo "ERROR: android folder does not exist."
             exit 1
           fi
 
-          echo "App icon found:"
-          echo "$ICON"
-
-          echo ""
-          echo "Removing old launcher resources..."
-
-          rm -rf "$RES"/mipmap-*
-          rm -rf "$RES"/drawable-anydpi*
-          
-          find "$RES" -type f \
-            \( -name "ic_launcher*" -o -name "ic_launcher_round*" \) \
-            -delete
-
-          echo ""
-          echo "Creating mipmap directories..."
-
-          mkdir -p "$RES/mipmap-mdpi"
-          mkdir -p "$RES/mipmap-hdpi"
-          mkdir -p "$RES/mipmap-xhdpi"
-          mkdir -p "$RES/mipmap-xxhdpi"
-          mkdir -p "$RES/mipmap-xxxhdpi"
-
-          echo ""
-          echo "Copying app icon..."
-
-          cp "$ICON" "$RES/mipmap-mdpi/ic_launcher.png"
-          cp "$ICON" "$RES/mipmap-hdpi/ic_launcher.png"
-          cp "$ICON" "$RES/mipmap-xhdpi/ic_launcher.png"
-          cp "$ICON" "$RES/mipmap-xxhdpi/ic_launcher.png"
-          cp "$ICON" "$RES/mipmap-xxxhdpi/ic_launcher.png"
-
-          cp "$ICON" "$RES/mipmap-mdpi/ic_launcher_round.png"
-          cp "$ICON" "$RES/mipmap-hdpi/ic_launcher_round.png"
-          cp "$ICON" "$RES/mipmap-xhdpi/ic_launcher_round.png"
-          cp "$ICON" "$RES/mipmap-xxhdpi/ic_launcher_round.png"
-          cp "$ICON" "$RES/mipmap-xxxhdpi/ic_launcher_round.png"
-
-          echo ""
-          echo "Launcher icons created successfully."
-
-
-      # ============================================================
-      # VERIFY LAUNCHER ICONS
-      # ============================================================
-
-      - name: Verify Launcher Icon Structure
-        shell: bash
-        run: |
-          set -e
-
-          RES="android/app/src/main/res"
-
-          echo ""
-          echo "============================================================"
-          echo "ANDROID RES STRUCTURE"
-          echo "============================================================"
-
-          find "$RES" -maxdepth 3 -type f | sort
-
-          echo ""
-          echo "============================================================"
-          echo "CHECKING FOR ADAPTIVE ICONS"
-          echo "============================================================"
-
-          ADAPTIVE_FOUND=0
-
-          if find "$RES" -type f \
-            \( \
-              -name "ic_launcher.xml" \
-              -o -name "ic_launcher_round.xml" \
-            \) | grep -q .; then
-
-            ADAPTIVE_FOUND=1
-
-          fi
-
-          if find "$RES" -type d \
-            \( \
-              -name "mipmap-anydpi" \
-              -o -name "mipmap-anydpi-v26" \
-              -o -name "mipmap-anydpi-v27" \
-              -o -name "drawable-anydpi-v24" \
-            \) | grep -q .; then
-
-            ADAPTIVE_FOUND=1
-
-          fi
-
-          if [ "$ADAPTIVE_FOUND" -eq 1 ]; then
-
-            echo ""
-            echo "ERROR: Adaptive launcher icon resources found."
-
-            find "$RES" \
-              \( \
-                -name "ic_launcher.xml" \
-                -o -name "ic_launcher_round.xml" \
-              \) -print || true
-
+          if [ ! -f "android/app/src/main/AndroidManifest.xml" ]; then
+            echo "ERROR: AndroidManifest.xml does not exist."
             exit 1
-
           fi
 
-          echo "OK: No adaptive launcher icons found."
-
-          echo ""
-          echo "============================================================"
-          echo "NORMAL PNG LAUNCHER ICONS"
-          echo "============================================================"
-
-          find "$RES" -type f \
-            \( \
-              -name "ic_launcher.png" \
-              -o -name "ic_launcher_round.png" \
-            \) | sort
-
-          echo ""
-          echo "============================================================"
-          echo "CHECKING REQUIRED ICONS"
-          echo "============================================================"
-
-          for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
-
-            if [ ! -f "$RES/mipmap-$density/ic_launcher.png" ]; then
-              echo "ERROR: Missing ic_launcher.png in mipmap-$density"
-              exit 1
-            fi
-
-            if [ ! -f "$RES/mipmap-$density/ic_launcher_round.png" ]; then
-              echo "ERROR: Missing ic_launcher_round.png in mipmap-$density"
-              exit 1
-            fi
-
-          done
-
-          echo ""
-          echo "OK: All launcher PNG files exist."
+          echo "Android project exists."
 
 
       # ============================================================
-      # Verify Android Manifest
+      # Generate Launcher Icons
       # ============================================================
 
-      - name: Verify Android Manifest
-        shell: bash
-        run: |
-          set -e
-
-          echo ""
-          echo "============================================================"
-          echo "ANDROID MANIFEST"
-          echo "============================================================"
-
-          grep -n \
-            -E 'android:icon|android:roundIcon' \
-            android/app/src/main/AndroidManifest.xml \
-            || true
+      - name: Generate Android App Icon
+        run: dart run flutter_launcher_icons
 
 
       # ============================================================
@@ -301,7 +127,7 @@ jobs:
 
 
       # ============================================================
-      # Fix Unity Ads JVM target
+      # Fix Unity Ads JVM Target
       # ============================================================
 
       - name: Fix Unity Ads JVM target
@@ -323,7 +149,6 @@ jobs:
 
           if [ -n "$UNITY_PLUGIN_PATH" ]; then
 
-            echo ""
             echo "Unity Ads plugin found:"
             echo "$UNITY_PLUGIN_PATH"
 
@@ -338,7 +163,6 @@ jobs:
                 -print0 |
               while IFS= read -r -d '' file; do
 
-                echo ""
                 echo "Checking:"
                 echo "$file"
 
@@ -359,6 +183,50 @@ jobs:
 
 
       # ============================================================
+      # Flutter Clean
+      # ============================================================
+
+      - name: Flutter Clean
+        run: flutter clean
+
+
+      # ============================================================
+      # Flutter Pub Get
+      # ============================================================
+
+      - name: Flutter Pub Get Again
+        run: flutter pub get
+
+
+      # ============================================================
+      # Verify Launcher Icons
+      # ============================================================
+
+      - name: Verify Launcher Icons
+        shell: bash
+        run: |
+          set -e
+
+          echo ""
+          echo "============================================================"
+          echo "LAUNCHER ICONS"
+          echo "============================================================"
+
+          find android/app/src/main/res \
+            -type f \
+            \( \
+              -name "ic_launcher.png" \
+              -o -name "ic_launcher_round.png" \
+              -o -name "ic_launcher.xml" \
+              -o -name "ic_launcher_round.xml" \
+            \) \
+            | sort
+
+          echo ""
+          echo "Launcher icon check completed."
+
+
+      # ============================================================
       # Build Release APK
       # ============================================================
 
@@ -367,42 +235,12 @@ jobs:
         run: |
           set -e
 
-          echo ""
-          echo "============================================================"
-          echo "STARTING FLUTTER RELEASE BUILD"
-          echo "============================================================"
+          echo "Starting Flutter release build..."
 
-          for attempt in 1 2 3; do
-
-            echo ""
-            echo "BUILD ATTEMPT $attempt / 3"
-
-            if flutter build apk --release; then
-
-              echo ""
-              echo "============================================================"
-              echo "BUILD SUCCESSFUL"
-              echo "============================================================"
-
-              exit 0
-
-            fi
-
-            if [ "$attempt" -lt 3 ]; then
-              echo ""
-              echo "Build failed."
-              echo "Waiting 20 seconds before retry..."
-              sleep 20
-            fi
-
-          done
+          flutter build apk --release
 
           echo ""
-          echo "============================================================"
-          echo "BUILD FAILED AFTER 3 ATTEMPTS"
-          echo "============================================================"
-
-          exit 1
+          echo "BUILD SUCCESSFUL"
 
 
       # ============================================================
