@@ -2706,78 +2706,43 @@ class _PrivateIslandWidget
               Positioned(
                 bottom: 0,
                 child: Material(
-                  color:
-                      Colors.transparent,
+                  color: Colors.transparent,
                   child: InkWell(
-                    borderRadius:
-                        BorderRadius
-                            .circular(
-                      18,
-                    ),
-                    onTap:
-                        unlocking
-                            ? null
-                            : onUnlockTap,
+                    borderRadius: BorderRadius.circular(18),
+                    onTap: unlocking ? null : onUnlockTap,
                     child: Container(
-                      padding:
-                          const EdgeInsets
-                              .symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 18,
                         vertical: 9,
                       ),
-                      decoration:
-                          BoxDecoration(
-                        color:
-                            const Color(
-                          0xFF5B3A7D,
-                        ).withOpacity(
-                          0.96,
-                        ),
-                        borderRadius:
-                            BorderRadius
-                                .circular(
-                          18,
-                        ),
-                        border:
-                            Border.all(
-                          color: Colors
-                              .amber
-                              .withOpacity(
-                            0.85,
-                          ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF5B3A7D).withOpacity(0.96),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: Colors.amber.withOpacity(0.85),
                           width: 1.5,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors
-                                .black
-                                .withOpacity(
-                              0.30,
-                            ),
+                            color: Colors.black.withOpacity(0.30),
                             blurRadius: 10,
                             spreadRadius: 1,
                           ),
                           BoxShadow(
-                            color: Colors
-                                .amber
-                                .withOpacity(
-                              0.18,
-                            ),
+                            color: Colors.amber.withOpacity(0.18),
                             blurRadius: 14,
                             spreadRadius: 2,
                           ),
                         ],
                       ),
                       child: Row(
-                        mainAxisSize:
-                            MainAxisSize.min,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Image.asset(
                             "assets/images/rewards/gem.png",
                             width: 22,
                             height: 22,
-                            fit:
-                                BoxFit.contain,
+                            fit: BoxFit.contain,
                             errorBuilder: (
                               context,
                               error,
@@ -2789,19 +2754,13 @@ class _PrivateIslandWidget
                               );
                             },
                           ),
-                          const SizedBox(
-                            width: 6,
-                          ),
+                          const SizedBox(width: 6),
                           const Text(
                             "فتح",
-                            style:
-                                TextStyle(
-                              color:
-                                  Colors.white,
+                            style: TextStyle(
+                              color: Colors.white,
                               fontSize: 14,
-                              fontWeight:
-                                  FontWeight
-                                      .bold,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
