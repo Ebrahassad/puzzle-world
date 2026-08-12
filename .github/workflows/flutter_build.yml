@@ -66,16 +66,15 @@ jobs:
 
 
       # ============================================================
-      # CREATE ANDROID LAUNCHER ICON
+      # CREATE NORMAL ANDROID LAUNCHER ICON
       #
-      # IMPORTANT:
-      # - No flutter_launcher_icons
-      # - No adaptive icon
-      # - No ic_launcher.xml
-      # - No background layer
-      # - No foreground layer
+      # Uses assets/icon/app_icon.png directly.
       #
-      # The PNG is used directly.
+      # NO flutter_launcher_icons
+      # NO adaptive icon
+      # NO XML launcher icon
+      # NO foreground
+      # NO background
       # ============================================================
 
       - name: Create Normal Android Launcher Icon
@@ -101,15 +100,17 @@ jobs:
           echo "$ICON"
 
           echo ""
-          echo "Removing ALL old launcher resources..."
+          echo "Removing old launcher resources..."
 
           rm -rf "$RES"/mipmap-*
           rm -rf "$RES"/drawable-anydpi*
-          rm -rf "$RES"/drawable*/ic_launcher*
-          rm -rf "$RES"/drawable*/ic_launcher_round*
+          
+          find "$RES" -type f \
+            \( -name "ic_launcher*" -o -name "ic_launcher_round*" \) \
+            -delete
 
           echo ""
-          echo "Creating normal mipmap directories..."
+          echo "Creating mipmap directories..."
 
           mkdir -p "$RES/mipmap-mdpi"
           mkdir -p "$RES/mipmap-hdpi"
@@ -118,16 +119,13 @@ jobs:
           mkdir -p "$RES/mipmap-xxxhdpi"
 
           echo ""
-          echo "Copying app_icon.png..."
+          echo "Copying app icon..."
 
           cp "$ICON" "$RES/mipmap-mdpi/ic_launcher.png"
           cp "$ICON" "$RES/mipmap-hdpi/ic_launcher.png"
           cp "$ICON" "$RES/mipmap-xhdpi/ic_launcher.png"
           cp "$ICON" "$RES/mipmap-xxhdpi/ic_launcher.png"
           cp "$ICON" "$RES/mipmap-xxxhdpi/ic_launcher.png"
-
-          echo ""
-          echo "Creating round launcher icon..."
 
           cp "$ICON" "$RES/mipmap-mdpi/ic_launcher_round.png"
           cp "$ICON" "$RES/mipmap-hdpi/ic_launcher_round.png"
@@ -140,7 +138,7 @@ jobs:
 
 
       # ============================================================
-      # VERIFY NO ADAPTIVE ICONS EXIST
+      # VERIFY LAUNCHER ICONS
       # ============================================================
 
       - name: Verify Launcher Icon Structure
@@ -155,66 +153,90 @@ jobs:
           echo "ANDROID RES STRUCTURE"
           echo "============================================================"
 
-          find "$RES" \
-            -maxdepth 3 \
-            -type f \
-            | sort
+          find "$RES" -maxdepth 3 -type f | sort
 
           echo ""
           echo "============================================================"
           echo "CHECKING FOR ADAPTIVE ICONS"
           echo "============================================================"
 
-          if find "$RES" \
-            -type f \
-            \
-              -path "*/mipmap-anydpi/*" \
-              -o -path "*/mipmap-anydpi-v26/*" \
-              -o -path "*/mipmap-anydpi-v27/*" \
-              -o -path "*/drawable-anydpi-v24/*" \
-              -o -name "ic_launcher.xml" \
+          ADAPTIVE_FOUND=0
+
+          if find "$RES" -type f \
+            \( \
+              -name "ic_launcher.xml" \
               -o -name "ic_launcher_round.xml" \
-            \
-            | grep -q .; then
+            \) | grep -q .; then
+
+            ADAPTIVE_FOUND=1
+
+          fi
+
+          if find "$RES" -type d \
+            \( \
+              -name "mipmap-anydpi" \
+              -o -name "mipmap-anydpi-v26" \
+              -o -name "mipmap-anydpi-v27" \
+              -o -name "drawable-anydpi-v24" \
+            \) | grep -q .; then
+
+            ADAPTIVE_FOUND=1
+
+          fi
+
+          if [ "$ADAPTIVE_FOUND" -eq 1 ]; then
 
             echo ""
-            echo "ERROR: Adaptive launcher icon resources still exist."
-            echo ""
+            echo "ERROR: Adaptive launcher icon resources found."
+
             find "$RES" \
-              -type f \
-              \
-                -path "*/mipmap-anydpi/*" \
-                -o -path "*/mipmap-anydpi-v26/*" \
-                -o -path "*/mipmap-anydpi-v27/*" \
-                -o -path "*/drawable-anydpi-v24/*" \
-                -o -name "ic_launcher.xml" \
+              \( \
+                -name "ic_launcher.xml" \
                 -o -name "ic_launcher_round.xml" \
-             
+              \) -print || true
 
             exit 1
 
-          else
-
-            echo "OK: No adaptive launcher icons found."
-
           fi
+
+          echo "OK: No adaptive launcher icons found."
 
           echo ""
           echo "============================================================"
           echo "NORMAL PNG LAUNCHER ICONS"
           echo "============================================================"
 
-          find "$RES" \
-            -type f \
-            \
+          find "$RES" -type f \
+            \( \
               -name "ic_launcher.png" \
               -o -name "ic_launcher_round.png" \
-            \
-            | sort
+            \) | sort
+
+          echo ""
+          echo "============================================================"
+          echo "CHECKING REQUIRED ICONS"
+          echo "============================================================"
+
+          for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+
+            if [ ! -f "$RES/mipmap-$density/ic_launcher.png" ]; then
+              echo "ERROR: Missing ic_launcher.png in mipmap-$density"
+              exit 1
+            fi
+
+            if [ ! -f "$RES/mipmap-$density/ic_launcher_round.png" ]; then
+              echo "ERROR: Missing ic_launcher_round.png in mipmap-$density"
+              exit 1
+            fi
+
+          done
+
+          echo ""
+          echo "OK: All launcher PNG files exist."
 
 
       # ============================================================
-      # Verify AndroidManifest
+      # Verify Android Manifest
       # ============================================================
 
       - name: Verify Android Manifest
@@ -224,10 +246,11 @@ jobs:
 
           echo ""
           echo "============================================================"
-          echo "ANDROID MANIFEST ICON"
+          echo "ANDROID MANIFEST"
           echo "============================================================"
 
-          grep -n 'android:icon\|android:roundIcon' \
+          grep -n \
+            -E 'android:icon|android:roundIcon' \
             android/app/src/main/AndroidManifest.xml \
             || true
 
@@ -308,10 +331,10 @@ jobs:
 
               find "$UNITY_PLUGIN_PATH/android" \
                 -type f \
-                \
+                \( \
                   -name "build.gradle" \
                   -o -name "build.gradle.kts" \
-                \
+                \) \
                 -print0 |
               while IFS= read -r -d '' file; do
 
@@ -320,4 +343,75 @@ jobs:
                 echo "$file"
 
                 sed -i \
-                  's/jvmTarget[[:space:]]*=[[:space:
+                  's/jvmTarget[[:space:]]*=[[:space:]]*["'\'']1\.8["'\'']/jvmTarget = "17"/g' \
+                  "$file"
+
+              done
+
+            fi
+
+          else
+
+            echo "Unity Ads plugin path not found."
+            echo "Continuing..."
+
+          fi
+
+
+      # ============================================================
+      # Build Release APK
+      # ============================================================
+
+      - name: Build Release APK
+        shell: bash
+        run: |
+          set -e
+
+          echo ""
+          echo "============================================================"
+          echo "STARTING FLUTTER RELEASE BUILD"
+          echo "============================================================"
+
+          for attempt in 1 2 3; do
+
+            echo ""
+            echo "BUILD ATTEMPT $attempt / 3"
+
+            if flutter build apk --release; then
+
+              echo ""
+              echo "============================================================"
+              echo "BUILD SUCCESSFUL"
+              echo "============================================================"
+
+              exit 0
+
+            fi
+
+            if [ "$attempt" -lt 3 ]; then
+              echo ""
+              echo "Build failed."
+              echo "Waiting 20 seconds before retry..."
+              sleep 20
+            fi
+
+          done
+
+          echo ""
+          echo "============================================================"
+          echo "BUILD FAILED AFTER 3 ATTEMPTS"
+          echo "============================================================"
+
+          exit 1
+
+
+      # ============================================================
+      # Upload Release APK
+      # ============================================================
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: puzzle-world-release
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
