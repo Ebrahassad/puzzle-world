@@ -50,204 +50,18 @@ jobs:
 
 
       # ============================================================
-      # Install ImageMagick
-      # ============================================================
-
-      - name: Install ImageMagick
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y imagemagick
-
-
-      # ============================================================
       # Generate Android App Icon
       #
-      # Source:
-      # assets/icon/app_icon.png
+      # Uses flutter_launcher_icons from pubspec.yaml.
       #
-      # The icon is generated directly as a normal Android
-      # launcher icon.
-      #
-      # No Adaptive Icon.
-      # No foreground layer.
-      # No background layer.
-      # No white padding.
-      #
-      # The entire icon is filled with the same purple
-      # background used by the application splash.
+      # No custom splash background.
+      # No splash_color.
+      # No ImageMagick.
+      # No adaptive icon configuration.
       # ============================================================
 
       - name: Generate Android App Icon
-        shell: bash
-        run: |
-          set -e
-
-          SOURCE="assets/icon/app_icon.png"
-          RES="android/app/src/main/res"
-          COLORS_FILE="$RES/values/colors.xml"
-
-          echo "=========================================="
-          echo "Generating Android application icon"
-          echo "=========================================="
-
-          # --------------------------------------------------------
-          # Check source image
-          # --------------------------------------------------------
-
-          if [ ! -f "$SOURCE" ]; then
-            echo "ERROR: App icon not found:"
-            echo "$SOURCE"
-            exit 1
-          fi
-
-          # --------------------------------------------------------
-          # Check colors.xml
-          # --------------------------------------------------------
-
-          if [ ! -f "$COLORS_FILE" ]; then
-            echo "ERROR: colors.xml not found:"
-            echo "$COLORS_FILE"
-            exit 1
-          fi
-
-          # --------------------------------------------------------
-          # Read splash_color from colors.xml
-          # --------------------------------------------------------
-
-          SPLASH_COLOR=$(sed -n \
-            's/.*<color[[:space:]]\+name="splash_color">[[:space:]]*\([^<]*\)[[:space:]]*<\/color>.*/\1/p' \
-            "$COLORS_FILE" |
-            head -n 1)
-
-          if [ -z "$SPLASH_COLOR" ]; then
-            echo "ERROR: splash_color was not found in colors.xml"
-            exit 1
-          fi
-
-          echo "Icon source:"
-          echo "$SOURCE"
-
-          echo "Background color:"
-          echo "$SPLASH_COLOR"
-
-
-          # --------------------------------------------------------
-          # Remove old launcher icon files
-          #
-          # This guarantees that old Flutter icons cannot remain.
-          # --------------------------------------------------------
-
-          rm -f "$RES"/mipmap-mdpi/ic_launcher.png
-          rm -f "$RES"/mipmap-hdpi/ic_launcher.png
-          rm -f "$RES"/mipmap-xhdpi/ic_launcher.png
-          rm -f "$RES"/mipmap-xxhdpi/ic_launcher.png
-          rm -f "$RES"/mipmap-xxxhdpi/ic_launcher.png
-
-          rm -f "$RES"/mipmap-mdpi/ic_launcher_round.png
-          rm -f "$RES"/mipmap-hdpi/ic_launcher_round.png
-          rm -f "$RES"/mipmap-xhdpi/ic_launcher_round.png
-          rm -f "$RES"/mipmap-xxhdpi/ic_launcher_round.png
-          rm -f "$RES"/mipmap-xxxhdpi/ic_launcher_round.png
-
-
-          # --------------------------------------------------------
-          # Create mipmap directories
-          # --------------------------------------------------------
-
-          mkdir -p "$RES/mipmap-mdpi"
-          mkdir -p "$RES/mipmap-hdpi"
-          mkdir -p "$RES/mipmap-xhdpi"
-          mkdir -p "$RES/mipmap-xxhdpi"
-          mkdir -p "$RES/mipmap-xxxhdpi"
-
-
-          # --------------------------------------------------------
-          # Generate launcher icons
-          #
-          # The source image fills the entire square.
-          #
-          # Alpha is removed and replaced by the application
-          # purple background.
-          #
-          # No extent.
-          # No additional transparent canvas.
-          # No white background.
-          # No adaptive icon.
-          # --------------------------------------------------------
-
-          convert "$SOURCE" \
-            -background "$SPLASH_COLOR" \
-            -alpha remove \
-            -alpha off \
-            -resize 48x48! \
-            "$RES/mipmap-mdpi/ic_launcher.png"
-
-          convert "$SOURCE" \
-            -background "$SPLASH_COLOR" \
-            -alpha remove \
-            -alpha off \
-            -resize 72x72! \
-            "$RES/mipmap-hdpi/ic_launcher.png"
-
-          convert "$SOURCE" \
-            -background "$SPLASH_COLOR" \
-            -alpha remove \
-            -alpha off \
-            -resize 96x96! \
-            "$RES/mipmap-xhdpi/ic_launcher.png"
-
-          convert "$SOURCE" \
-            -background "$SPLASH_COLOR" \
-            -alpha remove \
-            -alpha off \
-            -resize 144x144! \
-            "$RES/mipmap-xxhdpi/ic_launcher.png"
-
-          convert "$SOURCE" \
-            -background "$SPLASH_COLOR" \
-            -alpha remove \
-            -alpha off \
-            -resize 192x192! \
-            "$RES/mipmap-xxxhdpi/ic_launcher.png"
-
-
-          # --------------------------------------------------------
-          # Verify generated icons
-          # --------------------------------------------------------
-
-          echo ""
-          echo "=========================================="
-          echo "Generated launcher icons:"
-          echo "=========================================="
-
-          find "$RES" \
-            -type f \
-            -name "ic_launcher.png" \
-            -print
-
-
-          # --------------------------------------------------------
-          # Verify files are not empty
-          # --------------------------------------------------------
-
-          for ICON in \
-            "$RES/mipmap-mdpi/ic_launcher.png" \
-            "$RES/mipmap-hdpi/ic_launcher.png" \
-            "$RES/mipmap-xhdpi/ic_launcher.png" \
-            "$RES/mipmap-xxhdpi/ic_launcher.png" \
-            "$RES/mipmap-xxxhdpi/ic_launcher.png"
-          do
-
-            if [ ! -s "$ICON" ]; then
-              echo "ERROR: Generated icon is missing or empty:"
-              echo "$ICON"
-              exit 1
-            fi
-
-          done
-
-          echo ""
-          echo "All launcher icons generated successfully."
+        run: dart run flutter_launcher_icons
 
 
       # ============================================================
@@ -369,6 +183,16 @@ jobs:
 
       - name: Flutter Pub Get Again
         run: flutter pub get
+
+
+      # ============================================================
+      # Generate App Icon Again
+      #
+      # This guarantees the launcher icon exists after flutter clean.
+      # ============================================================
+
+      - name: Generate App Icon Again
+        run: dart run flutter_launcher_icons
 
 
       # ============================================================
