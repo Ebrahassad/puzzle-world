@@ -7,7 +7,8 @@
         <!-- خلفية شاشة Android 12 -->
         <item name="android:windowSplashScreenBackground">@color/splash_color</item>
 
-        <!-- الأيقونة تستخدم أيقونة التطبيق الافتراضية للنظام -->
+        <!-- خلفية دائرة/مربع الأيقونة - هذا السطر يمنع المربع الأبيض الافتراضي -->
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/splash_color</item>
 
         <item name="android:windowNoTitle">true</item>
 
