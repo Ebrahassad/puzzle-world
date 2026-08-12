@@ -125,12 +125,6 @@ class PuzzleProgressManager {
   static const int gemPurchaseAmount = 1;
 
   //==================================================
-  // 📺 رصيد الإعلانات التجريبي
-  //==================================================
-
-  static const int initialAdsBalance = 10000;
-
-  //==================================================
   // 🏝️ أسعار الجزيرة الخاصة
   //==================================================
 
@@ -1379,8 +1373,7 @@ class PuzzleProgressManager {
   static Future<int> getAdsBalance() async {
     final prefs = await _prefs;
 
-    return prefs.getInt(adsBalanceKey) ??
-        initialAdsBalance;
+    return prefs.getInt(adsBalanceKey) ?? 0;
   }
 
   static Future<void> addAdsBalance(
@@ -1411,8 +1404,7 @@ class PuzzleProgressManager {
     final prefs = await _prefs;
 
     final current =
-        prefs.getInt(adsBalanceKey) ??
-            initialAdsBalance;
+        prefs.getInt(adsBalanceKey) ?? 0;
 
     if (current < amount) {
       return false;
@@ -1503,10 +1495,16 @@ class PuzzleProgressManager {
       return false;
     }
 
+    // 📺 رصيد مشاهدة الإعلانات
     await addAdsBalance(500);
 
+    // 🪙 العملات
+    await addCoins(100);
+
+    // ⭐ النجوم
     await addStars(10);
 
+    // 💎 الجواهر
     await addGems(5);
 
     await prefs.setBool(
