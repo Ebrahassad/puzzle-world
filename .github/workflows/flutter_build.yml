@@ -269,12 +269,46 @@ jobs:
             | sort
 
 
-      # ============================================================
-      # Build Release APK
-      # ============================================================
+    # ============================================================
+# Build Release APK
+# ============================================================
 
-      - name: Build Release APK
-        run: flutter build apk --release
+- name: Build Release APK
+  shell: bash
+  run: |
+    set -e
+
+    echo "Starting Flutter release build..."
+
+    for attempt in 1 2 3; do
+
+      echo ""
+      echo "============================================================"
+      echo "BUILD ATTEMPT $attempt / 3"
+      echo "============================================================"
+
+      if flutter build apk --release; then
+        echo ""
+        echo "============================================================"
+        echo "BUILD SUCCESSFUL"
+        echo "============================================================"
+        exit 0
+      fi
+
+      if [ "$attempt" -lt 3 ]; then
+        echo ""
+        echo "Build failed. Waiting 20 seconds before retry..."
+        sleep 20
+      fi
+
+    done
+
+    echo ""
+    echo "============================================================"
+    echo "BUILD FAILED AFTER 3 ATTEMPTS"
+    echo "============================================================"
+
+    exit 1
 
 
       # ============================================================
