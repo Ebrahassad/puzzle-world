@@ -65,16 +65,16 @@ jobs:
       # Source:
       # assets/icon/app_icon.png
       #
-      # Background color:
-      # android/app/src/main/res/values/colors.xml
+      # The icon is generated directly as a normal Android
+      # launcher icon.
       #
-      # يتم أخذ splash_color من colors.xml
+      # No Adaptive Icon.
+      # No foreground layer.
+      # No background layer.
+      # No white padding.
       #
-      # مهم:
-      # - لا يوجد extent
-      # - لا توجد مساحة شفافة إضافية
-      # - لا يتم تصغير الأيقونة داخل مربع أكبر
-      # - الخلفية تكون بنفس لون التطبيق البنفسجي
+      # The entire icon is filled with the same purple
+      # background used by the application splash.
       # ============================================================
 
       - name: Generate Android App Icon
@@ -91,7 +91,7 @@ jobs:
           echo "=========================================="
 
           # --------------------------------------------------------
-          # التأكد من وجود الصورة
+          # Check source image
           # --------------------------------------------------------
 
           if [ ! -f "$SOURCE" ]; then
@@ -101,7 +101,7 @@ jobs:
           fi
 
           # --------------------------------------------------------
-          # التأكد من وجود colors.xml
+          # Check colors.xml
           # --------------------------------------------------------
 
           if [ ! -f "$COLORS_FILE" ]; then
@@ -111,10 +111,7 @@ jobs:
           fi
 
           # --------------------------------------------------------
-          # قراءة splash_color من colors.xml
-          # مثال:
-          #
-          # <color name="splash_color">#6A1B9A</color>
+          # Read splash_color from colors.xml
           # --------------------------------------------------------
 
           SPLASH_COLOR=$(sed -n \
@@ -133,8 +130,28 @@ jobs:
           echo "Background color:"
           echo "$SPLASH_COLOR"
 
+
           # --------------------------------------------------------
-          # إنشاء مجلدات الأيقونات
+          # Remove old launcher icon files
+          #
+          # This guarantees that old Flutter icons cannot remain.
+          # --------------------------------------------------------
+
+          rm -f "$RES"/mipmap-mdpi/ic_launcher.png
+          rm -f "$RES"/mipmap-hdpi/ic_launcher.png
+          rm -f "$RES"/mipmap-xhdpi/ic_launcher.png
+          rm -f "$RES"/mipmap-xxhdpi/ic_launcher.png
+          rm -f "$RES"/mipmap-xxxhdpi/ic_launcher.png
+
+          rm -f "$RES"/mipmap-mdpi/ic_launcher_round.png
+          rm -f "$RES"/mipmap-hdpi/ic_launcher_round.png
+          rm -f "$RES"/mipmap-xhdpi/ic_launcher_round.png
+          rm -f "$RES"/mipmap-xxhdpi/ic_launcher_round.png
+          rm -f "$RES"/mipmap-xxxhdpi/ic_launcher_round.png
+
+
+          # --------------------------------------------------------
+          # Create mipmap directories
           # --------------------------------------------------------
 
           mkdir -p "$RES/mipmap-mdpi"
@@ -143,16 +160,19 @@ jobs:
           mkdir -p "$RES/mipmap-xxhdpi"
           mkdir -p "$RES/mipmap-xxxhdpi"
 
+
           # --------------------------------------------------------
-          # توليد الأيقونة
+          # Generate launcher icons
           #
-          # الصورة الأصلية يتم وضعها على خلفية بنفسجية.
+          # The source image fills the entire square.
           #
-          # لا نستخدم extent.
-          # لا نضيف padding.
+          # Alpha is removed and replaced by the application
+          # purple background.
           #
-          # resize WxH! يجعل الصورة تملأ أبعاد الأيقونة
-          # بالكامل.
+          # No extent.
+          # No additional transparent canvas.
+          # No white background.
+          # No adaptive icon.
           # --------------------------------------------------------
 
           convert "$SOURCE" \
@@ -190,12 +210,44 @@ jobs:
             -resize 192x192! \
             "$RES/mipmap-xxxhdpi/ic_launcher.png"
 
+
+          # --------------------------------------------------------
+          # Verify generated icons
+          # --------------------------------------------------------
+
           echo ""
+          echo "=========================================="
           echo "Generated launcher icons:"
+          echo "=========================================="
+
           find "$RES" \
             -type f \
             -name "ic_launcher.png" \
             -print
+
+
+          # --------------------------------------------------------
+          # Verify files are not empty
+          # --------------------------------------------------------
+
+          for ICON in \
+            "$RES/mipmap-mdpi/ic_launcher.png" \
+            "$RES/mipmap-hdpi/ic_launcher.png" \
+            "$RES/mipmap-xhdpi/ic_launcher.png" \
+            "$RES/mipmap-xxhdpi/ic_launcher.png" \
+            "$RES/mipmap-xxxhdpi/ic_launcher.png"
+          do
+
+            if [ ! -s "$ICON" ]; then
+              echo "ERROR: Generated icon is missing or empty:"
+              echo "$ICON"
+              exit 1
+            fi
+
+          done
+
+          echo ""
+          echo "All launcher icons generated successfully."
 
 
       # ============================================================
