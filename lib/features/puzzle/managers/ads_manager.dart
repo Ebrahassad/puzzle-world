@@ -27,7 +27,7 @@ class AdsManager {
   static const String bannerPlacementId =
       'Banner_Android';
 
-  static const bool testMode = true;
+  static const bool testMode = false;
 
   //==================================================
   // ⚙️ الحالة
