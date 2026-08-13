@@ -177,20 +177,17 @@ jobs:
             exit 1
           fi
 
-          # Remove all generated launcher resources
           rm -rf "$RES"/mipmap-*
           rm -rf "$RES"/drawable-anydpi*
           rm -rf "$RES"/drawable*/ic_launcher*
           rm -rf "$RES"/drawable*/ic_launcher_round*
 
-          # Create normal mipmap folders
           mkdir -p "$RES/mipmap-mdpi"
           mkdir -p "$RES/mipmap-hdpi"
           mkdir -p "$RES/mipmap-xhdpi"
           mkdir -p "$RES/mipmap-xxhdpi"
           mkdir -p "$RES/mipmap-xxxhdpi"
 
-          # Copy ORIGINAL PNG directly
           cp "$ICON" "$RES/mipmap-mdpi/ic_launcher.png"
           cp "$ICON" "$RES/mipmap-hdpi/ic_launcher.png"
           cp "$ICON" "$RES/mipmap-xhdpi/ic_launcher.png"
@@ -422,7 +419,7 @@ jobs:
 
 
       # ============================================================
-      # 17. SHOW FINAL BUILD.GRADLE.KTS
+      # 17. VERIFY ANDROID GRADLE CONFIGURATION
       # ============================================================
 
       - name: Verify Android Gradle configuration
@@ -538,7 +535,52 @@ jobs:
 
 
       # ============================================================
-      # 22. UPLOAD APK
+      # 22. INSPECT FINAL APK
+      # ============================================================
+
+      - name: Inspect final APK
+        shell: bash
+        run: |
+          set -e
+
+          APK="build/app/outputs/flutter-apk/app-release.apk"
+
+          echo "============================================================"
+          echo "APK FILE"
+          echo "============================================================"
+
+          ls -lh "$APK"
+
+          echo ""
+          echo "============================================================"
+          echo "APK PACKAGE INFORMATION"
+          echo "============================================================"
+
+          BUILD_TOOLS=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)
+
+          echo "Build Tools: $BUILD_TOOLS"
+
+          "$ANDROID_HOME/build-tools/$BUILD_TOOLS/aapt" \
+            dump badging "$APK" | head -30
+
+          echo ""
+          echo "============================================================"
+          echo "APK SIGNATURE"
+          echo "============================================================"
+
+          "$ANDROID_HOME/build-tools/$BUILD_TOOLS/apksigner" \
+            verify --verbose "$APK"
+
+          echo ""
+          echo "============================================================"
+          echo "APK SHA256"
+          echo "============================================================"
+
+          sha256sum "$APK"
+
+
+      # ============================================================
+      # 23. UPLOAD APK
       # ============================================================
 
       - name: Upload Release APK
