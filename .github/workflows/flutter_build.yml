@@ -104,16 +104,16 @@ jobs:
 
 
       # ============================================================
-      # 7. FORCE GRADLE 8.14
+      # 7. FORCE GRADLE 9.1.0
       # ============================================================
 
-      - name: Set Gradle 8.14
+      - name: Set Gradle 9.1.0
         shell: bash
         run: |
           set -e
 
           sed -i \
-            's#gradle-[0-9.]*-all.zip#gradle-8.14-all.zip#g' \
+            's#gradle-[0-9.]*-all.zip#gradle-9.1.0-all.zip#g' \
             android/gradle/wrapper/gradle-wrapper.properties
 
           echo ""
