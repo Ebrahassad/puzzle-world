@@ -75,7 +75,7 @@ jobs:
 
           flutter create \
             --platforms=android \
-            --org com.ebrahassad \
+            --org com.ebrahassadi \
             --project-name puzzle_world \
             .
 
