@@ -405,20 +405,12 @@ jobs:
           path = Path(sys.argv[1])
           text = path.read_text()
 
-          # --------------------------------------------------------
-          # Imports
-          # --------------------------------------------------------
-
           if "import java.util.Properties" not in text:
               text = (
                   "import java.util.Properties\n"
                   "import java.io.FileInputStream\n\n"
                   + text
               )
-
-          # --------------------------------------------------------
-          # Keystore loader
-          # --------------------------------------------------------
 
           if "val keystorePropertiesFile" not in text:
 
@@ -441,10 +433,6 @@ jobs:
                   loader + "android {",
                   1
               )
-
-          # --------------------------------------------------------
-          # Signing config
-          # --------------------------------------------------------
 
           if 'create("release")' not in text:
 
@@ -474,10 +462,6 @@ jobs:
                   "android {\n" + signing,
                   1
               )
-
-          # --------------------------------------------------------
-          # Release signing
-          # --------------------------------------------------------
 
           if 'signingConfig = signingConfigs.getByName("release")' not in text:
 
@@ -674,10 +658,18 @@ jobs:
 
           echo ""
           echo "============================================================"
-          echo "APK SIGNATURE"
+          echo "APK PACKAGE INFORMATION"
           echo "============================================================"
 
           BUILD_TOOLS=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)
+
+          "$ANDROID_HOME/build-tools/$BUILD_TOOLS/aapt" \
+            dump badging "$APK" | head -20
+
+          echo ""
+          echo "============================================================"
+          echo "APK SIGNATURE"
+          echo "============================================================"
 
           "$ANDROID_HOME/build-tools/$BUILD_TOOLS/apksigner" \
             verify \
