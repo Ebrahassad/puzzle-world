@@ -35,7 +35,7 @@ jobs:
 
 
       # ============================================================
-      # 3. FLUTTER
+      # 3. FLUTTER 3.44.8
       # ============================================================
 
       - name: Setup Flutter 3.44.8
@@ -52,21 +52,23 @@ jobs:
 
       - name: Verify Flutter
         run: |
+          set -e
+
           flutter --version
           dart --version
 
 
       # ============================================================
-      # 5. CREATE ANDROID FROM SCRATCH
+      # 5. DELETE AND RECREATE ANDROID
       # ============================================================
 
-      - name: Create Android project
+      - name: Recreate Android project
         shell: bash
         run: |
           set -e
 
           echo "============================================================"
-          echo "CREATING ANDROID PROJECT"
+          echo "RECREATING ANDROID PROJECT"
           echo "============================================================"
 
           rm -rf android
@@ -79,87 +81,139 @@ jobs:
 
           test -d android
           test -f android/app/build.gradle.kts
+          test -f android/settings.gradle.kts
 
-          echo ""
           echo "Android project created successfully."
 
 
       # ============================================================
-      # 6. INSPECT GENERATED ANDROID
+      # 6. SET GRADLE 8.14
       # ============================================================
 
-      - name: Inspect generated Android
-        run: |
-          echo "===== ANDROID ====="
-          find android -maxdepth 3 -type f | sort
-
-          echo "===== MANIFEST ====="
-          cat android/app/src/main/AndroidManifest.xml
-
-          echo "===== APP GRADLE ====="
-          cat android/app/build.gradle.kts
-
-          echo "===== SETTINGS ====="
-          cat android/settings.gradle.kts
-
-
-      # ============================================================
-      # 7. FORCE GRADLE 9.1.0
-      # ============================================================
-
-      - name: Set Gradle 9.1.0
+      - name: Configure Gradle 8.14
         shell: bash
         run: |
           set -e
 
-          sed -i \
-            's#gradle-[0-9.]*-all.zip#gradle-9.1.0-all.zip#g' \
+          WRAPPER="android/gradle/wrapper/gradle-wrapper.properties"
+
+          python3 - "$WRAPPER" <<'PY'
+          import sys
+          from pathlib import Path
+          import re
+
+          path = Path(sys.argv[1])
+          text = path.read_text()
+
+          text = re.sub(
+              r'distributionUrl=.*',
+              'distributionUrl=https\\://services.gradle.org/distributions/gradle-8.14-all.zip',
+              text
+          )
+
+          path.write_text(text)
+          PY
+
+          echo "Gradle version:"
+          grep "distributionUrl" \
             android/gradle/wrapper/gradle-wrapper.properties
 
-          echo ""
-          echo "Gradle wrapper:"
-          cat android/gradle/wrapper/gradle-wrapper.properties
-
 
       # ============================================================
-      # 8. FORCE AGP 8.11.1 + KOTLIN 2.2.20
+      # 7. AGP 8.11.1 + KOTLIN 2.2.20
       # ============================================================
 
-      - name: Configure Android Gradle versions
+      - name: Configure Android Gradle Plugin and Kotlin
         shell: bash
         run: |
           set -e
 
-          if [ -f android/settings.gradle.kts ]; then
+          SETTINGS="android/settings.gradle.kts"
 
-            sed -i \
-              's/com.android.application version "[^"]*"/com.android.application version "8.11.1"/' \
-              android/settings.gradle.kts
+          python3 - "$SETTINGS" <<'PY'
+          import sys
+          from pathlib import Path
+          import re
 
-            sed -i \
-              's/org.jetbrains.kotlin.android version "[^"]*"/org.jetbrains.kotlin.android version "2.2.20"/' \
-              android/settings.gradle.kts
+          path = Path(sys.argv[1])
+          text = path.read_text()
 
-          fi
+          text = re.sub(
+              r'(id\("com\.android\.application"\)\s+version\s+")[^"]+(")',
+              r'\g<1>8.11.1\g<2>',
+              text
+          )
 
-          echo ""
+          text = re.sub(
+              r'(id\("org\.jetbrains\.kotlin\.android"\)\s+version\s+")[^"]+(")',
+              r'\g<1>2.2.20\g<2>',
+              text
+          )
+
+          path.write_text(text)
+          PY
+
           echo "Android settings:"
           cat android/settings.gradle.kts
 
 
       # ============================================================
-      # 9. FLUTTER PUB GET
+      # 8. PUB GET
       # ============================================================
 
-      - name: Flutter Pub Get
+      - name: Flutter pub get
         run: flutter pub get
 
 
       # ============================================================
-      # 10. CREATE NORMAL PNG LAUNCHER ICON
+      # 9. CONFIGURE ANDROID SDK / JAVA 17
       # ============================================================
 
-      - name: Install launcher icon
+      - name: Configure Android Java 17
+        shell: bash
+        run: |
+          set -e
+
+          APP="android/app/build.gradle.kts"
+
+          python3 - "$APP" <<'PY'
+          import sys
+          from pathlib import Path
+
+          path = Path(sys.argv[1])
+          text = path.read_text()
+
+          text = text.replace(
+              "JavaVersion.VERSION_1_8",
+              "JavaVersion.VERSION_17"
+          )
+
+          text = text.replace(
+              "JavaVersion.VERSION_11",
+              "JavaVersion.VERSION_17"
+          )
+
+          text = text.replace(
+              'jvmTarget = "1.8"',
+              'jvmTarget = "17"'
+          )
+
+          text = text.replace(
+              'jvmTarget = "11"',
+              'jvmTarget = "17"'
+          )
+
+          path.write_text(text)
+          PY
+
+          echo "Java 17 configured."
+
+
+      # ============================================================
+      # 10. LAUNCHER ICON
+      # ============================================================
+
+      - name: Install normal PNG launcher icon
         shell: bash
         run: |
           set -e
@@ -167,38 +221,27 @@ jobs:
           ICON="assets/icon/app_icon.png"
           RES="android/app/src/main/res"
 
-          echo "============================================================"
-          echo "INSTALLING LAUNCHER ICON"
-          echo "============================================================"
-
           if [ ! -f "$ICON" ]; then
-            echo "ERROR: Missing icon:"
-            echo "$ICON"
+            echo "ERROR: $ICON does not exist."
             exit 1
           fi
+
+          echo "Installing Puzzle World icon..."
 
           rm -rf "$RES"/mipmap-*
           rm -rf "$RES"/drawable-anydpi*
           rm -rf "$RES"/drawable*/ic_launcher*
-          rm -rf "$RES"/drawable*/ic_launcher_round*
 
-          mkdir -p "$RES/mipmap-mdpi"
-          mkdir -p "$RES/mipmap-hdpi"
-          mkdir -p "$RES/mipmap-xhdpi"
-          mkdir -p "$RES/mipmap-xxhdpi"
-          mkdir -p "$RES/mipmap-xxxhdpi"
+          for density in mdpi hdpi xhdpi xxhdpi xxxhdpi
+          do
+            mkdir -p "$RES/mipmap-$density"
 
-          cp "$ICON" "$RES/mipmap-mdpi/ic_launcher.png"
-          cp "$ICON" "$RES/mipmap-hdpi/ic_launcher.png"
-          cp "$ICON" "$RES/mipmap-xhdpi/ic_launcher.png"
-          cp "$ICON" "$RES/mipmap-xxhdpi/ic_launcher.png"
-          cp "$ICON" "$RES/mipmap-xxxhdpi/ic_launcher.png"
+            cp "$ICON" \
+              "$RES/mipmap-$density/ic_launcher.png"
 
-          cp "$ICON" "$RES/mipmap-mdpi/ic_launcher_round.png"
-          cp "$ICON" "$RES/mipmap-hdpi/ic_launcher_round.png"
-          cp "$ICON" "$RES/mipmap-xhdpi/ic_launcher_round.png"
-          cp "$ICON" "$RES/mipmap-xxhdpi/ic_launcher_round.png"
-          cp "$ICON" "$RES/mipmap-xxxhdpi/ic_launcher_round.png"
+            cp "$ICON" \
+              "$RES/mipmap-$density/ic_launcher_round.png"
+          done
 
           echo "Launcher icon installed."
 
@@ -219,20 +262,21 @@ jobs:
           rm -rf "$RES/mipmap-anydpi-v27"
           rm -rf "$RES/drawable-anydpi-v24"
 
-          find "$RES" -type f \
+          find "$RES" \
+            -type f \
             \( \
               -name "ic_launcher.xml" \
               -o -name "ic_launcher_round.xml" \
               -o -name "ic_launcher_foreground*" \
               -o -name "ic_launcher_background*" \
             \) \
-            -delete
+            -delete || true
 
-          echo "Adaptive icon resources removed."
+          echo "Adaptive icons removed."
 
 
       # ============================================================
-      # 12. CONFIGURE MANIFEST
+      # 12. MANIFEST
       # ============================================================
 
       - name: Configure Android Manifest
@@ -242,63 +286,44 @@ jobs:
 
           MANIFEST="android/app/src/main/AndroidManifest.xml"
 
-          sed -i \
-            's/android:icon="[^"]*"/android:icon="@mipmap\/ic_launcher"/g' \
-            "$MANIFEST"
+          python3 - "$MANIFEST" <<'PY'
+          import sys
+          from pathlib import Path
+          import re
 
-          if grep -q "android:roundIcon=" "$MANIFEST"; then
+          path = Path(sys.argv[1])
+          text = path.read_text()
 
-            sed -i \
-              's/android:roundIcon="[^"]*"/android:roundIcon="@mipmap\/ic_launcher_round"/g' \
-              "$MANIFEST"
+          text = re.sub(
+              r'\s+android:icon="[^"]*"',
+              '',
+              text
+          )
 
-          else
+          text = re.sub(
+              r'\s+android:roundIcon="[^"]*"',
+              '',
+              text
+          )
 
-            sed -i \
-              's/android:icon="@mipmap\/ic_launcher"/android:icon="@mipmap\/ic_launcher" android:roundIcon="@mipmap\/ic_launcher_round"/' \
-              "$MANIFEST"
+          text = text.replace(
+              "<application",
+              '''<application
+                  android:icon="@mipmap/ic_launcher"
+                  android:roundIcon="@mipmap/ic_launcher_round"''',
+              1
+          )
 
-          fi
+          path.write_text(text)
+          PY
 
-          echo ""
           grep -n \
             -E 'android:icon|android:roundIcon' \
             "$MANIFEST"
 
 
       # ============================================================
-      # 13. CONFIGURE JAVA 17
-      # ============================================================
-
-      - name: Configure Java 17
-        shell: bash
-        run: |
-          set -e
-
-          APP_GRADLE="android/app/build.gradle.kts"
-
-          sed -i \
-            's/JavaVersion.VERSION_1_8/JavaVersion.VERSION_17/g' \
-            "$APP_GRADLE"
-
-          sed -i \
-            's/JavaVersion.VERSION_11/JavaVersion.VERSION_17/g' \
-            "$APP_GRADLE"
-
-          sed -i \
-            's/jvmTarget = "1.8"/jvmTarget = "17"/g' \
-            "$APP_GRADLE"
-
-          sed -i \
-            's/jvmTarget = "11"/jvmTarget = "17"/g' \
-            "$APP_GRADLE"
-
-          echo ""
-          echo "Java/Kotlin target configured."
-
-
-      # ============================================================
-      # 14. DECODE RELEASE KEYSTORE
+      # 13. RELEASE KEYSTORE
       # ============================================================
 
       - name: Decode release keystore
@@ -308,21 +333,24 @@ jobs:
         run: |
           set -e
 
-          mkdir -p android/app
-
-          echo "$KEYSTORE_BASE64" | base64 --decode \
-            > android/app/upload-keystore.jks
-
-          if [ ! -s android/app/upload-keystore.jks ]; then
-            echo "ERROR: Keystore is empty."
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "ERROR: KEYSTORE_BASE64 secret is missing."
             exit 1
           fi
 
-          echo "Keystore created."
+          mkdir -p android/app
+
+          printf '%s' "$KEYSTORE_BASE64" \
+            | base64 --decode \
+            > android/app/upload-keystore.jks
+
+          test -s android/app/upload-keystore.jks
+
+          echo "Release keystore created."
 
 
       # ============================================================
-      # 15. CREATE KEY.PROPERTIES
+      # 14. KEY PROPERTIES
       # ============================================================
 
       - name: Create key.properties
@@ -333,6 +361,21 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           set -e
+
+          if [ -z "$KEYSTORE_PASSWORD" ]; then
+            echo "ERROR: KEYSTORE_PASSWORD missing."
+            exit 1
+          fi
+
+          if [ -z "$KEY_ALIAS" ]; then
+            echo "ERROR: KEY_ALIAS missing."
+            exit 1
+          fi
+
+          if [ -z "$KEY_PASSWORD" ]; then
+            echo "ERROR: KEY_PASSWORD missing."
+            exit 1
+          fi
 
           cat > android/key.properties <<EOF
           storePassword=$KEYSTORE_PASSWORD
@@ -345,7 +388,7 @@ jobs:
 
 
       # ============================================================
-      # 16. CONFIGURE RELEASE SIGNING
+      # 15. CONFIGURE RELEASE SIGNING
       # ============================================================
 
       - name: Configure release signing
@@ -353,96 +396,139 @@ jobs:
         run: |
           set -e
 
-          APP_GRADLE="android/app/build.gradle.kts"
+          APP="android/app/build.gradle.kts"
 
-          python3 - "$APP_GRADLE" <<'PY'
+          python3 - "$APP" <<'PY'
           import sys
           from pathlib import Path
 
           path = Path(sys.argv[1])
           text = path.read_text()
 
-          if "import java.util.Properties" not in text:
-              text = "import java.util.Properties\nimport java.io.FileInputStream\n\n" + text
+          # --------------------------------------------------------
+          # Imports
+          # --------------------------------------------------------
 
-          loader = '''
-          val keystorePropertiesFile = rootProject.file("key.properties")
+          if "import java.util.Properties" not in text:
+              text = (
+                  "import java.util.Properties\n"
+                  "import java.io.FileInputStream\n\n"
+                  + text
+              )
+
+          # --------------------------------------------------------
+          # Keystore loader
+          # --------------------------------------------------------
+
+          if "val keystorePropertiesFile" not in text:
+
+              loader = '''
+          val keystorePropertiesFile =
+              rootProject.file("key.properties")
+
           val keystoreProperties = Properties()
 
           if (keystorePropertiesFile.exists()) {
-              keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+              keystoreProperties.load(
+                  FileInputStream(keystorePropertiesFile)
+              )
           }
 
           '''
 
-          if 'val keystorePropertiesFile' not in text:
               text = text.replace(
-                  'android {',
-                  loader + 'android {',
+                  "android {",
+                  loader + "android {",
                   1
               )
 
+          # --------------------------------------------------------
+          # Signing config
+          # --------------------------------------------------------
+
           if 'create("release")' not in text:
+
               signing = '''
               signingConfigs {
                   create("release") {
-                      keyAlias = keystoreProperties["keyAlias"] as String?
-                      keyPassword = keystoreProperties["keyPassword"] as String?
-                      storeFile = keystoreProperties["storeFile"]?.let {
-                          rootProject.file(it as String)
-                      }
-                      storePassword = keystoreProperties["storePassword"] as String?
+                      keyAlias =
+                          keystoreProperties["keyAlias"] as String?
+
+                      keyPassword =
+                          keystoreProperties["keyPassword"] as String?
+
+                      storePassword =
+                          keystoreProperties["storePassword"] as String?
+
+                      storeFile =
+                          keystoreProperties["storeFile"]?.let {
+                              rootProject.file(it as String)
+                          }
                   }
               }
 
-              '''
+          '''
 
               text = text.replace(
-                  'android {',
-                  'android {\n' + signing,
+                  "android {",
+                  "android {\n" + signing,
                   1
               )
 
+          # --------------------------------------------------------
+          # Release signing
+          # --------------------------------------------------------
+
           if 'signingConfig = signingConfigs.getByName("release")' not in text:
+
               text = text.replace(
-                  'buildTypes {',
-                  '''buildTypes {
-                      getByName("release") {
-                          signingConfig = signingConfigs.getByName("release")
-                      }''',
+                  "release {",
+                  '''release {
+                      signingConfig =
+                          signingConfigs.getByName("release")''',
                   1
               )
 
           path.write_text(text)
-          print("Release signing configured successfully.")
+
+          print("Release signing configured correctly.")
           PY
 
 
       # ============================================================
-      # 17. VERIFY ANDROID GRADLE CONFIGURATION
+      # 16. VERIFY SIGNING CONFIG
       # ============================================================
 
-      - name: Verify Android Gradle configuration
+      - name: Verify signing configuration
         shell: bash
         run: |
           set -e
 
           echo "============================================================"
-          echo "android/app/build.gradle.kts"
+          echo "BUILD.GRADLE.KTS"
           echo "============================================================"
 
           cat android/app/build.gradle.kts
 
           echo ""
           echo "============================================================"
-          echo "Gradle wrapper"
+          echo "GRADLE WRAPPER"
           echo "============================================================"
 
           cat android/gradle/wrapper/gradle-wrapper.properties
 
+          echo ""
+          echo "============================================================"
+          echo "KEY PROPERTIES"
+          echo "============================================================"
+
+          grep -E \
+            '^(storeFile|keyAlias)=' \
+            android/key.properties
+
 
       # ============================================================
-      # 18. UNITY ADS JVM FIX
+      # 17. UNITY ADS JVM COMPATIBILITY
       # ============================================================
 
       - name: Fix Unity Ads JVM target
@@ -450,9 +536,12 @@ jobs:
         run: |
           set -e
 
+          echo "Searching Unity Ads plugin..."
+
           UNITY_PLUGIN_PATH=""
 
-          while IFS= read -r path; do
+          while IFS= read -r path
+          do
             UNITY_PLUGIN_PATH="$path"
             break
           done < <(
@@ -476,9 +565,11 @@ jobs:
                   -o -name "build.gradle.kts" \
                 \) \
                 -print0 |
-              while IFS= read -r -d '' file; do
+              while IFS= read -r -d '' file
+              do
 
-                echo "Checking $file"
+                echo "Patching:"
+                echo "$file"
 
                 sed -i \
                   's/jvmTarget[[:space:]]*=[[:space:]]*["'\'']1\.8["'\'']/jvmTarget = "17"/g' \
@@ -493,24 +584,45 @@ jobs:
             fi
 
           else
-            echo "Unity Ads plugin path not found."
+            echo "Unity Ads plugin not found."
+            echo "This is not necessarily an error."
           fi
 
 
       # ============================================================
-      # 19. CLEAN
+      # 18. FLUTTER CLEAN
       # ============================================================
 
       - name: Flutter clean
-        run: flutter clean
+        run: |
+          set -e
+
+          flutter clean
 
 
       # ============================================================
-      # 20. PUB GET
+      # 19. PUB GET AGAIN
       # ============================================================
 
-      - name: Flutter pub get
-        run: flutter pub get
+      - name: Flutter pub get final
+        run: |
+          set -e
+
+          flutter pub get
+
+
+      # ============================================================
+      # 20. VERIFY GRADLE
+      # ============================================================
+
+      - name: Verify Gradle
+        shell: bash
+        run: |
+          set -e
+
+          cd android
+
+          ./gradlew --version
 
 
       # ============================================================
@@ -526,19 +638,21 @@ jobs:
           echo "BUILDING PUZZLE WORLD RELEASE APK"
           echo "============================================================"
 
-          flutter build apk --release
+          flutter build apk \
+            --release
+
+          test -f \
+            build/app/outputs/flutter-apk/app-release.apk
 
           echo ""
-          echo "============================================================"
-          echo "BUILD SUCCESSFUL"
-          echo "============================================================"
+          echo "BUILD SUCCESSFUL."
 
 
       # ============================================================
-      # 22. INSPECT FINAL APK
+      # 22. VERIFY APK
       # ============================================================
 
-      - name: Inspect final APK
+      - name: Verify APK
         shell: bash
         run: |
           set -e
@@ -546,37 +660,29 @@ jobs:
           APK="build/app/outputs/flutter-apk/app-release.apk"
 
           echo "============================================================"
-          echo "APK FILE"
+          echo "APK"
           echo "============================================================"
 
           ls -lh "$APK"
 
           echo ""
           echo "============================================================"
-          echo "APK PACKAGE INFORMATION"
+          echo "SHA256"
           echo "============================================================"
 
-          BUILD_TOOLS=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)
-
-          echo "Build Tools: $BUILD_TOOLS"
-
-          "$ANDROID_HOME/build-tools/$BUILD_TOOLS/aapt" \
-            dump badging "$APK" | head -30
+          sha256sum "$APK"
 
           echo ""
           echo "============================================================"
           echo "APK SIGNATURE"
           echo "============================================================"
 
+          BUILD_TOOLS=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)
+
           "$ANDROID_HOME/build-tools/$BUILD_TOOLS/apksigner" \
-            verify --verbose "$APK"
-
-          echo ""
-          echo "============================================================"
-          echo "APK SHA256"
-          echo "============================================================"
-
-          sha256sum "$APK"
+            verify \
+            --verbose \
+            "$APK"
 
 
       # ============================================================
