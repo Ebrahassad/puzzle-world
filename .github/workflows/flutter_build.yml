@@ -14,15 +14,22 @@ on:
 permissions:
   contents: write
 
-jobs:
-  build:
-    name: Build Puzzle World Release APK
-    runs-on: ubuntu-latest
+env:
+  PACKAGE_NAME: com.ebrahassadi.puzzle_world
+  VERSION_NAME: "1.0.2"
+  VERSION_CODE: "3"
+  FLUTTER_VERSION: "3.44.8"
+  GRADLE_VERSION: "8.14"
+  AGP_VERSION: "8.11.1"
+  KOTLIN_VERSION: "2.2.20"
 
-    env:
-      PACKAGE_NAME: com.ebrahassadi.puzzle_world
-      VERSION_NAME: 1.0.2
-      VERSION_CODE: 3
+jobs:
+
+  build:
+
+    name: Build Puzzle World Release APK
+
+    runs-on: ubuntu-latest
 
     steps:
 
@@ -46,13 +53,13 @@ jobs:
 
 
       # ============================================================
-      # 3. FLUTTER 3.44.8
+      # 3. FLUTTER
       # ============================================================
 
-      - name: Setup Flutter 3.44.8
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.44.8"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
@@ -62,23 +69,33 @@ jobs:
       # ============================================================
 
       - name: Verify tools
+        shell: bash
         run: |
           set -e
 
-          echo "Flutter:"
+          echo "============================================================"
+          echo "FLUTTER"
+          echo "============================================================"
+
           flutter --version
 
           echo ""
-          echo "Dart:"
+          echo "============================================================"
+          echo "DART"
+          echo "============================================================"
+
           dart --version
 
           echo ""
-          echo "Java:"
+          echo "============================================================"
+          echo "JAVA"
+          echo "============================================================"
+
           java -version
 
 
       # ============================================================
-      # 5. RECREATE ANDROID PROJECT
+      # 5. RECREATE ANDROID
       # ============================================================
 
       - name: Recreate Android project
@@ -102,14 +119,14 @@ jobs:
           test -f android/app/build.gradle.kts
           test -f android/settings.gradle.kts
 
-          echo "Android project created successfully."
+          echo "Android project created."
 
 
       # ============================================================
-      # 6. FORCE PACKAGE NAME
+      # 6. CONFIGURE EXACT PACKAGE + VERSION
       # ============================================================
 
-      - name: Configure exact Package Name
+      - name: Configure Package and Version
         shell: bash
         run: |
           set -e
@@ -118,132 +135,153 @@ jobs:
 
           python3 - "$APP" "$PACKAGE_NAME" "$VERSION_NAME" "$VERSION_CODE" <<'PY'
           import sys
-          from pathlib import Path
           import re
+          from pathlib import Path
 
           path = Path(sys.argv[1])
+
           package_name = sys.argv[2]
           version_name = sys.argv[3]
           version_code = sys.argv[4]
 
           text = path.read_text()
 
-          # Remove any previous applicationId
-          text = re.sub(
-              r'applicationId\s*=\s*"[^"]*"',
-              '',
-              text
-          )
-
-          # Remove any previous namespace
-          text = re.sub(
-              r'namespace\s*=\s*"[^"]*"',
-              '',
-              text
-          )
-
-          # Remove any previous versionCode/versionName
-          text = re.sub(
-              r'versionCode\s*=\s*[^\n]+',
-              '',
-              text
-          )
+          # --------------------------------------------------------
+          # namespace
+          # --------------------------------------------------------
 
           text = re.sub(
-              r'versionName\s*=\s*"[^"]*"',
+              r'^\s*namespace\s*=\s*"[^"]*"\s*$',
               '',
-              text
+              text,
+              flags=re.MULTILINE
           )
 
-          # Add namespace
+          # --------------------------------------------------------
+          # applicationId
+          # --------------------------------------------------------
+
+          text = re.sub(
+              r'^\s*applicationId\s*=\s*"[^"]*"\s*$',
+              '',
+              text,
+              flags=re.MULTILINE
+          )
+
+          # --------------------------------------------------------
+          # versionCode
+          # --------------------------------------------------------
+
+          text = re.sub(
+              r'^\s*versionCode\s*=\s*[^\n]*$',
+              '',
+              text,
+              flags=re.MULTILINE
+          )
+
+          # --------------------------------------------------------
+          # versionName
+          # --------------------------------------------------------
+
+          text = re.sub(
+              r'^\s*versionName\s*=\s*"[^"]*"\s*$',
+              '',
+              text,
+              flags=re.MULTILINE
+          )
+
+          # --------------------------------------------------------
+          # Add namespace immediately after android {
+          # --------------------------------------------------------
+
           text = text.replace(
-              'android {',
+              "android {",
               f'''android {{
+
               namespace = "{package_name}"''',
               1
           )
 
-          # Add exact applicationId and versions
+          # --------------------------------------------------------
+          # Add exact applicationId/version inside defaultConfig
+          # --------------------------------------------------------
+
           text = text.replace(
-              'defaultConfig {',
+              "defaultConfig {",
               f'''defaultConfig {{
+
                   applicationId = "{package_name}"
+
                   versionCode = {version_code}
+
                   versionName = "{version_name}"''',
               1
           )
 
           path.write_text(text)
+
+          print("Package and version configured.")
           PY
 
-          echo ""
-          echo "Configured Package Name:"
-          grep -n "namespace" "$APP"
-          grep -n "applicationId" "$APP"
-
-          echo ""
-          echo "Configured Version:"
-          grep -n "versionCode" "$APP"
-          grep -n "versionName" "$APP"
-
 
       # ============================================================
-      # 7. FORCE PACKAGE NAME IN KOTLIN
+      # 7. CONFIGURE KOTLIN PACKAGE
       # ============================================================
 
-      - name: Configure Android Kotlin package
+      - name: Configure Kotlin package
         shell: bash
         run: |
           set -e
 
-          find android/app/src/main/kotlin \
-            -type f \
-            -name "*.kt" \
-            -print
+          if [ -d "android/app/src/main/kotlin" ]; then
 
-          while IFS= read -r file
-          do
-            sed -i \
-              -E 's/^package .*/package com.ebrahassadi.puzzle_world/' \
-              "$file"
-          done < <(
-            find android/app/src/main/kotlin \
-              -type f \
-              -name "*.kt"
-          )
+            while IFS= read -r file
+            do
+              sed -i \
+                -E 's/^package .*/package com.ebrahassadi.puzzle_world/' \
+                "$file"
 
-          echo ""
-          echo "Kotlin package verification:"
+            done < <(
+              find android/app/src/main/kotlin \
+                -type f \
+                -name "*.kt"
+            )
 
+          fi
+
+          echo "Kotlin package:"
           grep -R \
             "^package " \
             android/app/src/main/kotlin \
-            || true
+            2>/dev/null || true
 
 
       # ============================================================
       # 8. GRADLE 8.14
       # ============================================================
 
-      - name: Configure Gradle 8.14
+      - name: Configure Gradle
         shell: bash
         run: |
           set -e
 
           WRAPPER="android/gradle/wrapper/gradle-wrapper.properties"
 
-          python3 - "$WRAPPER" <<'PY'
+          python3 - "$WRAPPER" "$GRADLE_VERSION" <<'PY'
           import sys
-          from pathlib import Path
           import re
+          from pathlib import Path
 
           path = Path(sys.argv[1])
+          version = sys.argv[2]
+
           text = path.read_text()
 
           text = re.sub(
-              r'distributionUrl=.*',
-              'distributionUrl=https\\://services.gradle.org/distributions/gradle-8.14-all.zip',
-              text
+              r'^distributionUrl=.*$',
+              f'distributionUrl=https\\://services.gradle.org/distributions/gradle-{version}-all.zip',
+              text,
+              flags=re.MULTILINE
           )
 
           path.write_text(text)
@@ -254,33 +292,37 @@ jobs:
 
 
       # ============================================================
-      # 9. AGP 8.11.1 + KOTLIN 2.2.20
+      # 9. AGP + KOTLIN
       # ============================================================
 
-      - name: Configure Android Gradle Plugin and Kotlin
+      - name: Configure AGP and Kotlin
         shell: bash
         run: |
           set -e
 
           SETTINGS="android/settings.gradle.kts"
 
-          python3 - "$SETTINGS" <<'PY'
+          python3 - "$SETTINGS" "$AGP_VERSION" "$KOTLIN_VERSION" <<'PY'
           import sys
-          from pathlib import Path
           import re
+          from pathlib import Path
 
           path = Path(sys.argv[1])
+
+          agp = sys.argv[2]
+          kotlin = sys.argv[3]
+
           text = path.read_text()
 
           text = re.sub(
               r'(id\("com\.android\.application"\)\s+version\s+")[^"]+(")',
-              r'\g<1>8.11.1\g<2>',
+              rf'\g<1>{agp}\g<2>',
               text
           )
 
           text = re.sub(
               r'(id\("org\.jetbrains\.kotlin\.android"\)\s+version\s+")[^"]+(")',
-              r'\g<1>2.2.20\g<2>',
+              rf'\g<1>{kotlin}\g<2>',
               text
           )
 
@@ -291,7 +333,15 @@ jobs:
 
 
       # ============================================================
-      # 10. JAVA 17 / KOTLIN JVM 17
+      # 10. PUB GET
+      # ============================================================
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+
+      # ============================================================
+      # 11. JAVA 17
       # ============================================================
 
       - name: Configure Java 17
@@ -333,18 +383,10 @@ jobs:
 
 
       # ============================================================
-      # 11. FLUTTER PUB GET
+      # 12. INSTALL ICON
       # ============================================================
 
-      - name: Flutter pub get
-        run: flutter pub get
-
-
-      # ============================================================
-      # 12. LAUNCHER ICON
-      # ============================================================
-
-      - name: Install normal PNG launcher icon
+      - name: Install Puzzle World launcher icon
         shell: bash
         run: |
           set -e
@@ -353,7 +395,7 @@ jobs:
           RES="android/app/src/main/res"
 
           if [ ! -f "$ICON" ]; then
-            echo "ERROR: $ICON does not exist."
+            echo "ERROR: $ICON not found."
             exit 1
           fi
 
@@ -363,6 +405,7 @@ jobs:
 
           for density in mdpi hdpi xhdpi xxhdpi xxxhdpi
           do
+
             mkdir -p "$RES/mipmap-$density"
 
             cp "$ICON" \
@@ -370,9 +413,10 @@ jobs:
 
             cp "$ICON" \
               "$RES/mipmap-$density/ic_launcher_round.png"
+
           done
 
-          echo "Launcher icon installed."
+          echo "Icon installed."
 
 
       # ============================================================
@@ -403,7 +447,7 @@ jobs:
 
 
       # ============================================================
-      # 14. ANDROID MANIFEST
+      # 14. MANIFEST
       # ============================================================
 
       - name: Configure Android Manifest
@@ -415,10 +459,11 @@ jobs:
 
           python3 - "$MANIFEST" <<'PY'
           import sys
-          from pathlib import Path
           import re
+          from pathlib import Path
 
           path = Path(sys.argv[1])
+
           text = path.read_text()
 
           text = re.sub(
@@ -450,7 +495,7 @@ jobs:
 
 
       # ============================================================
-      # 15. RELEASE KEYSTORE
+      # 15. KEYSTORE
       # ============================================================
 
       - name: Decode release keystore
@@ -461,7 +506,7 @@ jobs:
           set -e
 
           if [ -z "$KEYSTORE_BASE64" ]; then
-            echo "ERROR: KEYSTORE_BASE64 secret is missing."
+            echo "ERROR: KEYSTORE_BASE64 is missing."
             exit 1
           fi
 
@@ -489,20 +534,9 @@ jobs:
         run: |
           set -e
 
-          if [ -z "$KEYSTORE_PASSWORD" ]; then
-            echo "ERROR: KEYSTORE_PASSWORD missing."
-            exit 1
-          fi
-
-          if [ -z "$KEY_ALIAS" ]; then
-            echo "ERROR: KEY_ALIAS missing."
-            exit 1
-          fi
-
-          if [ -z "$KEY_PASSWORD" ]; then
-            echo "ERROR: KEY_PASSWORD missing."
-            exit 1
-          fi
+          test -n "$KEYSTORE_PASSWORD"
+          test -n "$KEY_ALIAS"
+          test -n "$KEY_PASSWORD"
 
           cat > android/key.properties <<EOF
           storePassword=$KEYSTORE_PASSWORD
@@ -515,7 +549,7 @@ jobs:
 
 
       # ============================================================
-      # 17. RELEASE SIGNING
+      # 17. CONFIGURE RELEASE SIGNING
       # ============================================================
 
       - name: Configure release signing
@@ -532,16 +566,25 @@ jobs:
           path = Path(sys.argv[1])
           text = path.read_text()
 
+          # --------------------------------------------------------
+          # Imports
+          # --------------------------------------------------------
+
           if "import java.util.Properties" not in text:
+
               text = (
                   "import java.util.Properties\n"
                   "import java.io.FileInputStream\n\n"
                   + text
               )
 
+          # --------------------------------------------------------
+          # Keystore properties
+          # --------------------------------------------------------
+
           if "val keystorePropertiesFile" not in text:
 
-              loader = '''
+              block = '''
           val keystorePropertiesFile =
               rootProject.file("key.properties")
 
@@ -557,15 +600,20 @@ jobs:
 
               text = text.replace(
                   "android {",
-                  loader + "android {",
+                  block + "android {",
                   1
               )
+
+          # --------------------------------------------------------
+          # Release signing config
+          # --------------------------------------------------------
 
           if 'create("release")' not in text:
 
               signing = '''
               signingConfigs {
                   create("release") {
+
                       keyAlias =
                           keystoreProperties["keyAlias"] as String?
 
@@ -590,31 +638,42 @@ jobs:
                   1
               )
 
-          # Make release use ONLY release signing.
-          import re
+          # --------------------------------------------------------
+          # Remove every existing signingConfig from release block
+          # --------------------------------------------------------
 
-          text = re.sub(
-              r'release\s*\{[\s\S]*?\n\s*\}',
-              lambda m: m.group(0),
-              text,
-              count=1
-          )
+          marker = "buildTypes {"
 
-          if 'signingConfig = signingConfigs.getByName("release")' not in text:
+          if marker not in text:
+              raise SystemExit("ERROR: buildTypes block not found.")
 
-              text = text.replace(
-                  "release {",
-                  '''release {
-                      signingConfig =
-                          signingConfigs.getByName("release")''',
-                  1
-              )
+          before, after = text.split(marker, 1)
 
-          # Remove accidental debug signing.
-          text = text.replace(
+          # Only operate on the buildTypes section.
+          after = after.replace(
               'signingConfig = signingConfigs.getByName("debug")',
               ''
           )
+
+          after = after.replace(
+              'signingConfig = signingConfigs.getByName("release")',
+              ''
+          )
+
+          # Add one exact release signing config.
+          if 'release {' not in after:
+              raise SystemExit("ERROR: release buildType not found.")
+
+          after = after.replace(
+              "release {",
+              '''release {
+
+              signingConfig =
+                  signingConfigs.getByName("release")''',
+              1
+          )
+
+          text = before + marker + after
 
           path.write_text(text)
 
@@ -623,10 +682,10 @@ jobs:
 
 
       # ============================================================
-      # 18. VERIFY CONFIGURATION BEFORE BUILD
+      # 18. FINAL CONFIGURATION CHECK
       # ============================================================
 
-      - name: Verify final Android configuration
+      - name: Verify final configuration
         shell: bash
         run: |
           set -e
@@ -634,35 +693,43 @@ jobs:
           APP="android/app/build.gradle.kts"
 
           echo "============================================================"
-          echo "PACKAGE NAME CHECK"
+          echo "BUILD.GRADLE.KTS"
           echo "============================================================"
 
-          grep -n "namespace" "$APP"
-          grep -n "applicationId" "$APP"
-
-          echo ""
-          echo "============================================================"
-          echo "VERSION CHECK"
-          echo "============================================================"
-
-          grep -n "versionCode" "$APP"
-          grep -n "versionName" "$APP"
+          cat "$APP"
 
           echo ""
           echo "============================================================"
-          echo "SIGNING CHECK"
+          echo "PACKAGE VALIDATION"
           echo "============================================================"
 
-          grep -n "signingConfig" "$APP" || true
+          NAMESPACE=$(grep \
+            -E '^[[:space:]]*namespace[[:space:]]*=' \
+            "$APP" |
+            sed -E 's/.*"([^"]+)".*/\1/' |
+            head -1)
 
-          echo ""
-          echo "============================================================"
-          echo "KEY PROPERTIES"
-          echo "============================================================"
+          APPLICATION_ID=$(grep \
+            -E '^[[:space:]]*applicationId[[:space:]]*=' \
+            "$APP" |
+            sed -E 's/.*"([^"]+)".*/\1/' |
+            head -1)
 
-          grep -E \
-            '^(storeFile|keyAlias)=' \
-            android/key.properties
+          echo "Namespace: $NAMESPACE"
+          echo "Application ID: $APPLICATION_ID"
+
+          if [ "$NAMESPACE" != "$PACKAGE_NAME" ]; then
+            echo "ERROR: Wrong namespace."
+            exit 1
+          fi
+
+          if [ "$APPLICATION_ID" != "$PACKAGE_NAME" ]; then
+            echo "ERROR: Wrong applicationId."
+            exit 1
+          fi
+
+          echo "Package name: OK"
+
 
           echo ""
           echo "============================================================"
@@ -677,12 +744,52 @@ jobs:
             --exclude="*.lock" \
             2>/dev/null
           then
-            echo ""
-            echo "ERROR: Invalid package name detected."
+            echo "ERROR: Forbidden package found."
             exit 1
           fi
 
-          echo "No invalid *** package detected."
+          echo "Forbidden package: NOT FOUND"
+
+
+          echo ""
+          echo "============================================================"
+          echo "DEBUG SIGNING CHECK"
+          echo "============================================================"
+
+          if grep -n \
+            'signingConfigs.getByName("debug")' \
+            "$APP"
+          then
+            echo "ERROR: Debug signing detected."
+            exit 1
+          fi
+
+          echo "Debug signing: NOT USED"
+
+
+          echo ""
+          echo "============================================================"
+          echo "RELEASE SIGNING CHECK"
+          echo "============================================================"
+
+          if ! grep -n \
+            'signingConfigs.getByName("release")' \
+            "$APP"
+          then
+            echo "ERROR: Release signing not configured."
+            exit 1
+          fi
+
+          echo "Release signing: ENABLED"
+
+
+          echo ""
+          echo "============================================================"
+          echo "VERSION"
+          echo "============================================================"
+
+          grep -n "versionCode" "$APP"
+          grep -n "versionName" "$APP"
 
 
       # ============================================================
@@ -797,7 +904,7 @@ jobs:
 
 
       # ============================================================
-      # 24. PREPARE RELEASE FILES
+      # 24. PREPARE RELEASE
       # ============================================================
 
       - name: Prepare release files
@@ -811,21 +918,25 @@ jobs:
             build/app/outputs/flutter-apk/app-release.apk \
             release/PuzzleWorld-release.apk
 
-          ls -lh release/PuzzleWorld-release.apk
+          ls -lh \
+            release/PuzzleWorld-release.apk
 
 
       # ============================================================
-      # 25. VERIFY APK PACKAGE / VERSION / SIGNATURE
+      # 25. VERIFY APK
       # ============================================================
 
-      - name: Verify final APK
+      - name: Verify APK
         shell: bash
         run: |
           set -e
 
           APK="release/PuzzleWorld-release.apk"
 
-          BUILD_TOOLS=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)
+          BUILD_TOOLS=$(ls \
+            "$ANDROID_HOME/build-tools" |
+            sort -V |
+            tail -1)
 
           AAPT="$ANDROID_HOME/build-tools/$BUILD_TOOLS/aapt"
           APKSIGNER="$ANDROID_HOME/build-tools/$BUILD_TOOLS/apksigner"
@@ -841,22 +952,28 @@ jobs:
             head -1
           )
 
-          VERSION_NAME_ACTUAL=$(
+          APK_VERSION_NAME=$(
             echo "$BADGING" |
             sed -n \
               "s/.*versionName='\([^']*\)'.*/\1/p" |
             head -1
           )
 
-          VERSION_CODE_ACTUAL=$(
+          APK_VERSION_CODE=$(
             echo "$BADGING" |
             sed -n \
               "s/.*versionCode='\([^']*\)'.*/\1/p" |
             head -1
           )
 
+          SHA256=$(
+            sha256sum "$APK" |
+            awk '{print $1}'
+          )
+
+
           echo "============================================================"
-          echo "FINAL APK IDENTITY"
+          echo "FINAL APK"
           echo "============================================================"
 
           echo "Package Name:"
@@ -864,69 +981,61 @@ jobs:
 
           echo ""
           echo "Version Name:"
-          echo "$VERSION_NAME_ACTUAL"
+          echo "$APK_VERSION_NAME"
 
           echo ""
           echo "Version Code:"
-          echo "$VERSION_CODE_ACTUAL"
+          echo "$APK_VERSION_CODE"
 
           echo ""
-          echo "============================================================"
-          echo "EXPECTED VALUES"
-          echo "============================================================"
-
-          echo "Expected Package:"
-          echo "$PACKAGE_NAME"
-
-          echo "Expected Version:"
-          echo "$VERSION_NAME"
-
-          echo "Expected Version Code:"
-          echo "$VERSION_CODE"
-
-          echo ""
-          echo "============================================================"
-          echo "VALIDATING"
-          echo "============================================================"
-
-          if [ "$PACKAGE" != "$PACKAGE_NAME" ]; then
-            echo "ERROR: Package Name is incorrect."
-            echo "Expected: $PACKAGE_NAME"
-            echo "Actual:   $PACKAGE"
-            exit 1
-          fi
-
-          if [ "$VERSION_NAME_ACTUAL" != "$VERSION_NAME" ]; then
-            echo "ERROR: Version Name is incorrect."
-            exit 1
-          fi
-
-          if [ "$VERSION_CODE_ACTUAL" != "$VERSION_CODE" ]; then
-            echo "ERROR: Version Code is incorrect."
-            exit 1
-          fi
-
-          echo "Package Name: OK"
-          echo "Version Name: OK"
-          echo "Version Code: OK"
-
-
-          echo ""
-          echo "============================================================"
-          echo "APK SHA-256"
-          echo "============================================================"
-
-          SHA256=$(
-            sha256sum "$APK" |
-            awk '{print $1}'
-          )
-
+          echo "APK SHA-256:"
           echo "$SHA256"
 
 
+          # --------------------------------------------------------
+          # Validate package
+          # --------------------------------------------------------
+
+          if [ "$PACKAGE" != "$PACKAGE_NAME" ]; then
+
+            echo ""
+            echo "ERROR: PACKAGE NAME MISMATCH"
+            echo "Expected: $PACKAGE_NAME"
+            echo "Actual:   $PACKAGE"
+
+            exit 1
+          fi
+
+
+          # --------------------------------------------------------
+          # Validate version
+          # --------------------------------------------------------
+
+          if [ "$APK_VERSION_NAME" != "$VERSION_NAME" ]; then
+
+            echo ""
+            echo "ERROR: VERSION NAME MISMATCH"
+
+            exit 1
+          fi
+
+
+          if [ "$APK_VERSION_CODE" != "$VERSION_CODE" ]; then
+
+            echo ""
+            echo "ERROR: VERSION CODE MISMATCH"
+
+            exit 1
+          fi
+
+
+          # --------------------------------------------------------
+          # Verify APK signature
+          # --------------------------------------------------------
+
           echo ""
           echo "============================================================"
-          echo "APK SIGNATURE"
+          echo "APK SIGNATURE VERIFICATION"
           echo "============================================================"
 
           "$APKSIGNER" \
@@ -935,9 +1044,13 @@ jobs:
             "$APK"
 
 
+          # --------------------------------------------------------
+          # Print certificate fingerprints
+          # --------------------------------------------------------
+
           echo ""
           echo "============================================================"
-          echo "APK SIGNING CERTIFICATE"
+          echo "SIGNING CERTIFICATE"
           echo "============================================================"
 
           "$APKSIGNER" \
@@ -945,6 +1058,10 @@ jobs:
             --print-certs \
             "$APK"
 
+
+          # --------------------------------------------------------
+          # APK size
+          # --------------------------------------------------------
 
           echo ""
           echo "============================================================"
@@ -954,9 +1071,9 @@ jobs:
           ls -lh "$APK"
 
 
-          # ========================================================
-          # RELEASE INFO
-          # ========================================================
+          # --------------------------------------------------------
+          # Release info
+          # --------------------------------------------------------
 
           cat > release/PuzzleWorld-release-info.txt <<EOF
           Puzzle World
@@ -966,10 +1083,10 @@ jobs:
           $PACKAGE
 
           Version Name:
-          $VERSION_NAME_ACTUAL
+          $APK_VERSION_NAME
 
           Version Code:
-          $VERSION_CODE_ACTUAL
+          $APK_VERSION_CODE
 
           APK SHA-256:
           $SHA256
@@ -978,16 +1095,19 @@ jobs:
           GitHub Actions
 
           Flutter:
-          3.44.8
+          $FLUTTER_VERSION
 
           Java:
           17
 
           Gradle:
-          8.14
+          $GRADLE_VERSION
 
           Android Gradle Plugin:
-          8.11.1
+          $AGP_VERSION
+
+          Kotlin:
+          $KOTLIN_VERSION
 
           Release signing:
           Enabled
@@ -1002,7 +1122,7 @@ jobs:
 
 
       # ============================================================
-      # 26. UPLOAD GITHUB ARTIFACT
+      # 26. UPLOAD ARTIFACT
       # ============================================================
 
       - name: Upload Release APK Artifact
@@ -1024,10 +1144,11 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            release/PuzzleWorld-release.apk
-            release/PuzzleWorld-release-info.txt
+
+          tag_name: ${{ github.ref_name }}
+
           name: Puzzle World ${{ env.VERSION_NAME }}
+
           body: |
             # Puzzle World ${{ env.VERSION_NAME }}
 
@@ -1041,18 +1162,25 @@ jobs:
 
             **Build:** GitHub Actions
 
-            **Flutter:** 3.44.8
+            **Flutter:** ${{ env.FLUTTER_VERSION }}
 
             **Java:** 17
 
-            **Gradle:** 8.14
+            **Gradle:** ${{ env.GRADLE_VERSION }}
 
-            **Android Gradle Plugin:** 8.11.1
+            **Android Gradle Plugin:** ${{ env.AGP_VERSION }}
+
+            **Kotlin:** ${{ env.KOTLIN_VERSION }}
 
             **Release Signing:** Enabled
 
             **Debug Signing:** Disabled
 
-            The APK has been verified before release.
+            The APK was package-verified, version-verified and signature-verified before release.
+
+          files: |
+            release/PuzzleWorld-release.apk
+            release/PuzzleWorld-release-info.txt
+
           draft: false
           prerelease: false
