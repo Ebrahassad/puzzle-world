@@ -1087,43 +1087,64 @@ _calculateBoardPosition();
 // ⭐ فتح المرحلة التالية
 // ============================================================
 
-void openNextLevel() {
-if (widget.isCustomImage) {
-return;
-}
+Future<void> openNextLevel() async {
+  if (widget.isCustomImage) {
+    return;
+  }
 
-if (widget.level == null ||
-    widget.island == null) {
-  return;
-}
+  if (widget.level == null ||
+      widget.island == null) {
+    return;
+  }
 
-if (isFinalLevelOfIsland) {
-  _returnToWorldMap();
-  return;
-}
+  if (isFinalLevelOfIsland) {
+    await _unlockNextIslandIfNeeded();
+    _returnToWorldMap();
+    return;
+  }
 
-final currentNumber = widget.level!.levelNumber;
+  final currentNumber =
+      widget.level!.levelNumber;
 
-final nextLevel = PuzzleLevelData.getLevels(
-  widget.island!.id,
-).firstWhere(
-  (level) =>
-      level.levelNumber == currentNumber + 1,
-  orElse: () => widget.level!,
-);
+  final nextLevel =
+      PuzzleLevelData.getLevels(
+    widget.island!.id,
+  ).firstWhere(
+    (level) =>
+        level.levelNumber ==
+        currentNumber + 1,
+    orElse: () => widget.level!,
+  );
 
-Navigator.pushReplacement(
-  context,
-  MaterialPageRoute(
-    builder: (_) => PuzzleGameScreen(
-      level: nextLevel,
-      island: widget.island,
+  // ==========================================================
+  // 🔓 حفظ فتح المرحلة التالية
+  // ==========================================================
+
+  final nextLevelKey =
+      "${widget.island!.id}_level_${nextLevel.levelNumber}";
+
+  await PuzzleProgressManager.unlockLevel(
+    nextLevelKey,
+  );
+
+  if (!mounted) {
+    return;
+  }
+
+  // ==========================================================
+  // 🎮 الانتقال إلى المرحلة التالية
+  // ==========================================================
+
+  await Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (_) => PuzzleGameScreen(
+        level: nextLevel,
+        island: widget.island,
+      ),
     ),
-  ),
-);
-
+  );
 }
-
 // ============================================================
 // 🏆 الفوز
 // ============================================================
