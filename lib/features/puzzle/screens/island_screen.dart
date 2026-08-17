@@ -167,8 +167,8 @@ class _IslandScreenState extends State<IslandScreen>
   // ============================================================
 
   String getLevelKey(int levelNumber) {
-    return "${widget.island.id}level$levelNumber";
-  }
+  return "${widget.island.id}_level_$levelNumber";
+}
 
   // ============================================================
   // 🎮 فتح المرحلة
